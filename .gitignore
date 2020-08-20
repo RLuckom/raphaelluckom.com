@@ -1,0 +1,7 @@
+*.plan
+*.swp
+terraform/.terraform
+site
+resources
+docker/terraform/terraform
+docker/hugo/hugo
