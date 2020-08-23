@@ -1,6 +1,6 @@
-resource "aws_acm_certificate" "raphaelluckom_cert" {
+resource "aws_acm_certificate" "cert" {
   domain_name       = var.domain_name
-  subject_alternative_names = ["www.raphaelluckom.com"]
+  subject_alternative_names = var.subject_alternative_names
   validation_method = "DNS"
 
   lifecycle {
@@ -8,8 +8,8 @@ resource "aws_acm_certificate" "raphaelluckom_cert" {
   }
 }
 
-resource "aws_acm_certificate_validation" "cert" {
-  certificate_arn = aws_acm_certificate.raphaelluckom_cert.arn
+resource "aws_acm_certificate_validation" "cert_validation" {
+  certificate_arn = aws_acm_certificate.cert.arn
   validation_record_fqdns = [for record in aws_route53_record.cert_validation: record.fqdn]
 }
 

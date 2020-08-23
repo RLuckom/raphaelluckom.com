@@ -1,18 +1,18 @@
 locals {
-  s3_origin_id = "raphaelluckom"
+  s3_origin_id = var.domain_name_prefix
 }
 
-resource "aws_cloudfront_origin_access_identity" "raphaelluckom_access_identity" {
-  comment = "access identity for cloudfront to raphaelluckom bucket"
+resource "aws_cloudfront_origin_access_identity" "cloudfront_logging_access_id" {
+  comment = "access identity for cloudfront to ${var.domain_name_prefix} bucket"
 }
 
-resource "aws_cloudfront_distribution" "raphaelluckom_distribution" {
+resource "aws_cloudfront_distribution" "website_distribution" {
   origin {
-    domain_name = aws_s3_bucket.raphaelluckom.bucket_regional_domain_name
+    domain_name = aws_s3_bucket.website_bucket.bucket_regional_domain_name
     origin_id   = local.s3_origin_id
 
     s3_origin_config {
-      origin_access_identity = "origin-access-identity/cloudfront/${aws_cloudfront_origin_access_identity.raphaelluckom_access_identity.id}"
+      origin_access_identity = "origin-access-identity/cloudfront/${aws_cloudfront_origin_access_identity.cloudfront_logging_access_id.id}"
     }
   }
 
@@ -22,11 +22,11 @@ resource "aws_cloudfront_distribution" "raphaelluckom_distribution" {
 
   logging_config {
     include_cookies = false
-    bucket          = "${aws_s3_bucket.raphaelluckom_logs.id}.s3.amazonaws.com"
-    prefix          = "raphaelluckom"
+    bucket          = "${aws_s3_bucket.logging_bucket.id}.s3.amazonaws.com"
+    prefix          = var.domain_name_prefix
   }
 
-  aliases = ["raphaelluckom.com", "www.raphaelluckom.com"]
+  aliases = concat([var.domain_name], var.subject_alternative_names)
 
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
@@ -56,7 +56,7 @@ resource "aws_cloudfront_distribution" "raphaelluckom_distribution" {
   }
 
   viewer_certificate {
-    acm_certificate_arn = aws_acm_certificate_validation.cert.certificate_arn
+    acm_certificate_arn = aws_acm_certificate_validation.cert_validation.certificate_arn
     minimum_protocol_version = "TLSv1"
     ssl_support_method = "sni-only"
   }
