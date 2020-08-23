@@ -15,7 +15,7 @@ resource "aws_s3_bucket" "raphaelluckom" {
     max_age_seconds = 3000
   }
 
-  tags {
+  tags = {
     Name        = "raphaelluckom.com"
   }
 }
@@ -24,7 +24,15 @@ resource "aws_s3_bucket" "raphaelluckom_logs" {
   bucket = "logs.raphaelluckom.com"
   acl    = "log-delivery-write"
 
-  tags {
+  tags = {
     Name        = "logs.raphaelluckom.com"
+  }
+}
+
+resource "aws_s3_bucket" "rluckom_partitioned" {
+  bucket = "rluckom.timeseries"
+
+  tags = {
+    Name        = "partitioned"
   }
 }
