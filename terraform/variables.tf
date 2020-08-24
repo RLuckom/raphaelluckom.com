@@ -22,3 +22,13 @@ variable "partitioned_bucket_name" {
   type = string
   default = "rluckom.timeseries"
 }
+
+variable "partition_prefix" {
+  type = string
+  default = "partitioned"
+}
+
+variable "rotation_period_expression" {
+  type = string
+	default = "rate(45 minutes)"
+}
