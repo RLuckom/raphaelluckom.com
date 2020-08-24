@@ -36,3 +36,11 @@ resource "aws_s3_bucket" "partition_bucket" {
     Name        = "partitioned"
   }
 }
+
+resource "aws_s3_bucket" "athena_bucket" {
+  bucket = var.athena_bucket_name
+
+  tags = {
+    Name        = "athena"
+  }
+}

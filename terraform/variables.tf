@@ -23,6 +23,16 @@ variable "partitioned_bucket_name" {
   default = "rluckom.timeseries"
 }
 
+variable "athena_bucket_name" {
+  type = string
+  default = "rluckom.athena"
+}
+
+variable "athena_db_name" {
+  type = string
+  default = "raphaelluckomcf"
+}
+
 variable "partition_prefix" {
   type = string
   default = "partitioned"
@@ -31,4 +41,9 @@ variable "partition_prefix" {
 variable "rotation_period_expression" {
   type = string
 	default = "rate(45 minutes)"
+}
+
+variable "time_series_db_name" {
+  type = string
+  default = "timeseries"
 }
