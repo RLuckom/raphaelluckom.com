@@ -2,6 +2,7 @@
 *.swp
 terraform/.terraform
 site
+**node_modules
 resources
 docker/terraform/terraform
 docker/hugo/hugo
