@@ -38,6 +38,11 @@ variable "partition_prefix" {
   default = "partitioned"
 }
 
+variable athena_region {
+  type = string
+  default = "us-east-1"
+}
+
 variable "rotation_period_expression" {
   type = string
 	default = "rate(45 minutes)"

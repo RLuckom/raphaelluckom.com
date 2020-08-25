@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 resource "aws_iam_policy" "log_rotator_access_to_buckets" {
   name = "log-rotation-${var.domain_name_prefix}"
 
@@ -16,6 +18,54 @@ resource "aws_iam_policy" "log_rotator_access_to_buckets" {
         "${aws_s3_bucket.logging_bucket.arn}",
         "${aws_s3_bucket.logging_bucket.arn}/*"
       ]
+    },
+    {
+      "Action": [
+        "s3:GetObject",
+        "s3:ListMultipartUploadParts",
+        "s3:PutObject",
+        "s3:ListBucket"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "${aws_s3_bucket.athena_bucket.arn}",
+        "${aws_s3_bucket.athena_bucket.arn}/*"
+      ]
+    },
+    {
+      "Action": [
+        "glue:CreatePartition",
+        "glue:GetTable",
+        "glue:GetDatabase",
+        "glue:BatchCreatePartition"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "${aws_glue_catalog_database.time_series_database.arn}",
+        "${aws_glue_catalog_table.cloudformation_logs_glue_table.arn}",
+        "arn:aws:glue:us-east-1:${data.aws_caller_identity.current.account_id}:catalog",
+        "arn:aws:glue:us-east-1:${data.aws_caller_identity.current.account_id}:catalog*"
+      ]
+    },
+    {
+      "Action": [
+        "athena:StartQueryExecution",
+        "athena:GetQueryResults",
+        "athena:GetQueryExecution"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:athena:*"
+      ]
+    },
+    {
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:*:*:*",
+      "Effect": "Allow"
     },
     {
       "Action": [
@@ -56,6 +106,11 @@ resource "aws_iam_role" "log_rotator_role" {
 EOF
 }
 
+resource "aws_cloudwatch_log_group" "log_rotator_group" {
+    name              = "/aws/lambda/${aws_lambda_function.log_rotator_lambda.function_name}"
+      retention_in_days = 14
+    }
+
 resource "aws_lambda_function" "log_rotator_lambda" {
   filename      = "log-rotator.zip"
   function_name = "log-rotator"
@@ -69,6 +124,7 @@ resource "aws_lambda_function" "log_rotator_lambda" {
 
   runtime = "nodejs12.x"
   timeout = 40
+  memory_size = 256
 
   environment {
     variables = {
@@ -76,9 +132,14 @@ resource "aws_lambda_function" "log_rotator_lambda" {
       LOG_PREFIX = var.domain_name_prefix
       PARTITION_BUCKET = aws_s3_bucket.partition_bucket.id
       PARTITION_PREFIX = "${var.partition_prefix}/${var.domain_name}"
+      ATHENA_RESULT_BUCKET = "s3://${aws_s3_bucket.athena_bucket.id}/raphaelluckom.com"
+      ATHENA_TABLE = aws_glue_catalog_table.cloudformation_logs_glue_table.name 
+      ATHENA_DB = aws_glue_catalog_table.cloudformation_logs_glue_table.database_name
+      ATHENA_REGION = var.athena_region
     }
   }
 }
+
 
 resource "aws_cloudwatch_event_rule" "rotation_period" {
   schedule_expression = var.rotation_period_expression

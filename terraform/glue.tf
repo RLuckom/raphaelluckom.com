@@ -2,7 +2,7 @@ resource "aws_glue_catalog_database" "time_series_database" {
   name = var.time_series_db_name
 }
 
-resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
+resource "aws_glue_catalog_table" "cloudformation_logs_glue_table" {
   name          = "${var.domain_name_prefix}_cf_logs_partitioned_gz"
   database_name = var.time_series_db_name
 

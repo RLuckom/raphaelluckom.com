@@ -9,7 +9,7 @@
   "author": "Raphael Luckom",
   "license": "MIT",
   "dependencies": {
-    "exploranda-core": "^0.2.3",
+    "exploranda-core": "^0.2.4",
     "lodash": "^4.17.20"
   }
 }
