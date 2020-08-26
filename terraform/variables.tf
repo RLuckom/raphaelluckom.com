@@ -18,16 +18,6 @@ variable "route53_zone_name" {
   default = "raphaelluckom.com."
 }
 
-variable "partitioned_bucket_name" {
-  type = string
-  default = "rluckom.timeseries"
-}
-
-variable "athena_bucket_name" {
-  type = string
-  default = "rluckom.athena"
-}
-
 variable "athena_db_name" {
   type = string
   default = "raphaelluckomcf"
@@ -51,4 +41,19 @@ variable "rotation_period_expression" {
 variable "time_series_db_name" {
   type = string
   default = "timeseries"
+}
+
+variable "partitioned_bucket_name" {
+  type = string
+  default = "rluckom.timeseries"
+}
+
+variable "athena_bucket_name" {
+  type = string
+  default = "rluckom.athena"
+}
+
+variable "lambda_bucket_name" {
+  type = string
+  default = "rluckom.lambda"
 }

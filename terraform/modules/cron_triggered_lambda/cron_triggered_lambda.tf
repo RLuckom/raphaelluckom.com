@@ -35,15 +35,11 @@ resource "aws_cloudwatch_log_group" "lambda_log_group" {
     }
 
 resource "aws_lambda_function" "lambda" {
-  filename      = var.filename
+  s3_bucket = var.lambda_code_bucket
+  s3_key = var.lambda_code_key
   function_name = var.lambda_name_stem
   role          = aws_iam_role.lambda_role.arn
   handler       = var.handler
-
-  # The filebase64sha256() function is available in Terraform 0.11.12 and later
-  # For Terraform 0.11.11 and earlier, use the base64sha256() function and the file() function:
-  # source_code_hash = "${base64sha256(file("lambda_function_payload.zip"))}"
-  source_code_hash = filebase64sha256(var.filename)
 
   runtime = "nodejs12.x"
   timeout = var.timeout_secs

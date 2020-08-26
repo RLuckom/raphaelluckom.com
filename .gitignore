@@ -1,8 +1,8 @@
 *.plan
 *.swp
 terraform/.terraform
-site
+hugo_site/site
 **node_modules
-resources
+hugo_site/resources
 docker/terraform/terraform
 docker/hugo/hugo

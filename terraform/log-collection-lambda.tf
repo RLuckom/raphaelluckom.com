@@ -3,7 +3,8 @@ data "aws_caller_identity" "current" {}
 module "log_rotator_lambda" {
   source = "./modules/cron_triggered_lambda"
   lambda_name_stem = "log-rotation-${var.domain_name_prefix}"
-  filename      = abspath("log-rotator.zip")
+  lambda_code_bucket = aws_s3_bucket.lambda_bucket.id
+  lambda_code_key = "log-rotator/log-rotator.zip"
   timeout_secs = 40
   mem_mb = 256
   rotation_period_expression = var.rotation_period_expression

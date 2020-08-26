@@ -11,7 +11,11 @@ variable "handler" {
   default = "index.handler"
 }
 
-variable "filename" {
+variable "lambda_code_bucket" {
+  type = string
+}
+
+variable "lambda_code_key" {
   type = string
 }
 
