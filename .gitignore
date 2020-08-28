@@ -3,6 +3,7 @@
 terraform/.terraform
 hugo_site/site
 **node_modules
+*.zip
 hugo_site/resources
 docker/terraform/terraform
 docker/hugo/hugo
