@@ -24,7 +24,7 @@ resource "aws_glue_catalog_table" "cloudformation_logs_glue_table" {
   storage_descriptor {
     input_format = "org.apache.hadoop.mapred.TextInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
-    location = "s3://${var.partition_bucket == "" ? aws_s3_bucket.partition_bucket[0].id : var.partition_bucket}/${var.partition_prefix}"
+    location = "s3://${var.use_partition_bucket ? var.partition_bucket == "" ? aws_s3_bucket.partition_bucket[0].id : var.partition_bucket : var.metadata_bucket == "" ? aws_s3_bucket.metadata_bucket[0].id : var.metadata_bucket}/${var.partition_prefix}"
     compressed = true
 
     ser_de_info  {

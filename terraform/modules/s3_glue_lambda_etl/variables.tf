@@ -2,9 +2,29 @@ variable "name_stem" {
   type = string
 }
 
+variable "use_partition_bucket" {
+  type = bool
+  default = false
+}
+
 variable "handler" {
   type = string
   default = "index.handler"
+}
+
+variable "metadata_bucket_arn" {
+  type = string
+  default = ""
+}
+
+variable "metadata_bucket" {
+  type = string
+  default = ""
+}
+
+variable "metadata_partition_prefix" {
+  type = string
+  default = ""
 }
 
 variable "lambda_code_bucket" {
@@ -35,6 +55,7 @@ variable "partition_prefix" {
 
 variable "athena_result_bucket" {
   type = string
+  default = ""
 }
 
 variable "athena_region" {
@@ -99,6 +120,14 @@ variable "columns" {
     name = string
     type = string
   }))
+}
+
+variable "statements" {
+  type = list(object({
+    actions = list(string)
+    resources = list(string)
+  }))
+  default = []
 }
 
 variable "partition_keys" {

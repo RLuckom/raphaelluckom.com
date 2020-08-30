@@ -120,7 +120,6 @@ function dependencies({CopySource, SourceKey,  InputBucket, DestKey, year, month
 }
 
 exports.handler = function(event, context, callback) {
-  console.log(JSON.stringify(event))
   const key = _.get(event, 'Records[0].s3.object.key')
   const InputBucket = _.get(event, 'Records[0].s3.bucket.name')
   const [ignore, date, uniqId] = key.match(/.*([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2})\.(.*).gz/)

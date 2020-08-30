@@ -20,12 +20,15 @@ module "site_logs_etl" {
   name_stem = "log-rotation-${var.domain_name_prefix}"
   lambda_code_bucket = aws_s3_bucket.lambda_bucket.id
   lambda_code_key = "log-rotator/log-rotator.zip"
+  use_partition_bucket = true
   timeout_secs = 40
   mem_mb = 256
   input_bucket = module.static_site.logging_bucket_id
   input_bucket_arn = module.static_site.logging_bucket_arn
   partition_bucket = aws_s3_bucket.partition_bucket.id
   partition_bucket_arn = aws_s3_bucket.partition_bucket.arn
+  metadata_bucket_arn = aws_s3_bucket.partition_bucket.arn
+  metadata_bucket = aws_s3_bucket.partition_bucket.id
   partition_prefix = "${var.partition_prefix}/${var.domain_name}"
   athena_region = var.athena_region
   athena_result_bucket = aws_s3_bucket.athena_bucket.id
