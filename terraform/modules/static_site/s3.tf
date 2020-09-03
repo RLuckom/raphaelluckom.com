@@ -10,8 +10,8 @@ resource "aws_s3_bucket" "website_bucket" {
   cors_rule {
     allowed_headers = ["*"]
     allowed_methods = ["GET", "HEAD"]
-    allowed_origins = ["https://${var.domain_name}"]
-    expose_headers  = []
+    allowed_origins = var.allowed_origins == [] ? ["https://${var.domain_name}"] : var.allowed_origins
+    expose_headers  = ["ETag"]
     max_age_seconds = 3000
   }
 

@@ -7,6 +7,16 @@ variable "handler" {
   default = "index.handler"
 }
 
+variable "metadata_bucket_arn" {
+  type = string
+  default = ""
+}
+
+variable "metadata_bucket" {
+  type = string
+  default = ""
+}
+
 variable "metadata_partition_prefix" {
   type = string
   default = ""
@@ -14,6 +24,11 @@ variable "metadata_partition_prefix" {
 
 variable "lambda_code_bucket" {
   type = string
+}
+
+variable "time_series_table_name" {
+  type = string
+  default = ""
 }
 
 variable "lambda_code_key" {
@@ -33,8 +48,18 @@ variable "partition_prefix" {
   default = ""
 }
 
+variable "athena_result_bucket" {
+  type = string
+  default = ""
+}
+
 variable "athena_region" {
   type = string
+}
+
+variable "input_bucket" {
+  type = string
+  default = ""
 }
 
 variable "input_prefix" {
@@ -43,6 +68,31 @@ variable "input_prefix" {
 }
 
 variable "input_suffix" {
+  type = string
+  default = ""
+}
+
+variable "input_bucket_arn" {
+  type = string
+  default = ""
+}
+
+variable "partition_bucket_arn" {
+  type = string
+  default = ""
+}
+
+variable "athena_result_bucket_arn" {
+  type = string
+  default = ""
+}
+
+variable "partition_bucket" {
+  type = string
+  default = ""
+}
+
+variable "time_series_db_name" {
   type = string
   default = ""
 }

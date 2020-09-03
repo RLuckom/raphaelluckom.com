@@ -1,9 +1,9 @@
 resource "aws_glue_catalog_database" "time_series_database" {
-  name = "${var.name_stem}_timeseries"
+  name = var.time_series_db_name == "" ? "${var.name_stem}_timeseries" : var.time_series_db_name
 }
 
 resource "aws_glue_catalog_table" "cloudformation_logs_glue_table" {
-  name          = "${var.name_stem}_partitioned_gz"
+  name          = var.time_series_table_name == "" ? "${var.name_stem}_partitioned_gz" : var.time_series_table_name
   database_name = aws_glue_catalog_database.time_series_database.name
 
   table_type = "EXTERNAL_TABLE"
@@ -24,7 +24,7 @@ resource "aws_glue_catalog_table" "cloudformation_logs_glue_table" {
   storage_descriptor {
     input_format = "org.apache.hadoop.mapred.TextInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
-    location = "s3://${aws_s3_bucket.metadata_bucket.id}/"
+    location = "s3://${var.partition_bucket == "" ? aws_s3_bucket.partition_bucket[0].id : var.partition_bucket}/${var.partition_prefix}"
     compressed = true
 
     ser_de_info  {

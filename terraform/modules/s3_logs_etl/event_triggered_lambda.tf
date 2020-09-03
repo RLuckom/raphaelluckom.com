@@ -7,8 +7,8 @@ data "aws_iam_policy_document" "lamda_policy" {
 			"s3:ListBucket"
 		]
 		resources = [
-			aws_s3_bucket.input_bucket.arn,
-			"${aws_s3_bucket.input_bucket.arn}/*"
+			"${var.input_bucket_arn == "" ? aws_s3_bucket.input_bucket[0].arn : var.input_bucket_arn}",
+			"${var.input_bucket_arn == "" ? aws_s3_bucket.input_bucket[0].arn : var.input_bucket_arn}/*"
 		]
 	}
 	statement {
@@ -20,8 +20,8 @@ data "aws_iam_policy_document" "lamda_policy" {
 			"s3:ListBucket"
 		]
 		resources = [
-			aws_s3_bucket.athena_result_bucket.arn,
-			"${aws_s3_bucket.athena_result_bucket.arn}/*"
+			"${var.athena_result_bucket_arn == "" ? aws_s3_bucket.athena_result_bucket[0].arn : var.athena_result_bucket_arn}",
+			"${var.athena_result_bucket_arn == "" ? aws_s3_bucket.athena_result_bucket[0].arn : var.athena_result_bucket_arn}/*"
 		]
 	}
 
@@ -64,9 +64,9 @@ data "aws_iam_policy_document" "lamda_policy" {
 			"s3:PutObject"
 		]
 		resources = [
-			"${aws_s3_bucket.metadata_bucket.arn}/*",
-			"${aws_s3_bucket.partition_bucket.arn}/*",
-			"${aws_s3_bucket.athena_result_bucket.arn}/*"
+			"${var.metadata_bucket_arn == "" ?  aws_s3_bucket.metadata_bucket[0].arn : var.metadata_bucket_arn}/*",
+			"${var.partition_bucket_arn == "" ?  aws_s3_bucket.partition_bucket[0].arn : var.partition_bucket_arn}/*",
+			"${var.athena_result_bucket_arn == "" ?  aws_s3_bucket.athena_result_bucket[0].arn : var.athena_result_bucket_arn}/*"
 		]
 	}
 
@@ -119,18 +119,22 @@ resource "aws_cloudwatch_log_group" "lambda_log_group" {
 }
 
 resource "aws_s3_bucket" "input_bucket" {
+	count = var.input_bucket == "" ? 1 : 0
 	bucket = "${replace(var.name_stem, "_", ".")}.input"
 }
 
 resource "aws_s3_bucket" "athena_result_bucket" {
+	count = var.athena_result_bucket == "" ? 1 : 0
 	bucket = "${replace(var.name_stem, "_", ".")}.athena"
 }
 
 resource "aws_s3_bucket" "partition_bucket" {
+	count = var.partition_bucket == "" ? 1 : 0
 	bucket = "${replace(var.name_stem, "_", ".")}.partition"
 }
 
 resource "aws_s3_bucket" "metadata_bucket" {
+	count = var.metadata_bucket_arn == "" ? 1 : 0
 	bucket = "${replace(var.name_stem, "_", ".")}.metadata"
 }
 
@@ -147,13 +151,13 @@ resource "aws_lambda_function" "lambda" {
 
 	environment {
 		variables =  {
-			INPUT_BUCKET = aws_s3_bucket.input_bucket.id
+			INPUT_BUCKET = var.input_bucket == "" ? aws_s3_bucket.input_bucket[0].id : var.input_bucket
 			INPUT_PREFIX = var.input_prefix
-			PARTITION_BUCKET = aws_s3_bucket.partition_bucket.id
+			PARTITION_BUCKET = var.partition_bucket == "" ? aws_s3_bucket.partition_bucket[0].id : var.partition_bucket
 			PARTITION_PREFIX = var.partition_prefix
-			METADATA_PARTITION_BUCKET = aws_s3_bucket.metadata_bucket.id
+			METADATA_PARTITION_BUCKET = var.metadata_bucket_arn == "" ? aws_s3_bucket.metadata_bucket[0].id : ""
 			METADATA_PARTITION_PREFIX = var.metadata_partition_prefix
-			ATHENA_RESULT_BUCKET = aws_s3_bucket.athena_result_bucket.id
+			ATHENA_RESULT_BUCKET = var.athena_result_bucket == "" ? aws_s3_bucket.athena_result_bucket[0].id : "s3://${var.athena_result_bucket}"
 			ATHENA_TABLE = aws_glue_catalog_table.cloudformation_logs_glue_table.name 
 			ATHENA_DB = aws_glue_catalog_table.cloudformation_logs_glue_table.database_name
 			ATHENA_REGION = var.athena_region
@@ -166,11 +170,11 @@ resource "aws_lambda_permission" "allow_bucket" {
 	action        = "lambda:InvokeFunction"
 	function_name = aws_lambda_function.lambda.arn
 	principal     = "s3.amazonaws.com"
-	source_arn    = aws_s3_bucket.input_bucket.arn
+	source_arn    = var.input_bucket_arn == "" ?  aws_s3_bucket.input_bucket[0].arn : var.input_bucket_arn
 }
 
 resource "aws_s3_bucket_notification" "bucket_notification" {
-	bucket = aws_s3_bucket.input_bucket.id
+	bucket = var.input_bucket == "" ? aws_s3_bucket.input_bucket[0].id : var.input_bucket
 
 	lambda_function {
 		lambda_function_arn = aws_lambda_function.lambda.arn

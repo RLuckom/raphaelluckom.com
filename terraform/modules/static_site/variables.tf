@@ -13,3 +13,8 @@ variable "domain_name_prefix" {
 variable "subject_alternative_names" {
   type = list(string)
 }
+
+variable "allowed_origins" {
+  type = list(string)
+  default = []
+}

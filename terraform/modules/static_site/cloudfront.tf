@@ -35,6 +35,7 @@ resource "aws_cloudfront_distribution" "website_distribution" {
 
     forwarded_values {
       query_string = false
+      headers = ["Access-Control-Request-Headers", "Access-Control-Request-Method", "Origin"]
 
       cookies {
         forward = "none"
