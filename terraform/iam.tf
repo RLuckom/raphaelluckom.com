@@ -83,3 +83,52 @@ resource "aws_iam_user_policy_attachment" "phone_policy_attachment" {
   user       = aws_iam_user.phone.name
   policy_arn = aws_iam_policy.phone_upload_policy.arn
 }
+
+resource "aws_api_gateway_account" "demo" {
+  cloudwatch_role_arn = aws_iam_role.apigateway_role.arn
+}
+
+data "aws_iam_policy_document" "apigateway_assume_logging" {
+  statement {
+    actions   =  [
+      "sts:AssumeRole"
+    ]
+    principals {
+      type = "Service"
+      identifiers = ["apigateway.amazonaws.com"]
+    }
+  }
+}
+
+
+resource "aws_iam_role" "apigateway_role" {
+  name = "api_gateway_cloudwatch_global"
+
+  assume_role_policy = data.aws_iam_policy_document.apigateway_assume_logging.json
+}
+
+
+data "aws_iam_policy_document" "apigateway_logging_resources" {
+  statement {
+    actions   =  [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:DescribeLogGroups",
+      "logs:DescribeLogStreams",
+      "logs:PutLogEvents",
+      "logs:GetLogEvents",
+      "logs:FilterLogEvents"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "apigateway_cloudwatch_logging" {
+
+  policy = data.aws_iam_policy_document.apigateway_assume_logging.json
+}
+
+resource "aws_iam_role_policy_attachment" "apigateway_cloudwatch" {
+  role       = aws_iam_role.apigateway_role.name
+  policy_arn = aws_iam_policy.apigateway_cloudwatch_logging.arn
+}

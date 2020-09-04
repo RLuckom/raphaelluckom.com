@@ -3,6 +3,11 @@ variable "domain_name" {
   default = "raphaelluckom.com"
 }
 
+variable "api_domain_name" {
+  type = string
+  default = "api.raphaelluckom.com"
+}
+
 variable "subject_alternative_names" {
   type = list(string)
   default = ["www.raphaelluckom.com"]
