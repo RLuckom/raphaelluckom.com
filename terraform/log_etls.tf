@@ -15,9 +15,18 @@ resource "aws_s3_bucket" "partition_bucket" {
   }
 }
 
+resource "aws_glue_catalog_database" "time_series_database" {
+  name = var.time_series_db_name
+}
+
 module "site_logs_etl" {
   source = "./modules/s3_logs_etl"
   name_stem = "log-rotation-${var.domain_name_prefix}"
+  time_series_db = {
+    name = aws_glue_catalog_database.time_series_database.name
+    arn = aws_glue_catalog_database.time_series_database.arn
+  }
+  time_series_table_name          = "${var.domain_name_prefix}_cf_logs_partitioned_gz"
   lambda_code_bucket = aws_s3_bucket.lambda_bucket.id
   lambda_code_key = "log-rotator/log-rotator.zip"
   timeout_secs = 40
@@ -33,8 +42,6 @@ module "site_logs_etl" {
   athena_result_bucket = aws_s3_bucket.athena_bucket.id
   athena_result_bucket_arn = aws_s3_bucket.athena_bucket.arn
   skip_header_line_count = 2
-  time_series_db_name = var.time_series_db_name
-  time_series_table_name          = "${var.domain_name_prefix}_cf_logs_partitioned_gz"
   ser_de_info = {
     name                  = "${var.domain_name_prefix}_cf_logs"
     serialization_library = "org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe"

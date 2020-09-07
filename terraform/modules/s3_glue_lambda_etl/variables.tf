@@ -2,13 +2,15 @@ variable "name_stem" {
   type = string
 }
 
-variable "handler" {
-  type = string
-  default = "index.handler"
+variable "db" {
+  type = object({
+    name = string
+    arn = string
+  })
 }
 
-variable "metadata_partition_prefix" {
-  type = string
+  variable "metadata_partition_prefix" {
+    type = string
   default = ""
 }
 
@@ -18,14 +20,6 @@ variable "lambda_code_bucket" {
 
 variable "lambda_code_key" {
   type = string
-}
-
-variable "timeout_secs" {
-  type = number
-}
-
-variable "mem_mb" {
-  type = number
 }
 
 variable "partition_prefix" {
@@ -73,6 +67,16 @@ variable "statements" {
     resources = list(string)
   }))
   default = []
+}
+
+variable "timeout_secs" {
+  type = number
+  default = 40
+}
+
+variable "mem_mb" {
+  type = number
+  default = 256
 }
 
 variable "partition_keys" {

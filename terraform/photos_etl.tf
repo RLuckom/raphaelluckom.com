@@ -1,10 +1,15 @@
+resource "aws_glue_catalog_database" "time_series_db" {
+  name = "rluckom_photos_timeseries"
+}
 module "photos_etl" {
   source = "./modules/s3_glue_lambda_etl"
   name_stem = "rluckom_photos"
+  db = {
+    name = aws_glue_catalog_database.time_series_db.name
+    arn = aws_glue_catalog_database.time_series_db.arn
+  }
   lambda_code_bucket = aws_s3_bucket.lambda_bucket.id
   lambda_code_key = "rluckom.photos/lambda.zip"
-  timeout_secs = 40
-  mem_mb = 256
   athena_region = var.athena_region
   ser_de_info = {
     name                  = "photos-json-serde"
@@ -15,17 +20,7 @@ module "photos_etl" {
     }
   }
 
-  statements = [
-    {
-      actions: [
-        "rekognition:DetectLabels",
-        "rekognition:DetectFaces",
-        "rekognition:DetectText"
-      ]
-      resources = ["*"]
-    }
-  ]
-
+  statements = concat(var.athena_query_policy, var.allow_rekognition_policy)
 
   columns = [
     {

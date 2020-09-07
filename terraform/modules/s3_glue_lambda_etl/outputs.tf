@@ -1,24 +1,12 @@
 output "input_bucket" {
-  value = {
-    arn = aws_s3_bucket.input_bucket.arn
-    id = aws_s3_bucket.input_bucket.id
-  }
+  value = aws_s3_bucket.input_bucket
 }
 output "athena_result_bucket" {
-  value = {
-    arn = aws_s3_bucket.athena_result_bucket.arn
-    id = aws_s3_bucket.athena_result_bucket.id
-  }
+  value = aws_s3_bucket.athena_result_bucket
 }
 output "partition_bucket" {
-  value = {
-    arn = aws_s3_bucket.partition_bucket.arn
-    id = aws_s3_bucket.partition_bucket.id
-  }
+  value = aws_s3_bucket.partition_bucket
 }
 output "metadata_bucket" {
-  value = {
-    arn = aws_s3_bucket.metadata_bucket.arn
-    id = aws_s3_bucket.metadata_bucket.id
-  }
+  value = module.cloudformation_logs_glue_table.metadata_bucket.id
 }

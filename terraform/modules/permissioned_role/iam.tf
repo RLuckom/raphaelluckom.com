@@ -33,7 +33,7 @@ resource "aws_iam_role" "role" {
   assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
 }
 
-resource "aws_iam_role_policy_attachment" "test-attach" {
+resource "aws_iam_role_policy_attachment" "attach-policy-to-role" {
   role       = aws_iam_role.role.name
   policy_arn = aws_iam_policy.role_policy.arn
 }

@@ -17,6 +17,89 @@ module "websocket_api_cert" {
 module "websocket_api_gateway_gateway" {
   source = "./modules/websocket_api_gateway"
   name_stem = "websocket_api"
+  redeploy_sha = sha1(join(",", list(
+module.websocket_api_conect_route.sha,
+module.websocket_api_connect_rout.sha,
+module.websocket_api_connect_route.sha
+                          )))
+}
+
+module "websocket_api_connect_lambda_role" {
+  source = "./modules/permissioned_role"
+  role_name = "websocket_api_connect"
+  role_policy = [{
+    actions   =  [
+      "dynamodb:PutItem",
+    ]
+    resources = [module.websocket_connections_table.table.arn]
+  }]
+  principals = [{
+    type = "Service"
+    identifiers = ["lambda.amazonaws.com"]
+  }]
+}
+
+module "websocket_api_disconnect_role" {
+  source = "./modules/permissioned_role"
+  role_name = "websocket_api_disconnect"
+  role_policy = [{
+    actions   =  [
+      "dynamodb:DeleteItem",
+    ]
+    resources = [module.websocket_connections_table.table.arn]
+  }]
+  principals = [{
+    type = "Service"
+    identifiers = ["lambda.amazonaws.com"]
+  }]
+}
+
+module "websocket_api_connect_route" {
+  source = "./modules/websocket_api_service_integration"
+  route_key = "$default"
+  lambda_name = "websocket-api-connect"
+  api_id = module.websocket_api_gateway_gateway.websocket_api.id
+  invoking_principal = {
+    arn = module.websocket_api_gateway_gateway.websocket_api.arn
+    service = "apigateway.amazonaws.com"
+  }
+  lambda_role_arn = module.websocket_api_connect_lambda_role.role.arn
+  timeout_secs = 1
+  mem_mb = 256
+  lambda_code_bucket = aws_s3_bucket.lambda_bucket.id
+  lambda_code_key = "event.logger/lambda.zip"
+}
+
+module "websocket_api_connect_rout" {
+  source = "./modules/websocket_api_service_integration"
+  route_key = "$connect"
+  lambda_name = "websocet-api-connect"
+  api_id = module.websocket_api_gateway_gateway.websocket_api.id
+  invoking_principal = {
+    arn = module.websocket_api_gateway_gateway.websocket_api.arn
+    service = "apigateway.amazonaws.com"
+  }
+  lambda_role_arn = module.websocket_api_connect_lambda_role.role.arn
+  timeout_secs = 1
+  mem_mb = 256
+  lambda_code_bucket = aws_s3_bucket.lambda_bucket.id
+  lambda_code_key = "event.logger/lambda.zip"
+}
+
+module "websocket_api_conect_route" {
+  source = "./modules/websocket_api_service_integration"
+  route_key = "$disconnect"
+  lambda_name = "websocket-pi-connect"
+  api_id = module.websocket_api_gateway_gateway.websocket_api.id
+  invoking_principal = {
+    arn = module.websocket_api_gateway_gateway.websocket_api.arn
+    service = "apigateway.amazonaws.com"
+  }
+  lambda_role_arn = module.websocket_api_connect_lambda_role.role.arn
+  timeout_secs = 1
+  mem_mb = 256
+  lambda_code_bucket = aws_s3_bucket.lambda_bucket.id
+  lambda_code_key = "event.logger/lambda.zip"
 }
 
 data "aws_route53_zone" "selected" {

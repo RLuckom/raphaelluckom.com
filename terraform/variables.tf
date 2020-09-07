@@ -33,14 +33,14 @@ variable "partition_prefix" {
   default = "partitioned"
 }
 
-variable athena_region {
+variable "cloudwatch_partition_prefix" {
   type = string
-  default = "us-east-1"
+  default = "partitioned/cloudwatch"
 }
 
-variable "rotation_period_expression" {
+variable "athena_region" {
   type = string
-	default = "rate(45 minutes)"
+  default = "us-east-1"
 }
 
 variable "time_series_db_name" {
@@ -61,4 +61,52 @@ variable "athena_bucket_name" {
 variable "lambda_bucket_name" {
   type = string
   default = "rluckom.lambda"
+}
+
+variable "athena_query_policy" {
+  type = list(object({
+    actions = list(string)
+    resources = list(string)
+  }))
+  default = [{
+		actions   =  [
+			"athena:StartQueryExecution",
+			"athena:GetQueryResults",
+			"athena:GetQueryExecution"
+		]
+		resources = [
+			"arn:aws:athena:*"
+		]
+	}]
+}
+
+variable "cloudwatch_log_read_policy" {
+  type = list(object({
+    actions = list(string)
+    resources = list(string)
+  }))
+  default = [{
+		actions   =  [
+      "logs:DescribeLogGroups"
+		]
+		resources = [
+			"arn:aws:logs:*"
+		]
+	}]
+}
+
+variable "allow_rekognition_policy" {
+  type = list(object({
+    actions = list(string)
+    resources = list(string)
+  }))
+  default = [{
+      actions = [
+        "rekognition:DetectLabels",
+        "rekognition:DetectFaces",
+        "rekognition:DetectText"
+      ]
+      resources = ["*"]
+    }
+  ]
 }

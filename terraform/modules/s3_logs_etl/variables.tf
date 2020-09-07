@@ -31,6 +31,13 @@ variable "time_series_table_name" {
   default = ""
 }
 
+variable "time_series_db" {
+  type = object({
+    name = string
+    arn = string
+  })
+}
+
 variable "lambda_code_key" {
   type = string
 }
@@ -88,11 +95,6 @@ variable "athena_result_bucket_arn" {
 }
 
 variable "partition_bucket" {
-  type = string
-  default = ""
-}
-
-variable "time_series_db_name" {
   type = string
   default = ""
 }
