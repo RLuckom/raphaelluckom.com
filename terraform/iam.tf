@@ -86,7 +86,7 @@ resource "aws_iam_user_policy_attachment" "phone_policy_attachment" {
 
 module "apigateway_service_role" {
   source = "./modules/permissioned_role"
-  role_name = "api_gateway_cloudwatch_global"
+  role_name = "api_gateway_cloudwatch_global_n"
   role_policy = [{
     actions   =  [
       "logs:CreateLogGroup",

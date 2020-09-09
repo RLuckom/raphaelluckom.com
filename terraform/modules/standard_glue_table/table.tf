@@ -1,12 +1,17 @@
-resource "aws_glue_catalog_table" "cloudformation_logs_glue_table" {
-  name          = var.time_series_table_name == "" ? "${var.name_stem}_partitioned_gz" : var.time_series_table_name
-  database_name = var.time_series_db.name
+resource "aws_s3_bucket" "metadata_bucket" {
+  count = var.external_storage_bucket_id == "" ? 1 : 0
+  bucket = var.metadata_bucket_name == "" ? "${var.table_name}.metadata" : var.metadata_bucket_name
+}
+
+resource "aws_glue_catalog_table" "table" {
+  name          = var.table_name
+  database_name = var.db_name
 
   table_type = "EXTERNAL_TABLE"
 
   parameters = {
-    EXTERNAL              = "TRUE"
-    "skip.header.line.count"=var.skip_header_line_count
+    EXTERNAL                 = "TRUE"
+    "skip.header.line.count" = var.skip_header_line_count
   }
 
 	dynamic "partition_keys" {
@@ -18,10 +23,11 @@ resource "aws_glue_catalog_table" "cloudformation_logs_glue_table" {
 	}
 
   storage_descriptor {
+    stored_as_sub_directories = var.stored_as_sub_directories
     input_format = "org.apache.hadoop.mapred.TextInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
-    location = "s3://${var.partition_bucket == "" ? aws_s3_bucket.partition_bucket[0].id : var.partition_bucket}/${var.partition_prefix}"
-    compressed = true
+    location = "s3://${var.external_storage_bucket_id == "" ? aws_s3_bucket.metadata_bucket[0].id : var.external_storage_bucket_id}/${var.partition_prefix}${var.partition_prefix == "" ? "" : "/"}"
+    compressed = var.compressed
 
     ser_de_info  {
      name =  var.ser_de_info.name
@@ -36,6 +42,5 @@ resource "aws_glue_catalog_table" "cloudformation_logs_glue_table" {
         type = columns.value["type"]
       }
     }
-
   }
 }

@@ -1,44 +1,38 @@
-variable "name_stem" {
+variable "table_name" {
   type = string
 }
 
-variable "db" {
-  type = object({
-    name = string
-    arn = string
-  })
-}
-
-  variable "metadata_partition_prefix" {
-    type = string
-  default = ""
-}
-
-variable "lambda_code_bucket" {
-  type = string
-}
-
-variable "lambda_code_key" {
-  type = string
-}
-
-variable "partition_prefix" {
+variable "external_storage_bucket_id" {
   type = string
   default = ""
 }
 
-variable "athena_region" {
-  type = string
-}
-
-variable "input_prefix" {
+variable "external_storage_bucket_arn" {
   type = string
   default = ""
 }
 
-variable "input_suffix" {
+variable "db_name" {
+  type = string
+}
+
+variable "metadata_bucket_name" {
   type = string
   default = ""
+}
+
+variable "metadata_bucket_arn" {
+  type = string
+  default = ""
+}
+
+variable "stored_as_sub_directories" {
+  default = false
+}
+
+variable "compressed" {
+  type = bool
+  default = true
 }
 
 variable "skip_header_line_count" {
@@ -59,24 +53,6 @@ variable "columns" {
     name = string
     type = string
   }))
-}
-
-variable "statements" {
-  type = list(object({
-    actions = list(string)
-    resources = list(string)
-  }))
-  default = []
-}
-
-variable "timeout_secs" {
-  type = number
-  default = 40
-}
-
-variable "mem_mb" {
-  type = number
-  default = 256
 }
 
 variable "partition_keys" {
@@ -106,4 +82,9 @@ variable "partition_keys" {
     type = "string"
   }
   ]
+}
+
+variable "partition_prefix" {
+  type = string
+  default = ""
 }
