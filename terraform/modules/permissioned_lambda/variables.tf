@@ -56,6 +56,11 @@ variable "log_retention_period" {
   default = 14
 }
 
+variable "reserved_concurrent_executions" {
+  type = number
+  default = -1
+}
+
 variable "environment_var_map" {
   type = map(string)
   default = {}

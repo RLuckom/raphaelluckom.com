@@ -17,5 +17,3 @@ variable "principals" {
   }))
   default = []
 }
-
-

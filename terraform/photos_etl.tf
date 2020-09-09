@@ -11,14 +11,7 @@ module "photos_etl" {
   lambda_code_bucket = aws_s3_bucket.lambda_bucket.id
   lambda_code_key = "rluckom.photos/lambda.zip"
   athena_region = var.athena_region
-  ser_de_info = {
-    name                  = "photos-json-serde"
-    serialization_library = "org.openx.data.jsonserde.JsonSerDe"
-    parameters = {
-      "explicit.null"="true"
-      "ignore.malformed.json"="true"
-    }
-  }
+  ser_de_info = var.json_ser_de
 
   statements = concat(var.athena_query_policy, var.allow_rekognition_policy)
 

@@ -5,3 +5,11 @@ resource "aws_s3_bucket" "lambda_bucket" {
     Name        = "lambda"
   }
 }
+
+resource "aws_s3_bucket" "scratch_bucket" {
+  bucket = var.scratch_bucket_name
+
+  tags = {
+    Name        = "scratch"
+  }
+}

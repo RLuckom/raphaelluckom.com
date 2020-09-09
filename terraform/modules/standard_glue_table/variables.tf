@@ -2,12 +2,32 @@ variable "table_name" {
   type = string
 }
 
+variable "external_storage_bucket_id" {
+  type = string
+  default = ""
+}
+
+variable "external_storage_bucket_arn" {
+  type = string
+  default = ""
+}
+
 variable "db_name" {
   type = string
 }
 
 variable "metadata_bucket_name" {
   type = string
+  default = ""
+}
+
+variable "metadata_bucket_arn" {
+  type = string
+  default = ""
+}
+
+variable "stored_as_sub_directories" {
+  default = false
 }
 
 variable "compressed" {
@@ -62,4 +82,9 @@ variable "partition_keys" {
     type = "string"
   }
   ]
+}
+
+variable "partition_prefix" {
+  type = string
+  default = ""
 }

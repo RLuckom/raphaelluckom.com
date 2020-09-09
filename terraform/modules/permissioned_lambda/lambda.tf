@@ -15,6 +15,7 @@ resource "aws_lambda_function" "lambda" {
   role          = module.lambda_role.role.arn
   handler       = var.handler
 	timeout = var.timeout_secs
+  reserved_concurrent_executions = var.reserved_concurrent_executions
 	memory_size = var.mem_mb
 
   runtime = "nodejs12.x"
