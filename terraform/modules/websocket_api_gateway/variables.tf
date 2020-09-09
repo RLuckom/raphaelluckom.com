@@ -15,3 +15,8 @@ variable "apigateway_stage_name" {
   type = string
   default = "prod"
 }
+
+variable "log_retention_period" {
+  type = number
+  default = 7
+}

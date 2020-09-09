@@ -53,7 +53,7 @@ variable "mem_mb" {
 
 variable "log_retention_period" {
   type = number
-  default = 14
+  default = 7
 }
 
 variable "reserved_concurrent_executions" {
