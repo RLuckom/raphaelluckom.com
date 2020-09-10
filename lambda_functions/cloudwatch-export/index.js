@@ -28,6 +28,10 @@ function dependencies({logGroupName, destinationBucket, destinationKey, year, mo
         apiConfig: {value: apiConfig},
       },
       behaviors: {
+        retryParams: {
+          times: 60,
+          interval: 10000,
+        },
         detectErrors: (err, res) => {
           console.log(err)
           console.log(res)
