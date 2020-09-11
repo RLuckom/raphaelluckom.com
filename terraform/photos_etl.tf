@@ -20,10 +20,10 @@ module "photos_lambda" {
     INPUT_BUCKET = aws_s3_bucket.photos_input.id
     PARTITION_BUCKET = aws_s3_bucket.photos_partition.id
     PARTITION_PREFIX = var.partition_prefix
-    METADATA_PARTITION_BUCKET = module.cloudformation_logs_glue_table.metadata_bucket.id,
+    METADATA_PARTITION_BUCKET = module.photos_metadata_glue_table.metadata_bucket.id,
     ATHENA_RESULT_BUCKET = aws_s3_bucket.photos_athena_result.id
-    ATHENA_TABLE = module.cloudformation_logs_glue_table.table.name 
-    ATHENA_DB = module.cloudformation_logs_glue_table.table.database_name
+    ATHENA_TABLE = module.photos_metadata_glue_table.table.name 
+    ATHENA_DB = module.photos_metadata_glue_table.table.database_name
     ATHENA_REGION = var.athena_region
   }
   lambda_details = {
@@ -63,7 +63,7 @@ module "photos_lambda" {
       ]
       resources = [
         aws_glue_catalog_database.time_series_db.arn,
-        module.cloudformation_logs_glue_table.table.arn,
+        module.photos_metadata_glue_table.table.arn,
         "arn:aws:glue:us-east-1:${data.aws_caller_identity.current.account_id}:catalog",
         "arn:aws:glue:us-east-1:${data.aws_caller_identity.current.account_id}:catalog*"
       ]
@@ -73,7 +73,7 @@ module "photos_lambda" {
         "s3:PutObject"
       ]
       resources = [
-        "${module.cloudformation_logs_glue_table.metadata_bucket.arn}/*",
+        "${module.photos_metadata_glue_table.metadata_bucket.arn}/*",
         "${aws_s3_bucket.photos_partition.arn}/*",
         "${aws_s3_bucket.photos_athena_result.arn}/*"
       ]
@@ -94,7 +94,7 @@ module "photo_analysis_complete" {
   maxReceiveCount = 3
 }
 
-module "cloudformation_logs_glue_table" {
+module "photos_metadata_glue_table" {
   source = "./modules/standard_glue_table"
   table_name          = "rluckom_photos_partitioned_gz"
   metadata_bucket_name = "rluckom.photos.metadata"

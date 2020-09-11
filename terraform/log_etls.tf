@@ -16,28 +16,101 @@ resource "aws_glue_catalog_database" "time_series_database" {
   name = var.time_series_db_name
 }
 
-module "site_logs_etl" {
-  source = "./modules/s3_logs_etl"
-  name_stem = "log-rotation-${var.domain_name_prefix}"
-  time_series_db = {
-    name = aws_glue_catalog_database.time_series_database.name
-    arn = aws_glue_catalog_database.time_series_database.arn
-  }
-  time_series_table_name          = "${var.domain_name_prefix}_cf_logs_partitioned_gz"
-  lambda_code_bucket = aws_s3_bucket.lambda_bucket.id
-  lambda_code_key = "log-rotator/log-rotator.zip"
+module "log_etl_lambda" {
+  source = "./modules/permissioned_lambda"
   timeout_secs = 40
   mem_mb = 256
-  input_bucket = module.static_site.logging_bucket_id
-  input_bucket_arn = module.static_site.logging_bucket_arn
-  partition_bucket = aws_s3_bucket.partition_bucket.id
-  partition_bucket_arn = aws_s3_bucket.partition_bucket.arn
-  metadata_bucket_arn = aws_s3_bucket.partition_bucket.arn
-  metadata_bucket = aws_s3_bucket.partition_bucket.id
-  partition_prefix = "${var.partition_prefix}/${var.domain_name}"
-  athena_region = var.athena_region
-  athena_result_bucket = aws_s3_bucket.athena_bucket.id
-  athena_result_bucket_arn = aws_s3_bucket.athena_bucket.arn
+  environment_var_map = {
+    INPUT_BUCKET = module.static_site.logging_bucket_id
+    INPUT_PREFIX = ""
+    PARTITION_BUCKET = aws_s3_bucket.partition_bucket.id
+    PARTITION_PREFIX = "partitioned/raphaelluckom.com"
+    METADATA_PARTITION_BUCKET = ""
+    METADATA_PARTITION_PREFIX = ""
+    ATHENA_RESULT_BUCKET = "s3://${aws_s3_bucket.athena_bucket.id}"
+    ATHENA_TABLE = module.cloudformation_logs_glue_table.table.name 
+    ATHENA_DB = module.cloudformation_logs_glue_table.table.database_name
+    ATHENA_REGION = var.athena_region
+  }
+  lambda_details = {
+    name = "log-rotation-${var.domain_name_prefix}"
+    bucket = aws_s3_bucket.lambda_bucket.id
+    key = "log-rotator/log-rotator.zip"
+    policy_statements =  [{
+		actions   =  [
+			"s3:GetObject",
+			"s3:DeleteObject",
+			"s3:ListBucket"
+		]
+		resources = [
+			module.static_site.logging_bucket_arn,
+			"${module.static_site.logging_bucket_arn}/*"
+		]
+	}
+	,{
+		actions   =  [
+			"s3:GetObject",
+			"s3:ListMultipartUploadParts",
+			"s3:PutObject",
+			"s3:GetBucketLocation",
+			"s3:ListBucket"
+		]
+		resources = [
+			aws_s3_bucket.athena_bucket.arn,
+			"${aws_s3_bucket.athena_bucket.arn}/*"
+		]
+	}
+
+	,{
+		actions   =  [
+			"glue:CreatePartition",
+			"glue:GetTable",
+			"glue:GetDatabase",
+			"glue:BatchCreatePartition"
+		]
+		resources = [
+			aws_glue_catalog_database.time_series_database.arn,
+			"${module.cloudformation_logs_glue_table.table.arn}",
+			"arn:aws:glue:us-east-1:${data.aws_caller_identity.current.account_id}:catalog",
+			"arn:aws:glue:us-east-1:${data.aws_caller_identity.current.account_id}:catalog*"
+		]
+	}
+	,{
+		actions   =  [
+			"athena:StartQueryExecution",
+			"athena:GetQueryResults",
+			"athena:GetQueryExecution"
+		]
+		resources = [
+			"arn:aws:athena:*"
+		]
+	}
+	,{
+		actions   =  [
+			"s3:PutObject"
+		]
+		resources = [
+			"${aws_s3_bucket.partition_bucket.arn}/*",
+			"${aws_s3_bucket.athena_bucket.arn}/*"
+		]
+	}]
+  }
+
+  bucket_notifications = [{
+    bucket = module.static_site.logging_bucket_id
+    events              = ["s3:ObjectCreated:*"]
+    filter_prefix       = ""
+    filter_suffix       = ""
+  }]
+}
+
+module "cloudformation_logs_glue_table" {
+  source = "./modules/standard_glue_table"
+  table_name          = "${var.domain_name_prefix}_cf_logs_partitioned_gz"
+  metadata_bucket_name = aws_s3_bucket.partition_bucket.id
+  external_storage_bucket_id = aws_s3_bucket.partition_bucket.id
+  partition_prefix = "partitioned/raphaelluckom.com"
+  db_name = aws_glue_catalog_database.time_series_database.name
   skip_header_line_count = 2
   ser_de_info = {
     name                  = "${var.domain_name_prefix}_cf_logs"
@@ -47,7 +120,6 @@ module "site_logs_etl" {
       "serialization.format"="\t"
     }
   }
-
   columns = [
     {
       name = "date"
