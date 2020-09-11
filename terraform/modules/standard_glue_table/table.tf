@@ -5,7 +5,7 @@ resource "aws_s3_bucket" "metadata_bucket" {
 
 resource "aws_glue_catalog_table" "table" {
   name          = var.table_name
-  database_name = var.db_name
+  database_name = var.db.name
 
   table_type = "EXTERNAL_TABLE"
 

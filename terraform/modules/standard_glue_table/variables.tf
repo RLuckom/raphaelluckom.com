@@ -12,8 +12,11 @@ variable "external_storage_bucket_arn" {
   default = ""
 }
 
-variable "db_name" {
-  type = string
+variable "db" {
+  type = object({
+    name = string
+    arn = string
+  })
 }
 
 variable "metadata_bucket_name" {

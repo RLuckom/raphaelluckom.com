@@ -1,8 +1,6 @@
-resource "aws_s3_bucket" "athena_bucket" {
+module "logs_athena_bucket" {
+  source = "./modules/permissioned_bucket"
   bucket = var.athena_bucket_name
-  tags = {
-    Name        = "athena"
-  }
 }
 
 resource "aws_s3_bucket" "partition_bucket" {
@@ -27,7 +25,7 @@ module "log_etl_lambda" {
     PARTITION_PREFIX = "partitioned/raphaelluckom.com"
     METADATA_PARTITION_BUCKET = ""
     METADATA_PARTITION_PREFIX = ""
-    ATHENA_RESULT_BUCKET = "s3://${aws_s3_bucket.athena_bucket.id}"
+    ATHENA_RESULT_BUCKET = "s3://${module.logs_athena_bucket.bucket.id}"
     ATHENA_TABLE = module.cloudformation_logs_glue_table.table.name 
     ATHENA_DB = module.cloudformation_logs_glue_table.table.database_name
     ATHENA_REGION = var.athena_region
@@ -36,7 +34,11 @@ module "log_etl_lambda" {
     name = "log-rotation-${var.domain_name_prefix}"
     bucket = aws_s3_bucket.lambda_bucket.id
     key = "log-rotator/log-rotator.zip"
-    policy_statements =  [{
+    policy_statements =  concat(
+      var.athena_query_policy,
+			module.cloudformation_logs_glue_table.permission_sets.create_partition_glue_permissions,
+      module.logs_athena_bucket.permission_sets.athena_query_execution,
+      [{
 		actions   =  [
 			"s3:GetObject",
 			"s3:DeleteObject",
@@ -49,51 +51,12 @@ module "log_etl_lambda" {
 	}
 	,{
 		actions   =  [
-			"s3:GetObject",
-			"s3:ListMultipartUploadParts",
-			"s3:PutObject",
-			"s3:GetBucketLocation",
-			"s3:ListBucket"
-		]
-		resources = [
-			aws_s3_bucket.athena_bucket.arn,
-			"${aws_s3_bucket.athena_bucket.arn}/*"
-		]
-	}
-
-	,{
-		actions   =  [
-			"glue:CreatePartition",
-			"glue:GetTable",
-			"glue:GetDatabase",
-			"glue:BatchCreatePartition"
-		]
-		resources = [
-			aws_glue_catalog_database.time_series_database.arn,
-			"${module.cloudformation_logs_glue_table.table.arn}",
-			"arn:aws:glue:us-east-1:${data.aws_caller_identity.current.account_id}:catalog",
-			"arn:aws:glue:us-east-1:${data.aws_caller_identity.current.account_id}:catalog*"
-		]
-	}
-	,{
-		actions   =  [
-			"athena:StartQueryExecution",
-			"athena:GetQueryResults",
-			"athena:GetQueryExecution"
-		]
-		resources = [
-			"arn:aws:athena:*"
-		]
-	}
-	,{
-		actions   =  [
 			"s3:PutObject"
 		]
 		resources = [
 			"${aws_s3_bucket.partition_bucket.arn}/*",
-			"${aws_s3_bucket.athena_bucket.arn}/*"
 		]
-	}]
+	}])
   }
 
   bucket_notifications = [{
@@ -110,7 +73,10 @@ module "cloudformation_logs_glue_table" {
   metadata_bucket_name = aws_s3_bucket.partition_bucket.id
   external_storage_bucket_id = aws_s3_bucket.partition_bucket.id
   partition_prefix = "partitioned/raphaelluckom.com"
-  db_name = aws_glue_catalog_database.time_series_database.name
+  db = {
+    name = aws_glue_catalog_database.time_series_database.name
+    arn = aws_glue_catalog_database.time_series_database.arn
+  }
   skip_header_line_count = 2
   ser_de_info = {
     name                  = "${var.domain_name_prefix}_cf_logs"
@@ -120,140 +86,7 @@ module "cloudformation_logs_glue_table" {
       "serialization.format"="\t"
     }
   }
-  columns = [
-    {
-      name = "date"
-      type = "date"
-    },
-    {
-      name = "time"
-      type = "string"
-    },
-    {
-      name = "location"
-      type = "string"
-    },
-    {
-      name = "bytes"
-      type = "bigint"
-    },
-    {
-      name = "requestip"
-      type = "string"
-    },
-    {
-      name = "method"
-      type = "string"
-    },
-    {
-      name = "host"
-      type = "string"
-    },
-    {
-      name = "uri"
-      type = "string"
-    },
-    {
-      name = "status"
-      type = "int"
-    },
-    {
-      name = "referrer"
-      type = "string"
-    },
-    {
-      name = "useragent"
-      type = "string"
-    },
-    {
-      name = "querystring"
-      type = "string"
-    },
-    {
-      name = "cookie"
-      type = "string"
-    },
-    {
-      name = "resulttype"
-      type = "string"
-    },
-    {
-      name = "requestid"
-      type = "string"
-    },
-    {
-      name = "hostheader"
-      type = "string"
-    },
-    {
-      name = "requestprotocol"
-      type = "string"
-    },
-    {
-      name = "requestbytes"
-      type = "bigint"
-    },
-    {
-      name = "timetaken"
-      type = "float"
-    },
-    {
-      name = "xforwardedfor"
-      type = "string"
-    },
-    {
-      name = "sslprotocol"
-      type = "string"
-    },
-    {
-      name = "sslcipher"
-      type = "string"
-    },
-    {
-      name = "responseresulttype"
-      type = "string"
-    },
-    {
-      name = "httpversion"
-      type = "string"
-    },
-    {
-      name = "filestatus"
-      type = "string"
-    },
-    {
-      name = "encryptedfields"
-      type = "int"
-    },
-    {
-      name = "port"
-      type = "int"
-    },
-    {
-      name = "ttfb"
-      type = "float"
-    },
-    {
-      name = "detailedresulttype"
-      type = "string"
-    },
-    {
-      name = "contenttype"
-      type = "string"
-    },
-    {
-      name = "contentlength"
-      type = "bigint"
-    },
-    {
-      name = "rangestart"
-      type = "bigint"
-    },
-    {
-      name = "rangeend"
-      type = "bigint"
-    }
-  ]
+  columns = local.cloudfront_access_log_schema.columns
 }
 
 module "log_export_notification_lambda" {
@@ -267,49 +100,22 @@ module "log_export_notification_lambda" {
     "PARTITION_PREFIX" = var.cloudwatch_partition_prefix
     "ATHENA_DB" = aws_glue_catalog_database.time_series_database.name
     "ATHENA_TABLE" = var.cloudwatch_logs_table_name
-    ATHENA_RESULT_BUCKET = "s3://${aws_s3_bucket.athena_bucket.id}/"
+    ATHENA_RESULT_BUCKET = "s3://${module.logs_athena_bucket.bucket.id}/"
     "QUEUE_URL" = module.pending_cloudwatch_exports.queue.id
   }
   lambda_details = {
   name = "log_export_notification"
   bucket = aws_s3_bucket.lambda_bucket.id
   key = "log_export_notification/lambda.zip"
-  policy_statements = concat(var.cloudwatch_log_read_policy, var.athena_query_policy,
+  policy_statements = concat(
+    var.cloudwatch_log_read_policy, 
+    var.athena_query_policy,
+    module.cloudwatch_logs_glue_table.permission_sets.create_partition_glue_permissions,
+    module.logs_athena_bucket.permission_sets.athena_query_execution,
   [
     {
       actions = ["sqs:sendMessage"]
       resources = [module.pending_cloudwatch_exports.queue.arn]
-    },
-    {
-      actions = ["s3:GetBucketAcl"]
-      resources = [aws_s3_bucket.athena_bucket.arn]
-    },
-    {
-      actions   =  [
-        "s3:GetObject",
-        "s3:ListMultipartUploadParts",
-        "s3:PutObject",
-        "s3:GetBucketLocation",
-        "s3:ListBucket"
-      ]
-      resources = [
-        aws_s3_bucket.athena_bucket.arn,
-        "${aws_s3_bucket.athena_bucket.arn}/*"
-      ]
-    },
-    {
-      actions   =  [
-        "glue:CreatePartition",
-        "glue:GetTable",
-        "glue:GetDatabase",
-        "glue:BatchCreatePartition"
-      ]
-      resources = [
-        aws_glue_catalog_database.time_series_database.arn,
-        module.cloudwatch_logs_glue_table.table.arn,
-        "arn:aws:glue:us-east-1:${data.aws_caller_identity.current.account_id}:catalog",
-        "arn:aws:glue:us-east-1:${data.aws_caller_identity.current.account_id}:catalog*"
-      ]
     }
   ])
 }
@@ -387,7 +193,10 @@ module "log_export_queue_consumer" {
 module "cloudwatch_logs_glue_table" {
   source = "./modules/standard_glue_table"
   table_name          = var.cloudwatch_logs_table_name
-  db_name = aws_glue_catalog_database.time_series_database.name
+  db = {
+    name = aws_glue_catalog_database.time_series_database.name
+    arn = aws_glue_catalog_database.time_series_database.arn
+  }
   stored_as_sub_directories = true
   external_storage_bucket_id = aws_s3_bucket.partition_bucket.id
   partition_prefix = "partitioned/cloudwatch"
@@ -398,37 +207,7 @@ module "cloudwatch_logs_glue_table" {
       "input.format"="%%{TIMESTAMP_ISO8601:ingestTime} %%{GREEDYDATA:syslogMessage}"
     }
   }
-  partition_keys = [
-  {
-    name = "year"
-    type = "string"
-  },
-  {
-    name = "month"
-    type = "string"
-  },
-  {
-    name = "day"
-    type = "string"
-  },
-  {
-    name = "service"
-    type = "string"
-  },
-  {
-    name = "sourcename"
-    type = "string"
-  }
-  ]
+  partition_keys = local.generic_cloudwatch_logs_schema.partition_keys
 
-  columns = [
-    {
-      name = "ingesttime"
-      type = "string"
-    },
-    {
-      name = "logmessage"
-      type = "string"
-    }
-    ]
+  columns = local.generic_cloudwatch_logs_schema.columns
 }
