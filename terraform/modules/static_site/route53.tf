@@ -4,12 +4,12 @@ data "aws_route53_zone" "selected" {
 }
 
 resource "aws_route53_record" "cert_validation" {
-  for_each = {for opt in aws_acm_certificate.cert.domain_validation_options: opt.resource_record_name => opt}
-  name = each.value.resource_record_name
-  type = each.value.resource_record_type
-  zone_id = data.aws_route53_zone.selected.id
-  records = [each.value.resource_record_value]
-  ttl = 60
+  count = length(var.subject_alternative_names) + 1
+  name            = aws_acm_certificate.cert.domain_validation_options.*.resource_record_name[count.index]
+  records         = [aws_acm_certificate.cert.domain_validation_options.*.resource_record_value[count.index]]
+  type            = aws_acm_certificate.cert.domain_validation_options.*.resource_record_type[count.index]
+  zone_id         = data.aws_route53_zone.selected.zone_id
+  ttl             = 60
 }
 
 resource "aws_route53_record" "www_site_cname" {

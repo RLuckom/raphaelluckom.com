@@ -7,11 +7,40 @@ variable "lambda_details" {
       actions = list(string)
       resources = list(string)
     }))
-    invoking_principal = object({
-      service = string
-      source_arn = string
-    })
   })
+}
+
+variable "invoking_principals" {
+  type = list(object({
+    service = string
+    source_arn = string
+  }))
+  default = []
+}
+
+variable "bucket_notifications" {
+  type = list(object({
+    bucket = string
+    events = list(string)
+    filter_prefix = string
+    filter_suffix = string
+  }))
+  default = []
+}
+
+variable "cron_notifications" {
+  type = list(object({
+    period_expression = string
+  }))
+  default = []
+}
+
+variable "queue_event_sources" {
+  type = list(object({
+    arn = string
+    batch_size = number
+  }))
+  default = []
 }
 
 variable "deny_cloudwatch" {

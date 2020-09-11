@@ -46,6 +46,7 @@ data "aws_iam_policy_document" "phone_policy" {
     resources = [
       module.photos_etl.input_bucket.arn,
       "${module.photos_etl.input_bucket.arn}/*",
+      "${aws_s3_bucket.post_input_bucket.arn}/*",
       "arn:aws:s3:::rluckom-photo-archive",
       "arn:aws:s3:::rluckom-photo-archive/*"
     ]

@@ -17,7 +17,7 @@ module "permissioned_lambda" {
     ATHENA_REGION = var.athena_region
   }
   lambda_details = {
-    name = "${var.name_stem}-lambda"
+    name = "${var.name_stem}"
     bucket = var.lambda_code_bucket
     key = var.lambda_code_key
     policy_statements = concat(var.statements, [{
@@ -68,11 +68,14 @@ module "permissioned_lambda" {
         "${aws_s3_bucket.athena_result_bucket.arn}/*"
       ]
     }])
-    invoking_principal = {
-      service     = "s3.amazonaws.com"
-      source_arn    = aws_s3_bucket.input_bucket.arn
-    }
   }
+
+  bucket_notifications = [{
+    bucket = aws_s3_bucket.input_bucket.id
+    events              = ["s3:ObjectCreated:*"]
+    filter_prefix       = var.input_prefix
+    filter_suffix       = var.input_suffix
+  }]
 }
 
 resource "aws_s3_bucket" "input_bucket" {
@@ -85,15 +88,4 @@ resource "aws_s3_bucket" "athena_result_bucket" {
 
 resource "aws_s3_bucket" "partition_bucket" {
   bucket = "${replace(var.name_stem, "_", ".")}.partition"
-}
-
-resource "aws_s3_bucket_notification" "bucket_notification" {
-  bucket = aws_s3_bucket.input_bucket.id
-
-  lambda_function {
-    lambda_function_arn = module.permissioned_lambda.lambda.arn
-    events              = ["s3:ObjectCreated:*"]
-    filter_prefix       = var.input_prefix
-    filter_suffix       = var.input_suffix
-  }
 }

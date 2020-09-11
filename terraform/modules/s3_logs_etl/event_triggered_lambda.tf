@@ -16,7 +16,7 @@ module "permissioned_lambda" {
     ATHENA_REGION = var.athena_region
   }
   lambda_details = {
-    name = "${var.name_stem}-lambda"
+    name = "${var.name_stem}"
     bucket = var.lambda_code_bucket
     key = var.lambda_code_key
     policy_statements = concat(var.statements, [{
@@ -78,11 +78,14 @@ module "permissioned_lambda" {
 			"${var.athena_result_bucket_arn == "" ?  aws_s3_bucket.athena_result_bucket[0].arn : var.athena_result_bucket_arn}/*"
 		]
 	}])
-    invoking_principal = {
-      service     = "s3.amazonaws.com"
-      source_arn    = var.input_bucket_arn == "" ?  aws_s3_bucket.input_bucket[0].arn : var.input_bucket_arn
-    }
   }
+
+  bucket_notifications = [{
+    bucket = var.input_bucket == "" ? aws_s3_bucket.input_bucket[0].id : var.input_bucket
+    events              = ["s3:ObjectCreated:*"]
+    filter_prefix       = var.input_prefix
+    filter_suffix       = var.input_suffix
+  }]
 }
 
 resource "aws_s3_bucket" "input_bucket" {
@@ -103,16 +106,4 @@ resource "aws_s3_bucket" "partition_bucket" {
 resource "aws_s3_bucket" "metadata_bucket" {
 	count = var.metadata_bucket_arn == "" ? 1 : 0
 	bucket = "${replace(var.name_stem, "_", ".")}.metadata"
-}
-
-resource "aws_s3_bucket_notification" "bucket_notification" {
-	bucket = var.input_bucket == "" ? aws_s3_bucket.input_bucket[0].id : var.input_bucket
-
-	lambda_function {
-    lambda_function_arn = module.permissioned_lambda.lambda.arn
-		events              = ["s3:ObjectCreated:*"]
-		filter_prefix       = var.input_prefix
-		filter_suffix       = var.input_suffix
-	}
-
 }

@@ -1,8 +1,3 @@
-module "stream_items_table" {
-  source = "./modules/standard_dynamo_table"
-  table_name = "stream_items"
-}
-
 module "websocket_connections_table" {
   source = "./modules/standard_dynamo_table"
   table_name = "websocket_connections"

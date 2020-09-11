@@ -3,16 +3,6 @@ variable "domain_name" {
   default = "raphaelluckom.com"
 }
 
-variable "cloudwatch_logs_table_name" {
-  type = string
-  default = "cloudwatch_logs"
-}
-
-variable "api_domain_name" {
-  type = string
-  default = "api.raphaelluckom.com"
-}
-
 variable "subject_alternative_names" {
   type = list(string)
   default = ["www.raphaelluckom.com"]
@@ -26,6 +16,31 @@ variable "domain_name_prefix" {
 variable "route53_zone_name" {
   type = string
   default = "raphaelluckom.com."
+}
+
+variable "media_domain_settings" {
+  type = object({
+    domain_name = string
+    domain_name_prefix = string
+    allowed_origins = list(string)
+    subject_alternative_names = list(string)
+  })
+  default = {
+    domain_name = "media.raphaelluckom.com"
+    domain_name_prefix = "media.raphaelluckom"
+    allowed_origins = ["https://media.raphaelluckom.com", "http://localhost*"]
+    subject_alternative_names = ["www.media.raphaelluckom.com"]
+  }
+}
+
+variable "cloudwatch_logs_table_name" {
+  type = string
+  default = "cloudwatch_logs"
+}
+
+variable "api_domain_name" {
+  type = string
+  default = "api.raphaelluckom.com"
 }
 
 variable "athena_db_name" {
@@ -66,6 +81,11 @@ variable "athena_bucket_name" {
 variable "lambda_bucket_name" {
   type = string
   default = "rluckom.lambda"
+}
+
+variable "post_input_bucket_name" {
+  type = string
+  default = "rluckom.posts.input"
 }
 
 variable "scratch_bucket_name" {

@@ -187,10 +187,10 @@ module "site_logs_etl" {
 }
 
 module "log_export_notification_lambda" {
-  source = "./modules/cron_triggered_lambda"
-  name_stem = "log_export_notification"
-  lambda_code_bucket = aws_s3_bucket.lambda_bucket.id
-  lambda_code_key = "log_export_notification/lambda.zip"
+  source = "./modules/permissioned_lambda"
+  cron_notifications = [{
+    period_expression = "cron(0 1 * * ? *)"
+  }]
   environment_var_map = {
     "ATHENA_REGION" = var.athena_region
     "PARTITION_BUCKET" = aws_s3_bucket.partition_bucket.id
@@ -198,14 +198,17 @@ module "log_export_notification_lambda" {
     "ATHENA_DB" = aws_glue_catalog_database.time_series_database.name
     "ATHENA_TABLE" = var.cloudwatch_logs_table_name
     ATHENA_RESULT_BUCKET = "s3://${aws_s3_bucket.athena_bucket.id}/"
-    "QUEUE_URL" = aws_sqs_queue.pending_cloudwatch_exports.id
+    "QUEUE_URL" = module.pending_cloudwatch_exports.queue.id
   }
-  period_expression = "cron(0 1 * * ? *)"
-  lambda_iam_policy = concat(var.cloudwatch_log_read_policy, var.athena_query_policy,
+  lambda_details = {
+  name = "log_export_notification"
+  bucket = aws_s3_bucket.lambda_bucket.id
+  key = "log_export_notification/lambda.zip"
+  policy_statements = concat(var.cloudwatch_log_read_policy, var.athena_query_policy,
   [
     {
       actions = ["sqs:sendMessage"]
-      resources = [aws_sqs_queue.pending_cloudwatch_exports.arn]
+      resources = [module.pending_cloudwatch_exports.queue.arn]
     },
     {
       actions = ["s3:GetBucketAcl"]
@@ -240,24 +243,14 @@ module "log_export_notification_lambda" {
     }
   ])
 }
+}
+
 data "aws_caller_identity" "current" {}
 
-resource "aws_sqs_queue" "log_etl_dead_letter" {
-  name                      = "log-etl-dead-letter"
-}
-
-resource "aws_sqs_queue" "pending_cloudwatch_exports" {
-  name                      = "pending_cloudwatch_exports"
-  redrive_policy = jsonencode({
-    deadLetterTargetArn = aws_sqs_queue.log_etl_dead_letter.arn
-    maxReceiveCount     = 16
-  })
-}
-
-resource "aws_lambda_event_source_mapping" "sqs_trigger" {
-  event_source_arn = aws_sqs_queue.pending_cloudwatch_exports.arn
-  function_name    = module.log_export_queue_consumer.lambda.arn
-  batch_size = 1
+module "pending_cloudwatch_exports" {
+  source = "./modules/queue_with_deadletter"
+  queue_name = "pending_cloudwatch_exports"
+  maxReceiveCount = 16
 }
 
 data "aws_iam_policy_document" "partition_bucket_policy" {
@@ -286,6 +279,10 @@ resource "aws_s3_bucket_policy" "partition_bucket_policy" {
 
 module "log_export_queue_consumer" {
   source = "./modules/permissioned_lambda"
+  queue_event_sources = [{
+      batch_size = 1
+      arn = module.pending_cloudwatch_exports.queue.arn
+    }]
   lambda_details = {
     name = "log_export_queue_consumer"
     bucket = aws_s3_bucket.lambda_bucket.id
@@ -294,7 +291,7 @@ module "log_export_queue_consumer" {
     policy_statements = [
       {
         actions = ["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:GetQueueAttributes"]
-        resources = [aws_sqs_queue.pending_cloudwatch_exports.arn]
+        resources = [module.pending_cloudwatch_exports.queue.arn]
       },
       {
         actions = ["logs:DescribeExportTasks", "logs:CreateExportTask"]
@@ -309,10 +306,6 @@ module "log_export_queue_consumer" {
         resources = ["${aws_s3_bucket.partition_bucket.arn}/*"]
       }
     ]
-    invoking_principal = {
-      service =  "sqs.amazonaws.com"
-      source_arn = aws_sqs_queue.pending_cloudwatch_exports.arn
-    }
   }
   environment_var_map = {
     "ATHENA_REGION" = var.athena_region
