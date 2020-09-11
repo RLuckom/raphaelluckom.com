@@ -1,20 +1,105 @@
 resource "aws_glue_catalog_database" "time_series_db" {
   name = "rluckom_photos_timeseries"
 }
-module "photos_etl" {
-  source = "./modules/s3_glue_lambda_etl"
-  name_stem = "rluckom_photos"
-  db = {
-    name = aws_glue_catalog_database.time_series_db.name
-    arn = aws_glue_catalog_database.time_series_db.arn
+
+resource "aws_s3_bucket" "photos_input" {
+  bucket = "rluckom.photos.input"
+}
+
+resource "aws_s3_bucket" "photos_athena_result" {
+  bucket = "rluckom.photos.athena"
+}
+
+resource "aws_s3_bucket" "photos_partition" {
+  bucket = "rluckom.photos.partition"
+}
+
+module "photos_lambda" {
+  source = "./modules/permissioned_lambda"
+  environment_var_map = {
+    INPUT_BUCKET = aws_s3_bucket.photos_input.id
+    PARTITION_BUCKET = aws_s3_bucket.photos_partition.id
+    PARTITION_PREFIX = var.partition_prefix
+    METADATA_PARTITION_BUCKET = module.cloudformation_logs_glue_table.metadata_bucket.id,
+    ATHENA_RESULT_BUCKET = aws_s3_bucket.photos_athena_result.id
+    ATHENA_TABLE = module.cloudformation_logs_glue_table.table.name 
+    ATHENA_DB = module.cloudformation_logs_glue_table.table.database_name
+    ATHENA_REGION = var.athena_region
   }
-  lambda_code_bucket = aws_s3_bucket.lambda_bucket.id
-  lambda_code_key = "rluckom.photos/lambda.zip"
-  athena_region = var.athena_region
+  lambda_details = {
+    name = "rluckom_photos"
+    bucket = aws_s3_bucket.lambda_bucket.id
+    key = "rluckom.photos/lambda.zip"
+    policy_statements = concat(var.athena_query_policy, var.allow_rekognition_policy, [{
+      actions   =  [
+        "s3:GetObject",
+        "s3:DeleteObject",
+        "s3:ListBucket"
+      ]
+      resources = [
+        aws_s3_bucket.photos_input.arn,
+        "${aws_s3_bucket.photos_input.arn}/*"
+      ]
+    },
+    {
+      actions   =  [
+        "s3:GetObject",
+        "s3:ListMultipartUploadParts",
+        "s3:PutObject",
+        "s3:GetBucketLocation",
+        "s3:ListBucket"
+      ]
+      resources = [
+        aws_s3_bucket.photos_athena_result.arn,
+        "${aws_s3_bucket.photos_athena_result.arn}/*"
+      ]
+    },
+    {
+      actions   =  [
+        "glue:CreatePartition",
+        "glue:GetTable",
+        "glue:GetDatabase",
+        "glue:BatchCreatePartition"
+      ]
+      resources = [
+        aws_glue_catalog_database.time_series_db.arn,
+        module.cloudformation_logs_glue_table.table.arn,
+        "arn:aws:glue:us-east-1:${data.aws_caller_identity.current.account_id}:catalog",
+        "arn:aws:glue:us-east-1:${data.aws_caller_identity.current.account_id}:catalog*"
+      ]
+    },
+    {
+      actions   =  [
+        "s3:PutObject"
+      ]
+      resources = [
+        "${module.cloudformation_logs_glue_table.metadata_bucket.arn}/*",
+        "${aws_s3_bucket.photos_partition.arn}/*",
+        "${aws_s3_bucket.photos_athena_result.arn}/*"
+      ]
+    }])
+  }
+
+  bucket_notifications = [{
+    bucket = aws_s3_bucket.photos_input.id
+    events              = ["s3:ObjectCreated:*"]
+    filter_prefix       = ""
+    filter_suffix       = ""
+  }]
+}
+
+module "photo_analysis_complete" {
+  source = "./modules/queue_with_deadletter"
+  queue_name = "photo_analysis_complete"
+  maxReceiveCount = 3
+}
+
+module "cloudformation_logs_glue_table" {
+  source = "./modules/standard_glue_table"
+  table_name          = "rluckom_photos_partitioned_gz"
+  metadata_bucket_name = "rluckom.photos.metadata"
+  db_name = aws_glue_catalog_database.time_series_db.name
   ser_de_info = var.json_ser_de
-
-  statements = concat(var.athena_query_policy, var.allow_rekognition_policy)
-
   columns = [
     {
       name = "time"

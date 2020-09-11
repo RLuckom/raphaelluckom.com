@@ -83,9 +83,9 @@ variable "lambda_bucket_name" {
   default = "rluckom.lambda"
 }
 
-variable "post_input_bucket_name" {
+variable "stream_input_bucket_name" {
   type = string
-  default = "rluckom.posts.input"
+  default = "rluckom.stream.input"
 }
 
 variable "scratch_bucket_name" {
