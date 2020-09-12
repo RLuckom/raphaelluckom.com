@@ -10,7 +10,7 @@ variable "website_configs" {
   default = []
 }
 
-variable "act" {
+variable "acl" {
   type = string
   default = "private"
 }

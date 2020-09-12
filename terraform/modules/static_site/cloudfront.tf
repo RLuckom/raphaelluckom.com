@@ -8,7 +8,7 @@ resource "aws_cloudfront_origin_access_identity" "cloudfront_logging_access_id" 
 
 resource "aws_cloudfront_distribution" "website_distribution" {
   origin {
-    domain_name = aws_s3_bucket.website_bucket.bucket_regional_domain_name
+    domain_name = module.website_bucket.bucket.bucket_regional_domain_name
     origin_id   = local.s3_origin_id
 
     s3_origin_config {
@@ -22,7 +22,7 @@ resource "aws_cloudfront_distribution" "website_distribution" {
 
   logging_config {
     include_cookies = false
-    bucket          = "${aws_s3_bucket.logging_bucket.id}.s3.amazonaws.com"
+    bucket          = "${module.logging_bucket.bucket.id}.s3.amazonaws.com"
     prefix          = var.domain_name_prefix
   }
 

@@ -19,7 +19,7 @@ module "log_etl_lambda" {
   timeout_secs = 40
   mem_mb = 256
   environment_var_map = {
-    INPUT_BUCKET = module.static_site.logging_bucket_id
+    INPUT_BUCKET = module.static_site.logging_bucket.bucket.id
     INPUT_PREFIX = ""
     PARTITION_BUCKET = aws_s3_bucket.partition_bucket.id
     PARTITION_PREFIX = "partitioned/raphaelluckom.com"
@@ -38,18 +38,9 @@ module "log_etl_lambda" {
       var.athena_query_policy,
 			module.cloudformation_logs_glue_table.permission_sets.create_partition_glue_permissions,
       module.logs_athena_bucket.permission_sets.athena_query_execution,
-      [{
-		actions   =  [
-			"s3:GetObject",
-			"s3:DeleteObject",
-			"s3:ListBucket"
-		]
-		resources = [
-			module.static_site.logging_bucket_arn,
-			"${module.static_site.logging_bucket_arn}/*"
-		]
-	}
-	,{
+			module.static_site.logging_bucket.permission_sets.move_objects_out,
+      [
+	{
 		actions   =  [
 			"s3:PutObject"
 		]
@@ -60,7 +51,7 @@ module "log_etl_lambda" {
   }
 
   bucket_notifications = [{
-    bucket = module.static_site.logging_bucket_id
+    bucket = module.static_site.logging_bucket.bucket.id
     events              = ["s3:ObjectCreated:*"]
     filter_prefix       = ""
     filter_suffix       = ""

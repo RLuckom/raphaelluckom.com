@@ -2,10 +2,11 @@ output "cert_arn" {
   value = aws_acm_certificate_validation.cert_validation.certificate_arn
 }
 
-output "logging_bucket_arn" {
-  value = aws_s3_bucket.logging_bucket.arn
+output "logging_bucket" {
+  value = module.logging_bucket
 }
 
-output "logging_bucket_id" {
-  value = aws_s3_bucket.logging_bucket.id
+output "website_bucket" {
+  value = module.website_bucket
 }
+
