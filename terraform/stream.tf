@@ -8,7 +8,7 @@ resource "aws_s3_bucket" "stream_input_bucket" {
 }
 
 module "processed_for_stream" {
-  source = "./modules/queue_with_deadletter"
+  source = "./modules/permissioned_queue"
   queue_name = "processed_for_stream"
   maxReceiveCount = 3
 }

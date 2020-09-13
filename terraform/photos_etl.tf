@@ -60,7 +60,7 @@ module "photos_lambda" {
 }
 
 module "photo_analysis_complete_queue" {
-  source = "./modules/queue_with_deadletter"
+  source = "./modules/permissioned_queue"
   queue_name = "photo_analysis_complete"
   maxReceiveCount = 3
 }

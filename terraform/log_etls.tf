@@ -94,18 +94,13 @@ module "log_export_notification_lambda" {
       local.permission_sets.athena_query,
       module.cloudwatch_logs_glue_table.permission_sets.create_partition_glue_permissions,
       module.logs_athena_bucket.permission_sets.athena_query_execution,
-      [
-        {
-          actions = ["sqs:sendMessage"]
-          resources = [module.pending_cloudwatch_exports.queue.arn]
-        }
-      ]
+      module.pending_cloudwatch_exports.permission_sets.send_message
     )
   }
 }
 
 module "pending_cloudwatch_exports" {
-  source = "./modules/queue_with_deadletter"
+  source = "./modules/permissioned_queue"
   queue_name = "pending_cloudwatch_exports"
   maxReceiveCount = 16
 }
@@ -149,12 +144,7 @@ module "log_export_queue_consumer" {
       local.permission_sets.create_log_exports,
       module.logs_partition_bucket.permission_sets.get_bucket_acl,
       module.logs_partition_bucket.permission_sets.put_object,
-      [
-        {
-          actions = ["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:GetQueueAttributes"]
-          resources = [module.pending_cloudwatch_exports.queue.arn]
-        }
-      ]
+      module.pending_cloudwatch_exports.permission_sets.lambda_receive
     )
   }
   environment_var_map = {
