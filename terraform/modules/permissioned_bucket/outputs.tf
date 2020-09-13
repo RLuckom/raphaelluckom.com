@@ -29,5 +29,17 @@ output "permission_sets" {
         "${aws_s3_bucket.bucket.arn}/*"
       ]
     }]
+    put_object = [
+        {
+          actions   = ["s3:PutObject"]
+          resources = ["${aws_s3_bucket.bucket.arn}/*"]
+        }
+      ]
+    get_bucket_acl = [
+        {
+          actions = ["s3:GetBucketAcl"]
+          resources = [aws_s3_bucket.bucket.arn]
+        }
+      ]
   }
 }

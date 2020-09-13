@@ -34,8 +34,8 @@ module "photos_lambda" {
     key = "rluckom.photos/lambda.zip"
 
     policy_statements = concat(
-      var.athena_query_policy,
-      var.allow_rekognition_policy,
+      local.permission_sets.athena_query,
+      local.permission_sets.rekognition_image_analysis,
       module.photos_athena_result_bucket.permission_sets.athena_query_execution,
       module.photos_input_bucket.permission_sets.move_objects_out,
       module.photos_metadata_glue_table.permission_sets.create_partition_glue_permissions,
