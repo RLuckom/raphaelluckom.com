@@ -38,26 +38,26 @@ the specifics don't really matter. I'm going to cover the parts of the app in
 a sort of barebones way--these are the things that make the app an app; whether
 it's a _good_ app is a different post.
 
-An app like this can be divided into six areas: access control, User Interface (UI), API logic,
-application data, logging, and analytics. The access control part is the user
-management system--who can login, and what permission they have to see and interact with data. The UI is
+An app like this can be divided into six areas: access control, user interface (UI), API and domain logic,
+application data, logging, and analytics. The _access control_ consists of
+the user management and permission system--who can log in, 
+and what permission they have to see and interact with data. The _UI_ is
 all of the code and markup that tells your browser what to display (this
 includes assistive technologies--the way your website interacts with a screen reader
-for someone with a visual impairment is equally part of "UI"). The API logic
+for someone with a visual impairment is equally part of "UI"). The _API and domain logic_
 is the code on the server that handles interactions like "add a task" or "mark
-this task complete." The application data is the actual data storage system
+this task complete." The _application data_ is the actual data storage system
 used to save your todo items--probably a database, but other types of storage, like
-regular text files on a hard drive, _could_ also do the same job. The logging
+regular text files on a hard drive, _could_ also do the same job. The _logging_
 consists of the records that the system keeps about what it does;
-logs are usually written to a text file full of lines like 
-
+logs are usually written to a text file full of lines like the following:
 ```
 2020/09/13 03:30:50.789 [INFO] User testUser added Todo item with ID=a4th983e
 ```
-The analytics system consists of the tools used by whoever is running the app
+The _analytics_ system consists of the tools used by whoever is running the app
 to interpret the logs written by the system and answer questions like "when
 is the highest traffic period" or "what features do the people who use this
-app like most?" or "where do people who use this app encounter errors?"
+app interact with most?" or "where do people who use this app encounter errors?"
 
 ### Access Control
 Access control includes _Authentication_, _Authorization_, and _Audit_. _Authentication_ (Authn)
@@ -84,10 +84,10 @@ the dominant markup format, and it is augmented by [Cascading Style Sheets](http
 which carries additional formatting information.
 
 Markup all by itself is sufficient for every book that's ever been printed,
-but if you want significant interactivity, you need _code_. _Code_ consists
+but if you want significant interactivity, you need _code_. This _code_ consists
 of instructions that specify the behavior of the page after it has been displayed.
 It does things like submit data when you want to post something, or display the
-next page of search results when you click an arrow, etc. The most important thing
+next page of search results when you click an arrow. The most important thing
 to understand about UI code is that it runs on the computer that is _showing_ the 
 content. When we talk about web apps, the computer that requests the page and displays
 it to a person is called the _client_. The computer that sends the information is called
@@ -96,7 +96,7 @@ of the Google homepage, they _also_ send a bundle of computer code. Your web bro
 your computer, runs that code, which controls how Google's site looks. Almost
 all UI code that runs in the browser is written in the JavaScript language.
 
-### API Logic
+### API and Domain Logic
 The code that runs on a web app's UI needs to be able to talk to a server
 to do its job. The Application Programming Interface (API) is the code
 that runs on the server, listens for requests, and answers them. The
@@ -107,11 +107,11 @@ same structure, even though they see different content) there is sometimes a Con
 Delivery Network (CDN) that tries to speed up delivery of these standard parts.
 
 Unlike the main markup-and-code bundle, any user-specific content (like
-the items in your feed or your profile information) is served by an _application
+the items in _your_ feed or _your_ profile information) is served by an _application
 server_. Rather than send whole web pages, the application server listens for
 requests like "mark this task as done" or "show me my outstanding tasks." To answer
 these questions, the application server will read the request, check that the requester
-is allowed to perform the action (this is the Authn and Authz system), and then it
+is allowed to perform the action (using the Authn and Authz system), and then it
 might get data out of the data store (e.g. the list of todo items) or it might 
 modify the data (e.g. to mark a task as complete). Often when a programmer says that
 they work on "back-end" code, this is what they mean (the "front-end" means the UI).
@@ -132,7 +132,7 @@ unless several conditions can _all_ be satisfied, while others are designed to t
 certain types of failures. For instance, when a financial database needs to move money
 between two accounts, it is designed so that if _either_ the withdrawal from the source _or_
 the deposit to the destination fails, the whole transaction gets reversed. However, a database
-that tells you how many "likes" a facebook post has might give you the most recent data
+that tells you how many likes a facebook post has might give you the most recent data
 that it can find, even if it's unable to verify that it's _exactly_ up to date.
 
 A single application might use more than one data store if it has to support different
@@ -150,9 +150,9 @@ thought would be useful to know, like `TestUser signed in` or `wtf foo=true?!?!`
 certain exceptional cases `1. raph, remember to remove this log before merging`.
 
 Technically, most logging is actually part of one of the other subsystems--the UI code writes some logs,
-the API code writes others, the access control system writes still others. But the logs
+the API code writes others, the access control system writes others. But the logs
 as a body of information are so crucial to understanding how and if the system is working
-that they deserve to be treated separately. 
+that they deserve to be treated separately.
 
 Logs are also incredibly powerful tools for learning about people. Logs can tell
 system operators what pages people visited, how log they stayed, and sometimes
@@ -162,8 +162,8 @@ when thinking about the privacy of people who use a system.
 ### Analytics
 The analytics system is what tries to use the logs and other data generated
 _about_ the application to give the operators insight about what the system is doing.
-The analytics might warn about errors, display traffic graphs, or help business
-intelligence people make strategic decisions about what to build. A simple low-traffic
+The analytics might warn about errors, display traffic graphs, or help guide 
+strategic decisions about what to build. A simple low-traffic
 app might not have any dedicated analytics at all; a system like Facebook would have much
 more investment and complexity in its analytics than in what the people who use it would
 describe as the "product."
