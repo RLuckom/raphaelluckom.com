@@ -27,8 +27,8 @@ systems like Facebook as well as less interactive systems like Craigslist
 and Wikipedia.
 
 Throughout this post, I'll use a fictional "To-Do" app as an example. This
-type of app helps you keep track of your task list. You go to a website
-or phone app where you have an account, and you're able to add, edit, and
+type of app helps you keep track of your task list. You log in to the To-Do app
+through a website, and you're able to add, edit, and
 check off items from your personal to-do list. For the purposes of this
 discussion, I'm also going to say that the app stores your data--that is, even
 if you close the browser window you started out in, you can open a new one,
