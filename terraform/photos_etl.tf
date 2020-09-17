@@ -12,22 +12,36 @@ module "photos_athena_result_bucket" {
   bucket = "rluckom.photos.athena"
 }
 
-resource "aws_s3_bucket" "photos_partition" {
+module "photos_media_output_bucket" {
+  source = "./modules/permissioned_bucket"
   bucket = "rluckom.photos.partition"
+}
+
+locals {
+
+  photo_etl_bucket_notifications = [{
+    bucket = module.photos_input_bucket.bucket.id
+    events              = ["s3:ObjectCreated:*"]
+    filter_prefix       = ""
+    filter_suffix       = ""
+  }]
+  photo_etl_env = {
+    trigger = {
+    }
+    ingest = {
+      MEDIA_STORAGE_BUCKET = module.photos_media_output_bucket.bucket.id
+      MEDIA_STORAGE_PREFIX = var.partition_prefix
+      MEDIA_METADATA_TABLE_BUCKET = module.photos_metadata_glue_table.metadata_bucket[0].bucket.id
+      ATHENA_RESULT_BUCKET = module.photos_athena_result_bucket.bucket.id
+      ATHENA_TABLE = module.photos_metadata_glue_table.table.name
+      ATHENA_DB = module.photos_metadata_glue_table.table.database_name
+    }
+  }
 }
 
 module "photos_lambda" {
   source = "./modules/permissioned_lambda"
-  environment_var_map = {
-    INPUT_BUCKET = module.photos_input_bucket.bucket.id
-    PARTITION_BUCKET = aws_s3_bucket.photos_partition.id
-    PARTITION_PREFIX = var.partition_prefix
-    METADATA_PARTITION_BUCKET = module.photos_metadata_glue_table.metadata_bucket.id,
-    ATHENA_RESULT_BUCKET = module.photos_athena_result_bucket.bucket.id
-    ATHENA_TABLE = module.photos_metadata_glue_table.table.name 
-    ATHENA_DB = module.photos_metadata_glue_table.table.database_name
-    ATHENA_REGION = var.athena_region
-  }
+  environment_var_map = local.photo_etl_env.ingest
   lambda_details = {
     name = "rluckom_photos"
     bucket = aws_s3_bucket.lambda_bucket.id
@@ -39,24 +53,9 @@ module "photos_lambda" {
       module.photos_athena_result_bucket.permission_sets.athena_query_execution,
       module.photos_input_bucket.permission_sets.move_objects_out,
       module.photos_metadata_glue_table.permission_sets.create_partition_glue_permissions,
-      [
-    {
-      actions   =  [
-        "s3:PutObject"
-      ]
-      resources = [
-        "${module.photos_metadata_glue_table.metadata_bucket.arn}/*",
-        "${aws_s3_bucket.photos_partition.arn}/*"
-      ]
-    }])
-  }
-
-  bucket_notifications = [{
-    bucket = module.photos_input_bucket.bucket.id
-    events              = ["s3:ObjectCreated:*"]
-    filter_prefix       = ""
-    filter_suffix       = ""
-  }]
+      module.photos_media_output_bucket.permission_sets.put_object,
+      module.photos_metadata_glue_table.metadata_bucket[0].permission_sets.put_object)
+    }
 }
 
 module "photo_analysis_complete_queue" {
