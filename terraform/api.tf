@@ -1,6 +1,10 @@
 module "websocket_connections_table" {
   source = "./modules/standard_dynamo_table"
   table_name = "websocket_connections"
+  ttl = [{
+    enabled = true
+    attribute_name = "stream_entry_time"
+  }]
 }
 
 module "websocket_api_cert" {

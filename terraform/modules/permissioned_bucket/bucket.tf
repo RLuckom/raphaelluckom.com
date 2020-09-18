@@ -19,4 +19,32 @@ resource "aws_s3_bucket" "bucket" {
       max_age_seconds = cors_rule.value.max_age_seconds
     }
   }
+
+  dynamic "lifecycle_rule" {
+    for_each = var.lifecycle_rules
+    content {
+      id = lifecycle_rule.value.id
+      prefix = lifecycle_rule.value.prefix
+      tags = lifecycle_rule.value.tags
+      enabled = lifecycle_rule.value.enabled
+      expiration {
+          days = lifecycle_rule.value.expiration_days
+      }
+    }
+  }
+}
+
+resource "aws_s3_bucket_notification" "bucket_notification" {
+  count = length(var.lambda_notifications) == 0 ? 0 : 1
+  bucket = aws_s3_bucket.bucket.id
+
+  dynamic "lambda_function" {
+    for_each = var.lambda_notifications
+    content {
+      lambda_function_arn = lambda_function.value.lambda_arn
+      events              = lambda_function.value.events
+      filter_prefix       = lambda_function.value.filter_prefix
+      filter_suffix       = lambda_function.value.filter_suffix
+    }
+  }
 }

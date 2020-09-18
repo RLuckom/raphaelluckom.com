@@ -11,14 +11,11 @@ variable "range_key_name" {
 }
 
 variable "ttl" {
-  type = object({
+  type = list(object({
     enabled = bool
     attribute_name = string
-  })
-  default = {
-    enabled = true
-    attribute_name = "stream_entry_time"
-  }
+  }))
+  default = []
 }
 
 variable "partition_key" {

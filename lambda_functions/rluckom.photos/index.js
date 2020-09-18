@@ -2,50 +2,44 @@ const exploranda = require('exploranda-core');
 const _ = require('lodash');
 const ExifReader = require('exifreader');
 const zlib = require('zlib')
+const crypto = require('crypto')
+const uuid = require('uuid')
 
 // Bucket for partitioned files, e.g. 'rluckom.timeseries'
-const PARTITION_BUCKET = process.env.PARTITION_BUCKET
+const MEDIA_STORAGE_BUCKET = process.env.MEDIA_STORAGE_BUCKET
 // prefix in bucket for partitioned files, e.g. 'partitioned/raphaelluckom.com'
-const PARTITION_PREFIX = process.env.PARTITION_PREFIX
+const MEDIA_STORAGE_PREFIX = process.env.MEDIA_STORAGE_PREFIX
 
 // Bucket for partitioned files, e.g. 'rluckom.timeseries'
-const METADATA_PARTITION_BUCKET = process.env.METADATA_PARTITION_BUCKET
+const MEDIA_METADATA_TABLE_BUCKET = process.env.MEDIA_METADATA_TABLE_BUCKET
 // prefix in bucket for partitioned files, e.g. 'partitioned/raphaelluckom.com'
-const METADATA_PARTITION_PREFIX = process.env.METADATA_PARTITION_PREFIX
+const MEDIA_METADATA_TABLE_PREFIX = process.env.MEDIA_METADATA_TABLE_PREFIX
 // bucket in which to store Athena results with prefix, e.g. 's3://rluckom.athena'.
 // seems to not work if it's a folder.
 const ATHENA_RESULT_BUCKET = process.env.ATHENA_RESULT_BUCKET
+// DynamoDB table in which media is stored
+const MEDIA_DYNAMO_TABLE = process.env.MEDIA_DYNAMO_TABLE
+// Media type
+const MEDIA_TYPE = process.env.MEDIA_TYPE
 // database in Athena / Glue to query, e.g. 'timeseries'
 const ATHENA_DB = process.env.ATHENA_DB
 // table in Athena / Glue to query, e.g. 'raphaelluckom_cf_logs_partitioned_gz'
 const ATHENA_TABLE = process.env.ATHENA_TABLE
 // catalog to use in Athena. For most queries this will be 'AwsDataCatalog'
 const ATHENA_CATALOG = process.env.ATHENA_CATALOG || 'AwsDataCatalog'
-const ATHENA_REGION = process.env.ATHENA_REGION
+const AWS_REGION = process.env.AWS_REGION
 
 const apiConfig = {
-  region: ATHENA_REGION
+  region: AWS_REGION
 }
 
-function safeString(n) {
-  try {
-    const original = _.reduce(n, (a, v, k) => {
-      a[k] = _.get(v, 'value')
-      return a
-    }, {})
-    return JSON.stringify(original)
-  } catch(e) {
-    try {
-      return JSON.stringify(n)
-    } catch (err) {
-      console.log(err)
-      return null
-    }
-  }
+function sha1(buf) {
+  const hash = crypto.createHash('sha1');
+  hash.update(buf)
+  return hash.digest('hex')
 }
 
-function dependencies(bucket, key) {
-  const metaKey = `${key.match(/[^.]+/g)[0]}_meta.gz`
+function dependencies(bucket, key, mediaId) {
   return {
     text: {
       accessSchema: exploranda.dataSources.AWS.rekognition.detectText,
@@ -184,7 +178,6 @@ function dependencies(bucket, key) {
       accessSchema: exploranda.dataSources.AWS.s3.getObject,
       params: {
         Bucket: {value: bucket},
-        Range: {value: 'bytes=0-256000'},
         Key: {value: key}
       },
       formatter: (res) => _.map(res, (r) => {
@@ -213,11 +206,12 @@ function dependencies(bucket, key) {
           delete meta.exif.MakerNote
         }
         const ret = {
+          image: r.Body,
           meta: {
-            file: safeString(meta.file),
-            exif: safeString(meta.exif),
-            xmp: safeString(meta.xmp),
-            iptc: safeString(meta.iptc),
+            file: meta.file,
+            exif: meta.exif,
+            xmp: meta.xmp,
+            iptc: meta.iptc,
             // I think the gps is getters not data so it doesn't json nicely
             gps: meta.gps ? {
               Latitude: meta.gps.Latitude,
@@ -231,49 +225,79 @@ function dependencies(bucket, key) {
         return ret
       })
     },
-    copy: {
-      accessSchema: exploranda.dataSources.AWS.s3.copyObject,
+    rotate: {
+      accessSchema: exploranda.dataSources.sharp.rotate.rotateOne,
       params: {
-        Bucket: {
-          value: PARTITION_BUCKET
-        },
-        CopySource: {
-          value: `/${bucket}/${key}`,
-        },
-        Key: {
+        image: {
           source: 'imageMeta',
           formatter: ({imageMeta}) => {
-            const {year, month, day, hour} = imageMeta[0].date
-            return `${PARTITION_PREFIX ? PARTITION_PREFIX + '/' : ""}year=${year}/month=${month}/day=${day}/hour=${hour}/${key}`
+            return imageMeta[0].image
+          }
+        },
+      }
+    },
+    save:{
+      accessSchema: exploranda.dataSources.AWS.s3.putObject,
+      params: {
+        Bucket: {
+          value: MEDIA_STORAGE_BUCKET
+        },
+        Body: {
+          source: 'rotate',
+          formatter: ({rotate}) => rotate
+        },
+        Key: {
+          source: 'finalMeta',
+          formatter: ({finalMeta}) => finalMeta[0].mediakey
+        },
+      }
+    },
+    saveMeta: {
+      accessSchema: exploranda.dataSources.AWS.s3.putObject,
+      params: {
+        Bucket: {
+          value: MEDIA_METADATA_TABLE_BUCKET
+        },
+        Key: {
+          source: 'finalMeta',
+          formatter: ({finalMeta}) => finalMeta[0].key
+        },
+        Body: {
+          source:'finalMeta',
+          formatter: ({finalMeta}) => {
+            const meta = finalMeta[0]
+            meta.imagemeta = JSON.stringify(meta.imageMeta)
+            return zlib.gzipSync(JSON.stringify(meta) + '\n')
           }
         },
       },
     },
-    uploadMeta: {
-      accessSchema: exploranda.dataSources.AWS.s3.putObject,
+    finalMeta: {
+      accessSchema: {
+        dataSource: 'SYNTHETIC',
+        value: { path: _.identity},
+        transformation: ({meta}) => {
+          return meta
+        }
+      },
       params: {
-        Bucket: {
-          value: METADATA_PARTITION_BUCKET
-        },
-        Key: {
-          source: 'imageMeta',
-          formatter: ({imageMeta}) => {
+        meta: {
+          source: ['text', 'labels', 'faces', 'imageMeta', 'rotate'],
+          formatter: ({text, labels, faces, imageMeta, rotate}) => {
             const {year, month, day, hour} = imageMeta[0].date
-            return `${METADATA_PARTITION_PREFIX ? METADATA_PARTITION_PREFIX + '/' : ""}year=${year}/month=${month}/day=${day}/hour=${hour}/${metaKey}`
-          }
-        },
-        Body: {
-          source: ['text', 'labels', 'faces', 'imageMeta'],
-          formatter: ({text, labels, faces, imageMeta}) => {
-            const {year, month, day, hour} = imageMeta[0].date
-            const mediakey = `${PARTITION_PREFIX}/year=${year}/month=${month}/day=${day}/hour=${hour}/${key}`
-            const metadataKey = `${PARTITION_PREFIX}/year=${year}/month=${month}/day=${day}/hour=${hour}/${metaKey}`
+            const asSavedHash = sha1(rotate[0])
+            const mediakey = `${MEDIA_STORAGE_PREFIX ? MEDIA_STORAGE_PREFIX + '/' : ""}${mediaId}.${key.split('.').pop()}`
+            const metadataKey = `${MEDIA_METADATA_TABLE_PREFIX ? MEDIA_METADATA_TABLE_PREFIX + '/' : ""}year=${year}/month=${month}/day=${day}/hour=${hour}/${mediaId}.meta.gz`
             const record = {
+              mediaId,
+              format: key.split('.').pop(),
               time: imageMeta[0].meta.timestamp,
-              mediabucket: PARTITION_BUCKET,
+              mediabucket: MEDIA_STORAGE_BUCKET,
               mediakey,
-              bucket: METADATA_PARTITION_BUCKET,
+              bucket: MEDIA_METADATA_TABLE_BUCKET,
               key: metadataKey,
+              originalHash: sha1(imageMeta[0].image),
+              asSavedHash,
               gps: imageMeta[0].meta.gps,
               metadata: {
                 faces: faces.number,
@@ -282,33 +306,62 @@ function dependencies(bucket, key) {
                 labels: labels.labels,
                 gps: imageMeta[0].meta.gps,
                 timestamp: imageMeta[0].meta.timestamp,
-                bucket: METADATA_PARTITION_BUCKET,
+                bucket: MEDIA_METADATA_TABLE_BUCKET,
                 key,
-                mediabucket: PARTITION_BUCKET,
+                mediabucket: MEDIA_STORAGE_BUCKET,
                 mediakey,
               },
               text: text.detail,
               labels: labels.detail,
               faces: faces.detail,
-              imagemeta: JSON.stringify(imageMeta[0].meta),
+              imagemeta: imageMeta[0].meta,
             }
             if (_.get(imageMeta, '[0].meta.gps')) {
               record.gps = _.get(imageMeta, '[0].meta.gps')
             }
-            return zlib.gzipSync(JSON.stringify(record) + '\n')
+            return record
           }
         },
-      },
+      }
     },
-    delete: {
-      accessSchema: exploranda.dataSources.AWS.s3.deleteObject,
+    dynamo: {
+      accessSchema: exploranda.dataSources.AWS.dynamodb.putItem,
+      params: {
+        apiConfig: {value: apiConfig},
+        TableName: {
+          value: MEDIA_DYNAMO_TABLE
+        },
+        Item: {
+          source: 'finalMeta',
+          formatter: ({finalMeta}) => {
+            return {
+              id: mediaId,
+              type: MEDIA_TYPE,
+              metadata: finalMeta
+            }
+          }
+        }
+      }
+    },
+    tagForCleanup: {
+      accessSchema: exploranda.dataSources.AWS.s3.putObjectTagging,
       params: {
         Bucket: {
           value: bucket
         },
         Key: {
-          source: ['copy'],
-          formatter: () => key
+          value: key
+        },
+        Tagging: {
+          source: ['save', 'dynamo', 'partitionResults', 'saveMeta'],
+          formatter: () => {
+            return {
+              TagSet: [{
+                Key: "processed",
+                Value: "true"
+              }]
+            }
+          }
         }
       },
     }
@@ -316,21 +369,7 @@ function dependencies(bucket, key) {
 }
 
 exports.handler = function(event, context, callback) {
-  //const key = _.get(event, 'Records[0].s3.object.key', 'photos/2020-03-18/DSC_0653.JPG')
-  //const key = _.get(event, 'Records[0].s3.object.key', 'ashjackplane/IMG_6020.JPG')
-  //const key = _.get(event, 'Records[0].s3.object.key', 'IMG_6821.JPG')
-  //const key = _.get(event, 'Records[0].s3.object.key', 'IMG_6826.JPG')
-  //const key = _.get(event, 'Records[0].s3.object.key', 'IMG_6831.JPG')
-  //const bucket = _.get(event, 'Records[0].s3.bucket.name', 'rluckom-photo-archive')
-  const key = _.get(event, 'Records[0].s3.object.key')
-  const bucket = _.get(event, 'Records[0].s3.bucket.name')
-  const reporter = exploranda.Gopher(dependencies(bucket, key));
-  reporter.report((e, n) => callback(e, JSON.stringify(n)));
+  const {key, bucket, mediaId} = event
+  const reporter = exploranda.Gopher(dependencies(bucket, key, mediaId));
+  reporter.report((e, n) => callback(e, n.finalMeta));
 }
-
-/*
-exports.handler({}, {}, (e, r) => {
-  console.log(e)
-  console.log(r)
-})
-*/

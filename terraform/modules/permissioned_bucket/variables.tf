@@ -25,3 +25,24 @@ variable cors_rules {
   }))
   default = []
 }
+
+variable lifecycle_rules {
+  type = list(object({
+    id = string
+    prefix = string
+    tags = map(string)
+    enabled = bool
+    expiration_days = number
+  }))
+  default = []
+}
+
+variable "lambda_notifications" {
+  type = list(object({
+    lambda_arn = string
+    events = list(string)
+    filter_prefix = string
+    filter_suffix = string
+  }))
+  default = []
+}

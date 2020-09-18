@@ -3,13 +3,13 @@ resource "aws_dynamodb_table" "standard_table" {
   hash_key         = var.partition_key.name
   billing_mode     = "PAY_PER_REQUEST"
   stream_enabled   = false
-  range_key      = var.range_key_name != "" ? var.range_key_name : var.ttl.attribute_name
+  range_key      = var.range_key_name == "" ? length(var.ttl) > 0 ? var.ttl[0].attribute_name : "" : var.range_key_name
 
   dynamic "ttl" {
-    for_each = var.ttl == "" ? [] : [var.ttl]
+    for_each = var.ttl
     content {
-      enabled = var.ttl.enabled
-      attribute_name = var.ttl.attribute_name
+      enabled = ttl.value.enabled
+      attribute_name = ttl.value.attribute_name
     }
   }
 
@@ -23,10 +23,10 @@ resource "aws_dynamodb_table" "standard_table" {
   }
 
   dynamic "attribute" {
-    for_each = var.ttl == "" ? [] : [var.ttl] 
+    for_each = var.ttl
 
     content {
-      name               = var.ttl.attribute_name
+      name               = attribute.value.attribute_name
       type               = "N" // ttl key must be number
     }
   }

@@ -1,6 +1,10 @@
 module "stream_items_table" {
   source = "./modules/standard_dynamo_table"
   table_name = "stream_items"
+  ttl = [{
+    enabled = true
+    attribute_name = "stream_entry_time"
+  }]
 }
 
 resource "aws_s3_bucket" "stream_input_bucket" {

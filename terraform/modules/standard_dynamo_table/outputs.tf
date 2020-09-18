@@ -1,7 +1,14 @@
 output "table" {
+  value = aws_dynamodb_table.standard_table
+}
+
+output permission_sets {
   value = {
-    arn = aws_dynamodb_table.standard_table.arn
-    name = aws_dynamodb_table.standard_table.name
-    id = aws_dynamodb_table.standard_table.id
+    put_item = [
+        {
+          actions   = ["dynamodb:PutItem"]
+          resources = [aws_dynamodb_table.standard_table.arn]
+        }
+      ]
   }
 }
