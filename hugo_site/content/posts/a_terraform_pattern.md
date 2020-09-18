@@ -32,8 +32,8 @@ because it sits right on top of several of the traditional tectonic fault lines
 between different groups you find in contemporary software organizations. A brief
 digression here is useful to set the stage.
 
-The first group whose desks you generally sidle over to if you want to get
-in an argument about infrastructure is _Ops_. The role of this group
+If you want to get in an argument about infrastructure, the first group whose 
+desks you generally sidle over to is _Ops_. The role of this group
 is ill-defined but its borders are fairly stable; it doesn't do "application
 development" and it likely does not have final sign-off authority on matters
 of security. Ops people (and for the purposes of this conversation, "devops"
@@ -55,7 +55,7 @@ more like Walter Benjamin's famous quote about the [angel of history](https://en
 Application development teams, through organizational pressure or self-preservation,
 often _also_ assume an ops-like responsibility for at least some of their infrastructure.
 There are usually several application development teams in any moderately-sized
-organization, often working in different areas.
+organization, working in different areas.
 
 Finally, we arrive at the _security_ team, because the security team is always the
 last to be included. This is because they ask inconvenient questions, like
@@ -78,14 +78,13 @@ on the company's production cloud vendor accounts and control what permissions o
 The _application_ teams usually get full access to a less sensitive "test" or
 "development" environment where they can try stuff out. This allows them to
 demonstrate progress quickly without needing to include other teams every five
-minutes. The _ops_ team is responsible for maintaining the test/dev environment
-(in as much of a hands-off way as possible, so the application teams can get
-their work done) and helping provide solutions and advance negotiations when the
-application teams want to get the security team's sign-off to move something
-into the production account. This is the "communications structure," in 
-Conway's meaning, that often obtains in the world of system design. 
+minutes. The _ops_ team is responsible for maintaining the production environment, 
+the test/dev environment, and helping provide solutions and 
+advance negotiations when the application teams want to get the security
+team's sign-off to move something into the production account. This
+is the "communications structure," in Conway's meaning, that often obtains in the world of system design. 
 
-Terraform, as a tool for organizing (predominantly cloud-based) infrastructure,
+Terraform, as a tool for organizing infrastructure,
 sits right in the middle. Since it's clearly an _infrastructure_ tool, the ops team
 usually "owns" terraform. But since infrastructure only exists to support the
 application teams, those teams will at least dictate what is needed, and frequently
@@ -136,7 +135,7 @@ block refers to the bucket defined on the first line, but hardcodes
 the [`arn`](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html).
 In practice you would at least want to reference the actual bucket
 (i.e. `"Resource": "${aws_s3_bucket.b.arn}/*"`) to guard against drift--if
-the name of the bucket changes, you could apply this policy to successfully 
+the name of the bucket changes, you could apply this policy successfully 
 and yet still fail to DENY the actions you're trying to prevent.
 
 The second thing that's outdated about this is that it uses the [_heredoc_](https://en.wikipedia.org/wiki/Here_document)
@@ -201,7 +200,7 @@ resource "aws_iam_policy" "example" {
 }
 ```
 
-This example copied from the official docs shows how the policy data source
+This example, copied from the official docs, shows how the policy data source
 accepts an arbitrary number of `statement` blocks, with all of the capabilities
 outlined in the [AWS docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_statement.html).
 This is what I mean when I say that terraform has been improving by leaps and bounds--
@@ -295,13 +294,13 @@ output "permission_sets" {
 }
 ```
 
-This tiny module takes a bucket, which is a typical stateful
+This tiny module makes a bucket, which is a typical stateful
 resource to which you would want to control access, and, as part of its
 outputs, it exports different named groups of permissions that represent the
 least-privilege permissions necessary for performing different functions
 relative to the resource. Since these are just lists of objects, it's
-easy to use them in other places, such as a definition for a module 
-that creates a lambda and assigns it appropriate permissions:
+easy to use them in other places, such as a module that creates
+a lambda and assigns it appropriate permissions:
 
 ```
 module "photos_lambda" {
