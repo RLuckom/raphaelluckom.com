@@ -21,3 +21,16 @@ output "log_group" {
     tags = aws_cloudwatch_log_group.lambda_log_group.tags
   }
 }
+
+output "permission_sets" {
+  value = {
+    invoke = [{
+      actions   =  [
+        "lambda:InvokeFunction"
+      ]
+      resources = [
+        aws_lambda_function.lambda.arn,
+      ]
+    }]
+  }
+}

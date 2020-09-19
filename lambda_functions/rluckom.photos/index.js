@@ -99,80 +99,9 @@ function dependencies(bucket, key, mediaId) {
       formatter: (res) => {
         return {
           labels: _.uniq(_.flatten(_.map(res, (r) => _.flatten([[r.Name], _.map(r.Parents, 'Name')])))),
-          detail: res
+            detail: res
         }
       }
-    },
-    addPartitions: {
-      accessSchema: exploranda.dataSources.AWS.athena.startQueryExecution,
-      params: {
-        apiConfig: {value: apiConfig},
-        QueryString: {
-          source: 'imageMeta',
-          formatter : ({imageMeta}) => {
-            const {year, month, day, hour} = imageMeta[0].date
-
-            return `ALTER TABLE ${ATHENA_DB}.${ATHENA_TABLE}
-            ADD IF NOT EXISTS 
-            PARTITION (
-              year = '${year}',
-              month = '${month}',
-              day = '${day}',
-              hour = '${hour}' );`
-          }
-        },
-        QueryExecutionContext: {
-          value: {
-            Catalog: ATHENA_CATALOG,
-            Database: ATHENA_DB,
-          }
-        },
-        ResultConfiguration: {
-          value: {
-            OutputLocation: `s3://${ATHENA_RESULT_BUCKET}`,
-          }
-        }
-      }
-    },
-    waitForPartitions: {
-      accessSchema: exploranda.dataSources.AWS.athena.getQueryExecution,
-      params: {
-        apiConfig: {value: apiConfig},
-        QueryExecutionId: {
-          source: 'addPartitions',
-          formatter: ({addPartitions}) => addPartitions
-        }
-      },
-      behaviors: {
-        retryParams: {
-          times: 60,
-          interval: 10000,
-          errorFilter: (err) => {
-            return (err === 'QUEUED' || err === 'RUNNING')
-          }
-        },
-        detectErrors: (err, res) => {
-          status = _.get(res, 'QueryExecution.Status.State')
-          if (status !== 'SUCCEEDED') {
-            if (process.env.EXPLORANDA_DEBUG) {
-              console.log(err)
-            }
-            return status
-          }
-        }
-      }
-    },
-    partitionResults: {
-      accessSchema: exploranda.dataSources.AWS.athena.getQueryResults,
-      params: {
-        apiConfig: {value: apiConfig},
-        QueryExecutionId: {
-          source: 'waitForPartitions',
-          formatter: ({waitForPartitions}) => {
-            return _.map(waitForPartitions, 'QueryExecutionId')
-          }
-        }
-      },
     },
     imageMeta: {
       accessSchema: exploranda.dataSources.AWS.s3.getObject,
@@ -247,32 +176,12 @@ function dependencies(bucket, key, mediaId) {
           formatter: ({rotate}) => rotate
         },
         Key: {
-          source: 'finalMeta',
-          formatter: ({finalMeta}) => finalMeta[0].mediakey
+          source: 'dynamoRecord',
+          formatter: ({dynamoRecord}) => dynamoRecord[0].mediakey
         },
       }
     },
-    saveMeta: {
-      accessSchema: exploranda.dataSources.AWS.s3.putObject,
-      params: {
-        Bucket: {
-          value: MEDIA_METADATA_TABLE_BUCKET
-        },
-        Key: {
-          source: 'finalMeta',
-          formatter: ({finalMeta}) => finalMeta[0].key
-        },
-        Body: {
-          source:'finalMeta',
-          formatter: ({finalMeta}) => {
-            const meta = finalMeta[0]
-            meta.imagemeta = JSON.stringify(meta.imageMeta)
-            return zlib.gzipSync(JSON.stringify(meta) + '\n')
-          }
-        },
-      },
-    },
-    finalMeta: {
+    dynamoRecord: {
       accessSchema: {
         dataSource: 'SYNTHETIC',
         value: { path: _.identity},
@@ -287,38 +196,25 @@ function dependencies(bucket, key, mediaId) {
             const {year, month, day, hour} = imageMeta[0].date
             const asSavedHash = sha1(rotate[0])
             const mediakey = `${MEDIA_STORAGE_PREFIX ? MEDIA_STORAGE_PREFIX + '/' : ""}${mediaId}.${key.split('.').pop()}`
-            const metadataKey = `${MEDIA_METADATA_TABLE_PREFIX ? MEDIA_METADATA_TABLE_PREFIX + '/' : ""}year=${year}/month=${month}/day=${day}/hour=${hour}/${mediaId}.meta.gz`
-            const record = {
-              mediaId,
+            const record = {...{
+              id: mediaId,
+              type: MEDIA_TYPE,
               format: key.split('.').pop(),
               time: imageMeta[0].meta.timestamp,
               mediabucket: MEDIA_STORAGE_BUCKET,
               mediakey,
-              bucket: MEDIA_METADATA_TABLE_BUCKET,
-              key: metadataKey,
               originalHash: sha1(imageMeta[0].image),
               asSavedHash,
+              faces: faces.number,
+              emotions: faces.emotions,
+              strings: text.strings,
+              labels: labels.labels,
               gps: imageMeta[0].meta.gps,
-              metadata: {
-                faces: faces.number,
-                emotions: faces.emotions,
-                strings: text.strings,
-                labels: labels.labels,
-                gps: imageMeta[0].meta.gps,
-                timestamp: imageMeta[0].meta.timestamp,
-                bucket: MEDIA_METADATA_TABLE_BUCKET,
-                key,
-                mediabucket: MEDIA_STORAGE_BUCKET,
-                mediakey,
-              },
+              timestamp: imageMeta[0].meta.timestamp,
               text: text.detail,
               labels: labels.detail,
               faces: faces.detail,
-              imagemeta: imageMeta[0].meta,
-            }
-            if (_.get(imageMeta, '[0].meta.gps')) {
-              record.gps = _.get(imageMeta, '[0].meta.gps')
-            }
+            }, ...imageMeta[0].meta}
             return record
           }
         },
@@ -332,14 +228,8 @@ function dependencies(bucket, key, mediaId) {
           value: MEDIA_DYNAMO_TABLE
         },
         Item: {
-          source: 'finalMeta',
-          formatter: ({finalMeta}) => {
-            return {
-              id: mediaId,
-              type: MEDIA_TYPE,
-              metadata: finalMeta
-            }
-          }
+          source: 'dynamoRecord',
+          formatter: ({dynamoRecord}) => dynamoRecord
         }
       }
     },
@@ -353,7 +243,7 @@ function dependencies(bucket, key, mediaId) {
           value: key
         },
         Tagging: {
-          source: ['save', 'dynamo', 'partitionResults', 'saveMeta'],
+          source: ['save', 'dynamo'],
           formatter: () => {
             return {
               TagSet: [{
@@ -371,5 +261,5 @@ function dependencies(bucket, key, mediaId) {
 exports.handler = function(event, context, callback) {
   const {key, bucket, mediaId} = event
   const reporter = exploranda.Gopher(dependencies(bucket, key, mediaId));
-  reporter.report((e, n) => callback(e, n.finalMeta));
+  reporter.report((e, n) => callback(e, n.dynamoRecord));
 }

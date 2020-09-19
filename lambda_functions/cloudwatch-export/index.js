@@ -34,7 +34,7 @@ function dependencies({logGroupName, destinationBucket, destinationKey, year, mo
         },
         detectErrors: (err, res) => {
           console.log(err)
-          console.log(res)
+          console.log(JSON.stringify(res))
           status = _.map(res.exportTasks, 'status.code').filter((c) => c === "PENDING" || c === "RUNNING")
           if (status.length) {
             if (process.env.EXPLORANDA_DEBUG) {
@@ -83,7 +83,7 @@ function dependencies({logGroupName, destinationBucket, destinationKey, year, mo
         },
         detectErrors: (err, res) => {
           console.log(err)
-          console.log(res)
+          console.log(JSON.stringify(res))
           status = _.map(res.exportTasks, 'status.code').filter((c) => c === "PENDING" || c === "RUNNING")
           if (status.length) {
             if (process.env.EXPLORANDA_DEBUG) {

@@ -40,6 +40,7 @@ variable lifecycle_rules {
 variable "lambda_notifications" {
   type = list(object({
     lambda_arn = string
+    lambda_name = string
     events = list(string)
     filter_prefix = string
     filter_suffix = string

@@ -18,12 +18,10 @@ locals {
   photo_etl_env = {
     ingest = {
       MEDIA_STORAGE_BUCKET = module.photos_media_output_bucket.bucket.id
+      MEDIA_STORAGE_PREFIX = "images"
       MEDIA_DYNAMO_TABLE = module.media_table.table.name
       MEDIA_TYPE = "IMAGE"
       MEDIA_METADATA_TABLE_BUCKET = module.photos_metadata_glue_table.metadata_bucket[0].bucket.id
-      ATHENA_RESULT_BUCKET = module.photos_athena_result_bucket.bucket.id
-      ATHENA_TABLE = module.photos_metadata_glue_table.table.name
-      ATHENA_DB = module.photos_metadata_glue_table.table.database_name
     }
   }
 }
@@ -40,17 +38,14 @@ module "photos_lambda" {
 
     policy_statements = concat(
       module.media_table.permission_sets.put_item,
-      local.permission_sets.athena_query,
       local.permission_sets.rekognition_image_analysis,
-      module.photos_athena_result_bucket.permission_sets.athena_query_execution,
       module.media_input_bucket.permission_sets.move_objects_out,
       module.media_input_bucket.permission_sets.put_object_tagging,
-      module.photos_metadata_glue_table.permission_sets.create_partition_glue_permissions,
-      module.photos_media_output_bucket.permission_sets.put_object,
-      module.photos_metadata_glue_table.metadata_bucket[0].permission_sets.put_object
+      module.photos_media_output_bucket.permission_sets.put_object
     )
   }
 }
+
 
 module "photos_metadata_glue_table" {
   source = "./modules/standard_glue_table"

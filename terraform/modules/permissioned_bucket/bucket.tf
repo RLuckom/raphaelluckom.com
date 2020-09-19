@@ -34,6 +34,14 @@ resource "aws_s3_bucket" "bucket" {
   }
 }
 
+resource "aws_lambda_permission" "allow_caller" {
+  count = length(var.lambda_notifications)
+  action        = "lambda:InvokeFunction"
+  function_name = var.lambda_notifications[count.index].lambda_name
+  principal     = "s3.amazonaws.com"
+  source_arn = aws_s3_bucket.bucket.arn
+}
+
 resource "aws_s3_bucket_notification" "bucket_notification" {
   count = length(var.lambda_notifications) == 0 ? 0 : 1
   bucket = aws_s3_bucket.bucket.id
