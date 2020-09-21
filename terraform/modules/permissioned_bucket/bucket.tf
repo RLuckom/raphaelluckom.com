@@ -56,3 +56,27 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
     }
   }
 }
+
+data "aws_iam_policy_document" "bucket_policy_document" {
+  count = length(var.bucket_policy_statements) == 0 ? 0 : 1
+  dynamic "statement" {
+    for_each = var.bucket_policy_statements
+    content {
+      actions   = statement.value.actions
+      resources   = ["${aws_s3_bucket.bucket.arn}/*"]
+      dynamic "principals" {
+        for_each = statement.value.principals
+        content {
+          type = principals.value.type
+          identifiers = principals.value.identifiers
+        }
+      }
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "bucket_policy" {
+  count = length(var.bucket_policy_statements) == 0 ? 0 : 1
+  bucket = aws_s3_bucket.bucket.id
+  policy = data.aws_iam_policy_document.bucket_policy_document[0].json
+}

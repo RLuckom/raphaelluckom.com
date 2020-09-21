@@ -33,6 +33,21 @@ variable "media_domain_settings" {
   }
 }
 
+variable "test_domain_settings" {
+  type = object({
+    domain_name = string
+    domain_name_prefix = string
+    allowed_origins = list(string)
+    subject_alternative_names = list(string)
+  })
+  default = {
+    domain_name = "test.raphaelluckom.com"
+    domain_name_prefix = "test.raphaelluckom"
+    allowed_origins = ["https://test.raphaelluckom.com", "http://localhost*"]
+    subject_alternative_names = ["www.test.raphaelluckom.com"]
+  }
+}
+
 variable "cloudwatch_logs_table_name" {
   type = string
   default = "cloudwatch_logs"

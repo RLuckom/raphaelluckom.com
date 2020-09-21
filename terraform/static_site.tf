@@ -15,3 +15,12 @@ module "media_hosting_bucket" {
   domain_name_prefix = var.media_domain_settings.domain_name_prefix
   subject_alternative_names = var.media_domain_settings.subject_alternative_names
 }
+
+module "test_site" {
+  source = "./modules/static_site"
+  route53_zone_name = var.route53_zone_name
+  domain_name = var.test_domain_settings.domain_name
+  allowed_origins = var.test_domain_settings.allowed_origins
+  domain_name_prefix = var.test_domain_settings.domain_name_prefix
+  subject_alternative_names = var.test_domain_settings.subject_alternative_names
+}
