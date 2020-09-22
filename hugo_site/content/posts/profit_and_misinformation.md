@@ -60,7 +60,7 @@ or a desire to blend in.
 
 I love this passage because it describes the _mechanism_ of manipulating opinion
 so clearly. The manipulators do not argue, they don't invoke us-vs-them, and
-they certainly don't try to use logic to acheive their goal. Instead, they try to
+they certainly don't try to use logic to achieve their goal. Instead, they try to
 shape _how the world appears to their victims_. It's gaslighting at a cottage-industry
 scale, with socialites carefully orchestrating the party so that it _appears_ to everyone
 as if one side is unanimously agreed to be correct. Because this tactic relies
@@ -120,12 +120,12 @@ Next, the algorithm will make _predictions_ about what is likely to generate
 engagement from different users. To do this, it needs a model of the
 _item_ ("what is this post 'about' and what other features does it have")
 and a model of the _user_ ("what features are common to the items that this person
-spend time engaging with.") 
+spends time engaging with.") 
 
 Note that none of this requires any kind of intent at all on the part of the
 network operator. No one need _set out_ to say "If someone is interested in woodworking,
 or advocating genocide, or rejecting science, show them things like those"
-There is not even any guaranttee that that's what will happen--the algorithm might
+There is not even any guarantee that that's what will happen--the algorithm might
 find that controversy and disagreement generate engagement, and
 so it might promote posts that are opposite what a user thinks. The algorithm
 can only knows three things: what the user does, what the item "looks like," and
@@ -175,11 +175,11 @@ thought to avoid.
 So when we think about using and advocating for better social media, we need to understand
 that the conversation can't _just_ be about specific instances of racism or bias
 appearing in the output of these algorithms. We _also_ need to focus on the
-practice of introducing algorithms that may in practice operate as feedback loops
-that magnify bias and inequality that already exist, as well as all of the other
+practice of introducing algorithms that may operate as feedback loops
+to magnify bias and inequality that already exist, as well as all of the other
 problems that can follow when you let "engaging with" something stand for "valuing" it.
 And when we are using these systems, we should be mindful that we're not _only_
 looking at what other users of the service are posting (and we're _definitely not_
 looking at what "everybody" is posting, or what "public opinion" looks like.) We're
-also looking at what an algorithm thinks will keep our eyes on the screen. And it
+looking at what an algorithm thinks will keep our eyes on the screen. And it
 doesn't know or care why.
