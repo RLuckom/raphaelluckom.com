@@ -48,6 +48,17 @@ variable "lambda_notifications" {
   default = []
 }
 
+variable "object_policy_statements" {
+  type = list(object({
+    actions = list(string)
+    principals = list(object({
+      type = string
+      identifiers = list(string)
+    }))
+  }))
+  default = []
+}
+
 variable "bucket_policy_statements" {
   type = list(object({
     actions = list(string)
@@ -57,4 +68,8 @@ variable "bucket_policy_statements" {
     }))
   }))
   default = []
+}
+
+locals {
+  need_policy = length(concat(var.bucket_policy_statements, var.object_policy_statements)) > 0
 }

@@ -16,7 +16,7 @@ module "website_bucket" {
     max_age_seconds = 3000
   }]
 
-  bucket_policy_statements = [{
+  object_policy_statements = [{
     actions = ["s3:GetObject", "s3:GetObjectVersion"]
     principals = [{
       type = "*"

@@ -23,4 +23,9 @@ module "test_site" {
   allowed_origins = var.test_domain_settings.allowed_origins
   domain_name_prefix = var.test_domain_settings.domain_name_prefix
   subject_alternative_names = var.test_domain_settings.subject_alternative_names
+  default_cloudfront_ttls = {
+    min = 0
+    default = 0
+    max = 0
+  }
 }

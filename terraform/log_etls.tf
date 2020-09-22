@@ -6,6 +6,24 @@ module "logs_athena_bucket" {
 module "logs_partition_bucket" {
   source = "./modules/permissioned_bucket"
   bucket = var.partitioned_bucket_name
+
+  bucket_policy_statements = [
+    {
+      actions = ["s3:GetBucketAcl"]
+      principals = [{
+        type = "Service"
+        identifiers = ["logs.amazonaws.com" ]
+      }]
+    }]
+
+    object_policy_statements = [{
+      actions = ["s3:PutObject"]
+      principals = [{
+        type = "Service"
+        identifiers = ["logs.amazonaws.com" ]
+      }]
+    }
+  ]
 }
 
 resource "aws_glue_catalog_database" "time_series_database" {
@@ -103,30 +121,6 @@ module "pending_cloudwatch_exports" {
   source = "./modules/permissioned_queue"
   queue_name = "pending_cloudwatch_exports"
   maxReceiveCount = 16
-}
-
-data "aws_iam_policy_document" "partition_bucket_policy" {
-  statement {
-    principals { 
-      type = "Service"
-      identifiers = ["logs.amazonaws.com" ]
-    }
-    actions = ["s3:GetBucketAcl"]
-    resources = [module.logs_partition_bucket.bucket.arn]
-  }
-  statement {
-    principals { 
-      type = "Service"
-      identifiers = ["logs.amazonaws.com" ]
-    }
-    actions = ["s3:PutObject"]
-    resources = ["${module.logs_partition_bucket.bucket.arn}/*"]
-  }
-}
-
-resource "aws_s3_bucket_policy" "partition_bucket_policy" {
-  bucket = module.logs_partition_bucket.bucket.id
-  policy = data.aws_iam_policy_document.partition_bucket_policy.json
 }
 
 module "log_export_queue_consumer" {
