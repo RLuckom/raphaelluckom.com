@@ -9,7 +9,7 @@ I've had a lot of conversations over the last months about how for-profit
 social media actively interferes with efforts to solve humanity's big challenges.
 Along the way, I've been surprised how many people agree with the basic 
 premise--Something Has Gone Wrong. What has _not_ surprised me is that
-most of those people find it hard to take that analysis a little farther 
+most people find it hard to take that analysis a little farther 
 to come up with actions they can take to be part of the solution. For-profit
 social media is an intimidating hydra to imagine opposing. In this post, I'm
 going to present a way of understanding the issue that helps point out
@@ -18,7 +18,7 @@ ways to take action.
 The first priority is to understand the problem. Social media raises questions
 about privacy from other users, privacy from network operators, and privacy
 from third parties (advertisers, government propaganda machines, etc). Most of those
-questions about privacy raise further questions about security. But for today,
+questions about privacy raise further questions about security. But to start,
 we're going to set those questions to the side. Instead, we're going to take
 the position of someone who is _trying_ to influence public opinion--for instance,
 to destabilize a wealthy and powerful country by interfering with its elections
@@ -28,7 +28,6 @@ Sir Terry Pratchett's novel Night Watch gives a wonderful small-scale example of
 how this kind of manipulation works. In this section, we find ourselves at
 a political soiree (similar to a $10k / head fundraising dinner) where a
 sneaky plan is being carried out to turn opinion against the current ruler.
-Let's watch:
 
 > On her apparently random walk to the buffet table, Madam happened to meet
 several other gentlemen and, like a good hostess, piloted them in the direction
@@ -73,7 +72,7 @@ real world is the result of people earnestly asking this question. In the real w
 if you are a motivated person who exists near a place of crisis, there is usually
 a way for you to use your resources and your body to improve the situation a little.
 
-However, when it comes to artificial, human-owned systems like for-profit
+However, when it comes to artificial, human-created systems like for-profit
 social media, this is not the case. If we use Sir Pratchett's analogy,
 it's as if each person at the party is blindfolded, and must rely on
 the network itself for their picture of what's going on. Since the network's
@@ -88,12 +87,15 @@ Notice that this dynamic has an important difference from the "real world"
 scenario that I outlined earlier, where you can have a positive impact 
 on any crisis that you or your resources can reach. Because the social network's
 algorithm largely controls who sees what, it can surface only those things
-likely to increase engagement. If we believe in [Hanlon's Razor](https://en.wikipedia.org/wiki/Hanlon%27s_razor)--
+likely to increase engagement. Unless the algorithm assigns high value to what you say,
+you may not ever appear to anyone else at all.
+
+Now, if we believe in [Hanlon's Razor](https://en.wikipedia.org/wiki/Hanlon%27s_razor)--
 that is, "never attribute to malice that which is adequately explained by stupidity"--
-then we are duty-bound to assume (at least at first) that no one is being intentionally
+then we're supposed to assume (at least at first) that no one is being intentionally
 nefarious. Let's make that assumption and look at where it leads us.
 
-The first thing we need to notice is very simple and requires no malice
+The first thing we can imagine is very simple and requires no malice
 at all. A project manager walks over to an engineer's desk and says "I think
 that we can tell how good our service is by how much time people spend on it. Stands
 to reason, right? If people enjoy our service, they'll spend more time here,
@@ -101,7 +103,7 @@ and if they spend more time here, our advertisers are happier and we're making
 bank. Win-win-win. So what I want _you_ to do is, I want you to design an algorithm
 that helps people find the content that gets them to stay longest." I just 
 made this up, but I think it's a pretty fair representation and it
-doesn't require bad intent. However, it _does_ conflate "time users spend 
+doesn't require bad intent. However, it _does_ require the conflation of "time users spend 
 interacting with the service" and "value that users get from the service."
 In PR terms, this is convenient--it's the publicly-palatable rationale
 for any decision that gets made to support the goal.
@@ -124,7 +126,7 @@ spends time engaging with.")
 
 Note that none of this requires any kind of intent at all on the part of the
 network operator. No one need _set out_ to say "If someone is interested in woodworking,
-or advocating genocide, or rejecting science, show them things like those"
+or hate speech, or rejecting science, show them things like that"
 There is not even any guarantee that that's what will happen--the algorithm might
 find that controversy and disagreement generate engagement, and
 so it might promote posts that are opposite what a user thinks. The algorithm
