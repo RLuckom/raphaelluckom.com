@@ -1,6 +1,6 @@
 module "lambda_role" {
   source = "../permissioned_role"
-  role_name = "${var.lambda_details.name}-lambda"
+  role_name = "${local.scoped_lambda_name}-lambda"
   role_policy = concat(var.deny_cloudwatch ? [] : var.log_writer_policy, var.lambda_details.policy_statements)
   principals = [{
     type = "Service"
@@ -9,9 +9,9 @@ module "lambda_role" {
 }
 
 resource "aws_lambda_function" "lambda" {
-  function_name = var.lambda_details.name
+  function_name = local.scoped_lambda_name
   s3_bucket = var.lambda_details.bucket
-	s3_key = var.lambda_details.key
+	s3_key = "${var.lambda_details.action_name}/lambda.zip"
   role          = module.lambda_role.role.arn
   handler       = var.handler
 	timeout = var.timeout_secs

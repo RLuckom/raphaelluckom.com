@@ -26,9 +26,9 @@ module "archive_image_jpg_lambda" {
   mem_mb = 384
   timeout_secs = 20
   lambda_details = {
-    name = "archive_image_jpg"
+    action_name = "archive_image_jpg"
+    scope_name = ""
     bucket = aws_s3_bucket.lambda_bucket.id
-    key = "archive_image_jpg/lambda.zip"
 
     policy_statements = concat(
       module.media_table.permission_sets.put_item,
@@ -45,9 +45,9 @@ module "jpg_resize_lambda" {
   mem_mb = 512
   timeout_secs = 20
   lambda_details = {
-    name = "jpg_image_resize"
+    action_name = "jpg_image_resize"
+    scope_name = ""
     bucket = aws_s3_bucket.lambda_bucket.id
-    key = "jpg_image_resize/lambda.zip"
 
     policy_statements = concat(
       module.stream_input_bucket.permission_sets.read_and_tag,

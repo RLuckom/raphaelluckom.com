@@ -12,9 +12,9 @@ module "event_trigger_lambda" {
     })
   }
   lambda_details = {
-    name = "event_trigger"
+    action_name = "event_trigger"
+    scope_name = ""
     bucket = aws_s3_bucket.lambda_bucket.id
-    key = "event_trigger/lambda.zip"
 
     policy_statements = concat(
       module.archive_image_jpg_lambda.permission_sets.invoke,

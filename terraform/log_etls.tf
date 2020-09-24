@@ -30,7 +30,7 @@ resource "aws_glue_catalog_database" "time_series_database" {
   name = var.time_series_db_name
 }
 
-module "log_etl_lambda" {
+module "archive_cloudfront_logs" {
   source = "./modules/permissioned_lambda"
   timeout_secs = 40
   mem_mb = 256
@@ -47,9 +47,9 @@ module "log_etl_lambda" {
     ATHENA_REGION = var.athena_region
   }
   lambda_details = {
-    name = "log-rotation-${var.domain_name_prefix}"
+    action_name = "archive_cloudfront_logs"
+    scope_name = var.domain_name_prefix
     bucket = aws_s3_bucket.lambda_bucket.id
-    key = "log-rotator/log-rotator.zip"
     policy_statements =  concat(
       local.permission_sets.athena_query, 
       module.cloudformation_logs_glue_table.permission_sets.create_partition_glue_permissions,
@@ -104,9 +104,9 @@ module "log_export_notification_lambda" {
     "QUEUE_URL" = module.pending_cloudwatch_exports.queue.id
   }
   lambda_details = {
-    name = "log_export_notification"
+    action_name = "log_export_notification"
+    scope_name = ""
     bucket = aws_s3_bucket.lambda_bucket.id
-    key = "log_export_notification/lambda.zip"
     policy_statements = concat(
       local.permission_sets.cloudwatch_log_read, 
       local.permission_sets.athena_query,
@@ -130,9 +130,9 @@ module "log_export_queue_consumer" {
     arn = module.pending_cloudwatch_exports.queue.arn
   }]
   lambda_details = {
-    name = "log_export_queue_consumer"
+    action_name = "log_export_queue_consumer"
+    scope_name = ""
     bucket = aws_s3_bucket.lambda_bucket.id
-    key = "log_export_consumer/lambda.zip"
     reserved_concurrent_executions = 1
     policy_statements = concat(
       local.permission_sets.create_log_exports,

@@ -1,13 +1,17 @@
 variable "lambda_details" {
   type = object({
-    name = string
+    action_name = string
+    scope_name = string
     bucket = string
-    key = string
     policy_statements = list(object({
       actions = list(string)
       resources = list(string)
     }))
   })
+}
+
+locals {
+  scoped_lambda_name = "${var.lambda_details.action_name}${var.lambda_details.scope_name == "" ? "-" : ""}${var.lambda_details.scope_name}"
 }
 
 variable "invoking_principals" {
