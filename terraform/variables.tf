@@ -100,7 +100,7 @@ variable "lambda_bucket_name" {
 
 variable "stream_input_bucket_name" {
   type = string
-  default = "rluckom.stream.input"
+  default = "rluckom-stream-input"
 }
 
 variable "scratch_bucket_name" {

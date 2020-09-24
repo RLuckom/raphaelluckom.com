@@ -92,5 +92,7 @@ variable "reserved_concurrent_executions" {
 
 variable "environment_var_map" {
   type = map(string)
-  default = {}
+  default = {
+    NO_VARS = "true"
+  }
 }

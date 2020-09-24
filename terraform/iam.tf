@@ -45,8 +45,9 @@ data "aws_iam_policy_document" "phone_policy" {
     ]
     resources = [
       module.media_input_bucket.bucket.arn,
+      module.stream_input_bucket.bucket.arn,
       "${module.media_input_bucket.bucket.arn}/*",
-      "${aws_s3_bucket.stream_input_bucket.arn}/*",
+      "${module.stream_input_bucket.bucket.arn}/*",
       "arn:aws:s3:::rluckom-photo-archive",
       "arn:aws:s3:::rluckom-photo-archive/*"
     ]

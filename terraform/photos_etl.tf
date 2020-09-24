@@ -1,8 +1,3 @@
-module "photos_athena_result_bucket" {
-  source = "./modules/permissioned_bucket"
-  bucket = "rluckom.photos.athena"
-}
-
 module "photos_media_output_bucket" {
   source = "./modules/permissioned_bucket"
   bucket = "rluckom.photos.partition"
@@ -21,40 +16,42 @@ locals {
       MEDIA_STORAGE_PREFIX = "images"
       MEDIA_DYNAMO_TABLE = module.media_table.table.name
       MEDIA_TYPE = "IMAGE"
-      MEDIA_METADATA_TABLE_BUCKET = module.photos_metadata_glue_table.metadata_bucket[0].bucket.id
     }
   }
 }
 
-module "photos_lambda" {
+module "archive_image_jpg_lambda" {
   source = "./modules/permissioned_lambda"
   environment_var_map = local.photo_etl_env.ingest
   mem_mb = 384
   timeout_secs = 20
   lambda_details = {
-    name = "rluckom_photos"
+    name = "archive_image_jpg"
     bucket = aws_s3_bucket.lambda_bucket.id
-    key = "rluckom.photos/lambda.zip"
+    key = "archive_image_jpg/lambda.zip"
 
     policy_statements = concat(
       module.media_table.permission_sets.put_item,
       local.permission_sets.rekognition_image_analysis,
-      module.media_input_bucket.permission_sets.move_objects_out,
-      module.media_input_bucket.permission_sets.put_object_tagging,
+      module.media_input_bucket.permission_sets.read_and_tag,
+      module.stream_input_bucket.permission_sets.read_and_tag,
       module.photos_media_output_bucket.permission_sets.put_object
     )
   }
 }
 
+module "jpg_resize_lambda" {
+  source = "./modules/permissioned_lambda"
+  mem_mb = 512
+  timeout_secs = 20
+  lambda_details = {
+    name = "jpg_image_resize"
+    bucket = aws_s3_bucket.lambda_bucket.id
+    key = "jpg_image_resize/lambda.zip"
 
-module "photos_metadata_glue_table" {
-  source = "./modules/standard_glue_table"
-  table_name          = "rluckom_photos_partitioned_gz"
-  metadata_bucket_name = "rluckom.photos.metadata"
-  db = {
-    name = aws_glue_catalog_database.media_db.name
-    arn = aws_glue_catalog_database.media_db.arn
+    policy_statements = concat(
+      module.stream_input_bucket.permission_sets.read_and_tag,
+      module.media_hosting_bucket.website_bucket.permission_sets.put_object 
+    )
   }
-  ser_de_info = var.json_ser_de
-  columns = local.images_glue_schema.columns
 }

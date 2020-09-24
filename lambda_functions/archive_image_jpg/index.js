@@ -14,19 +14,10 @@ const MEDIA_STORAGE_PREFIX = process.env.MEDIA_STORAGE_PREFIX
 const MEDIA_METADATA_TABLE_BUCKET = process.env.MEDIA_METADATA_TABLE_BUCKET
 // prefix in bucket for partitioned files, e.g. 'partitioned/raphaelluckom.com'
 const MEDIA_METADATA_TABLE_PREFIX = process.env.MEDIA_METADATA_TABLE_PREFIX
-// bucket in which to store Athena results with prefix, e.g. 's3://rluckom.athena'.
-// seems to not work if it's a folder.
-const ATHENA_RESULT_BUCKET = process.env.ATHENA_RESULT_BUCKET
 // DynamoDB table in which media is stored
 const MEDIA_DYNAMO_TABLE = process.env.MEDIA_DYNAMO_TABLE
 // Media type
 const MEDIA_TYPE = process.env.MEDIA_TYPE
-// database in Athena / Glue to query, e.g. 'timeseries'
-const ATHENA_DB = process.env.ATHENA_DB
-// table in Athena / Glue to query, e.g. 'raphaelluckom_cf_logs_partitioned_gz'
-const ATHENA_TABLE = process.env.ATHENA_TABLE
-// catalog to use in Athena. For most queries this will be 'AwsDataCatalog'
-const ATHENA_CATALOG = process.env.ATHENA_CATALOG || 'AwsDataCatalog'
 const AWS_REGION = process.env.AWS_REGION
 
 const apiConfig = {
@@ -195,7 +186,7 @@ function dependencies(bucket, key, mediaId) {
           formatter: ({text, labels, faces, imageMeta, rotate}) => {
             const {year, month, day, hour} = imageMeta[0].date
             const asSavedHash = sha1(rotate[0])
-            const mediakey = `${MEDIA_STORAGE_PREFIX ? MEDIA_STORAGE_PREFIX + '/' : ""}${mediaId}.${key.split('.').pop()}`
+            const mediakey = `${MEDIA_STORAGE_PREFIX ? MEDIA_STORAGE_PREFIX + '/' : ""}${mediaId}.JPG`
             const record = {...{
               id: mediaId,
               type: MEDIA_TYPE,

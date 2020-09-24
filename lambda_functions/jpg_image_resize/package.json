@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "exifreader": "^3.12.2",
-    "exploranda-core": "^0.2.7",
+    "exploranda-core": "^0.2.10",
     "lodash": "^4.17.20"
   }
 }
