@@ -11,7 +11,7 @@ variable "lambda_details" {
 }
 
 locals {
-  scoped_lambda_name = "${var.lambda_details.action_name}${var.lambda_details.scope_name == "" ? "-" : ""}${var.lambda_details.scope_name}"
+  scoped_lambda_name = "${var.lambda_details.action_name}${var.lambda_details.scope_name == "" ? "" : "-"}${var.lambda_details.scope_name}"
 }
 
 variable "invoking_principals" {
