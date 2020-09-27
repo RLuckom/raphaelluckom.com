@@ -1,44 +1,27 @@
 {
     "intro": {
         "dependencies": {
-            "mediaId": {
+            "firstItem": {
                 "action": "storeItem",
                 "params": {
                     "item": {
-                        "ref": "mediaId"
+                        "helper": "processFirstItem",
+                        "params": {
+                            "items": {
+                                "ref": "stage.items"
+                            }
+                        }
                     }
                 }
-            }
-        },
-        "transformers": {
-            "mediaId": [
-                {
-                    "uuid": [
-                        "mediaId"
-                    ]
-                }
-            ]
-        }
-    },
-    "outro": {
-        "dependencies": {
-            "nextFunction": {
-                "action": "invokeFunction",
+            },
+            "restItems": {
+                "action": "storeItem",
                 "params": {
-                    "FunctionName": {
-                        "value": "${function_name}"
-                    },
-                    "Payload": {
-                        "helper": "constructInvokePayload",
+                    "item": {
+                        "helper": "getRestItems",
                         "params": {
-                            "Bucket": {
-                                "ref": "bucket"
-                            },
-                            "Key": {
-                                "ref": "key"
-                            },
-                            "mediaId": {
-                                "ref": "mediaId"
+                            "items": {
+                                "ref": "stage.items"
                             }
                         }
                     }
@@ -49,17 +32,53 @@
             "parameters": [
                 {
                     "copy": {
-                        "intro.mediaId_stored[0]": "mediaId"
+                        "event.items": "items"
+                    }
+                }
+            ]
+        }
+    },
+    "outro": {
+        "dependencies": {
+            "nextFunction": {
+                "action": "invokeFunction",
+                "conditions": {
+                    "nonEmpty": [
+                        {
+                            "isNonEmptyList": "stage.restItems"
+                        }
+                    ]
+                },
+                "params": {
+                    "FunctionName": {
+                        "ref": "stage.function"
+                    },
+                    "Payload": {
+                        "helper": "constructInvokePayload",
+                        "params": {
+                            "items": {
+                                "ref": "stage.restItems"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "transformers": {
+            "parameters": [
+                {
+                    "copy": {
+                        "intro.results.firstItem_stored[0]": "firstItem"
                     }
                 },
                 {
                     "copy": {
-                        "event.bucket": "bucket"
+                        "context.invokedFunctionArn": "function"
                     }
                 },
                 {
                     "copy": {
-                        "event.key": "key"
+                        "intro.results.restItems_stored": "restItems"
                     }
                 }
             ]

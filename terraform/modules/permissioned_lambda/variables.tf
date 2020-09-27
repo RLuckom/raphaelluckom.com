@@ -22,6 +22,17 @@ variable "invoking_principals" {
   default = []
 }
 
+variable "self_invoke" {
+  type = object({
+    allowed = bool
+    concurrent_executions = number
+  })
+  default = {
+    allowed = false
+    concurrent_executions = 0
+  }
+}
+
 variable "bucket_notifications" {
   type = list(object({
     bucket = string

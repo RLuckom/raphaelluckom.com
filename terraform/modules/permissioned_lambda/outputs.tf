@@ -23,7 +23,11 @@ output "log_group" {
 }
 
 output "permission_sets" {
-  value = {
+  value = local.permission_sets
+}
+
+locals {
+  permission_sets = {
     invoke = [{
       actions   =  [
         "lambda:InvokeFunction"

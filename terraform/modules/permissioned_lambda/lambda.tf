@@ -1,10 +1,25 @@
 module "lambda_role" {
   source = "../permissioned_role"
   role_name = "${local.scoped_lambda_name}-lambda"
-  role_policy = concat(var.deny_cloudwatch ? [] : var.log_writer_policy, var.lambda_details.policy_statements)
+  role_policy = concat(var.self_invoke.allowed ? local.lambda_invoke : [], var.deny_cloudwatch ? [] : var.log_writer_policy, var.lambda_details.policy_statements)
   principals = [{
     type = "Service"
     identifiers = ["lambda.amazonaws.com"]
+  }]
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_region" "current" {}
+
+locals {
+  lambda_invoke = [{
+    actions   =  [
+      "lambda:InvokeFunction"
+    ]
+    resources = [
+      "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:${local.scoped_lambda_name}"
+    ]
   }]
 }
 
@@ -15,7 +30,7 @@ resource "aws_lambda_function" "lambda" {
   role          = module.lambda_role.role.arn
   handler       = var.handler
 	timeout = var.timeout_secs
-  reserved_concurrent_executions = var.reserved_concurrent_executions
+  reserved_concurrent_executions = var.self_invoke.allowed ? var.self_invoke.concurrent_executions : var.reserved_concurrent_executions
 	memory_size = var.mem_mb
 
   runtime = "nodejs12.x"

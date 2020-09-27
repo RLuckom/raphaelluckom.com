@@ -9,6 +9,10 @@ module "test_donut_days_lambda" {
       module.event_logger_lambda.permission_sets.invoke
     )
   }
+  self_invoke = {
+    allowed = true
+    concurrent_executions = 3
+  }
   environment_var_map = {
     DONUT_DAYS_DEBUG = "true"
     DONUT_DAYS_CONFIG = templatefile("./invoke.tpl", {
