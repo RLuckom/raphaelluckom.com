@@ -24,11 +24,14 @@
             "nextFunction": {
                 "action": "invokeFunction",
                 "conditions": {
-                    "nonEmpty": [
-                        {
-                            "isNonEmptyList": "intro.vars.restItems"
+                    "nonEmpty": {
+                        "helper": "isNonEmptyList",
+                        "params": {
+                            "list": {
+                                "ref": "intro.vars.restItems"
+                            }
                         }
-                    ]
+                    }
                 },
                 "params": {
                     "FunctionName": {
