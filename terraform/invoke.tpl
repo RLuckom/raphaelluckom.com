@@ -1,41 +1,22 @@
 {
     "intro": {
-        "dependencies": {
+        "transformers": {
             "firstItem": {
-                "action": "storeItem",
+                "helper": "processFirstItem",
                 "params": {
-                    "item": {
-                        "helper": "processFirstItem",
-                        "params": {
-                            "items": {
-                                "ref": "stage.items"
-                            }
-                        }
+                    "items": {
+                        "ref": "event.items"
                     }
                 }
             },
             "restItems": {
-                "action": "storeItem",
+                "helper": "getRestItems",
                 "params": {
-                    "item": {
-                        "helper": "getRestItems",
-                        "params": {
-                            "items": {
-                                "ref": "stage.items"
-                            }
-                        }
+                    "items": {
+                        "ref": "event.items"
                     }
                 }
             }
-        },
-        "transformers": {
-            "parameters": [
-                {
-                    "copy": {
-                        "event.items": "items"
-                    }
-                }
-            ]
         }
     },
     "outro": {
@@ -45,43 +26,24 @@
                 "conditions": {
                     "nonEmpty": [
                         {
-                            "isNonEmptyList": "stage.restItems"
+                            "isNonEmptyList": "intro.vars.restItems"
                         }
                     ]
                 },
                 "params": {
                     "FunctionName": {
-                        "ref": "stage.function"
+                        "ref": "context.invokedFunctionArn"
                     },
                     "Payload": {
                         "helper": "constructInvokePayload",
                         "params": {
                             "items": {
-                                "ref": "stage.restItems"
+                                "ref": "intro.vars.restItems"
                             }
                         }
                     }
                 }
             }
-        },
-        "transformers": {
-            "parameters": [
-                {
-                    "copy": {
-                        "intro.results.firstItem_stored[0]": "firstItem"
-                    }
-                },
-                {
-                    "copy": {
-                        "context.invokedFunctionArn": "function"
-                    }
-                },
-                {
-                    "copy": {
-                        "intro.results.restItems_stored": "restItems"
-                    }
-                }
-            ]
         }
     }
 }
