@@ -23,13 +23,43 @@ locals {
   }]
 }
 
+provider "archive" {}
+
+data "archive_file" "deployment_package" {
+  count = length(var.source_contents) == 0 ? 0 : 1
+  type        = "zip"
+  output_path = local.deployment_package_local_path
+
+  dynamic "source" {
+    for_each = var.source_contents
+    content {
+      content  = source.value.file_contents
+      filename = source.value.file_name
+    }
+  }
+}
+
+resource "aws_s3_bucket_object" "deployment_package_zip" {
+  count = length(var.source_contents) == 0 ? 0 : 1
+  bucket = var.lambda_details.bucket
+  key    = local.deployment_package_key
+  source = local.deployment_package_local_path
+
+  # The filemd5() function is available in Terraform 0.11.12 and later
+  # For Terraform 0.11.11 and earlier, use the md5() function and the file() function:
+  # etag = "${md5(file("path/to/file"))}"
+  etag = data.archive_file.deployment_package[0].output_md5
+}
+
 resource "aws_lambda_function" "lambda" {
   function_name = local.scoped_lambda_name
   s3_bucket = var.lambda_details.bucket
-	s3_key = "${var.lambda_details.action_name}/lambda.zip"
+	s3_key = local.deployment_package_key
   role          = module.lambda_role.role.arn
   handler       = var.handler
+  layers = var.layers
 	timeout = var.timeout_secs
+  source_code_hash = length(data.archive_file.deployment_package) > 0 ? data.archive_file.deployment_package[0].output_base64sha256 : null
   reserved_concurrent_executions = var.self_invoke.allowed ? var.self_invoke.concurrent_executions : var.reserved_concurrent_executions
 	memory_size = var.mem_mb
 
@@ -37,6 +67,7 @@ resource "aws_lambda_function" "lambda" {
   environment {
     variables = var.environment_var_map
   }
+  depends_on = [aws_s3_bucket_object.deployment_package_zip]
 }
 
 resource "aws_cloudwatch_log_group" "lambda_log_group" {
