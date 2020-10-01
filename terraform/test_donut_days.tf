@@ -22,7 +22,6 @@ resource "aws_lambda_layer_version" "donut_days" {
   layer_name = "donut_days"
   s3_bucket = aws_s3_bucket.lambda_bucket.id
   s3_key = "layers/donut_days/layer.zip"
-
   compatible_runtimes = ["nodejs12.x"]
 }
 

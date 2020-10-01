@@ -56,6 +56,7 @@ function insertAthenaPartitions({exportTask, athenaCatalog, athenaDb, athenaTabl
       QueryString: {
         source: exportTask,
         formatter: (params) => {
+          console.log(JSON.stringify(params))
           return _.map(params[exportTask], (le) => {
             return `ALTER TABLE ${athenaDb}.${athenaTable}
             ADD IF NOT EXISTS 
