@@ -1,5 +1,5 @@
 {
-  "name": "cloudwatch-export",
+  "name": "cloudwatch-rotator",
   "version": "0.0.0",
   "description": "",
   "main": "index.js",
@@ -9,7 +9,10 @@
   "author": "Raphael Luckom",
   "license": "MIT",
   "dependencies": {
-    "exploranda-core": "^0.2.6",
-    "lodash": "^4.17.20"
+    "donut-days": "github:RLuckom/donut-days",
+    "exploranda-core": "^0.2.11",
+    "lodash": "^4.17.20",
+    "moment": "^2.29.0",
+    "uuid": "^8.3.0"
   }
 }
