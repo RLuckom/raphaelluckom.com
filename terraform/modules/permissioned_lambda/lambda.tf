@@ -45,9 +45,6 @@ resource "aws_s3_bucket_object" "deployment_package_zip" {
   key    = local.deployment_package_key
   source = local.deployment_package_local_path
 
-  # The filemd5() function is available in Terraform 0.11.12 and later
-  # For Terraform 0.11.11 and earlier, use the md5() function and the file() function:
-  # etag = "${md5(file("path/to/file"))}"
   etag = data.archive_file.deployment_package[0].output_md5
 }
 

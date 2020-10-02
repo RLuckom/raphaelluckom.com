@@ -19,9 +19,6 @@ module.exports = {
           "athenaTable": {
             "value": "${athena_table}"
           },
-          "dryRun": {
-            "value": true
-          },
           "exportTask": {
             "helper": "qualifiedDependencyName",
             "params": {
@@ -57,6 +54,28 @@ module.exports = {
       "runId": {
         "helper": "uuid"
       }
+    }
+  },
+  main: {
+    "dependencies": {
+      "performExport": {
+        "action": "performExport",
+        "params": {
+          exportTask: {ref: "stage.allExports[0]"}
+        }
+      },
+    },
+    "transformers": {
+      "allExports": {
+        "or": [
+          {
+            "ref": "event.exportConfigs"
+          },
+          {
+            "ref": "intro.results.logExports_exportTasks"
+          }
+        ]
+      },
     }
   },
   "outro": {
@@ -98,7 +117,7 @@ module.exports = {
           },
           "start": { value: 1 }
         }
-      }
+      },
     }
   }
 }

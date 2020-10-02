@@ -89,65 +89,6 @@ module "cloudformation_logs_glue_table" {
   columns = local.cloudfront_access_log_schema.columns
 }
 
-module "log_export_notification_lambda" {
-  source = "./modules/permissioned_lambda"
-  cron_notifications = [{
-    period_expression = "cron(0 1 * * ? *)"
-  }]
-  environment_var_map = {
-    "ATHENA_REGION" = var.athena_region
-    "PARTITION_BUCKET" = module.logs_partition_bucket.bucket.id
-    "PARTITION_PREFIX" = var.cloudwatch_partition_prefix
-    "ATHENA_DB" = aws_glue_catalog_database.time_series_database.name
-    "ATHENA_TABLE" = var.cloudwatch_logs_table_name
-    ATHENA_RESULT_BUCKET = "s3://${module.logs_athena_bucket.bucket.id}/"
-    "QUEUE_URL" = module.pending_cloudwatch_exports.queue.id
-  }
-  lambda_details = {
-    action_name = "log_export_notification"
-    scope_name = ""
-    bucket = aws_s3_bucket.lambda_bucket.id
-    policy_statements = concat(
-      local.permission_sets.cloudwatch_log_read, 
-      local.permission_sets.athena_query,
-      module.cloudwatch_logs_glue_table.permission_sets.create_partition_glue_permissions,
-      module.logs_athena_bucket.permission_sets.athena_query_execution,
-      module.pending_cloudwatch_exports.permission_sets.send_message
-    )
-  }
-}
-
-module "pending_cloudwatch_exports" {
-  source = "./modules/permissioned_queue"
-  queue_name = "pending_cloudwatch_exports"
-  maxReceiveCount = 16
-}
-
-module "log_export_queue_consumer" {
-  source = "./modules/permissioned_lambda"
-  queue_event_sources = [{
-    batch_size = 1
-    arn = module.pending_cloudwatch_exports.queue.arn
-  }]
-  lambda_details = {
-    action_name = "log_export_queue_consumer"
-    scope_name = ""
-    bucket = aws_s3_bucket.lambda_bucket.id
-    reserved_concurrent_executions = 1
-    policy_statements = concat(
-      local.permission_sets.create_log_exports,
-      module.logs_partition_bucket.permission_sets.get_bucket_acl,
-      module.logs_partition_bucket.permission_sets.put_object,
-      module.pending_cloudwatch_exports.permission_sets.lambda_receive
-    )
-  }
-  environment_var_map = {
-    "ATHENA_REGION" = var.athena_region
-    "PARTITION_BUCKET" = module.logs_partition_bucket.bucket.id
-    "PARTITION_PREFIX" = var.cloudwatch_partition_prefix
-  }
-}
-
 module "cloudwatch_logs_glue_table" {
   source = "./modules/standard_glue_table"
   table_name          = var.cloudwatch_logs_table_name
@@ -167,4 +108,51 @@ module "cloudwatch_logs_glue_table" {
   }
   partition_keys = local.generic_cloudwatch_logs_schema.partition_keys
   columns = local.generic_cloudwatch_logs_schema.columns
+}
+
+module "log_export_lambda" {
+  source = "./modules/permissioned_lambda"
+  source_contents = [
+    {
+      file_contents = templatefile("./functions/templates/log_exports/config.js", {
+        log_export_destination_bucket = module.logs_partition_bucket.bucket.id
+        partition_prefix = var.cloudwatch_partition_prefix
+        athena_db = aws_glue_catalog_database.time_series_database.name
+        athena_table = var.cloudwatch_logs_table_name
+        athena_result_bucket = "s3://${module.logs_athena_bucket.bucket.id}/"
+      })
+      file_name = "config.js"
+    },
+    {
+      file_name = "index.js"
+      file_contents = file("./functions/templates/log_exports/index.js") 
+    } 
+  ]
+  lambda_details = {
+    action_name = "log_export"
+    scope_name = "cloudwatch"
+    bucket = aws_s3_bucket.lambda_bucket.id
+
+    policy_statements = concat( 
+      local.permission_sets.athena_query,
+      local.permission_sets.create_log_exports,
+      local.permission_sets.cloudwatch_log_read, 
+      module.cloudwatch_logs_glue_table.permission_sets.create_partition_glue_permissions,
+      module.logs_athena_bucket.permission_sets.athena_query_execution,
+      module.logs_partition_bucket.permission_sets.get_bucket_acl,
+      module.logs_partition_bucket.permission_sets.put_object,
+    )
+  }
+  self_invoke = {
+    allowed = true
+    concurrent_executions = 3
+  }
+  timeout_secs = 50
+  layers = [aws_lambda_layer_version.donut_days.arn]
+  environment_var_map = {
+    DONUT_DAYS_DEBUG = "true"
+  }
+  cron_notifications = [{
+    period_expression = "cron(0 1 * * ? *)"
+  }]
 }

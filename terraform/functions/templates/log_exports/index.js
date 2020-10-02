@@ -124,4 +124,85 @@ function insertAthenaPartitions({exportTask, athenaCatalog, athenaDb, athenaTabl
   }, dryRun)
 }
 
-exports.handler = createTask(config, {}, {prepareLogExports, insertAthenaPartitions})
+function performExport({exportTask, dryRun}, addDependency, getDependencyName, processParams) {
+  addDependency('checkForRunning', {
+    accessSchema: exploranda.dataSources.AWS.cloudwatchlogs.describeExportTasks,
+    params: {
+      apiConfig: {value: apiConfig},
+    },
+    behaviors: {
+      retryParams: {
+        times: 60,
+        interval: 10000,
+      },
+      detectErrors: (err, res) => {
+        console.log(err)
+        console.log(JSON.stringify(res))
+        const status = _.map(res.exportTasks, 'status.code').filter((c) => c === "PENDING" || c === "RUNNING")
+        if (status.length) {
+          if (process.env.DONUT_DAYS_DEBUG) {
+            console.log(err)
+            console.log(res)
+          }
+          return status
+        }
+      }
+    }
+  }, dryRun)
+
+  addDependency('createExport', {
+    accessSchema: exploranda.dataSources.AWS.cloudwatchlogs.createExportTask,
+    params: {
+      apiConfig: {value: apiConfig},
+      logGroupName: {
+        source: getDependencyName('checkForRunning'),
+        formatter: () => exportTask.logGroupName,
+      },
+        from: {
+          value: exportTask.startStamp,
+        },
+        to: {
+          value: exportTask.endStamp,
+        },
+        destination: {
+          value: exportTask.destinationBucket,
+        },
+        destinationPrefix: {
+          value: exportTask.destinationKey,
+        },
+        taskName: {
+          value: exportTask.runId,
+        },
+    },
+  }, dryRun)
+
+  addDependency('waitForFinished', {
+    accessSchema: exploranda.dataSources.AWS.cloudwatchlogs.describeExportTasks,
+    params: {
+      apiConfig: {
+        source: getDependencyName('createExport'),
+        formatter: () => apiConfig,
+      }
+    },
+    behaviors: {
+      retryParams: {
+        times: 60,
+        interval: 10000,
+      },
+      detectErrors: (err, res) => {
+        console.log(err)
+        console.log(JSON.stringify(res))
+        status = _.map(res.exportTasks, 'status.code').filter((c) => c === "PENDING" || c === "RUNNING")
+        if (status.length) {
+          if (process.env.EXPLORANDA_DEBUG) {
+            console.log(err)
+            console.log(res)
+          }
+          return status
+        }
+      }
+    }
+  }, dryRun)
+}
+
+exports.handler = createTask(config, {}, {prepareLogExports, insertAthenaPartitions, performExport})
