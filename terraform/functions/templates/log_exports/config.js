@@ -1,4 +1,7 @@
 module.exports = {
+  overrides: {
+    MAX_RECURSION_DEPTH: 20
+  },
   "intro": {
     "dependencies": {
       "addPartitions": {
@@ -59,7 +62,6 @@ module.exports = {
   "outro": {
     "dependencies": {
       "nextFunction": {
-        "action": "exploranda",
         "conditions": {
           "moreExports": {
             "helper": "isNonEmptyList",
@@ -70,32 +72,11 @@ module.exports = {
             }
           }
         },
+        "action": "recurse",
         "params": {
-          "accessSchema": {
-            "value": "dataSources.AWS.lambda.invoke"
-          },
-          "dependencyName": {
-            "value": "nextFunction"
-          },
-          "params": {
-            "value": {
-              "FunctionName": {
-                "all": {
-                  "value": {
-                    "ref": "context.invokedFunctionArn"
-                  }
-                }
-              },
-            InvocationType: {value: {value: 'Event'}},
-              "Payload": {
-                "all": {
-                  "value": {helper: 'toJson',
-                    params: {
-                      "exportConfigs": {"ref": "stage.remainingExports"}
-                    }
-                  }
-                }
-              }
+          "Payload": {
+            all: {
+              exportConfigs: {ref: "stage.remainingExports"}
             }
           }
         }
