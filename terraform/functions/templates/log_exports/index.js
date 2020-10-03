@@ -36,7 +36,6 @@ function prepareLogExports({runId, partitionPrefix, logExportDestinationBucket},
               destinationKey: `${partitionPrefix}/year=${year}/month=${month}/day=${day}/service=${service}/sourcename=${sourcename}/${runId}`
             }
           }).filter((g) => g.service && g.sourcename)
-          console.log(JSON.stringify(ret))
           return ret;
         }
       },
@@ -56,7 +55,6 @@ function insertAthenaPartitions({exportTask, athenaCatalog, athenaDb, athenaTabl
       QueryString: {
         source: exportTask,
         formatter: (params) => {
-          console.log(JSON.stringify(params))
           return _.map(params[exportTask], (le) => {
             return `ALTER TABLE ${athenaDb}.${athenaTable}
             ADD IF NOT EXISTS 
@@ -102,7 +100,7 @@ function insertAthenaPartitions({exportTask, athenaCatalog, athenaDb, athenaTabl
       detectErrors: (err, res) => {
         const status = _.get(res, 'QueryExecution.Status.State')
         if (status !== 'SUCCEEDED') {
-          if (process.env.EXPLORANDA_DEBUG) {
+          if (process.env.DONUT_DAYS_DEBUG) {
             console.log(err)
           }
           return status
@@ -136,8 +134,6 @@ function performExport({exportTask, dryRun}, addDependency, getDependencyName, p
         interval: 10000,
       },
       detectErrors: (err, res) => {
-        console.log(err)
-        console.log(JSON.stringify(res))
         const status = _.map(res.exportTasks, 'status.code').filter((c) => c === "PENDING" || c === "RUNNING")
         if (status.length) {
           if (process.env.DONUT_DAYS_DEBUG) {
@@ -190,11 +186,9 @@ function performExport({exportTask, dryRun}, addDependency, getDependencyName, p
         interval: 10000,
       },
       detectErrors: (err, res) => {
-        console.log(err)
-        console.log(JSON.stringify(res))
         status = _.map(res.exportTasks, 'status.code').filter((c) => c === "PENDING" || c === "RUNNING")
         if (status.length) {
-          if (process.env.EXPLORANDA_DEBUG) {
+          if (process.env.DONUT_DAYS_DEBUG) {
             console.log(err)
             console.log(res)
           }

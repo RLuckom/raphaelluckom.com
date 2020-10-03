@@ -149,9 +149,6 @@ module "log_export_lambda" {
   }
   timeout_secs = 50
   layers = [aws_lambda_layer_version.donut_days.arn]
-  environment_var_map = {
-    DONUT_DAYS_DEBUG = "true"
-  }
   cron_notifications = [{
     period_expression = "cron(0 1 * * ? *)"
   }]
