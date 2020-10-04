@@ -7,12 +7,6 @@ module "stream_items_table" {
   }]
 }
 
-module "processed_for_stream" {
-  source = "./modules/permissioned_queue"
-  queue_name = "processed_for_stream"
-  maxReceiveCount = 3
-}
-
 module "stream_input_bucket" {
   source = "./modules/permissioned_bucket"
   bucket = var.stream_input_bucket_name
