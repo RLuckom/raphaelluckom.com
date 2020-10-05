@@ -35,9 +35,38 @@ module "websocket_api_gateway_gateway" {
   },
     {
     route_key = "$default"
-    handler_arn = module.event_log_lambda.lambda.arn
-    handler_name = module.event_log_lambda.lambda.function_name
+    handler_arn = module.api_handler_test_lambda.lambda.arn
+    handler_name = module.api_handler_test_lambda.lambda.function_name
   },
   ]
 }
 
+
+module "api_handler_test_lambda" {
+  source = "./modules/permissioned_lambda"
+  source_contents = [
+    {
+      file_name = "index.js"
+      file_contents = file("./functions/templates/generic_donut_days/index.js") 
+    }, 
+    {
+      file_contents = templatefile("./functions/templates/api_handler_test/config.js", {
+        apigateway_management_endpoint = "${replace(module.websocket_api_gateway_gateway.websocket_api.api_endpoint, "wss://", "")}/prod"
+      })
+      file_name = "config.js"
+    },
+  ]
+  lambda_details = {
+    action_name = "api_handler_test"
+    scope_name = ""
+    bucket = aws_s3_bucket.lambda_bucket.id
+
+    policy_statements = concat(
+      module.websocket_api_gateway_gateway.permission_sets.manage_connections
+    )
+  }
+  environment_var_map = {
+    DONUT_DAYS_DEBUG = "true"
+  }
+  layers = [aws_lambda_layer_version.donut_days.arn]
+}

@@ -22,3 +22,17 @@ output "websocket_api_stage" {
     api_id = aws_apigatewayv2_stage.stage.api_id
   }
 }
+
+output permission_sets {
+  value = {
+    manage_connections = [{
+      actions = [
+        "execute-api:ManageConnections",
+        "execute-api:Invoke"
+      ],
+      resources = [
+        "${aws_apigatewayv2_api.websocket_api.execution_arn}/*"
+      ]
+    }]
+  }
+}
