@@ -17,7 +17,7 @@ function prepareLogExports({runId, partitionPrefix, logExportDestinationBucket},
           const startStamp = logDay.valueOf()
           const endStamp = moment().subtract(2, 'days').endOf('day').valueOf()
           const year = logDay.year()
-          const month = logDay.month()
+          const month = logDay.month() + 1
           const day = logDay.date()
           const ret =  _.map(groups[groupDepName], (g) => {
             const logGroupName = g.logGroupName

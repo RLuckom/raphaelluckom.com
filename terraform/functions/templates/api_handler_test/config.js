@@ -28,7 +28,7 @@ module.exports = {
                   value: {
                     helper: 'toJson',
                     params: {
-                      imgUrl: { value: 'https://media.raphaelluckom.com/img/9c530653-4f61-4e33-b956-b83bd05cb01d-800.JPG'},
+                      imgUrl: { value: 'https://www.media.raphaelluckom.com/img/9c530653-4f61-4e33-b956-b83bd05cb01d-1000.JPG'},
                       greeting: { value: "hello"},
                     }
                   }
