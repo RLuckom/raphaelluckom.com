@@ -2,47 +2,35 @@ module.exports = {
   intro: {
     dependencies: {
       nextFunction: {
-        action: 'exploranda',
+        action: 'eventConfiguredInvocation',
         params: {
-          dependencyName: { value: 'respondToAction' },
-          accessSchema: { value: 'dataSources.AWS.lambda.invoke'},
-          params: {
+          FunctionName: {value: '${test_function}'},
+          config: {
             value: {
-              apiConfig: {
+              intro: {},
+              main: {},
+              outro: {},
+            }
+          },
+          payloadValues: {
+            all: {
+              runId: { ref: 'stage.uniqueId' }
+            }
+          },
+          resourceReferences: {
+            value: {
+              s3Object: {
                 all: {
-                  value: { 
-                    all: {
-                      region: process.env.AWS_REGION
-                    }
-                  }
-                }
-              },
-              InvocationType: {value: { value: 'Event'}},
-              FunctionName: {value: { value: '${test_function}' }},
-              Payload: {
-                all: {
-                  value: {
-                    helper: 'toJson',
-                    params: {
-                      runId: { ref: 'stage.runId' },
-                      config: { 
-                        value: {
-                          intro: {},
-                          main: {},
-                          outro: {},
-                        }
-                      }
-                    }
-                  }
+                  fileName: {ref: 'prospectiveEvent.runId' }
                 }
               }
             }
-          }
+          },
         }
       },
     },
     transformers: {
-      runId: {
+      uniqueId: {
         helper: "uuid",
       }
     }
