@@ -23,8 +23,6 @@ locals {
   }]
 }
 
-provider "archive" {}
-
 data "archive_file" "deployment_package" {
   count = length(var.source_contents) == 0 ? 0 : 1
   type        = "zip"

@@ -24,16 +24,6 @@ module "websocket_api_gateway_gateway" {
   ]
   lambda_routes = [
     {
-    route_key = "$connect"
-    handler_arn = module.event_log_lambda.lambda.arn
-    handler_name = module.event_log_lambda.lambda.function_name
-  },
-    {
-    route_key = "$disconnect"
-    handler_arn = module.event_log_lambda.lambda.arn
-    handler_name = module.event_log_lambda.lambda.function_name
-  },
-    {
     route_key = "$default"
     handler_arn = module.api_handler_test_lambda.lambda.arn
     handler_name = module.api_handler_test_lambda.lambda.function_name
