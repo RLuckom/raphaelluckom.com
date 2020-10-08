@@ -10,10 +10,6 @@ const MEDIA_STORAGE_BUCKET = process.env.MEDIA_STORAGE_BUCKET
 // prefix in bucket for partitioned files, e.g. 'partitioned/raphaelluckom.com'
 const MEDIA_STORAGE_PREFIX = process.env.MEDIA_STORAGE_PREFIX
 
-// Bucket for partitioned files, e.g. 'rluckom.timeseries'
-const MEDIA_METADATA_TABLE_BUCKET = process.env.MEDIA_METADATA_TABLE_BUCKET
-// prefix in bucket for partitioned files, e.g. 'partitioned/raphaelluckom.com'
-const MEDIA_METADATA_TABLE_PREFIX = process.env.MEDIA_METADATA_TABLE_PREFIX
 // DynamoDB table in which media is stored
 const MEDIA_DYNAMO_TABLE = process.env.MEDIA_DYNAMO_TABLE
 // Media type
