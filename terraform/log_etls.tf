@@ -143,6 +143,9 @@ module "log_export_lambda" {
       module.logs_partition_bucket.permission_sets.put_object,
     )
   }
+  environment_var_map = {
+    DONUT_DAYS_DEBUG = true
+  }
   self_invoke = {
     allowed = true
     concurrent_executions = 3
