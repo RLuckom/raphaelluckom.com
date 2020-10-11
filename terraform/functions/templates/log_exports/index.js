@@ -7,7 +7,7 @@ const apiConfig = {
   region: process.env.AWS_REGION
 }
 
-function prepareLogExports({runId, partitionPrefix, logExportDestinationBucket}, addDependency, getDependencyName, processParams) {
+function prepareLogExports({runId, partitionPrefix, logExportDestinationBucket}, addDependency, addResourceReference, getDependencyName, processParams) {
   const groupDepName = addDependency('groups', exploranda.dataSources.AWS.cloudwatchlogs.describeLogGroupsBuilder(apiConfig))
   addDependency('exportTasks', {
       accessSchema: {
@@ -47,7 +47,7 @@ function prepareLogExports({runId, partitionPrefix, logExportDestinationBucket},
   })
 }
 
-function insertAthenaPartitions({exportTask, athenaCatalog, athenaDb, athenaTable, athenaResultBucket, dryRun}, addDependency, getDependencyName, processParams) {
+function insertAthenaPartitions({exportTask, athenaCatalog, athenaDb, athenaTable, athenaResultBucket, dryRun}, addDependency, addResourceReference, getDependencyName, processParams) {
   const addPartitionsDepName = addDependency('addPartitions', {
     accessSchema: exploranda.dataSources.AWS.athena.startQueryExecution,
     params: {
@@ -122,7 +122,7 @@ function insertAthenaPartitions({exportTask, athenaCatalog, athenaDb, athenaTabl
   }, dryRun)
 }
 
-function performExport({exportTask, dryRun}, addDependency, getDependencyName, processParams) {
+function performExport({exportTask, dryRun}, addDependency, addResourceReference, getDependencyName, processParams) {
   addDependency('checkForRunning', {
     accessSchema: exploranda.dataSources.AWS.cloudwatchlogs.describeExportTasks,
     params: {
