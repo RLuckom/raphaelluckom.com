@@ -10,23 +10,40 @@ locals {
     filter_prefix       = ""
     filter_suffix       = ""
   }]
-  photo_etl_env = {
-    ingest = {
-      MEDIA_STORAGE_BUCKET = module.photos_media_output_bucket.bucket.id
-      MEDIA_STORAGE_PREFIX = "images"
-      MEDIA_DYNAMO_TABLE = module.media_table.table.name
-      MEDIA_TYPE = "IMAGE"
-    }
-  }
 }
 
-module "archive_image_jpg_lambda" {
+module "image_archive_lambda" {
   source = "./modules/permissioned_lambda"
-  environment_var_map = local.photo_etl_env.ingest
-  mem_mb = 384
-  timeout_secs = 20
+  mem_mb = 512
+  source_contents = [
+    {
+      file_name = "index.js"
+      file_contents = file("./functions/templates/event_configured_donut_days/index.js")
+    },
+    {
+      file_name = "dependencyHelpers.js"
+      file_contents = file("./functions/templates/event_configured_donut_days/imageDependencyHelpers.js")
+    },
+    {
+      file_name = "config.js"
+      file_contents = templatefile("./functions/templates/pipelines/imagePipelineConfig.js",
+      {
+      photo_input_bucket = module.media_input_bucket.bucket.id
+      media_storage_bucket = module.photos_media_output_bucket.bucket.id
+      media_storage_prefix = "images"
+      media_dynamo_table = module.media_table.table.name
+      media_hosting_bucket = module.media_hosting_bucket.website_bucket.bucket.id
+      post_input_bucket_name = module.stream_input_bucket.bucket.id 
+
+      })
+    },
+    {
+      file_name = "helpers.js"
+      file_contents = file("./functions/templates/event_configured_donut_days/helpers.js")
+    },
+  ]
   lambda_details = {
-    action_name = "archive_image_jpg"
+    action_name = "image_archive"
     scope_name = ""
     bucket = aws_s3_bucket.lambda_bucket.id
 
@@ -35,23 +52,16 @@ module "archive_image_jpg_lambda" {
       local.permission_sets.rekognition_image_analysis,
       module.media_input_bucket.permission_sets.read_and_tag,
       module.stream_input_bucket.permission_sets.read_and_tag,
-      module.photos_media_output_bucket.permission_sets.put_object
-    )
-  }
-}
-
-module "jpg_resize_lambda" {
-  source = "./modules/permissioned_lambda"
-  mem_mb = 512
-  timeout_secs = 20
-  lambda_details = {
-    action_name = "jpg_image_resize"
-    scope_name = ""
-    bucket = aws_s3_bucket.lambda_bucket.id
-
-    policy_statements = concat(
       module.stream_input_bucket.permission_sets.read_and_tag,
-      module.media_hosting_bucket.website_bucket.permission_sets.put_object 
+      module.media_hosting_bucket.website_bucket.permission_sets.put_object,
+      module.photos_media_output_bucket.permission_sets.put_object,
     )
   }
+  environment_var_map = {
+    DONUT_DAYS_DEBUG = "true"
+  }
+  layers = [
+    aws_lambda_layer_version.donut_days.arn,
+    aws_lambda_layer_version.image_dependencies.arn
+  ]
 }

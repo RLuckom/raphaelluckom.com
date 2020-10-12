@@ -226,8 +226,6 @@ function archiveImage({imageMetaDependencyName, autoRotatedImageDependencyName, 
       Body: {
         source: autoRotatedImageDependencyName,
         formatter: (params) => {
-          console.log(_.keys(params))
-          console.log(_.keys(params[autoRotatedImageDependencyName][0]))
           return params[autoRotatedImageDependencyName][0]
         },
       },
@@ -255,7 +253,7 @@ function archiveImage({imageMetaDependencyName, autoRotatedImageDependencyName, 
       }
     }
   }, dryRun)
-  addFullfilledResource(mediaDynamoTable)
+  addFullfilledResource(dynamoItem)
   const tagForCleanup = addDependency('tagForCleanup', {
     accessSchema: exploranda.dataSources.AWS.s3.putObjectTagging,
     params: {
