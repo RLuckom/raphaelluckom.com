@@ -1,4 +1,4 @@
-const exploranda = require('exploranda-core');
+const { exploranda } = require('donut-days');
 const _ = require('lodash'); 
 
 // log prefix in original log bucket, e.g. 'raphaelluckom'
@@ -68,7 +68,7 @@ function dependencies({CopySource, SourceKey,  InputBucket, DestKey, year, month
           }
         },
         detectErrors: (err, res) => {
-          status = _.get(res, 'QueryExecution.Status.State')
+          const status = _.get(res, 'QueryExecution.Status.State')
           if (status !== 'SUCCEEDED') {
             if (process.env.EXPLORANDA_DEBUG) {
               console.log(err)

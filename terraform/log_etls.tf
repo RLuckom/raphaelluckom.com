@@ -36,16 +36,19 @@ module "archive_cloudfront_logs" {
   mem_mb = 256
   environment_var_map = {
     INPUT_BUCKET = module.static_site.logging_bucket.bucket.id
-    INPUT_PREFIX = ""
     PARTITION_BUCKET = module.logs_partition_bucket.bucket.id
     PARTITION_PREFIX = "partitioned/raphaelluckom.com"
-    METADATA_PARTITION_BUCKET = ""
-    METADATA_PARTITION_PREFIX = ""
     ATHENA_RESULT_BUCKET = "s3://${module.logs_athena_bucket.bucket.id}"
     ATHENA_TABLE = module.cloudformation_logs_glue_table.table.name 
     ATHENA_DB = module.cloudformation_logs_glue_table.table.database_name
     ATHENA_REGION = var.athena_region
   }
+  source_contents = [
+    {
+      file_name = "index.js"
+      file_contents = file("./functions/templates/log_exports/cloudfrontExports.js") 
+    } 
+  ]
   lambda_details = {
     action_name = "archive_cloudfront_logs"
     scope_name = var.domain_name_prefix
@@ -58,6 +61,7 @@ module "archive_cloudfront_logs" {
       module.logs_partition_bucket.permission_sets.put_object
     )
   }
+  layers = [aws_lambda_layer_version.donut_days.arn]
 
   bucket_notifications = [{
     bucket = module.static_site.logging_bucket.bucket.id
