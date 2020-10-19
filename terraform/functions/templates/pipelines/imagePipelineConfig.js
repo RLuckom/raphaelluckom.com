@@ -48,6 +48,7 @@ module.exports = {
           mediaStorageBucket: { value: '${media_storage_bucket}' },
           mediaStoragePrefix: { value: '${media_storage_prefix}' },
           mediaDynamoTable: { value: '${media_dynamo_table}' },
+          labeledMediaTable: { value: '${labeled_media_dynamo_table}' },
           mediaType: { value: 'IMAGE' },
           bucket: { ref: 'stage.bucket' },
           key: { ref: 'stage.imageKey' },

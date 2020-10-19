@@ -32,6 +32,7 @@ module "image_archive_lambda" {
       media_storage_bucket = module.photos_media_output_bucket.bucket.id
       media_storage_prefix = "images"
       media_dynamo_table = module.media_table.table.name
+      labeled_media_dynamo_table = module.labeled_media_table.table.name
       media_hosting_bucket = module.media_hosting_bucket.website_bucket.bucket.id
       post_input_bucket_name = module.stream_input_bucket.bucket.id 
 
@@ -49,6 +50,7 @@ module "image_archive_lambda" {
 
     policy_statements = concat(
       module.media_table.permission_sets.put_item,
+      module.labeled_media_table.permission_sets.put_item,
       local.permission_sets.rekognition_image_analysis,
       module.media_input_bucket.permission_sets.read_and_tag,
       module.stream_input_bucket.permission_sets.read_and_tag,

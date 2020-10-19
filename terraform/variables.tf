@@ -3,6 +3,11 @@ variable "domain_name" {
   default = "raphaelluckom.com"
 }
 
+variable "slack_credentials_parameterstore_key" {
+  type = string
+  default = "/prod/slack/credentials.js"
+}
+
 variable "subject_alternative_names" {
   type = list(string)
   default = ["www.raphaelluckom.com"]
@@ -53,9 +58,14 @@ variable "cloudwatch_logs_table_name" {
   default = "cloudwatch_logs"
 }
 
-variable "api_domain_name" {
+variable "websocket_api_domain_name" {
   type = string
-  default = "api.raphaelluckom.com"
+  default = "websocket.api.raphaelluckom.com"
+}
+
+variable "slack_api_domain_name" {
+  type = string
+  default = "slack.api.raphaelluckom.com"
 }
 
 variable "athena_db_name" {
@@ -123,3 +133,6 @@ variable "json_ser_de" {
     }
   }
 }
+
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}

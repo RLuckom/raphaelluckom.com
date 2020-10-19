@@ -2,13 +2,7 @@ variable "table_name" {
   type = string
 }
 
-
 // stream items table vars
-
-variable "range_key_name" {
-  type = string
-  default = ""
-}
 
 variable "ttl" {
   type = list(object({
@@ -26,6 +20,17 @@ variable "partition_key" {
   default = {
     name = "id"
     type = "S"
+  }
+}
+
+variable "range_key" {
+  type = object({
+    name = string
+    type = string 
+  })
+  default = {
+    name = ""
+    type = "N"
   }
 }
 

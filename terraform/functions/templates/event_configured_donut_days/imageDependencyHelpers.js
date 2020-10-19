@@ -10,7 +10,7 @@ function sha1(buf) {
   return hash.digest('hex')
 }
 
-function getImageAutoRotated({inputBucket, inputKey, dryRun}, addDependency, addResourceReference, getDependencyName, processParams, processParamValue, addFullfilledResource, transformers) {
+function getImageAutoRotated({inputBucket, inputKey}, addDependency, addResourceReference, getDependencyName, processParams, processParamValue, addFullfilledResource, transformers) {
   const image = addDependency('image', {
     accessSchema: exploranda.dataSources.AWS.s3.getObject,
     params: {
@@ -61,7 +61,7 @@ function getImageAutoRotated({inputBucket, inputKey, dryRun}, addDependency, add
       };
       return ret
     })
-  }, dryRun)
+  })
   const autoRotatedImage = addDependency('autoRotatedImage', {
     accessSchema: exploranda.dataSources.sharp.rotate.rotateOne,
     params: {
@@ -70,10 +70,10 @@ function getImageAutoRotated({inputBucket, inputKey, dryRun}, addDependency, add
         formatter: (params) => params[image][0].image
       },
     }
-  }, dryRun)
+  })
 }
 
-function publishImageWebSizes({autoRotatedImageDependencyName, publicHostingBucket, publicHostingPrefix, mediaId, widths, dryRun}, addDependency, addResourceReference, getDependencyName, processParams, processParamValue, addFullfilledResource, transformers) {
+function publishImageWebSizes({autoRotatedImageDependencyName, publicHostingBucket, publicHostingPrefix, mediaId, widths}, addDependency, addResourceReference, getDependencyName, processParams, processParamValue, addFullfilledResource, transformers) {
   const resize = addDependency('resize', {
     accessSchema: exploranda.dataSources.sharp.resize.resizeOne,
     params: {
@@ -84,7 +84,7 @@ function publishImageWebSizes({autoRotatedImageDependencyName, publicHostingBuck
       width: {value: widths},
       withoutEnlargement: {value: true},
     }
-  }, dryRun)
+  })
   const fulfilledResource = {
     bucket: publicHostingBucket,
     key: _.map(widths, (w) => `${(_.endsWith(publicHostingPrefix, '/') || !publicHostingPrefix) ? publicHostingPrefix : publicHostingPrefix + '/'}${mediaId}-${w}.JPG`)
@@ -99,11 +99,11 @@ function publishImageWebSizes({autoRotatedImageDependencyName, publicHostingBuck
       },
       Key: {value: fulfilledResource.key }
     }
-  }, dryRun)
+  })
   addFullfilledResource(fulfilledResource)
 }
 
-function archiveImage({imageMetaDependencyName, autoRotatedImageDependencyName, mediaStorageBucket, mediaStoragePrefix, mediaDynamoTable, mediaType, bucket, key, mediaId, dryRun}, addDependency, addResourceReference, getDependencyName, processParams, processParamValue, addFullfilledResource, transformers) {
+function archiveImage({imageMetaDependencyName, autoRotatedImageDependencyName, mediaStorageBucket, mediaStoragePrefix, mediaDynamoTable, labeledMediaTable, mediaType, bucket, key, mediaId}, addDependency, addResourceReference, getDependencyName, processParams, processParamValue, addFullfilledResource, transformers) {
   const apiConfig = {
     region: process.env.AWS_REGION
   }
@@ -126,7 +126,7 @@ function archiveImage({imageMetaDependencyName, autoRotatedImageDependencyName, 
         detail: res
       }
     }
-  }, dryRun)
+  })
   const facesDepName = addDependency('faces', {
     accessSchema: exploranda.dataSources.AWS.rekognition.detectFaces,
     params: {
@@ -148,7 +148,7 @@ function archiveImage({imageMetaDependencyName, autoRotatedImageDependencyName, 
         detail: res
       }
     }
-  }, dryRun)
+  })
   const labelsDepName = addDependency('labels', {
     accessSchema: exploranda.dataSources.AWS.rekognition.detectLabels,
     params: {
@@ -168,7 +168,7 @@ function archiveImage({imageMetaDependencyName, autoRotatedImageDependencyName, 
           detail: res
       }
     }
-  }, dryRun)
+  })
   const dynamoRecord = addDependency('dynamoRecord', {
     accessSchema: {
       dataSource: 'SYNTHETIC',
@@ -212,7 +212,7 @@ function archiveImage({imageMetaDependencyName, autoRotatedImageDependencyName, 
         }
       },
     }
-  }, dryRun)
+  })
   const archivedImage = {
     bucket: mediaStorageBucket,
     key: `${mediaStoragePrefix ? mediaStoragePrefix + '/' : ""}${mediaId}.JPG`
@@ -234,7 +234,7 @@ function archiveImage({imageMetaDependencyName, autoRotatedImageDependencyName, 
         formatter: (params) => archivedImage.key
       },
     }
-  }, dryRun)
+  })
   addFullfilledResource(archivedImage)
   const dynamoItem = {
     table: mediaDynamoTable,
@@ -249,11 +249,30 @@ function archiveImage({imageMetaDependencyName, autoRotatedImageDependencyName, 
       },
       Item: {
         source: dynamoRecord,
-        formatter: (params) => params[dynamoRecord]
+        formatter: (params) => params[dynamoRecord][0]
       }
     }
-  }, dryRun)
+  })
   addFullfilledResource(dynamoItem)
+  const dynamoLabelRecords = addDependency('dynamoLabelRecords', {
+    accessSchema: exploranda.dataSources.AWS.dynamodb.putItem,
+    params: {
+      apiConfig: {value: apiConfig},
+      TableName: {
+        value: labeledMediaTable
+      },
+      Item: {
+        source: dynamoRecord,
+        formatter: (params) => _.map(params[dynamoRecord][0].labels, (label) => {
+          return {
+            mediaId,
+            mediaType,
+            label: label.Name
+          }
+        })
+      }
+    }
+  })
   const tagForCleanup = addDependency('tagForCleanup', {
     accessSchema: exploranda.dataSources.AWS.s3.putObjectTagging,
     params: {
@@ -275,7 +294,7 @@ function archiveImage({imageMetaDependencyName, autoRotatedImageDependencyName, 
         }
       }
     },
-  }, dryRun)
+  })
 }
 
 module.exports = {

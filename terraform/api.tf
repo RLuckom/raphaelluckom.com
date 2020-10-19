@@ -10,14 +10,16 @@ module "websocket_connections_table" {
 module "websocket_api_cert" {
   source = "./modules/validated_cert"
   route53_zone_name = var.route53_zone_name
-  domain_name = var.api_domain_name
+  domain_name = var.websocket_api_domain_name
 }
 
 module "websocket_api_gateway_gateway" {
-  source = "./modules/websocket_api_gateway"
+  source = "./modules/apigatewayv2"
   name_stem = "websocket_api"
+  protocol = "WEBSOCKET"
+  route_selection_expression = "$request.body.action"
   domain_record = [{
-    domain_name = var.api_domain_name
+    domain_name = var.websocket_api_domain_name
     cert_arn = module.websocket_api_cert.cert.arn
     zone_name = var.route53_zone_name
   }
@@ -41,7 +43,7 @@ module "api_handler_test_lambda" {
     }, 
     {
       file_contents = templatefile("./functions/templates/api_handler_test/config.js", {
-        apigateway_management_endpoint = "${replace(module.websocket_api_gateway_gateway.websocket_api.api_endpoint, "wss://", "")}/prod"
+        apigateway_management_endpoint = "${replace(module.websocket_api_gateway_gateway.api.api_endpoint, "wss://", "")}/prod"
       })
       file_name = "config.js"
     },

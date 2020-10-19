@@ -51,3 +51,16 @@ module "media_table" {
   source = "./modules/standard_dynamo_table"
   table_name = "media"
 }
+
+module "labeled_media_table" {
+  source = "./modules/standard_dynamo_table"
+  table_name = "labeled_media"
+  partition_key = {
+    name = "label"
+    type = "S"
+  }
+  range_key = {
+    name = "mediaId"
+    type = "S"
+  }
+}

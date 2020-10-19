@@ -1,5 +1,4 @@
-
-module "test_ecdd" {
+module "test" {
   source = "./modules/permissioned_lambda"
   source_contents = [
     {
@@ -7,29 +6,30 @@ module "test_ecdd" {
       file_contents = file("./functions/templates/generic_donut_days/index.js") 
     },
     {
+      file_name = "utils.js"
+      file_contents = file("./functions/templates/test/utils.js") 
+    },
+    {
       file_name = "config.js"
-      file_contents = templatefile("./functions/templates/test_ecdd/config.js",
+      file_contents = templatefile("./functions/templates/test/config.js",
       {
-        test_function = module.image_archive_lambda.lambda.function_name
-      media_storage_prefix = "images"
-      media_dynamo_table = module.media_table.table.name
-      media_hosting_bucket = module.media_hosting_bucket.website_bucket.bucket.id
-
+        slack_credentials_parameterstore_key = var.slack_credentials_parameterstore_key
       }
     )
     }
   ]
   lambda_details = {
-    action_name = "test_ecdd"
+    action_name = "test"
     scope_name = ""
     bucket = aws_s3_bucket.lambda_bucket.id
 
     policy_statements = concat(
-      module.image_archive_lambda.permission_sets.invoke
+      local.permission_sets.read_slack_credentials
     )
   }
   environment_var_map = {
     DONUT_DAYS_DEBUG = "true"
+    NODE_DEBUG = "request"
   }
   layers = [aws_lambda_layer_version.donut_days.arn]
 }

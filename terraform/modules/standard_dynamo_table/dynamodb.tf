@@ -3,7 +3,7 @@ resource "aws_dynamodb_table" "standard_table" {
   hash_key         = var.partition_key.name
   billing_mode     = "PAY_PER_REQUEST"
   stream_enabled   = false
-  range_key      = var.range_key_name == "" ? length(var.ttl) > 0 ? var.ttl[0].attribute_name : "" : var.range_key_name
+  range_key      = var.range_key.name == "" ? length(var.ttl) > 0 ? var.ttl[0].attribute_name : "" : var.range_key.name
 
   dynamic "ttl" {
     for_each = var.ttl
@@ -14,7 +14,7 @@ resource "aws_dynamodb_table" "standard_table" {
   }
 
   dynamic "attribute" {
-    for_each = concat([var.partition_key], var.range_key_name != "" ? [{name = var.range_key_name, type="N"}] : [], var.additional_keys)
+    for_each = concat([var.partition_key], var.range_key.name != "" ? [var.range_key] : [], var.additional_keys)
 
     content {
       name               = attribute.value.name

@@ -27,21 +27,21 @@ resource "aws_apigatewayv2_domain_name" "api_domain_name" {
   }
 }
 
-resource "aws_apigatewayv2_api_mapping" "websocket_api_mapping" {
+resource "aws_apigatewayv2_api_mapping" "api_mapping" {
   count = length(var.domain_record) == 0 ? 0 : 1
-  api_id      = aws_apigatewayv2_api.websocket_api.id
+  api_id      = aws_apigatewayv2_api.api.id
   domain_name = aws_apigatewayv2_domain_name.api_domain_name[0].id
   stage       = aws_apigatewayv2_stage.stage.id 
 }
 
-resource "aws_apigatewayv2_api" "websocket_api" {
-  name                       = "${var.name_stem}_websocket_api"
-  protocol_type              = "WEBSOCKET"
+resource "aws_apigatewayv2_api" "api" {
+  name                       = "${var.name_stem}_api"
+  protocol_type              = var.protocol
   route_selection_expression = var.route_selection_expression
 }
 
-resource "aws_apigatewayv2_deployment" "websocket_api" {
-  api_id      = aws_apigatewayv2_api.websocket_api.id
+resource "aws_apigatewayv2_deployment" "api" {
+  api_id      = aws_apigatewayv2_api.api.id
 
   lifecycle {
     create_before_destroy = true
@@ -53,16 +53,16 @@ resource "aws_apigatewayv2_deployment" "websocket_api" {
 }
 
 resource "aws_cloudwatch_log_group" "apigateway_log_group" {
-	name              = "/aws/apigateway/${aws_apigatewayv2_api.websocket_api.id}/${var.apigateway_stage_name}"
+	name              = "/aws/apigateway/${aws_apigatewayv2_api.api.id}/${var.apigateway_stage_name}"
 	retention_in_days = var.log_retention_period
 }
 
 resource "aws_apigatewayv2_stage" "stage" {
-  api_id = aws_apigatewayv2_api.websocket_api.id
+  api_id = aws_apigatewayv2_api.api.id
   name   = var.apigateway_stage_name
-  deployment_id = aws_apigatewayv2_deployment.websocket_api.id
+  deployment_id = aws_apigatewayv2_deployment.api.id
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.apigateway_log_group.arn
-    format = "[ '$context.requestId' ] [ $context.requestTimeEpoch ] [ $context.identity.sourceIp ] [ $context.connectionId ] [ $context.eventType ] [ $context.status ] [ $context.routeKey ] [ $context.stage ] [ $context.integration.requestId ] [ $context.integration.latency ] [ $context.integration.status ] [ '$context.integration.error' ] [ $context.apiId ] [ $context.connectedAt ] [ $context.domainName ] [ $context.error.messageString ]"
+    format = local.log_format
   }
 }
