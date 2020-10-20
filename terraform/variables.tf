@@ -134,5 +134,16 @@ variable "json_ser_de" {
   }
 }
 
+variable "example_jpg" {
+  type = object({ 
+    bucket = string
+    key = string
+  })
+  default = {
+    bucket = "media.raphaelluckom.com"
+    key = "images/2a5110b7-a6e6-4574-8c0b-2197edbc6607-100.JPG"
+  }
+}
+
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}

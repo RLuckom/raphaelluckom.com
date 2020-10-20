@@ -1,4 +1,5 @@
 const _ = require('lodash')
+const { exploranda } = require('donut-days')
 
 const { slackMethods } = require('./utils')
 
@@ -70,11 +71,22 @@ module.exports = {
             value: {
               apiConfig: {all: {value: {all: {
                 token: { ref: 'stage.slackCredentials.token' },
-                headerParamKeys: { value: ['content-type'] },
               }}}},
               channel: {value: { value: 'app_testing' }},
               text: {value: { value: 'it\'s alive!' }},
-              'content-type': {value: { value: 'application/json' }},
+            }
+          }
+        }
+      },
+      getImage: {
+        action: 'exploranda',
+        params: {
+          dependencyName: {value: 'exampleImage'},
+          accessSchema: {value: exploranda.dataSources.AWS.s3.getObject},
+          params: {
+            value: {
+              Bucket: { value: {value: '${example_jpg.bucket}'}},
+              Key: { value: {value: '${example_jpg.key}'}},
             }
           }
         }
@@ -83,7 +95,30 @@ module.exports = {
   },
   outro: {
     transformers: {
-      channels: {ref: 'main.results' }
+      channels: {ref: 'main.results.channels_channels' }
+    },
+    dependencies: {
+      postImageToSlack: {
+        action: 'exploranda',
+        params: {
+          dependencyName: {value: 'live'},
+          accessSchema: { value: slackMethods.uploadBufferAsFile },
+          params: {
+            value: {
+              apiConfig: {all: {value: {all: {
+                token: { ref: 'main.vars.slackCredentials.token' },
+              }}}},
+              channels: {value: { value: 'C01D71TDE0Z' }},
+              file: {all: {value: { ref: 'main.results.getImage_exampleImage[0].Body'}}},
+            }
+          }
+        }
+      },
     }
   },
+  cleanup: {
+    transformers: {
+      image: { ref: 'outro.results.postImageToSlack_live'}
+    }
+  }
 }

@@ -14,6 +14,7 @@ module "test" {
       file_contents = templatefile("./functions/templates/test/config.js",
       {
         slack_credentials_parameterstore_key = var.slack_credentials_parameterstore_key
+        example_jpg = var.example_jpg
       }
     )
     }
