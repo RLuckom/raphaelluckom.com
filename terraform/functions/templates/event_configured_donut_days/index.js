@@ -9,5 +9,5 @@ exports.handler = (event, context, callback) => {
   const ddConfig = event.config || config || {}
   config.expectations = config.expectations || event.expectations || {}
   const ddEvent = event.event || event || {}
-  createTask(_.cloneDeep(ddConfig), helpers, dependencyHelpers)(ddEvent, context, callback)
+  createTask(_.cloneDeep(ddConfig), helpers, dependencyHelpers, recordCollectors)(ddEvent, context, callback)
 }

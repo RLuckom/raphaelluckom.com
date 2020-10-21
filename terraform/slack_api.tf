@@ -33,8 +33,16 @@ module "slack_api_handler_lambda" {
       file_contents = file("./functions/templates/generic_donut_days/index.js") 
     }, 
     {
+      file_name = "helpers.js"
+      file_contents = file("./functions/templates/generic_donut_days/helpers.js") 
+    }, 
+    {
       file_name = "config.js"
-      file_contents = file("./functions/templates/slack_api/config.js") 
+      file_contents = templatefile("./functions/templates/slack_api/config.js",
+      {
+        slack_credentials_parameterstore_key = var.slack_credentials_parameterstore_key
+      }
+    ) 
     }, 
   ]
   lambda_details = {
@@ -43,7 +51,8 @@ module "slack_api_handler_lambda" {
     bucket = aws_s3_bucket.lambda_bucket.id
 
     policy_statements = concat(
-      module.slack_api_gateway_gateway.permission_sets.manage_connections
+      module.slack_api_gateway_gateway.permission_sets.manage_connections,
+      local.permission_sets.read_slack_credentials
     )
   }
   environment_var_map = {
