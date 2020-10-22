@@ -1,44 +1,14 @@
 const _ = require('lodash')
 const { exploranda } = require('donut-days')
 
-const converter = require('aws-sdk').DynamoDB.Converter;
-const scan = {
-  dataSource: 'AWS',
-  namespaceDetails: {
-    name: 'DynamoDB',
-    constructorArgs: {}
-  },
-  name: 'Scan',
-  value: {
-    path: ({Items}) => _.map(Items, (i) => converter.unmarshall(i))
-  },
-  incompleteIndicator: 'LastEvaluatedKey',
-  nextBatchParamConstructor: (params, {LastEvaluatedKey}) => {
-    return _.merge({}, params, {ExclusiveStartKey: LastEvaluatedKey});
-  },
-  requiredParams: {
-    TableName: {},
-  },
-  optionalParams: {
-    AttributesToGet: {},
-    ConsistentRead: {},
-    FilterExpression: {},
-    ProjectionExpression: {},
-    Select: {},
-    Segment: {},
-    TotalSegments: {},
-  },
-  apiMethod: 'scan',
-};
-
 const nlpDataSource = 'NLP'
 
 const classifyUsingJsonModel = {
   name: 'ClassifyFromJsonModel',
   dataSource: nlpDataSource,
-  initializeNamespace: true,
   namespaceDetails: {
-    name: 'natural.BayesClassifier.restore'
+    name: 'natural.BayesClassifier.restore',
+    initialize: true,
   },
   isSync: true,
   apiMethod: {
@@ -51,10 +21,41 @@ const classifyUsingJsonModel = {
   }
 };
 
+const buildClassifierModel = {
+  name: 'BuildClassifierModel',
+  dataSource: nlpDataSource,
+  namespaceDetails: {
+    isTarget: true,
+    initialize: { 
+      useNew: true,
+      argumentOrder: [],
+    },
+    name: 'natural.BayesClassifier',
+  },
+  isSync: true,
+  apiMethod: {
+    name: 'addDocument',
+  },
+  argumentOrder: ['doc', 'class'],
+  requiredParams: {
+    doc: {},
+    class: {},
+  },
+  value: {
+    path: (classifier) => {
+      classifier.train()
+      return JSON.stringify(classifier)
+    }
+  }
+};
+
 module.exports = {
   intro: {
     dependencies: {
       scan: {
+        conditions: {
+          shouldAddRecord: { ref: 'stage.shouldAddRecord' }
+        },
         action: 'exploranda',
         params: {
           accessSchema: {value: 'dataSources.AWS.dynamodb.putItem'},
@@ -116,7 +117,7 @@ module.exports = {
       scan: {
         action: 'exploranda',
         params: {
-          accessSchema: {value: scan},
+          accessSchema: {value: 'dataSources.AWS.dynamodb.scan'},
           params: {
             value: {
               TableName: { value: { value: "${classification_table_name}" }},
@@ -127,10 +128,45 @@ module.exports = {
     },
   },
   outro: {
+    dependencies: {
+      buildModel: {
+        action: 'exploranda',
+        params: {
+          accessSchema: { value: buildClassifierModel },
+          params: {
+            value: {
+              class: {
+                all: {
+                  value: {
+                    helper: 'map',
+                    params: {
+                      list: {ref: 'main.results.scan'},
+                      handler: { value: 'class' }
+                    }
+                  }
+                }
+              },
+              doc: {
+                all: {
+                  value: {
+                    helper: 'map',
+                    params: {
+                      list: {ref: 'main.results.scan'},
+                      handler: { value: 'document' }
+                    }
+                  }
+                }
+              },
+            }
+          }
+        }
+      },
+    }
   },
   cleanup: {
     transformers: {
-      image: { ref: 'main.results.scan'},
+      scan: { ref: 'main.results.scan'},
+      built: { ref: 'outro.results.buildModel'},
       class: { ref: 'main.results.classify'},
     }
   }
