@@ -1,8 +1,6 @@
 const _ = require('lodash')
 const { exploranda } = require('donut-days')
 
-const { slackMethods } = require('./utils')
-
 const converter = require('aws-sdk').DynamoDB.Converter;
 const scan = {
   dataSource: 'AWS',
@@ -33,13 +31,32 @@ const scan = {
   apiMethod: 'scan',
 };
 
+const nlpDataSource = 'NLP'
+
+const classifyUsingJsonModel = {
+  name: 'ClassifyFromJsonModel',
+  dataSource: nlpDataSource,
+  initializeNamespace: true,
+  namespaceDetails: {
+    name: 'natural.BayesClassifier.restore'
+  },
+  isSync: true,
+  apiMethod: {
+    name: 'classify'
+  },
+  argumentOrder: ['doc'],
+  requiredParams: {
+    apiConfig: {},
+    doc: {},
+  }
+};
+
 module.exports = {
   intro: {
     dependencies: {
       scan: {
         action: 'exploranda',
         params: {
-          dependencyName: {value: 'scan'},
           accessSchema: {value: 'dataSources.AWS.dynamodb.putItem'},
           params: {
             value: {
@@ -54,15 +71,51 @@ module.exports = {
             }
           }
         },
-      }
+      },
+      getModel: {
+        action: 'exploranda',
+        params: {
+          accessSchema: {value: 'dataSources.AWS.s3.getObject'},
+          params: {
+            value: {
+              Bucket: { value: { value: "${classification_model.bucket}" }},
+              Key: { value: { value: "${classification_model.key}" }},
+            }
+          }
+        },
+      },
     },
   },
   main: {
+    transformers: {
+      model: {
+        helper: 'fromJson',
+        params: {
+          string: {
+            helper: 'bufferToString',
+            params: {
+              buffer: { ref: 'intro.results.getModel[0].Body' }
+            }
+          }
+        }
+      }
+    },
     dependencies: {
+      classify: {
+        action: 'exploranda',
+        params: {
+          accessSchema: { value: classifyUsingJsonModel },
+          params: {
+            value: {
+              apiConfig: {all: {value: {ref: 'stage.model'}}},
+              doc: { value: { value: 'show me images' }},
+            }
+          }
+        }
+      },
       scan: {
         action: 'exploranda',
         params: {
-          dependencyName: {value: 'scan'},
           accessSchema: {value: scan},
           params: {
             value: {
@@ -77,7 +130,8 @@ module.exports = {
   },
   cleanup: {
     transformers: {
-      image: { ref: 'main.results.scan_scan'}
+      image: { ref: 'main.results.scan'},
+      class: { ref: 'main.results.classify'},
     }
   }
 }

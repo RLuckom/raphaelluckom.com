@@ -40,6 +40,17 @@ output "permission_sets" {
         "${aws_s3_bucket.bucket.arn}/*"
       ]
     }]
+    read_write_objects = [{
+      actions   =  [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:ListBucket"
+      ]
+      resources = [
+        aws_s3_bucket.bucket.arn,
+        "${aws_s3_bucket.bucket.arn}/*"
+      ]
+    }]
     put_object = [
         {
           actions   = ["s3:PutObject"]

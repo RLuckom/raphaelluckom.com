@@ -118,6 +118,21 @@ variable "scratch_bucket_name" {
   default = "rluckom.scratch"
 }
 
+variable "classification_bucket_name" {
+  type = string
+  default = "rluckom.classification"
+}
+
+variable "classification_model_key" {
+  type = string
+  default = "intents.json"
+}
+
+variable "classification_table_name" {
+  type = string
+  default = "test_training_table"
+}
+
 variable "json_ser_de" {
   type = object({
     name = string
