@@ -4,19 +4,20 @@ author: "Raphael Luckom"
 date: 2020-10-21T20:09:34-05:00
 draft: false
 ---
+
 It's Wednesday night. So far it's been a good week--I've found my way back
-into the working cadence that I like. I'm starting to do what I hoped
-I'd be able to--take a real shot at making my skills as valuable to me,
+into the working cadence that I like. This is what I hoped I'd eventually
+be able to do--take a real shot at making my skills as valuable to me,
 the human, as they would be to an employer.
 
 It's taken longer than I hoped to get here. I left my job at the end of July--
 though I don't think I was leaving _that job_, which was pretty new, so much as I was
 stepping off the commercial-software-development treadmill for a bit of a rest([^1]).
-As I've mentioned, I had planned to explore ways to support myself through various
+As I've [mentioned](https://www.raphaelluckom.com/posts/october_check_in.html), I had planned to explore ways to support myself through various
 kinds of traditional crafts. I started moving in that direction--working on designing
 standard-ish objects that I would be able to make and sell--but a feeling of unfinished
-business persisted. It seemed hypocritical to take the money I was paid for spending
-five years working in the systems that are eating the world, then wander off to a quiet
+business remained. It seemed hypocritical to take the money I was paid for 
+working in the systems that are eating the world, then wander off to a quiet
 spot and work on my pottery and sewing like the accounts were balanced. Besides that,
 I _like_ programming. It has the same kind of appeal as doing a crossword puzzle or
 playing Tetris, but when you're finished, there's something new in the world. It makes
@@ -25,14 +26,14 @@ most commercial and leisure activities--redounds to the benefit of a tiny minori
 people. It makes me sad that out of that, somehow, _programming_ is what gets a bad name--
 as if it's the intellectual activity of writing code that gentrifies neighborhoods or
 moves factories overseas, and not billions of tiny acts of unthinking capitulation to the
-logic of markets. I didn't want that to be the note I left on.
+logic of markets. I didn't want to leave on that note.
 
 If I've been short on specifics for the past couple months, it's because I didn't have
 specifics to share. I knew my intended direction of travel but not my route, and certainly
 not when or where exactly I might arrive. Those things are a little clearer to me now--at least,
-I can describe some of the concrete details of what I'm working on day-to-day. The things
-I'm about to talk about should be considered works-in-progress, and I reserve the right
-to about-face on any of them if my perspective changes.
+I can describe some of the concrete details of what I'm working on day-to-day. What
+I'm about to talk about should be considered work-in-progress, and I reserve the right
+to about-face on any of it if my perspective changes.
 
 I've been working on three specific projects. The first one is the cloud infrastructure
 that lives in [github](https://github.com/RLuckom/raphaelluckom.com/tree/master/terraform) alongside
@@ -46,9 +47,8 @@ for myself, I would not like to embarrass myself by giving you something that is
 The other two projects I've been working on are a pair of code libraries: [exploranda-core](https://github.com/RLuckom/exploranda-core)
 and [donut-days](https://github.com/RLuckom/donut-days)([^5]). The purpose of those libraries is to
 make it easy to put any system together at the speed at which you can describe it, without being
-tied to any particular vendor or platform. I've been using AWS, but I've also used other cloud vendors
-and I'm making sure that nothing I'm building _relies_ on anything that's specific to AWS and not
-also offered by competing vendors.
+tied to any particular vendor or platform. I've been using AWS, but I'm making sure that nothing 
+I'm building _relies_ on AWS and not also offered by competing vendors.
 
 Because my goal is that _anyone_ should be able to build whatever system happens to be right for them,
 I need to start with some example systems that I can build and simplify until they meet my standards.
@@ -67,7 +67,7 @@ I don't mean that I'm going to invent a new identity system, and I'm
 just _profoundly_ uninterested in cryptocurrency. My confidence actually comes from
 how obvious and boring the solutions to these problems really are. There are plenty
 of payment processors who offer access to the regular credit card and banking systems at
-reasonable rates([^7]). Likewise, there are extremely trustworthy ways of verifying identity,
+reasonable rates([^7]). Likewise, there are extremely well-understood and trustworthy ways of verifying identity,
 suitable for social media use, that do not rely on Facebook's or Google's login system([^8]).
 It was a big deal when facebook started doing facial recognition on images in 2010. Now
 there are simple ways to do it on a raspberry pi. Paypal is old enough to vote. Technology
@@ -78,15 +78,15 @@ problem, if enough people care about it.
 
 [^1]: The opportunity to do this is so obviously key to my mental and physical health that I think it should be guaranteed to everyone, whenever they need. Whatever obstacles exist to that becoming a reality, shortage of resources does not seem to be one.
 
-[^2]: Well-behaved software keeps records of what it does. These records are written to text files called logs. How to manage these logs--how to balance being able to understand the system without being overwhelmed or paying too much--is an art form.
+[^2]: Well-behaved software keeps records of what it does. These records are written to text files called logs. How to manage these logs--how to balance "being able to understand the system" with "not being overwhelmed" and "not paying too much"--is an art form.
 
-[^3]: The [principle of least privilege](https://en.wikipedia.org/wiki/Principle_of_least_privilege) states that a system component should only be given permission to do the specific things it _needs_ to do. For instance, an application that only needs to read from a database table should not be given permission to write to that table, or to read from any different tables. In practice, it's usually easier for an engineer to develop in a permissive environment (for instance, to give their program full access to a test database) and then only try to restrict access down to the minimum when it's time to deploy to production. I do not find this approach to work well--on the technical side, it can be hard to determine the required set of privileges without significant trial and error, and on the human side, people sometimes cut corners when they're rushing things into production. These factors work against someone trying to do least-privilege after the fact. I described a central part of my least-privilege strategy in [an earlier post](https://www.raphaelluckom.com/posts/a_terraform_pattern.html)
+[^3]: The [principle of least privilege](https://en.wikipedia.org/wiki/Principle_of_least_privilege) states that a system component should only be given permission to do the specific things it _needs_ to do. For instance, an application that only needs to _read_ from a database should not be given permission to _write_ to that database, or to read from any different database. In practice, it's common for an engineer to develop in a permissive environment (for instance, to give their program full access to a test database) and then try to restrict access down to the minimum when it's time to deploy to production. I do not find this approach to work well--on the technical side, it can be hard to determine the required set of privileges without significant trial and error, and on the human side, people sometimes cut corners when they're rushing things into production. These factors work against someone trying to do least-privilege after the fact. I described a central part of my least-privilege strategy in [an earlier post](https://www.raphaelluckom.com/posts/a_terraform_pattern.html)
 
 [^4]: I'm all set for ways to embarrass myself without adding any more.
 
 [^5]: I'll think of some kind of prize for the first person who successfully figures out the reason for that name.
 
-[^6]: It's not immediately obvious, but _login_ is actually one of the core features of every for-profit social media system. The ability to like or comment on a post relies on the fact that the system knows who you are--part of what's important about getting likes is that you can see who they're from, and you know (usually) that it wasn't just a bot clicking on the like button a bunch of times. The fact that a celebrity's social media accounts are reliably _theirs_, not those of an impostor, are why those accounts are valuable. There has been much less popular focus on ways of getting those same assurances without relying on a central system (the "federated" part). That is, there are some well-known ways to do it, but they haven't yet been widely applied to social media. The big money is in getting everyone under _your_ roof, not giving everyone their own.
+[^6]: It's not immediately obvious, but _login_ is one of the core features of every for-profit social media system. The ability to like or comment on a post relies on the fact that the system knows who you are--part of what's important about getting likes is that you can see who they're from, and you know (usually) that it wasn't just a bot clicking on the like button a bunch of times. The fact that a celebrity's social media accounts are reliably _theirs_, not those of an impostor, are why those accounts are valuable. No popular social media system uses a way of getting those assurances without relying on a central system (the "federated" part). There _are_ well-known ways to do it, but they haven't yet been widely applied to social media. The big money is in getting everyone under _your_ roof, not giving everyone their own.
 
 [^7]: I'm defining "reasonable" here as "better than what you can get from rent-seeking market owners," not in a universal sense.
 
