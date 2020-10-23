@@ -3,22 +3,34 @@ const { exploranda } = require('donut-days')
 
 const nlpDataSource = 'NLP'
 
-const classifyUsingJsonModel = {
-  name: 'ClassifyFromJsonModel',
+const classify = {
+  name: 'Classify',
   dataSource: nlpDataSource,
   namespaceDetails: {
-    name: 'natural.BayesClassifier.restore',
-    initialize: true,
+    paramDriven: true
   },
-  isSync: true,
   apiMethod: {
+    argumentOrder: ['doc'],
+    isSync: true,
     name: 'classify'
   },
-  argumentOrder: ['doc'],
   requiredParams: {
     apiConfig: {},
     doc: {},
   }
+};
+
+const restoreClassifier = {
+  name: 'restoreClassifier',
+  dataSource: nlpDataSource,
+  namespaceDetails: {
+    name: 'natural.BayesClassifier.restore',
+    initialize: {
+      isSync: true,
+      argumentOrder: ['jsonModel'],
+    },
+  },
+  isSync: true,
 };
 
 const buildClassifierModel = {
@@ -27,26 +39,46 @@ const buildClassifierModel = {
   namespaceDetails: {
     isTarget: true,
     initialize: { 
+      isSync: true,
       useNew: true,
       argumentOrder: [],
     },
     name: 'natural.BayesClassifier',
   },
-  isSync: true,
-  apiMethod: {
-    name: 'addDocument',
+};
+
+const addDocuments = {
+  name: 'addDocuments',
+  dataSource: nlpDataSource,
+  namespaceDetails: {
+    paramDriven: true
   },
-  argumentOrder: ['doc', 'class'],
+  apiMethod: {
+    argumentOrder: ['doc', 'class'],
+    isSync: true,
+    name: 'addDocument'
+  },
   requiredParams: {
+    apiConfig: {},
     doc: {},
     class: {},
   },
-  value: {
-    path: (classifier) => {
-      classifier.train()
-      return JSON.stringify(classifier)
-    }
-  }
+};
+
+const train = {
+  name: 'train',
+  dataSource: nlpDataSource,
+  namespaceDetails: {
+    paramDriven: true
+  },
+  apiMethod: {
+    argumentOrder: ['doc', 'class'],
+    isSync: true,
+    name: 'train'
+  },
+  requiredParams: {
+    apiConfig: {},
+  },
 };
 
 module.exports = {
@@ -102,13 +134,29 @@ module.exports = {
       }
     },
     dependencies: {
+      restoreClassifier: {
+        action: 'exploranda',
+        params: {
+          accessSchema: { value: restoreClassifier },
+          params: {
+            value: {
+              jsonModel: {all: {value: {ref: 'stage.model'}}},
+            }
+          }
+        }
+      },
       classify: {
         action: 'exploranda',
         params: {
-          accessSchema: { value: classifyUsingJsonModel },
+          accessSchema: { value: classify },
           params: {
             value: {
-              apiConfig: {all: {value: {ref: 'stage.model'}}},
+              apiConfig: {
+                value: {
+                  source: 'restoreClassifier',
+                  formatter: ({restoreClassifier}) => restoreClassifier[0]
+                }
+              },
               doc: { value: { value: 'show me images' }},
             }
           }
@@ -134,7 +182,21 @@ module.exports = {
         params: {
           accessSchema: { value: buildClassifierModel },
           params: {
+          }
+        }
+      },
+      addDocuments: {
+        action: 'exploranda',
+        params: {
+          accessSchema: { value: addDocuments },
+          params: {
             value: {
+              apiConfig: {
+                value: {
+                  source: 'buildModel',
+                  formatter: ({buildModel}) => buildModel[0],
+                }
+              },
               class: {
                 all: {
                   value: {
@@ -152,7 +214,7 @@ module.exports = {
                     helper: 'map',
                     params: {
                       list: {ref: 'main.results.scan'},
-                      handler: { value: 'document' }
+                      handler: { value: 'document' },
                     }
                   }
                 }
@@ -161,6 +223,22 @@ module.exports = {
           }
         }
       },
+      train: {
+        action: 'exploranda',
+        params: {
+          accessSchema: { value: train },
+          params: {
+            value: {
+              apiConfig: {
+                value: {
+                  source: [ 'buildModel', 'addDocuments' ],
+                  formatter: ({buildModel}) => buildModel[0],
+                }
+              },
+            }
+          }
+        }
+      }
     }
   },
   cleanup: {
