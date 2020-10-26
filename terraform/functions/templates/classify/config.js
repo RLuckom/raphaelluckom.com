@@ -30,7 +30,6 @@ const restoreClassifier = {
       argumentOrder: ['jsonModel'],
     },
   },
-  isSync: true,
 };
 
 const buildClassifierModel = {
