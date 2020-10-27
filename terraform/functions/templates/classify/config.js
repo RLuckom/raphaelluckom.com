@@ -80,151 +80,153 @@ const train = {
 };
 
 module.exports = {
-  intro: {
-    index: 0,
-    dependencies: {
-      scan: {
-        conditions: {
-          shouldAddRecord: { ref: 'stage.shouldAddRecord' }
-        },
-        action: 'explorandaUpdated',
-        params: {
-          accessSchema: {value: 'dataSources.AWS.dynamodb.putItem'},
+  stages: {
+    intro: {
+      index: 0,
+      dependencies: {
+        scan: {
+          conditions: {
+            shouldAddRecord: { ref: 'stage.shouldAddRecord' }
+          },
+          action: 'explorandaUpdated',
           params: {
-            explorandaParams: {
-              TableName: "${classification_table_name}" ,
-              Item: { all: {
-                class: { ref: 'event.addItem.class' },
-                document: { ref: 'event.addItem.document' },
-                timeAdded: {
-                  helper: 'msTimestamp'
-                }
-              }}, 
-            }
-          }
-        },
-      },
-      getModel: {
-        action: 'explorandaUpdated',
-        params: {
-          accessSchema: {value: 'dataSources.AWS.s3.getObject'},
-          params: {
-            explorandaParams: {
-              Bucket: "${classification_model.bucket}" ,
-              Key: "${classification_model.key}" ,
-            }
-          }
-        },
-      },
-    },
-  },
-  main: {
-    index: 1,
-    transformers: {
-      model: {
-        helper: 'fromJson',
-        params: {
-          string: {
-            helper: 'bufferToString',
+            accessSchema: {value: 'dataSources.AWS.dynamodb.putItem'},
             params: {
-              buffer: { ref: 'intro.results.getModel[0].Body' }
+              explorandaParams: {
+                TableName: "${classification_table_name}" ,
+                Item: { all: {
+                  class: { ref: 'event.addItem.class' },
+                  document: { ref: 'event.addItem.document' },
+                  timeAdded: {
+                    helper: 'msTimestamp'
+                  }
+                }}, 
+              }
             }
-          }
-        }
-      }
-    },
-    dependencies: {
-      restoreClassifier: {
-        action: 'explorandaUpdated',
-        params: {
-          accessSchema: { value: restoreClassifier },
-          params: {
-            explorandaParams: {
-              jsonModel: {ref: 'stage.model'},
-            }
-          }
-        }
-      },
-      classify: {
-        action: 'explorandaUpdated',
-        params: {
-          accessSchema: { value: classify },
-          params: {
-            explorandaParams: {
-              apiConfig: {
-                source: 'restoreClassifier',
-                formatter: 'restoreClassifier'
-              },
-              doc: 'show me images',
-            }
-          }
-        }
-      },
-      scan: {
-        action: 'explorandaUpdated',
-        params: {
-          accessSchema: {value: 'dataSources.AWS.dynamodb.scan'},
-          params: {
-            explorandaParams: {
-              TableName: "${classification_table_name}" ,
-            }
-          }
+          },
         },
-      }
-    },
-  },
-  outro: {
-    index: 2,
-    dependencies: {
-      buildModel: {
-        action: 'explorandaUpdated',
-        params: {
-          accessSchema: { value: buildClassifierModel },
-        }
-      },
-      addDocuments: {
-        action: 'explorandaUpdated',
-        params: {
-          accessSchema: { value: addDocuments },
+        getModel: {
+          action: 'explorandaUpdated',
           params: {
-            explorandaParams: {
-              apiConfig: {
-                source: 'buildModel',
-                formatter: 'buildModel',
-              },
-              class: {
-                helper: 'map',
-                params: {
-                  list: {ref: 'main.results.scan'},
-                  handler: { value: 'class' }
-                }
-              },
-              doc: {
-                helper: 'map',
-                params: {
-                  list: {ref: 'main.results.scan'},
-                  handler: { value: 'document' },
-                }
+            accessSchema: {value: 'dataSources.AWS.s3.getObject'},
+            params: {
+              explorandaParams: {
+                Bucket: "${classification_model.bucket}" ,
+                Key: "${classification_model.key}" ,
+              }
+            }
+          },
+        },
+      },
+    },
+    main: {
+      index: 1,
+      transformers: {
+        model: {
+          helper: 'fromJson',
+          params: {
+            string: {
+              helper: 'bufferToString',
+              params: {
+                buffer: { ref: 'intro.results.getModel[0].Body' }
               }
             }
           }
         }
       },
-      train: {
-        action: 'explorandaUpdated',
-        params: {
-          accessSchema: { value: train },
+      dependencies: {
+        restoreClassifier: {
+          action: 'explorandaUpdated',
           params: {
-            explorandaParams: {
-              apiConfig: {
-                source: [ 'buildModel', 'addDocuments' ],
-                formatter: 'buildModel',
-              },
+            accessSchema: { value: restoreClassifier },
+            params: {
+              explorandaParams: {
+                jsonModel: {ref: 'stage.model'},
+              }
+            }
+          }
+        },
+        classify: {
+          action: 'explorandaUpdated',
+          params: {
+            accessSchema: { value: classify },
+            params: {
+              explorandaParams: {
+                apiConfig: {
+                  source: 'restoreClassifier',
+                  formatter: 'restoreClassifier'
+                },
+                doc: 'show me images',
+              }
+            }
+          }
+        },
+        scan: {
+          action: 'explorandaUpdated',
+          params: {
+            accessSchema: {value: 'dataSources.AWS.dynamodb.scan'},
+            params: {
+              explorandaParams: {
+                TableName: "${classification_table_name}" ,
+              }
+            }
+          },
+        }
+      },
+    },
+    outro: {
+      index: 2,
+      dependencies: {
+        buildModel: {
+          action: 'explorandaUpdated',
+          params: {
+            accessSchema: { value: buildClassifierModel },
+          }
+        },
+        addDocuments: {
+          action: 'explorandaUpdated',
+          params: {
+            accessSchema: { value: addDocuments },
+            params: {
+              explorandaParams: {
+                apiConfig: {
+                  source: 'buildModel',
+                  formatter: 'buildModel',
+                },
+                class: {
+                  helper: 'map',
+                  params: {
+                    list: {ref: 'main.results.scan'},
+                    handler: { value: 'class' }
+                  }
+                },
+                doc: {
+                  helper: 'map',
+                  params: {
+                    list: {ref: 'main.results.scan'},
+                    handler: { value: 'document' },
+                  }
+                }
+              }
+            }
+          }
+        },
+        train: {
+          action: 'explorandaUpdated',
+          params: {
+            accessSchema: { value: train },
+            params: {
+              explorandaParams: {
+                apiConfig: {
+                  source: [ 'buildModel', 'addDocuments' ],
+                  formatter: 'buildModel',
+                },
+              }
             }
           }
         }
       }
-    }
+    },
   },
   cleanup: {
     transformers: {

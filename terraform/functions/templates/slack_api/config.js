@@ -18,49 +18,51 @@ const getParameter = {
 };
 
 module.exports = {
-  intro: {
-    index: 0,
-    transformers: {
-      body: { 
-        helper: 'fromJson',
-        params: {
-          string: { ref: 'event.body'}
+  config: {
+    intro: {
+      index: 0,
+      transformers: {
+        body: { 
+          helper: 'fromJson',
+          params: {
+            string: { ref: 'event.body'}
+          }
+        },
+      },
+      dependencies: {
+        parameterStore: {
+          action: 'explorandaDeprecated',
+          params: {
+            dependencyName: {value: 'credentials'},
+            accessSchema: {value: getParameter},
+            params: {
+              value: {
+                Name: { value: { value: "${slack_credentials_parameterstore_key}" }},
+                WithDecryption: { value: { value: true }},
+              }
+            }
+          },
         }
       },
     },
-    dependencies: {
-      parameterStore: {
-        action: 'exploranda',
-        params: {
-          dependencyName: {value: 'credentials'},
-          accessSchema: {value: getParameter},
+    main: {
+      index: 1,
+      transformers: {
+        valid: { 
+          helper: 'verifySlackSignature',
           params: {
-            value: {
-              Name: { value: { value: "${slack_credentials_parameterstore_key}" }},
-              WithDecryption: { value: { value: true }},
-            }
+            messageBody: { ref: 'event.body'},
+            credentials: {
+              helper: 'fromJson',
+              params: {
+                string: { ref: 'intro.results.parameterStore_credentials[0].Value'},
+              }
+            },
+            messageSig: { ref: 'event.headers.X-Slack-Signature' },
+            timestampEpochSeconds: { ref: 'event.headers.X-Slack-Request-Timestamp' },
           }
-        },
-      }
-    },
-  },
-  main: {
-    index: 1,
-    transformers: {
-      valid: { 
-        helper: 'verifySlackSignature',
-        params: {
-          messageBody: { ref: 'event.body'},
-          credentials: {
-            helper: 'fromJson',
-            params: {
-              string: { ref: 'intro.results.parameterStore_credentials[0].Value'},
-            }
-          },
-          messageSig: { ref: 'event.headers.X-Slack-Signature' },
-          timestampEpochSeconds: { ref: 'event.headers.X-Slack-Request-Timestamp' },
         }
-      }
+      },
     },
   },
   cleanup: {
