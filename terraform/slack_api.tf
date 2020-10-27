@@ -37,6 +37,10 @@ module "slack_api_handler_lambda" {
       file_contents = file("./functions/templates/generic_donut_days/helpers.js") 
     }, 
     {
+      file_name = "utils.js"
+      file_contents = file("./functions/templates/test/utils.js") 
+    }, 
+    {
       file_name = "config.js"
       file_contents = templatefile("./functions/templates/slack_api/config.js",
       {

@@ -2,25 +2,6 @@ const _ = require('lodash')
 
 const { slackMethods } = require('./utils')
 
-const getParameter = {
-  dataSource: 'AWS',
-  namespaceDetails: {
-    name: 'SSM',
-    constructorArgs: {}
-  },
-  name: 'getParameter',
-  value: {
-    path: 'Parameter'
-  },
-  requiredParams: {
-    Name: {},
-  },
-  optionalParams: {
-    WithDecryption: {},
-  },
-  apiMethod: 'getParameter',
-};
-
 module.exports = {
   stages: {
     intro: {
@@ -30,7 +11,7 @@ module.exports = {
           action: 'explorandaDeprecated',
           params: {
             dependencyName: {value: 'credentials'},
-            accessSchema: {value: getParameter},
+            accessSchema: {value: 'dataSources.AWS.parameterstore.getParameter'},
             params: {
               value: {
                 Name: { value: { value: "${slack_credentials_parameterstore_key}" }},
