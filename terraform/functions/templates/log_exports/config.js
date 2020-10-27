@@ -3,6 +3,7 @@ module.exports = {
     MAX_RECURSION_DEPTH: 20
   },
   "intro": {
+    index: 0,
     "dependencies": {
       "addPartitions": {
         "action": "insertAthenaPartitions",
@@ -57,6 +58,7 @@ module.exports = {
     }
   },
   main: {
+    index: 1,
     "dependencies": {
       "performExport": {
         "action": "performExport",
@@ -79,6 +81,7 @@ module.exports = {
     }
   },
   "outro": {
+    index: 2,
     "dependencies": {
       "nextFunction": {
         "conditions": {

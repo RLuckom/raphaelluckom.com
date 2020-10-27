@@ -24,6 +24,7 @@ const getParameter = {
 
 module.exports = {
   intro: {
+    index: 0,
     dependencies: {
       parameterStore: {
         action: 'exploranda',
@@ -41,6 +42,7 @@ module.exports = {
     },
   },
   main: {
+    index: 1,
     transformers: {
       slackCredentials: {
         helper: 'fromJson',
@@ -94,6 +96,7 @@ module.exports = {
     }
   },
   outro: {
+    index: 2,
     transformers: {
       channels: {ref: 'main.results.channels_channels' }
     },

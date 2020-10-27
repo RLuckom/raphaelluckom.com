@@ -19,6 +19,7 @@ const getParameter = {
 
 module.exports = {
   intro: {
+    index: 0,
     transformers: {
       body: { 
         helper: 'fromJson',
@@ -44,6 +45,7 @@ module.exports = {
     },
   },
   main: {
+    index: 1,
     transformers: {
       valid: { 
         helper: 'verifySlackSignature',

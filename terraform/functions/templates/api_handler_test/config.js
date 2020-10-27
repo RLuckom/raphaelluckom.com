@@ -1,5 +1,6 @@
 module.exports = {
   intro: {
+    index: 0,
     dependencies: {
       nextFunction: {
         conditions: {
@@ -48,6 +49,4 @@ module.exports = {
       }
     }
   },
-  main: {},
-  outro: {},
 }

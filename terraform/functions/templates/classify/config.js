@@ -81,6 +81,7 @@ const train = {
 
 module.exports = {
   intro: {
+    index: 0,
     dependencies: {
       scan: {
         conditions: {
@@ -118,6 +119,7 @@ module.exports = {
     },
   },
   main: {
+    index: 1,
     transformers: {
       model: {
         helper: 'fromJson',
@@ -172,6 +174,7 @@ module.exports = {
     },
   },
   outro: {
+    index: 2,
     dependencies: {
       buildModel: {
         action: 'explorandaUpdated',

@@ -1,5 +1,6 @@
 module.exports = {
   intro: {
+    index: 0,
     transformers: {
       mediaId: {
         or: [
@@ -86,9 +87,5 @@ module.exports = {
         }
       },
     }
-  },
-  main: {
-  },
-  outro: {
   },
 } 
