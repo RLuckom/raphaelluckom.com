@@ -86,7 +86,7 @@ module.exports = {
       dependencies: {
         scan: {
           condition: { ref: 'stage.shouldAddRecord' },
-          action: 'explorandaUpdated',
+          action: 'exploranda',
           params: {
             accessSchema: {value: 'dataSources.AWS.dynamodb.putItem'},
             params: {
@@ -104,13 +104,13 @@ module.exports = {
           },
         },
         getModel: {
-          action: 'explorandaUpdated',
+          action: 'exploranda',
           params: {
             accessSchema: {value: 'dataSources.AWS.s3.getObject'},
             params: {
               explorandaParams: {
-                Bucket: "${classification_model.bucket}" ,
-                Key: "${classification_model.key}" ,
+                Bucket: "${classification_model.bucket}",
+                Key: "${classification_model.key}",
               }
             }
           },
@@ -134,7 +134,7 @@ module.exports = {
       },
       dependencies: {
         restoreClassifier: {
-          action: 'explorandaUpdated',
+          action: 'exploranda',
           params: {
             accessSchema: { value: restoreClassifier },
             params: {
@@ -145,7 +145,7 @@ module.exports = {
           }
         },
         classify: {
-          action: 'explorandaUpdated',
+          action: 'exploranda',
           params: {
             accessSchema: { value: classify },
             params: {
@@ -160,7 +160,7 @@ module.exports = {
           }
         },
         scan: {
-          action: 'explorandaUpdated',
+          action: 'exploranda',
           params: {
             accessSchema: {value: 'dataSources.AWS.dynamodb.scan'},
             params: {
@@ -176,13 +176,13 @@ module.exports = {
       index: 2,
       dependencies: {
         buildModel: {
-          action: 'explorandaUpdated',
+          action: 'exploranda',
           params: {
             accessSchema: { value: buildClassifierModel },
           }
         },
         addDocuments: {
-          action: 'explorandaUpdated',
+          action: 'exploranda',
           params: {
             accessSchema: { value: addDocuments },
             params: {
@@ -210,7 +210,7 @@ module.exports = {
           }
         },
         train: {
-          action: 'explorandaUpdated',
+          action: 'exploranda',
           params: {
             accessSchema: { value: train },
             params: {

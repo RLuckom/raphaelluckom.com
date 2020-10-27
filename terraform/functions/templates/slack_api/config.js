@@ -12,10 +12,10 @@ module.exports = {
       },
       dependencies: {
         parameterStore: {
-          action: 'explorandaDeprecated',
+          action: 'exploranda',
           params: {
             dependencyName: {value: 'credentials'},
-            accessSchema: {value: getParameter},
+            accessSchema: {value: 'dataSources.AWS.parameterstore.getParameter'},
             params: {
               explorandaParams: {
                 Name: "${slack_credentials_parameterstore_key}" ,
