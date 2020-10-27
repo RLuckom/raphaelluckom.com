@@ -1,5 +1,4 @@
 const _ = require('lodash')
-const { exploranda } = require('donut-days')
 
 const nlpDataSource = 'NLP'
 
@@ -87,31 +86,31 @@ module.exports = {
         conditions: {
           shouldAddRecord: { ref: 'stage.shouldAddRecord' }
         },
-        action: 'exploranda',
+        action: 'explorandaUpdated',
         params: {
           accessSchema: {value: 'dataSources.AWS.dynamodb.putItem'},
           params: {
-            value: {
-              TableName: { value: { value: "${classification_table_name}" }},
-              Item: { all: { value: {all: {
+            explorandaParams: {
+              TableName: "${classification_table_name}" ,
+              Item: { all: {
                 class: { ref: 'event.addItem.class' },
                 document: { ref: 'event.addItem.document' },
                 timeAdded: {
                   helper: 'msTimestamp'
                 }
-              }}}}, 
+              }}, 
             }
           }
         },
       },
       getModel: {
-        action: 'exploranda',
+        action: 'explorandaUpdated',
         params: {
           accessSchema: {value: 'dataSources.AWS.s3.getObject'},
           params: {
-            value: {
-              Bucket: { value: { value: "${classification_model.bucket}" }},
-              Key: { value: { value: "${classification_model.key}" }},
+            explorandaParams: {
+              Bucket: "${classification_model.bucket}" ,
+              Key: "${classification_model.key}" ,
             }
           }
         },
@@ -134,40 +133,38 @@ module.exports = {
     },
     dependencies: {
       restoreClassifier: {
-        action: 'exploranda',
+        action: 'explorandaUpdated',
         params: {
           accessSchema: { value: restoreClassifier },
           params: {
-            value: {
-              jsonModel: {all: {value: {ref: 'stage.model'}}},
+            explorandaParams: {
+              jsonModel: {ref: 'stage.model'},
             }
           }
         }
       },
       classify: {
-        action: 'exploranda',
+        action: 'explorandaUpdated',
         params: {
           accessSchema: { value: classify },
           params: {
-            value: {
+            explorandaParams: {
               apiConfig: {
-                value: {
-                  source: 'restoreClassifier',
-                  formatter: ({restoreClassifier}) => restoreClassifier[0]
-                }
+                source: 'restoreClassifier',
+                formatter: 'restoreClassifier'
               },
-              doc: { value: { value: 'show me images' }},
+              doc: 'show me images',
             }
           }
         }
       },
       scan: {
-        action: 'exploranda',
+        action: 'explorandaUpdated',
         params: {
           accessSchema: {value: 'dataSources.AWS.dynamodb.scan'},
           params: {
-            value: {
-              TableName: { value: { value: "${classification_table_name}" }},
+            explorandaParams: {
+              TableName: "${classification_table_name}" ,
             }
           }
         },
@@ -177,62 +174,48 @@ module.exports = {
   outro: {
     dependencies: {
       buildModel: {
-        action: 'exploranda',
+        action: 'explorandaUpdated',
         params: {
           accessSchema: { value: buildClassifierModel },
-          params: {
-          }
         }
       },
       addDocuments: {
-        action: 'exploranda',
+        action: 'explorandaUpdated',
         params: {
           accessSchema: { value: addDocuments },
           params: {
-            value: {
+            explorandaParams: {
               apiConfig: {
-                value: {
-                  source: 'buildModel',
-                  formatter: ({buildModel}) => buildModel[0],
-                }
+                source: 'buildModel',
+                formatter: 'buildModel',
               },
               class: {
-                all: {
-                  value: {
-                    helper: 'map',
-                    params: {
-                      list: {ref: 'main.results.scan'},
-                      handler: { value: 'class' }
-                    }
-                  }
+                helper: 'map',
+                params: {
+                  list: {ref: 'main.results.scan'},
+                  handler: { value: 'class' }
                 }
               },
               doc: {
-                all: {
-                  value: {
-                    helper: 'map',
-                    params: {
-                      list: {ref: 'main.results.scan'},
-                      handler: { value: 'document' },
-                    }
-                  }
+                helper: 'map',
+                params: {
+                  list: {ref: 'main.results.scan'},
+                  handler: { value: 'document' },
                 }
-              },
+              }
             }
           }
         }
       },
       train: {
-        action: 'exploranda',
+        action: 'explorandaUpdated',
         params: {
           accessSchema: { value: train },
           params: {
-            value: {
+            explorandaParams: {
               apiConfig: {
-                value: {
-                  source: [ 'buildModel', 'addDocuments' ],
-                  formatter: ({buildModel}) => buildModel[0],
-                }
+                source: [ 'buildModel', 'addDocuments' ],
+                formatter: 'buildModel',
               },
             }
           }
