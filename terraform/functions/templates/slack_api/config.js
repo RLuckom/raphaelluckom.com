@@ -1,24 +1,5 @@
-const getParameter = {
-  dataSource: 'AWS',
-  namespaceDetails: {
-    name: 'SSM',
-    constructorArgs: {}
-  },
-  name: 'getParameter',
-  value: {
-    path: 'Parameter'
-  },
-  requiredParams: {
-    Name: {},
-  },
-  optionalParams: {
-    WithDecryption: {},
-  },
-  apiMethod: 'getParameter',
-};
-
 module.exports = {
-  config: {
+  stages: {
     intro: {
       index: 0,
       transformers: {
@@ -36,9 +17,9 @@ module.exports = {
             dependencyName: {value: 'credentials'},
             accessSchema: {value: getParameter},
             params: {
-              value: {
-                Name: { value: { value: "${slack_credentials_parameterstore_key}" }},
-                WithDecryption: { value: { value: true }},
+              explorandaParams: {
+                Name: "${slack_credentials_parameterstore_key}" ,
+                WithDecryption: true ,
               }
             }
           },
@@ -48,7 +29,7 @@ module.exports = {
     main: {
       index: 1,
       transformers: {
-        valid: { 
+        valid: {
           helper: 'verifySlackSignature',
           params: {
             messageBody: { ref: 'event.body'},

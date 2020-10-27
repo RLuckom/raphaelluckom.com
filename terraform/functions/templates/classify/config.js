@@ -85,9 +85,7 @@ module.exports = {
       index: 0,
       dependencies: {
         scan: {
-          conditions: {
-            shouldAddRecord: { ref: 'stage.shouldAddRecord' }
-          },
+          condition: { ref: 'stage.shouldAddRecord' },
           action: 'explorandaUpdated',
           params: {
             accessSchema: {value: 'dataSources.AWS.dynamodb.putItem'},

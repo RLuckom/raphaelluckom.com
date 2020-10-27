@@ -8,9 +8,7 @@ module.exports = {
       "dependencies": {
         "addPartitions": {
           "action": "insertAthenaPartitions",
-          "conditions": {
-            "nonEmpty": {not: {"ref": "event.exportConfigs"}}
-          },
+          "condition": { not: {"ref": "event.exportConfigs"}},
           "params": {
             "athenaDb": {
               "value": "${athena_db}"
@@ -36,9 +34,7 @@ module.exports = {
         },
         "logExports": {
           "action": "prepareLogExports",
-          "conditions": {
-            "nonEmpty": {not: {"ref": "event.exportConfigs"}}
-          },
+          "condition": {not: {"ref": "event.exportConfigs"}},
           "params": {
             "logExportDestinationBucket": {
               "value": "${log_export_destination_bucket}"
@@ -85,13 +81,11 @@ module.exports = {
       index: 2,
       "dependencies": {
         "nextFunction": {
-          "conditions": {
-            "moreExports": {
-              "helper": "isNonEmptyList",
-              "params": {
-                "list": {
-                  "ref": "stage.remainingExports"
-                }
+          "condition": {
+            "helper": "isNonEmptyList",
+            "params": {
+              "list": {
+                "ref": "stage.remainingExports"
               }
             }
           },

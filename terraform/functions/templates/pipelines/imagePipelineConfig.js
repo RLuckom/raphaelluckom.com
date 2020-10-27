@@ -59,19 +59,17 @@ module.exports = {
         },
         publishImageWebSizes: {
           action: 'publishImageWebSizes',
-          conditions: {
-            shouldPublish: {
-              or: [
-                {
-                  helper: 'isInList',
-                  params: {
-                    list: {value: ['${post_input_bucket_name}']},
-                    item: { ref: 'stage.bucket' }
-                  }
-                },
-                {ref: 'stage.publish'}
-              ]
-            }
+          condition: {
+            or: [
+              {
+                helper: 'isInList',
+                params: {
+                  list: {value: ['${post_input_bucket_name}']},
+                  item: { ref: 'stage.bucket' }
+                }
+              },
+              {ref: 'stage.publish'}
+            ]
           },
           params: {
             autoRotatedImageDependencyName: { 

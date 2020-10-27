@@ -11,6 +11,7 @@
   "dependencies": {
     "aws-sdk": "^2.779.0",
     "donut-days": "github:RLuckom/donut-days",
-    "lodash": "^4.17.20"
+    "lodash": "^4.17.20",
+    "moment": "^2.29.1"
   }
 }

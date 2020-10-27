@@ -4,9 +4,7 @@ module.exports = {
       index: 0,
       dependencies: {
         nextFunction: {
-          conditions: {
-            hasAction: {ref: 'stage.messageBody.action'},
-          },
+          condition: {ref: 'stage.messageBody.action'},
           action: 'explorandaDeprecated',
           params: {
             dependencyName: { value: 'respondToAction' },
