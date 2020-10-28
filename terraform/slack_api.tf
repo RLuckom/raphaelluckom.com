@@ -1,9 +1,3 @@
-module "slack_api_cert" {
-  source = "./modules/validated_cert"
-  route53_zone_name = var.route53_zone_name
-  domain_name = var.slack_api_domain_name
-}
-
 module "slack_api_gateway_gateway" {
   source = "./modules/apigatewayv2"
   name_stem = "slack_api"
@@ -11,16 +5,15 @@ module "slack_api_gateway_gateway" {
   route_selection_expression = "$request.method $request.path"
   domain_record = [{
     domain_name = var.slack_api_domain_name
-    cert_arn = module.slack_api_cert.cert.arn
     zone_name = var.route53_zone_name
   }
   ]
   lambda_routes = [
     {
-    route_key = "$default"
-    handler_arn = module.slack_api_handler_lambda.lambda.arn
-    handler_name = module.slack_api_handler_lambda.lambda.function_name
-  },
+      route_key = "$default"
+      handler_arn = module.slack_api_handler_lambda.lambda.arn
+      handler_name = module.slack_api_handler_lambda.lambda.function_name
+    },
   ]
 }
 

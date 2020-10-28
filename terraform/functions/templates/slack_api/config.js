@@ -55,6 +55,30 @@ module.exports = {
             string: { ref: 'event.body'}
           }
         },
+        noSelfMentions: {
+          helper: 'transform',
+          params: {
+            arg: {
+              helper: 'fromJson',
+              params: {
+                string: { ref: 'event.body'}
+              }
+            },
+            func: {value: (body) => body.event.text.replace(/<[^>]*>/g, '') }
+          },
+        },
+        firstWord: {
+          helper: 'transform',
+          params: {
+            arg: {
+              helper: 'fromJson',
+              params: {
+                string: { ref: 'event.body'}
+              }
+            },
+            func: {value: (body) => body.event.text.replace(/<[^>]*>/g, '').split(' ').filter((s) => s.length)[0] }
+          },
+        },
       },
       dependencies: { 
         post: {
@@ -65,7 +89,7 @@ module.exports = {
               explorandaParams: {
                 apiConfig: {all: {token: { ref: 'verifySlackSignature.vars.credentials.token' }}},
                 channel: { ref: 'stage.messageBody.event.channel'},
-                text: 'I know you are but what am I',
+                text: { value: "```" + JSON.stringify([{type: 'plain_text', text: 'plain text?'}]) + "```" }, 
               }
             }
           },
@@ -75,8 +99,8 @@ module.exports = {
   },
   cleanup: {
     transformers: {
+      slack: { ref: 'postRebuttal.results' },
       statusCode: { value: 200 },
-      body: {helper: 'toJson', params: {challenge: { ref: 'intro.vars.body.challenge' }}},
     }
   }
 }

@@ -3,6 +3,13 @@ data "aws_route53_zone" "selected" {
   name = var.domain_record[0].zone_name
 }
 
+module "domain_cert" {
+  count = length(var.domain_record) == 0 ? 0 : 1
+  source = "../validated_cert"
+  route53_zone_name = data.aws_route53_zone.selected[0].name
+  domain_name = var.domain_record[0].domain_name
+}
+
 resource "aws_route53_record" "apigateway_domain" {
   count = length(var.domain_record) == 0 ? 0 : 1
   name = var.domain_record[0].domain_name
@@ -21,7 +28,7 @@ resource "aws_apigatewayv2_domain_name" "api_domain_name" {
   domain_name = var.domain_record[0].domain_name
 
   domain_name_configuration {
-    certificate_arn = var.domain_record[0].cert_arn
+    certificate_arn = module.domain_cert[0].cert.arn
     endpoint_type   = "REGIONAL"
     security_policy = "TLS_1_2"
   }

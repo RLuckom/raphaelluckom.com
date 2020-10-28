@@ -7,12 +7,6 @@ module "websocket_connections_table" {
   }]
 }
 
-module "websocket_api_cert" {
-  source = "./modules/validated_cert"
-  route53_zone_name = var.route53_zone_name
-  domain_name = var.websocket_api_domain_name
-}
-
 module "websocket_api_gateway_gateway" {
   source = "./modules/apigatewayv2"
   name_stem = "websocket_api"
@@ -20,7 +14,6 @@ module "websocket_api_gateway_gateway" {
   route_selection_expression = "$request.body.action"
   domain_record = [{
     domain_name = var.websocket_api_domain_name
-    cert_arn = module.websocket_api_cert.cert.arn
     zone_name = var.route53_zone_name
   }
   ]

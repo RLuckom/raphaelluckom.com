@@ -9,6 +9,7 @@ function buildSlackAccessSchema({apiMethod, requiredBodyParams, optionalBodyPara
     bodyParamKeys,
     multipart,
     method: 'POST',
+    detectErrors: (e, r) => !_.get(r, 'body.ok') ? _.get(r, 'body.error') : null,
     requiredParams: _.reduce(requiredBodyParams, (acc, v) => {
       acc[v] = {}
       return acc
@@ -27,7 +28,7 @@ function buildSlackAccessSchema({apiMethod, requiredBodyParams, optionalBodyPara
 const slackMethods = {
   getChannels: buildSlackAccessSchema({apiMethod: 'conversations.list'}),
   uploadBufferAsFile: buildSlackAccessSchema({apiMethod: 'files.upload', requiredBodyParams: ['file'], optionalBodyParams: ['channels'], multipart: true}),
-  postMessage: buildSlackAccessSchema({apiMethod: 'chat.postMessage', requiredBodyParams: ['channel', 'text']})
+  postMessage: buildSlackAccessSchema({apiMethod: 'chat.postMessage', requiredBodyParams: ['channel'], optionalBodyParams: ['text', 'blocks']})
 }
 
 module.exports = {

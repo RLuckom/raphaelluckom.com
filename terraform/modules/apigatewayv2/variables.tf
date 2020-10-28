@@ -32,7 +32,6 @@ variable "lambda_routes" {
 variable domain_record {
   type = list(object({
     domain_name = string
-    cert_arn = string
     zone_name = string
   }))
   default = []
