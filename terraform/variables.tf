@@ -68,6 +68,11 @@ variable "slack_api_domain_name" {
   default = "slack.api.raphaelluckom.com"
 }
 
+variable "web_api_domain_name" {
+  type = string
+  default = "web.api.raphaelluckom.com"
+}
+
 variable "athena_db_name" {
   type = string
   default = "raphaelluckomcf"

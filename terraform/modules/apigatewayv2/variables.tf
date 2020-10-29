@@ -10,6 +10,18 @@ variable "route_selection_expression" {
   type = string
 }
 
+variable "cors_configuration" {
+  type = list(object({
+    allow_credentials = bool
+    allow_headers = list(string)
+    allow_methods = list(string)
+    allow_origins = list(string)
+    expose_headers = list(string)
+    max_age = number
+  }))
+  default = []
+}
+
 variable "apigateway_stage_name" {
   type = string
   default = "prod"
