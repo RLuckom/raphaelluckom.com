@@ -1,3 +1,4 @@
+const { slackMethods } = require('./utils')
 module.exports = {
   stages: {
     intro: {
@@ -9,6 +10,7 @@ module.exports = {
             {helper: "uuid"},
           ]
         },
+        widths: { value: [100, 300, 500, 750, 1000, 2500] },
         bucket: {
           or: [
             {ref: 'event.bucket'},
@@ -82,9 +84,78 @@ module.exports = {
             publicHostingBucket: { value: '${media_hosting_bucket}' },
             publicHostingPrefix: { value: '${media_storage_prefix}' },
             mediaId: { ref: 'stage.mediaId' },
-            widths: { value: [100, 300, 500, 750, 1000, 2500] },
+            widths: { ref: 'stage.widths' },
           }
         },
+        parameterStore: {
+          action: 'exploranda',
+          params: {
+            accessSchema: {value: 'dataSources.AWS.parameterstore.getParameter'},
+            params: {
+              explorandaParams: {
+                Name: "${slack_credentials_parameterstore_key}" ,
+                WithDecryption: true ,
+              }
+            }
+          },
+        },
+        postImageToSlack: {
+          action: 'exploranda',
+          condition: {
+            or: [
+              {
+                helper: 'isInList',
+                params: {
+                  list: {value: ['${post_input_bucket_name}']},
+                  item: { ref: 'stage.bucket' }
+                }
+              },
+              {ref: 'stage.publish'}
+            ]
+          },
+          params: {
+            accessSchema: { value: slackMethods.postMessage },
+            params: {
+              explorandaParams: {
+                apiConfig: {
+                  source: ['parameterStore', 'publishImageWebSizes_save'],
+                  formatter: ({parameterStore}) => {
+                    console.log(parameterStore.Value)
+                    return {token: JSON.parse(parameterStore.Value).token }
+                  }
+                },
+                channel: 'app_testing',
+                blocks: { 
+                  helper: 'transform',
+                  params: {
+                    arg: {
+                      all: {
+                        bucket: { value: '${media_hosting_bucket}' },
+                        mediaId: { ref: 'stage.mediaId' },
+                      }
+                    },
+                    func: {
+                      value: ({ bucket, mediaId }) => {
+                        return JSON.stringify([
+                        {
+                          "type": "image",
+                          "title": {
+                            "type": "plain_text",
+                            "text":  mediaId
+                          },
+                          "block_id": "image4",
+                            "image_url": "https://media.raphaelluckom.com/images/" + mediaId + '-300.JPG',
+                          "alt_text": "image"
+                        }
+                        ])
+                      }
+                    },
+                  }
+                }
+              }
+            },
+          },
+        }
       }
     },
   },

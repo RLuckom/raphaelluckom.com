@@ -25,6 +25,10 @@ module "image_archive_lambda" {
       file_contents = file("./functions/templates/event_configured_donut_days/imageDependencyHelpers.js")
     },
     {
+      file_name = "utils.js"
+      file_contents = file("./functions/templates/test/utils.js") 
+    }, 
+    {
       file_name = "config.js"
       file_contents = templatefile("./functions/templates/pipelines/imagePipelineConfig.js",
       {
@@ -35,6 +39,7 @@ module "image_archive_lambda" {
       labeled_media_dynamo_table = module.labeled_media_table.table.name
       media_hosting_bucket = module.media_hosting_bucket.website_bucket.bucket.id
       post_input_bucket_name = module.stream_input_bucket.bucket.id 
+      slack_credentials_parameterstore_key = var.slack_credentials_parameterstore_key
 
       })
     },
@@ -49,6 +54,7 @@ module "image_archive_lambda" {
     bucket = aws_s3_bucket.lambda_bucket.id
 
     policy_statements = concat(
+      local.permission_sets.read_slack_credentials,
       module.media_table.permission_sets.put_item,
       module.labeled_media_table.permission_sets.put_item,
       local.permission_sets.rekognition_image_analysis,
