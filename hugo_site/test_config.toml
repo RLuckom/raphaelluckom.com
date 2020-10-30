@@ -1,4 +1,4 @@
-baseURL = "https://www.raphaelluckom.com"
+baseURL = "https://test.raphaelluckom.com"
 languageCode = "en-us"
 title = "Raphael Luckom"
 theme = "black-and-light"
@@ -15,9 +15,15 @@ pygmentsStyle = "xcode"
 
 [params]
   sitename = "Raphael Luckom"
-  disableWebFonts = false
+  disableWebFonts = true
   customCss = ["css/style-overrides.css"]
 
 [[menu.main]]
+    name = "Instagram @rluckom"
+    url  = "https://instagram.com/RLuckom"
+[[menu.main]]
     name = "Github rluckom"
     url  = "https://github.com/RLuckom"
+[[menu.main]]
+    name = "Store"
+    url  = "https://tumble-aloft.com"

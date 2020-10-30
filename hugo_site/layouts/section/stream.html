@@ -1,0 +1,66 @@
+{{ partial "header.html" . }}
+<section id="stream">
+</section>
+<script>
+function request({method, url, headers, body, responseType}, callback) {
+  const req = new XMLHttpRequest()
+  req.addEventListener('load', (evt) => callback(null, req, req.response))
+  req.addEventListener('error', (evt) => callback(new Error(req.statusText), req, null))
+  const sentMethod = method || 'GET'
+  req.open(method || 'GET', url)
+  if (headers) {
+    Object.keys(headers).map((k) => {
+      req.setRequestHeader(k, headers[k])
+    })
+  }
+  req.responseType = responseType || 'json'
+  let toSend = body
+  if (toSend && typeof toSend !== 'string') {
+    toSend = JSON.stringify(toSend)
+  }
+  req.send(toSend)
+}
+
+function imageElementFromBlob(b) {
+  const imgUrl = window.URL.createObjectURL(b);
+  const img = document.createElement('img');
+  img.src = imgUrl;
+  return img
+}
+
+let currentImage = null
+function setLatestImage(url) {
+  request({
+    url, 
+    responseType: 'blob'
+  }, (e, r, b) => {
+    if (e) {
+      console.log(e)
+      return
+    }
+    const stream = document.querySelector('#stream');
+    if (currentImage) {
+      stream.removeChild(currentImage)
+    }
+    currentImage = imageElementFromBlob(b)
+    const v = stream.appendChild(currentImage);
+    console.log(v)
+    console.log('wokka')
+  })
+}
+
+setLatestImage('https://www.test.raphaelluckom.com/img/singerbelt/original-belt.jpeg')
+
+const exampleSocket = new WebSocket("wss://api.raphaelluckom.com")
+exampleSocket.onopen = function (event) {
+   console.log(event) 
+   exampleSocket.send(JSON.stringify({action: "hello", note: "ready for data!"}))
+};
+exampleSocket.onmessage = function (event) {
+   console.log(event) 
+  setLatestImage(JSON.parse(event.data).imgUrl)
+};
+
+
+</script>
+{{ partial "footer.html" . }}
