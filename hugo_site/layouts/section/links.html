@@ -4,6 +4,7 @@
         {{ range .Site.Menus.main }}
       <li>
           <h2><a href="{{ .URL }}">{{ .Name }}</a></h2>
+          <p>{{ .Title }}</p>
       </li>
     {{ end }}
   </ul>

@@ -20,4 +20,5 @@ pygmentsStyle = "xcode"
 
 [[menu.main]]
     name = "Github rluckom"
+    title = "The public repositories containing the code of this website, other cloud infrastructure, and various tools and libraries"
     url  = "https://github.com/RLuckom"
