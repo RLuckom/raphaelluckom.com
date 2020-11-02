@@ -2,23 +2,54 @@
 <section id="stream">
 </section>
 <script>
-function request({method, url, headers, body, responseType}, callback) {
-  const req = new XMLHttpRequest()
-  req.addEventListener('load', (evt) => callback(null, req, req.response))
-  req.addEventListener('error', (evt) => callback(new Error(req.statusText), req, null))
-  const sentMethod = method || 'GET'
-  req.open(method || 'GET', url)
-  if (headers) {
-    Object.keys(headers).map((k) => {
-      req.setRequestHeader(k, headers[k])
-    })
+
+function reduceObject(collection, f, initial) {
+  let acc = initial
+  if (!collection) {
+    return acc
   }
-  req.responseType = responseType || 'json'
-  let toSend = body
-  if (toSend && typeof toSend !== 'string') {
-    toSend = JSON.stringify(toSend)
+  for (const prop in collection) {
+    const currentVal = collection[prop]
+    acc = f(acc, currentVal, prop)
   }
-  req.send(toSend)
+  return acc
+}
+
+function request({method, url, headers, body, queryParams, responseType}, callback) {
+  const queryString = reduceObject(queryParams, (acc, v, k) => {
+    if (v) {
+      const uriEncoded = encodeURIComponent(typeof v === 'string' ? v : JSON.stringify(v))
+      if (acc) {
+        return acc + `&${k}=${uriEncoded}`
+      } else {
+        return acc + `?${k}=${uriEncoded}`
+      }
+    }
+    return acc
+  },
+  '')
+  const req = {
+    method: method || 'GET', 
+    headers,
+    body: body && typeof body !== 'string' ? JSON.stringify(body) : body
+  }
+  console.log(url + queryString)
+  fetch(url + queryString, req).then((response) => {
+    if (!response.ok) {
+      console.log(response)
+      callback(response)
+    } else if (responseType && responseType === 'blob') {
+      response.blob().then((data) => {
+        callback(null, response, data)
+      })
+    } else {
+      response.json().then((data) => {
+        callback(null, response, data)
+      })
+    }
+  }).catch((err) => {
+    callback(err)
+  })
 }
 
 function imageElementFromBlob(b) {
@@ -28,10 +59,66 @@ function imageElementFromBlob(b) {
   return img
 }
 
+function getStreamItems({Limit, startItem, filterExpression, expressionAttributeValues}, callback) {
+  const streamUrl = 'https://web.api.raphaelluckom.com'
+  request({
+    method: 'GET',
+    headers: {'Content-Type':  'application/json' },
+    url: streamUrl,
+    queryParams: {Limit, startItem, FilterExpression: filterExpression,ExpressionAttributeValues: expressionAttributeValues}
+  }, callback)
+}
+
+function mapObject(o, f) {
+  const acc = []
+  for (k in o) {
+    acc.push(f(o[k], k))
+  }
+  return acc
+}
+
+function getDisplayableStreamItems({Limit}, callback) {
+  const results = []
+  const typeAttributeValues = {
+    image: 'image'
+  }
+  const filterExpression = `itemType IN (${mapObject(typeAttributeValues, (v, k) => ':' + k).join(', ')})`
+  const expressionAttributeValues = reduceObject(typeAttributeValues, (acc, v, k) => {
+    acc[':' + k] = {'S': v}
+    return acc
+  }, {})
+
+  function cb(e, r, b) {
+    if (e) {
+      console.log(e)
+      return callback(e)
+    }
+    console.log(b)
+    for (const i of b.Items) {
+      results.push(i)
+    }
+    if (b.LastEvaluatedKey) {
+      getStreamItems({Limit, startItem: b.LastEvaluatedKey, filterExpression, expressionAttributeValues }, cb)
+    } else {
+      return callback(null, results)
+    }
+  }
+  getStreamItems( {Limit, filterExpression, expressionAttributeValues}, cb)
+}
+
+getDisplayableStreamItems({}, (e, r) => {
+  console.log(e)
+  console.log(r)
+  if (r.length > 0 && r[0].mediaId) {
+    const imgUrl = `https:\/\/www.media.raphaelluckom.com/images/${r[0].mediaId}-1000.JPG`
+    setLatestImage(imgUrl)
+  }
+})
+
 let currentImage = null
 function setLatestImage(url) {
   request({
-    url, 
+    url,
     responseType: 'blob'
   }, (e, r, b) => {
     if (e) {
@@ -45,22 +132,24 @@ function setLatestImage(url) {
     currentImage = imageElementFromBlob(b)
     const v = stream.appendChild(currentImage);
     console.log(v)
-    console.log('wokka')
   })
 }
 
+function latestImageExample() {
 setLatestImage('https://www.test.raphaelluckom.com/img/singerbelt/original-belt.jpeg')
+}
 
-const exampleSocket = new WebSocket("wss://api.raphaelluckom.com")
-exampleSocket.onopen = function (event) {
-   console.log(event) 
-   exampleSocket.send(JSON.stringify({action: "hello", note: "ready for data!"}))
-};
-exampleSocket.onmessage = function (event) {
-   console.log(event) 
-  setLatestImage(JSON.parse(event.data).imgUrl)
-};
-
+function websocketExample() {
+  const exampleSocket = new WebSocket("wss://api.raphaelluckom.com")
+    exampleSocket.onopen = function (event) {
+      console.log(event) 
+        exampleSocket.send(JSON.stringify({action: "hello", note: "ready for data!"}))
+    };
+  exampleSocket.onmessage = function (event) {
+    console.log(event) 
+      setLatestImage(JSON.parse(event.data).imgUrl)
+  };
+}
 
 </script>
 {{ partial "footer.html" . }}

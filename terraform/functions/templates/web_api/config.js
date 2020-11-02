@@ -23,6 +23,7 @@ const scan = {
   optionalParams: {
     AttributesToGet: {},
     ConsistentRead: {},
+    ExpressionAttributeValues: {},
     FilterExpression: {},
     ExclusiveStartKey: {},
     ProjectionExpression: {},
@@ -39,10 +40,22 @@ module.exports = {
     main: {
       index: 1,
       transformers: {
-        body: {
-          helper: 'fromJson',
-          params: {
-            string: { ref: 'event.body' }
+        query: {
+          all: {
+            Limit: { ref: 'event.queryStringParameters.Limit' },
+            FilterExpression: { ref: 'event.queryStringParameters.FilterExpression' },
+            ExclusiveStartKey: {
+              helper: 'fromJson',
+              params: {
+                string: { or: [{ref: 'event.queryStringParameters.startItem'}, { value: 'null' } ]},
+              }
+            },
+            ExpressionAttributeValues: {
+              helper: 'fromJson',
+              params: {
+                string: { or: [{ref: 'event.queryStringParameters.ExpressionAttributeValues'}, { value: 'null' } ]},
+              }
+            },
           }
         }
       },
@@ -54,8 +67,10 @@ module.exports = {
             params: {
               explorandaParams: {
                 TableName: "${table_name}",
-                Limit: { ref: 'stage.body.Limit' },
-                ExclusiveStartKey: { ref: 'stage.body.startItem' },
+                Limit: { ref: 'stage.query.Limit' },
+                ExpressionAttributeValues: { ref: 'stage.query.ExpressionAttributeValues' },
+                FilterExpression: { ref: 'stage.query.FilterExpression' },
+                ExclusiveStartKey: { ref: 'stage.query.ExclusiveStartKey' },
               }
             }
           },
@@ -67,8 +82,11 @@ module.exports = {
     transformers: {
       statusCode: { value: 200 },
       headers: {
-        value: {
-          "Content-Type": "application/json"
+        all: {
+          "Content-Type": {value: "application/json"},
+          "Access-Control-Allow-Headers" : {value: "Content-Type"},
+          "Access-Control-Allow-Origin": {or: [{ref: 'event.headers.origin'}, {ref: 'event.headers.Origin'}, {value: ''}]},
+          "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
         }
       },
       isBase64Encoded: {value: false},

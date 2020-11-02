@@ -76,14 +76,6 @@ module "web_api_gateway_gateway" {
       handler_name = module.web_api_handler_lambda.lambda.function_name
     },
   ]
-  cors_configuration = [{
-    allow_origins = ["https://aphaelluckom.com", "https://www.raphaelluckom.com", "http://localhost"]
-    allow_headers = null
-    allow_methods = null
-    allow_credentials = false
-    expose_headers = null
-    max_age = null
-  }]
 }
 
 module "web_api_handler_lambda" {
