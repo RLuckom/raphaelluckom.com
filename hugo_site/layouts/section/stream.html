@@ -3,6 +3,92 @@
 </section>
 <script>
 
+// GENERAL UTILITIES
+// functions that are applicable in any domain.
+// When I miss something from lodash or async I reimplement it here
+
+function isString(s) {
+  return typeof s === 'string'
+}
+
+function isNumber(n) {
+  return typeof n === 'number'
+}
+
+function isArray(a) {
+  return Array.isArray(a)
+}
+
+function isObject(o) {
+  return o && (typeof o === 'object')
+}
+
+function isBoolean(b) {
+  return b === true || b === false
+}
+
+function isNull(n) {
+  return !n && typeof n === 'object'
+}
+
+function isUndefined(u) {
+  return u === undefined
+}
+
+function isFunction(f) {
+  return typeof f === 'function'
+}
+
+function get(o, p) {
+  if (!o) {
+    if ((isString(p) || isArray(p)) && p.length) {
+      return null
+    } else {
+      return o
+    }
+  }
+  if (isArray(p)) {
+    if (p.length) {
+      return get(o[p.pop()], p)
+    } else {
+      return o
+    }
+  } else if (isString(p)) {
+    return get(o, stringToPropArray(p))
+  }
+}
+
+function stringToPropArray(s) {
+  const result = []
+  let current = ''
+  for (l of s) {
+    if (l === '.' || l === '[') {
+      result.push(current)
+      current = ''
+    } else if (l === ']') {
+      if (isNaN(current)) {
+        result.push(current)
+        current = ''
+      } else {
+        result.push(+current)
+        current = ''
+      }
+    } else {
+      current += l
+    }
+  }
+  return result
+}
+
+function reduce(q, f, acc) {
+  if (isArray(q)) {
+    return reduceArray(q, f, acc)
+  } else if (isObject(q)) {
+    return reduceObject(q, f, acc)
+  }
+  return acc
+}
+
 function reduceObject(collection, f, initial) {
   let acc = initial
   if (!collection) {
@@ -15,6 +101,77 @@ function reduceObject(collection, f, initial) {
   return acc
 }
 
+function reduceArray(collection, f, initial) {
+  let acc = initial
+  if (!collection) {
+    return acc
+  }
+  for (let indx = 0; indx < collection.length; indx++) {
+    const currentVal = collection[indx]
+    acc = f(acc, currentVal, indx)
+  }
+  return acc
+}
+
+function map(q, f) {
+  if (isArray(q)) {
+    return mapArray(q, f)
+  } else if (isObject(q)) {
+    return mapObject(q, f)
+  }
+  return []
+}
+
+function mapObject(o, f) {
+  const acc = []
+  for (k in o) {
+    acc.push(f(o[k], k))
+  }
+  return acc
+}
+
+function mapArray(a, f) {
+  const acc = []
+  for (let k=0; k < a.length; k++) {
+    acc.push(f(a[k], k))
+  }
+  return acc
+}
+
+function series(cbList, callback, results) {
+  results = results || []
+  if (cbList && cbList.length) {
+    const current = cbList.shift()
+    current((err, res) => {
+      results.push(res)
+      if (err) {
+        return callback(err)
+      } else {
+        return series(cbList, callback, results)
+      }
+    })
+  } else {
+    callback(null, results)
+  }
+}
+
+function waterfall(cbList, callback, ...args) {
+  if (cbList && cbList.length) {
+    const current = cbList.shift()
+    current(...args, (err, ...res) => {
+      if (err) {
+        return callback(err)
+      } else {
+        return waterfall(cbList, callback, ...res)
+      }
+    })
+  } else {
+    callback(null, ...args)
+  }
+}
+
+// SPECIALIZED UTILITIES
+// domain-specific utilities that should not appear more than once
 function request({method, url, headers, body, queryParams, responseType}, callback) {
   const queryString = reduceObject(queryParams, (acc, v, k) => {
     if (v) {
@@ -33,10 +190,8 @@ function request({method, url, headers, body, queryParams, responseType}, callba
     headers,
     body: body && typeof body !== 'string' ? JSON.stringify(body) : body
   }
-  console.log(url + queryString)
   fetch(url + queryString, req).then((response) => {
     if (!response.ok) {
-      console.log(response)
       callback(response)
     } else if (responseType && responseType === 'blob') {
       response.blob().then((data) => {
@@ -52,12 +207,46 @@ function request({method, url, headers, body, queryParams, responseType}, callba
   })
 }
 
-function imageElementFromBlob(b) {
-  const imgUrl = window.URL.createObjectURL(b);
+function imageElementFromBlob({blob, alt}) {
+  const imgUrl = window.URL.createObjectURL(blob);
   const img = document.createElement('img');
   img.src = imgUrl;
+  img.alt = alt;
   return img
 }
+
+function createImgElement(metadata) {
+  if (metadata.blob) {
+    metadata.src =  window.URL.createObjectURL(metadata.blob)
+    delete metadata.blob
+  }
+  return createGenericElement('img', metadata)
+}
+
+function createGenericElement(nodeType, metadata) {
+  const el = document.createElement(nodeType)
+  for (attr in metadata) {
+    el.setAttribute(attr,  metadata[attr])
+  }
+  return el
+}
+
+function jsonToDom(node) {
+  let domNode = null
+  if (node.type === 'img') {
+    domNode = createImgElement(node.metadata)
+  } else {
+    domNode = createGenericElement(node.type, node.metadata)
+  }
+  for (const child of (node.children || [])) {
+    domNode && domNode.appendChild(jsonToDom(child))
+  }
+  return domNode
+}
+
+// ASSERTIONAL UTILITIES
+// Functions that define and operate on data structures that are entirely
+// within the purview of this application.
 
 function getStreamItems({Limit, startItem, filterExpression, expressionAttributeValues}, callback) {
   const streamUrl = 'https://web.api.raphaelluckom.com'
@@ -67,14 +256,6 @@ function getStreamItems({Limit, startItem, filterExpression, expressionAttribute
     url: streamUrl,
     queryParams: {Limit, startItem, FilterExpression: filterExpression,ExpressionAttributeValues: expressionAttributeValues}
   }, callback)
-}
-
-function mapObject(o, f) {
-  const acc = []
-  for (k in o) {
-    acc.push(f(o[k], k))
-  }
-  return acc
 }
 
 function getDisplayableStreamItems({Limit}, callback) {
@@ -93,7 +274,6 @@ function getDisplayableStreamItems({Limit}, callback) {
       console.log(e)
       return callback(e)
     }
-    console.log(b)
     for (const i of b.Items) {
       results.push(i)
     }
@@ -107,48 +287,25 @@ function getDisplayableStreamItems({Limit}, callback) {
 }
 
 getDisplayableStreamItems({}, (e, r) => {
-  console.log(e)
-  console.log(r)
-  if (r.length > 0 && r[0].mediaId) {
-    const imgUrl = `https:\/\/www.media.raphaelluckom.com/images/${r[0].mediaId}-1000.JPG`
-    setLatestImage(imgUrl)
+  const items = []
+  for (const item of r) {
+    items.push({
+      type: 'img', 
+      metadata: {
+      src: `https:\/\/www.media.raphaelluckom.com/images/${item.mediaId}-1000.JPG`
+    }
+    })
+    setLatestImages(items)
   }
 })
 
-let currentImage = null
-function setLatestImage(url) {
-  request({
-    url,
-    responseType: 'blob'
-  }, (e, r, b) => {
-    if (e) {
-      console.log(e)
-      return
-    }
-    const stream = document.querySelector('#stream');
-    if (currentImage) {
-      stream.removeChild(currentImage)
-    }
-    currentImage = imageElementFromBlob(b)
-    const v = stream.appendChild(currentImage);
-    console.log(v)
+function setLatestImages(items) {
+  const stream = document.querySelector('#stream');
+  const v = map(items, (i) => {
+    const l = jsonToDom(i)
+    console.log(l)
+    stream.appendChild(l)
   })
-}
-
-function latestImageExample() {
-setLatestImage('https://www.test.raphaelluckom.com/img/singerbelt/original-belt.jpeg')
-}
-
-function websocketExample() {
-  const exampleSocket = new WebSocket("wss://api.raphaelluckom.com")
-    exampleSocket.onopen = function (event) {
-      console.log(event) 
-        exampleSocket.send(JSON.stringify({action: "hello", note: "ready for data!"}))
-    };
-  exampleSocket.onmessage = function (event) {
-    console.log(event) 
-      setLatestImage(JSON.parse(event.data).imgUrl)
-  };
 }
 
 </script>
