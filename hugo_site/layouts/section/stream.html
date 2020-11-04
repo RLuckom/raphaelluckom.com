@@ -305,13 +305,16 @@ function constructImagePost(item) {
 }
 
 getDisplayableStreamItems({}, (e, r) => {
+  r.sort((a, b) => a.timeAddedMs > b.timeAddedMs ? -1 : a.timeAddedMs < b.timeAddedMs ? 1 : 0)
   const items = map(r, constructImagePost)
   setLatestImages(items)
 })
 
 function setLatestImages(items) {
   const stream = document.querySelector('#stream');
+  console.log(items)
   const v = map(items, (i) => {
+    console.log(i)
     const l = jsonToDom(i)
     stream.appendChild(l)
   })
