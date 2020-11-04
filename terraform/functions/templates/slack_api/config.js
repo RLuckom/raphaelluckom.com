@@ -102,8 +102,8 @@ module.exports = {
                 let item = null
                 try {
                   item = JSON.parse(itemString)
-                  item.timeAddedMs = new Date().getTime()
-                  item.id = uuid.v4()
+                  item.timeAddedMs = item.timeAddedMs || new Date().getTime()
+                  item.id = item.id || uuid.v4()
                 } catch(e) {
                 }
                 return item || itemString
@@ -125,7 +125,7 @@ module.exports = {
             }
           },
         },
-        writePostToDynamo: {
+        writePostToSlack: {
           action: 'exploranda',
           params: {
             accessSchema: { value: slackMethods.postMessage },

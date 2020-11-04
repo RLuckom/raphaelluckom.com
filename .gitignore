@@ -6,5 +6,6 @@ hugo_site/site
 *.zip
 hugo_site/resources
 hugo_site/static/img/map
+hugo_site/static/img/png/
 docker/terraform/terraform
 docker/hugo/hugo

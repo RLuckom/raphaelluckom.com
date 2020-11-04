@@ -146,7 +146,60 @@ module.exports = {
                           "block_id": "image4",
                             "image_url": "https://media.raphaelluckom.com/images/" + mediaId + '-300.JPG',
                           "alt_text": "image"
-                        }
+                        },
+                        ])
+                      }
+                    },
+                  }
+                }
+              }
+            },
+          },
+        },
+        postPostTemplateToSlack: {
+          action: 'exploranda',
+          condition: {
+            or: [
+              {
+                helper: 'isInList',
+                params: {
+                  list: {value: ['${post_input_bucket_name}']},
+                  item: { ref: 'stage.bucket' }
+                }
+              },
+              {ref: 'stage.publish'}
+            ]
+          },
+          params: {
+            accessSchema: { value: slackMethods.postMessage },
+            params: {
+              explorandaParams: {
+                apiConfig: {
+                  source: ['parameterStore', 'publishImageWebSizes_save'],
+                  formatter: ({parameterStore}) => {
+                    console.log(parameterStore.Value)
+                    return {token: JSON.parse(parameterStore.Value).token }
+                  }
+                },
+                channel: 'app_testing',
+                blocks: { 
+                  helper: 'transform',
+                  params: {
+                    arg: {
+                      all: {
+                        mediaId: { ref: 'stage.mediaId' },
+                      }
+                    },
+                    func: {
+                      value: ({ mediaId }) => {
+                        return JSON.stringify([
+                          {
+                            "type": "section",
+                            "text": {
+                              "type": "mrkdwn",
+                              "text": '```' + JSON.stringify( {itemType: 'image', mediaId, alt: "", caption: "", timeAddedMs: new Date().getTime()}) +  '```'
+                            }
+                          }
                         ])
                       }
                     },

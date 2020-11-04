@@ -1,5 +1,12 @@
-.foo {
-  display: inline-block;
-  max-width: 43%;
-  margin: 2%;
+.footnote-ref {
+  vertical-align: super;
+  font-size: 70%;
 }
+
+figcaption, figcaption p {
+  font-style: italic;
+  padding-top: 0px;
+  margin-top: 0px;
+}
+
+

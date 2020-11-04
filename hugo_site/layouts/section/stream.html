@@ -5,7 +5,7 @@
 
 // GENERAL UTILITIES
 // functions that are applicable in any domain.
-// When I miss something from lodash or async I reimplement it here
+// When I miss something from lodash or async or other languages I reimplement it here
 
 function isString(s) {
   return typeof s === 'string'
@@ -39,10 +39,14 @@ function isFunction(f) {
   return typeof f === 'function'
 }
 
-function get(o, p) {
-  if (!o) {
+function concat(...arrays) {
+  return [].concat(...arrays)
+}
+
+function get(o, p, fallback) {
+  if (isUndefined(o) || isNull(o)) {
     if ((isString(p) || isArray(p)) && p.length) {
-      return null
+      return fallback || null
     } else {
       return o
     }
@@ -77,63 +81,44 @@ function stringToPropArray(s) {
       current += l
     }
   }
+  if (current) {
+    result.push(current)
+  }
   return result
 }
 
-function reduce(q, f, acc) {
-  if (isArray(q)) {
-    return reduceArray(q, f, acc)
-  } else if (isObject(q)) {
-    return reduceObject(q, f, acc)
-  }
-  return acc
-}
-
-function reduceObject(collection, f, initial) {
-  let acc = initial
+function reduce(collection, f, acc) {
   if (!collection) {
     return acc
   }
-  for (const prop in collection) {
-    const currentVal = collection[prop]
-    acc = f(acc, currentVal, prop)
+  if (isArray(collection)) {
+    for (let indx = 0; indx < collection.length; indx++) {
+      const currentVal = collection[indx]
+      acc = f(acc, currentVal, indx)
+    }
+  } else if (isObject(collection)) {
+    for (const prop in collection) {
+      const currentVal = collection[prop]
+      acc = f(acc, currentVal, prop)
+    }
   }
   return acc
 }
 
-function reduceArray(collection, f, initial) {
-  let acc = initial
-  if (!collection) {
-    return acc
-  }
-  for (let indx = 0; indx < collection.length; indx++) {
-    const currentVal = collection[indx]
-    acc = f(acc, currentVal, indx)
-  }
-  return acc
+function each(collection, f) {
+  map(collection, f)
 }
 
-function map(q, f) {
-  if (isArray(q)) {
-    return mapArray(q, f)
-  } else if (isObject(q)) {
-    return mapObject(q, f)
-  }
-  return []
-}
-
-function mapObject(o, f) {
+function map(collection, f) {
   const acc = []
-  for (k in o) {
-    acc.push(f(o[k], k))
-  }
-  return acc
-}
-
-function mapArray(a, f) {
-  const acc = []
-  for (let k=0; k < a.length; k++) {
-    acc.push(f(a[k], k))
+  if (isArray(collection)) {
+    for (let k=0; k < collection.length; k++) {
+      acc.push(f(collection[k], k))
+    }
+  } else if (isObject(collection)) {
+    for (k in collection) {
+      acc.push(f(collection[k], k))
+    }
   }
   return acc
 }
@@ -173,7 +158,7 @@ function waterfall(cbList, callback, ...args) {
 // SPECIALIZED UTILITIES
 // domain-specific utilities that should not appear more than once
 function request({method, url, headers, body, queryParams, responseType}, callback) {
-  const queryString = reduceObject(queryParams, (acc, v, k) => {
+  const queryString = reduce(queryParams, (acc, v, k) => {
     if (v) {
       const uriEncoded = encodeURIComponent(typeof v === 'string' ? v : JSON.stringify(v))
       if (acc) {
@@ -207,14 +192,6 @@ function request({method, url, headers, body, queryParams, responseType}, callba
   })
 }
 
-function imageElementFromBlob({blob, alt}) {
-  const imgUrl = window.URL.createObjectURL(blob);
-  const img = document.createElement('img');
-  img.src = imgUrl;
-  img.alt = alt;
-  return img
-}
-
 function createImgElement(metadata) {
   if (metadata.blob) {
     metadata.src =  window.URL.createObjectURL(metadata.blob)
@@ -223,21 +200,25 @@ function createImgElement(metadata) {
   return createGenericElement('img', metadata)
 }
 
-function createGenericElement(nodeType, metadata) {
-  const el = document.createElement(nodeType)
-  for (attr in metadata) {
-    el.setAttribute(attr,  metadata[attr])
+function createElement(node) {
+  if (!node.type) {
+    if (isString(node.data)) {
+      return document.createTextNode(node.data)
+    }
   }
+  const el = document.createElement(node.type)
+  if (node.type === 'img') {
+    if (get(node, 'metadata.blob')) {
+      node.metadata.src =  window.URL.createObjectURL(node.metadata.blob)
+      delete node.metadata.blob
+    }
+  }
+  each(get(node, 'metadata'), (v, k) => el.setAttribute(k,  v))
   return el
 }
 
 function jsonToDom(node) {
-  let domNode = null
-  if (node.type === 'img') {
-    domNode = createImgElement(node.metadata)
-  } else {
-    domNode = createGenericElement(node.type, node.metadata)
-  }
+  const domNode = createElement(node)
   for (const child of (node.children || [])) {
     domNode && domNode.appendChild(jsonToDom(child))
   }
@@ -263,15 +244,15 @@ function getDisplayableStreamItems({Limit}, callback) {
   const typeAttributeValues = {
     image: 'image'
   }
-  const filterExpression = `itemType IN (${mapObject(typeAttributeValues, (v, k) => ':' + k).join(', ')})`
-  const expressionAttributeValues = reduceObject(typeAttributeValues, (acc, v, k) => {
+  const filterExpression = `itemType IN (${map(typeAttributeValues, (v, k) => ':' + k).join(', ')})`
+  const expressionAttributeValues = reduce(typeAttributeValues, (acc, v, k) => {
     acc[':' + k] = {'S': v}
     return acc
   }, {})
 
   function cb(e, r, b) {
     if (e) {
-      console.log(e)
+      console.error(e)
       return callback(e)
     }
     for (const i of b.Items) {
@@ -286,24 +267,52 @@ function getDisplayableStreamItems({Limit}, callback) {
   getStreamItems( {Limit, filterExpression, expressionAttributeValues}, cb)
 }
 
-getDisplayableStreamItems({}, (e, r) => {
-  const items = []
-  for (const item of r) {
-    items.push({
-      type: 'img', 
-      metadata: {
-      src: `https:\/\/www.media.raphaelluckom.com/images/${item.mediaId}-1000.JPG`
-    }
-    })
-    setLatestImages(items)
+function constructImagePost(item) {
+  const children = []
+  children.push({
+    type: 'img', 
+    metadata: {
+      src: `https:\/\/www.media.raphaelluckom.com/images/${item.mediaId}-1000.JPG`,
+      alt: item.alt,
+      title: item.alt,
+    },
+  })
+  children.push({
+    type: 'div',
+    metadata: {
+      class: 'post-date'
+    },
+    children: [
+      {data: new Date(item.timeAddedMs).toLocaleString()}
+    ]
+  })
+  children.push({
+    type: 'div',
+    metadata: {
+      class: 'image-caption'
+    },
+    children: [
+      {data: item.caption}
+    ]
+  })
+  return {
+    type: 'div',
+    metadata: {
+      class: 'post'
+    },
+    children,
   }
+}
+
+getDisplayableStreamItems({}, (e, r) => {
+  const items = map(r, constructImagePost)
+  setLatestImages(items)
 })
 
 function setLatestImages(items) {
   const stream = document.querySelector('#stream');
   const v = map(items, (i) => {
     const l = jsonToDom(i)
-    console.log(l)
     stream.appendChild(l)
   })
 }
