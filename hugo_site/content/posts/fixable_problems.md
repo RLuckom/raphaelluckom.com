@@ -12,7 +12,7 @@ the human, as they would be to an employer.
 
 It's taken longer than I hoped to get here. I left my job at the end of July--
 though I don't think I was leaving _that job_, which was pretty new, so much as I was
-stepping off the commercial-software-development treadmill for a bit of a rest([^1]).
+stepping off the commercial-software-development treadmill for a bit of a rest[^1].
 As I've [mentioned](https://www.raphaelluckom.com/posts/october_check_in.html), I had planned to explore ways to support myself through various
 kinds of traditional crafts. I started moving in that direction--working on designing
 standard-ish objects that I would be able to make and sell--but a feeling of unfinished
@@ -38,14 +38,14 @@ to about-face on any of it if my perspective changes.
 I've been working on three specific projects. The first one is the cloud infrastructure
 that lives in [github](https://github.com/RLuckom/raphaelluckom.com/tree/master/terraform) alongside
 the code for this website. A lot of that work has been on "overbuilding" some of the more basic
-components--things like log management([^2]) and permission management([^3]). My number one rule
+components--things like log management[^2] and permission management[^3]. My number one rule
 for system design is that the _right_ way to do something _must_ be made the easiest way, because
 the easiest way is what people are going to do, whether it's the right way or not. Since my ultimate
 goal is that you, reader, will be able to deploy and maintain your own system like the one I am building
-for myself, I would not like to embarrass myself by giving you something that is going to break([^4]).
+for myself, I would not like to embarrass myself by giving you something that is going to break[^4].
 
 The other two projects I've been working on are a pair of code libraries: [exploranda-core](https://github.com/RLuckom/exploranda-core)
-and [donut-days](https://github.com/RLuckom/donut-days)([^5]). The purpose of those libraries is to
+and [donut-days](https://github.com/RLuckom/donut-days)[^5]. The purpose of those libraries is to
 make it easy to put any system together at the speed at which you can describe it, without being
 tied to any particular vendor or platform. I've been using AWS, but I'm making sure that nothing 
 I'm building _relies_ on AWS and not also offered by competing vendors.
@@ -61,14 +61,14 @@ to send and receive data, to work from mobile devices and computers, to publish 
 and to search, read, and edit metadata (when a picture was taken, what's in it, etc). The difficulty
 of doing all these things well is part of what makes for-profit social media such an attractive
 proposition. Other capabilities that are _not_ included in image management, but which I intend
-to address in the fullness of time, are sending and receiving payments and true _federated identity_([^6]).
+to address in the fullness of time, are sending and receiving payments and true _federated identity_[^6].
 
 I don't mean that I'm going to invent a new identity system, and I'm
 just _profoundly_ uninterested in cryptocurrency. My confidence actually comes from
 how obvious and boring the solutions to these problems really are. There are plenty
 of payment processors who offer access to the regular credit card and banking systems at
-reasonable rates([^7]). Likewise, there are extremely well-understood and trustworthy ways of verifying identity,
-suitable for social media use, that do not rely on Facebook's or Google's login system([^8]).
+reasonable rates[^7]. Likewise, there are extremely well-understood and trustworthy ways of verifying identity,
+suitable for social media use, that do not rely on Facebook's or Google's login system[^8].
 It was a big deal when facebook started doing facial recognition on images in 2010. Now
 there are simple ways to do it on a raspberry pi. Paypal is old enough to vote. Technology
 has not stopped moving in any of these areas just because people already got rich off them.
