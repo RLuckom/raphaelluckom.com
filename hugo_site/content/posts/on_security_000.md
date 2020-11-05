@@ -20,7 +20,7 @@ that we call _value_--identifying not just what is valuable, but looking
 deeper at the particular characteristics of value in a given
 context. It is these contextual characteristics of value that guide the
 definition of security in that context. Security is _appropriately protecting
-value_([^1]). In a bank robbery, security might include putting dye packs in with 
+value_[^1]. In a bank robbery, security might include putting dye packs in with 
 the money being stolen, one goal of which is to destroy the value of what is taken. 
 In a home security system, however, it would not be appropriate to include
 incendiary devices that set the house on fire in the event of a break-in. 
@@ -29,7 +29,7 @@ The system designer has several responsibilities with respect to security:
 
 1. To identify the characteristics of value in the context of the system.
 2. To identify a set of likely _threats_ to that value.
-3. To implement efficient([^2]) _controls_ that guard against the threats, ideally by raising the cost of an attack higher than the likely reward.
+3. To implement efficient[^2] _controls_ that guard against the threats, ideally by raising the cost of an attack higher than the likely reward.
 
 Notice that "preventing bad things from happening" is too general to appear
 on that list. That is, _when_ bad things happen, they may or may not represent

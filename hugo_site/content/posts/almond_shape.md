@@ -48,7 +48,7 @@ allows a person to use their care and attention efficiently toward their goals, 
 it doesn't put one person's care and attention "in charge" of anyone else's.
 
 There are examples of almond-shaped computer system design that have been highly effective.
-In the late 20th century--very roughly 1980-1995([^1])--the PC itself was an almond-shaped system. 
+In the late 20th century--very roughly 1980-1995[^1]--the PC itself was an almond-shaped system. 
 You bought the computer and the software you needed, plugged it into
 a source of electricity, and even people who were not "programmers" could operate it by themselves
 without the manufacturer or anyone else needing to continue supporting it.
@@ -66,17 +66,17 @@ it has always focused on allowing a single user to install the software on
 a web server and use a control plane (the admin UI) to run a highly advanced website platform
 without needing others to continually keep the service working. I don't
 have a use for Wordpress, but its scope and attention to human factors (especially in
-its admin panel) never fail to impress me([^2]).
+its admin panel) never fail to impress me[^2].
 
 Conversely, I know of no almond-shaped systems that would be widely described as "social
-media" systems([^3]). To use facebook or instagram or twitter requires the constant attention
+media" systems[^3]. To use facebook or instagram or twitter requires the constant attention
 of the workforces of those companies--if those companies went away tomorrow, everyone's accounts
 would go away with them. This is a very important distinction--if you get a copy of the
 Wordpress software, you can keep your Wordpress site running even if the Wordpress organization
 disappears. There is no analogous way for you to publish "your" facebook content without
 the existence of the facebook organization. The closest thing I know of to an almond-shaped
 social media platform is [diaspora](https://en.wikipedia.org/wiki/Diaspora_(social_network)), 
-an ambitious distributed, user-controlled social network first released in 2010([^4]).
+an ambitious distributed, user-controlled social network first released in 2010[^4].
 
 Not all challenges call for an almond-shaped system. Wikipedia is far from almond-shaped;
 so are public phone networks. There are times when you _need_ a centralized authority to

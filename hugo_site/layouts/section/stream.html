@@ -270,14 +270,6 @@ function getDisplayableStreamItems({Limit}, callback) {
 function constructImagePost(item) {
   const children = []
   children.push({
-    type: 'img', 
-    metadata: {
-      src: `https:\/\/www.media.raphaelluckom.com/images/${item.mediaId}-1000.JPG`,
-      alt: item.alt,
-      title: item.alt,
-    },
-  })
-  children.push({
     type: 'div',
     metadata: {
       class: 'post-date'
@@ -285,6 +277,14 @@ function constructImagePost(item) {
     children: [
       {data: new Date(item.timeAddedMs).toLocaleString()}
     ]
+  })
+  children.push({
+    type: 'img', 
+    metadata: {
+      src: `https:\/\/www.media.raphaelluckom.com/images/${item.mediaId}-1000.JPG`,
+      alt: item.alt,
+      title: item.alt,
+    },
   })
   children.push({
     type: 'div',

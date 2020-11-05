@@ -7,8 +7,8 @@ draft: false
 
 One of the things that I'm most nervous about when it comes to designing
 a social media alternative is having to grapple with the concept of _privacy_.
-On a purely technical level, the "privacy controls"([^1]) that _are_ actually
-implemented by social networks seem both too complex and too useless([^2]) to bother with.
+On a purely technical level, the "privacy controls"[^1] that _are_ actually
+implemented by social networks seem both too complex and too useless[^2] to bother with.
 On a human level, the concept of privacy has so many dimensions that I will never
 be able to do it justice. So I turned to one of my new favorite resources, the 
 [Stanford Encyclopedia of Philosophy](https://plato.stanford.edu/entries/privacy/),
@@ -21,12 +21,12 @@ people have in democratic societies, such as reproductive rights and rights rega
 and gender expression. I don't usually think of those rights as fundamentally about
 _privacy_, and it was interesting to read about how privacy was the legal concept from which
 they arose. I don't intend to explore those ideas further in this context, but if you're
-interested, the discussion in the SEP is fascinating([^3]).
+interested, the discussion in the SEP is fascinating[^3].
 
 The dimension of privacy that seems most relevant to social media is described in the
 encyclopedia as _informational privacy_. This conception of privacy was articulated
 in an 1890 article called [The Right to Privacy](https://www.jstor.org/stable/1321160)
-by Brandeis and Warren([^4]). The most stunnning insight in the article is that "...the
+by Brandeis and Warren[^4]. The most stunnning insight in the article is that "...the
 protection afforded to thoughts, sentiments, and emotions, expressed through the medium of
 writing or of the arts...is merely an instance of the enforcement of the more general right
 of the individual to be let alone. It is like the right not to be assaulted or beaten...
@@ -97,7 +97,7 @@ definitions of privacy I've summarized here. I was worried that not wanting to m
 might lead me to the conclusion that privacy itself is overrated. That hasn't happened. I think that
 privacy can be understood in a number of ways, each of which has value in a particular context. It
 is appropriate for social media tools to have privacy controls based on their context, whether that's 
-an official public blog like this one([^5]) or a chat room between friends. It doesn't seem especially
+an official public blog like this one[^5] or a chat room between friends. It doesn't seem especially
 difficult, when designing systems for personal use by public or private individuals, to use these concepts of the value
 of privacy to do an acceptably-good job of protecting what ought to be protected and valuing what ought
 to be valued. I'll refer back to these ideas as I build stuff, and hope to revisit and elaborate on them.
