@@ -45,30 +45,30 @@ When `test_app ` posts the confirmation, I can expect to see this in the stream:
 
 This flow works, and if I had to stop working on this project today, I'd probably
 keep using it. But it's not great, and it definitely doesn't meet the standard of something
-I would give to someone else. Improving this experience is also going to be a priority for me.
+I would give to someone else. Improving this experience is going to be a priority for me.
 
 As I get closer to an acceptable posting UX, I'll also think more about how to package
 up the entire system so that people can deploy and maintain it on their own. Right now
 that's in a similar state as the posting UX--it's not terrible if you're familiar with the tools,
 but it's not very accessible if you don't. There are various reasons for leaving this until
-later. First, the design of the posting UX will affect _what_ needs to be deployed, so I won't
+later. For one, the design of the posting UX will affect _what_ needs to be deployed, so I won't
 necessarily be able to decide _how_ to deploy things until that happens. Second, and 
-more importantly, I don't want to risk giving anyone a bad experience if I drastically
-change the system in a way that will be difficult to update. If you're interested in having
+more importantly, I don't want to package the system for distribution if I might drastically
+change it in a way that will cause problems for anyone with a running system. If you're interested in having
 your own system like this (hopefully as it improves people will be), let me know and I'll
 keep you updated when I have something I feel comfortable distributing. If you're somewhat 
 experienced or feeling adventurous, head over to github whenever and let me know if you have questions.
 
-Another major part of my project is to describe what I see as the important choices to make
-in social media systems, and why I'm making the choices I am. Since my last check-in, I've written
-a few posts on those topics since my last check-in. The post on [almond-shaped systems](https://www.raphaelluckom.com/posts/almond_shape.html)
+Another major part of my project is to describe the important choices to make
+in social media systems, and why I'm making them the way I am. Since my last check-in, I've written
+a few posts on those topics. The post on [almond-shaped systems](https://www.raphaelluckom.com/posts/almond_shape.html)
 describes the basic properties I want this system to have. The posts on [privacy](https://www.raphaelluckom.com/posts/on_privacy_000.html) and [security](https://www.raphaelluckom.com/posts/on_security_000.html)
 describe my framework for thinking about those topics--I'll expand on both as appropriate.
 
 One post idea I've had for a while is to look closer at something called the [hypertext transfer
 protocol (HTTP)](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol). This
 is the protocol that has been at the foundation of web pages for as long as web pages 
-have existed. The reason I haven't written it yet is that I was having a hard
+have existed. The reason I haven't written about it yet is that I was having a hard
 time presenting the information in a way that does justice to how interesting and important
 it is. But I'm getting there. The concepts we can see in HTTP are highly relevant to the
 challenge of building good UX, so I think those things might feed into each other.
