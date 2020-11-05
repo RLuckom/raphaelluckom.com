@@ -48,7 +48,7 @@ The other two projects I've been working on are a pair of code libraries: [explo
 and [donut-days](https://github.com/RLuckom/donut-days)[^5]. The purpose of those libraries is to
 make it easy to put any system together at the speed at which you can describe it, without being
 tied to any particular vendor or platform. I've been using AWS, but I'm making sure that nothing 
-I'm building _relies_ on AWS and not also offered by competing vendors.
+I'm building _relies_ on AWS and isn't also offered by competing vendors.
 
 Because my goal is that _anyone_ should be able to build whatever system happens to be right for them,
 I need to start with some example systems that I can build and simplify until they meet my standards.
