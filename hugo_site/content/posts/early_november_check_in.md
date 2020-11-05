@@ -21,7 +21,7 @@ probably stand up to load pretty well, should that ever become a factor.
 
 If "make the stream functional and interesting" is one category of tasks, there are two other categories
 that I'm actively prioritizing. One of those categories is to make posting as easy and convenient
-as it on other social networking apps. I'm using instagram as my model for how easy
+as it is on other social networking apps. I'm using instagram as my model for how easy
 it should be--I think that's a reasonable, not-too-high standard. Right now my solution
 falls short of that, but it is as follows:
 
@@ -50,7 +50,7 @@ I would give to someone else. Improving this experience is going to be a priorit
 As I get closer to an acceptable posting UX, I'll also think more about how to package
 up the entire system so that people can deploy and maintain it on their own. Right now
 that's in a similar state as the posting UX--it's not terrible if you're familiar with the tools,
-but it's not very accessible if you don't. There are various reasons for leaving this until
+but it's not very accessible if you aren't. There are various reasons for leaving this until
 later. For one, the design of the posting UX will affect _what_ needs to be deployed, so I won't
 necessarily be able to decide _how_ to deploy things until that happens. Second, and 
 more importantly, I don't want to package the system for distribution if I might drastically
