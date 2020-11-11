@@ -73,7 +73,7 @@ time presenting the information in a way that does justice to how interesting an
 it is. But I'm getting there. The concepts we can see in HTTP are highly relevant to the
 challenge of building good UX, so I think those things might feed into each other.
 
-That's all I've got for now. Let me know if you have questions, and have a good coule of weeks!
+That's all I've got for now. Let me know if you have questions, and have a good couple of weeks!
 
 [^1]: For instance, I could experiment with supporting hashtags, or a categorization system, or non-image microblog-style posts.
 [^2]: You can think of this as being a big hard drive where you pay based on the amount of stuff you actually store.

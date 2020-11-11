@@ -2,7 +2,7 @@
 title: "Internet History 000: One Place To Start"
 author: "Raphael Luckom"
 date: 2020-11-10T07:09:34-05:00
-draft: true
+draft: false
 ---
 
 1991, the year when the first websites were published, is not by any stretch of the imagination 
@@ -14,7 +14,7 @@ trace the earlier events[^1]. It also gets easier to contextualize what has been
 in the decades since 2000, and understand the situation in which we find ourselves.
 
 A thriving internet culture already existed in 1991. [Usenet](https://en.wikipedia.org/wiki/Usenet), 
-a kind of bulletin-board-system/mailing list system, had been operating continuously 
+a kind of bulletin-board-system, had been operating continuously 
 since 1980. Usenet is a collection of channels called _newsgroups_--today we might think of them as similar
 to subreddits or topics in a discussion forum. But Usenet consists of a single _namespace_[^2]. The newsgroups were assigned names in a tree
 structure--for instance, there might be one newsgroup called `baking`, and a more specialized newsgroup might be called
@@ -45,7 +45,7 @@ very quickly. So we need to be really careful about statements like "the _philos
 underlies {x technology} was faulty somehow, _therefore_ more people started using {y technology}."
 Before we make any statement like that, we need to consider the idea that maybe the newer system 
 happened to arrive at a time when it could take advantage of improvements in computer technology
-that established systems were prevented from doing by their communities and functions.
+that established systems were prevented from using by their communities and functions.
 It's _possible_ that the design principles on which one system was built could affect
 its adoption relative to a similar system, but we should not assume that relationship
 just because we see one system outcompete another.
@@ -68,14 +68,14 @@ to record and share information easily, without it getting lost. As he later sai
 He describes his project as a _documentation system_--a way for scientists
 to organize and share research notes and user manuals for the tools of
 high-energy physics. The [document](https://www.w3.org/Protocols/HTTP/AsImplemented.html) 
-describing the original HTTP implementation weighs in at 656 _words_.  What it describes
+describing the original HTTP implementation weighs in at 656 _words_.  What it contains
 is a _protocol_--a structured way for computers to interact so that they can understand 
 each other. This protocol centers around two concepts: _request_ and _response_. One computer,
 the _client_, sends a small piece of text called a _request_ to another, the _server_.
 The server then builds a _response_ and sends it back[^4].
 
 There's something curious about the 1991 protocol document. It says that every request
-must include the word `GET` followed by the document address. We would now refer to this
+must begin with the word `GET` followed by the document address. We would now refer to this
 type of request as a GET request, and it's the type of request that a browser makes
 when it's trying to, well, _get_ something, like a web page. There are other types of requests
 as well: a POST request is for when you want to make a new thing, like when you submit a tweet.
@@ -116,9 +116,9 @@ concepts that arose as it matured. Later, I want to think about how HTTP serves 
 for other developments in internet technology, and the principles on which those later systems
 are designed.
 
-[^1]: One of the big milestones in this history, if you're interested in going back further, is Claude Shannon's 1948 papoer _A Mathematical Theory of Communication_ ([PDF](https://web.archive.org/web/19980715013250/http://cm.bell-labs.com/cm/ms/what/shannonday/shannon1948.pdf)), which Wikipedia credits as "the founding work of information theory." Well worth a read, and also not the real beginning. Nothing ever is.
+[^1]: One of the big milestones in this history, if you're interested in going back further, is Claude Shannon's 1948 paper _A Mathematical Theory of Communication_ ([PDF](https://web.archive.org/web/19980715013250/http://cm.bell-labs.com/cm/ms/what/shannonday/shannon1948.pdf)), which Wikipedia credits as "the founding work of information theory." Well worth a read, and also not the real beginning. Nothing ever is.
 
-[^2]: A [namespace](https://en.wikipedia.org/wiki/Namespace) is a collection of things with unique names. The set of Twitter users is a namespace, because each handle only refers to a _single_ account. The set of users on a Wordpress site is also a namespace; each username again refers to only one account. But if you take _two_ Wordpress sites, they would represent two separate namespaces, because a single username (e.g. 'admin') could exist identically on both systems yet not be the same account. Namespaces solve the problem of connecting one identifier unabiguously with each thing, but they present big challenges. For instance, domain names on the internet form a namespace, and in the domain name system (DNS) you can see examples of people fighting over domain names and hoarding them. The other big feature of a namespace is that someone, or a lot of people, have to agree on how to give out the names and generally manage the thing, which is a human-coordination challenge.
+[^2]: A [namespace](https://en.wikipedia.org/wiki/Namespace) is a collection of things with unique names. The set of Twitter users is a namespace, because each handle only refers to a _single_ account. The set of users on a Wordpress site is also a namespace; each username again refers to only one account. But if you take _two_ Wordpress sites, they would represent two separate namespaces, because a single username (e.g. 'admin') could exist identically on both systems yet not be the same account. Namespaces solve the problem of connecting one identifier unambiguously with a single thing, but they present big challenges. For instance, domain names on the internet form a namespace, and in the domain name system (DNS) you can see examples of people fighting over domain names and hoarding them. The other big feature of a namespace is that someone, or a lot of people, have to agree on how to give out the names and generally manage the thing, which is a human-coordination challenge.
 
 [^3]: This is an argument we should consider any time it seems like a computing technology is "ruining" the internet. Is it really the case that a technology is having a deleterious effect on the internet, or is it just revealing or enabling some human trait that we prefer not to acknowledge? Further, on what authority are _we_ the judge? These aren't unanswerable questions--I've argued on this blog that certain common system designs are [evil and rude](http://www.catb.org/~esr/jargon/html/E/evil-and-rude.html). Any time I make a statement like that, I try to provide answers to the questions of how I think the technology interacts with humans and the grounds on which I consider it to be bad. By stating this chain of reasoning I hope to offer well-intentioned critics the tools to help me understand better.
 

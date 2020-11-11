@@ -8,6 +8,10 @@ uglyURLs = true
 pygmentsCodeFences = true
 pygmentsUseClassic = true
 pygmentsStyle = "xcode"
+
+[markup.goldmark.renderer]
+    unsafe = true
+
 [author]
    name = "Raphael Luckom"       #Author name
    github = "RLuckom"     #Github username

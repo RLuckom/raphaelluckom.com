@@ -27,3 +27,6 @@ pygmentsStyle = "xcode"
 [[menu.main]]
     name = "Store"
     url  = "https://tumble-aloft.com"
+
+[markup.goldmark.renderer]
+    unsafe = true
