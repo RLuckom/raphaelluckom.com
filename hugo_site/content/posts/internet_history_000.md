@@ -48,7 +48,7 @@ happened to arrive at a time when it could take advantage of improvements in com
 that established systems were prevented from using by their communities and functions.
 It's _possible_ that the design principles on which one system was built could affect
 its adoption relative to a similar system, but we should not assume that relationship
-just because we see one system outcompete another.
+just because we see one system outcompete another[^3].
 
 In any case, in 1991, Tim Berners-Lee, working in the High Energy Physics
 group at CERN, distributed a design for a new way to publish documents between computers
@@ -108,11 +108,12 @@ systems of its time. HTTP allowed any domain name to be a location, or _web site
 be accessed by anyone with a _web browser_. Those documents could _link_ to other documents on the same
 site or another site. It also made use of an existing convention of representing online "stuff" as _resources_--
 things that it makes sense to GET, PUT, POST, or DELETE. One of the main goals of the effort was to allow
-large numbers of people to collaborate on complex tasks.
+large numbers of people to collaborate on complex tasks. It was this configuration of technologies,
+founded at CERN in 1991, that was named the _World Wide Web_.
 
-There's a lot more ground to cover, but this is a good place to pause. In future posts in this series, I'll
+There's a lot more ground to cover, but this is a good place to pause. In future posts in this series, we'll
 explore the evolution of HTTP through its subsequent versions, and some of the important design
-concepts that arose as it matured. Later, I want to think about how HTTP serves as the foundation
+concepts that arose as it matured. Later, we'll think about how HTTP serves as the foundation
 for other developments in internet technology, and the principles on which those later systems
 are designed.
 
@@ -120,7 +121,7 @@ are designed.
 
 [^2]: A [namespace](https://en.wikipedia.org/wiki/Namespace) is a collection of things with unique names. The set of Twitter users is a namespace, because each handle only refers to a _single_ account. The set of users on a Wordpress site is also a namespace; each username again refers to only one account. But if you take _two_ Wordpress sites, they would represent two separate namespaces, because a single username (e.g. 'admin') could exist identically on both systems yet not be the same account. Namespaces solve the problem of connecting one identifier unambiguously with a single thing, but they present big challenges. For instance, domain names on the internet form a namespace, and in the domain name system (DNS) you can see examples of people fighting over domain names and hoarding them. The other big feature of a namespace is that someone, or a lot of people, have to agree on how to give out the names and generally manage the thing, which is a human-coordination challenge.
 
-[^3]: This is an argument we should consider any time it seems like a computing technology is "ruining" the internet. Is it really the case that a technology is having a deleterious effect on the internet, or is it just revealing or enabling some human trait that we prefer not to acknowledge? Further, on what authority are _we_ the judge? These aren't unanswerable questions--I've argued on this blog that certain common system designs are [evil and rude](http://www.catb.org/~esr/jargon/html/E/evil-and-rude.html). Any time I make a statement like that, I try to provide answers to the questions of how I think the technology interacts with humans and the grounds on which I consider it to be bad. By stating this chain of reasoning I hope to offer well-intentioned critics the tools to help me understand better.
+[^3]: This is an argument we should consider any time it seems like a computing technology is "ruining" the internet. Is it really the case that a technology is having a deleterious effect on the internet, or is it just revealing or enabling some human trait that we prefer not to acknowledge? Further, on what authority are _we_ the judge? These aren't unanswerable questions--I've argued on this blog that certain common system designs are [evil and rude](http://www.catb.org/~esr/jargon/html/E/evil-and-rude.html). Any time I make a statement like that, I try to provide answers to the questions of how I think the technology interacts with human tendencies and the grounds on which I consider it to be bad. By stating this chain of reasoning, I hope to offer well-intentioned critics the tools to help me understand better.
 
 [^4]: Not all systems work this way. For instance, a TV with an antenna doesn't "request" a channel, and the tv station doesn't "respond" to any specific TV. TV stations _broadcast_ and TVs _receive_. 
 
