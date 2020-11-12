@@ -17,3 +17,11 @@ figcaption, figcaption p {
 .post-date {
   font-style: italic;
 }
+
+h4 {
+  font-weight: bold;
+}
+
+h4 + p {
+  margin-top: 0px;
+}
