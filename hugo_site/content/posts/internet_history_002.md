@@ -107,7 +107,7 @@ Responses can include information about whether they should be re-used if the sa
    to "help out" the source of a piece of information by protecting it from getting overloaded. Some responses
    will indicate that they should _not_ be reused--for instance, a response that gives the current time.
 
-#### Some things should be consistent no matter which client is talking to which server
+#### Some things about the request-response interaction should be consistent no matter which client is talking to which server
 There are four things that should always be true about an interaction no matter what client or
    server is being used: the URI should refer to a specific _resource_[^2]; the resource should be _represented_ by
    something (or a set of things) that can travel between the client and the server[^3]; the _message_ should have
@@ -152,8 +152,59 @@ histories to consider, and there are even (as Fielding himself [stated clearly](
 
 [^3]: [Earlier](https://www.ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm#sec_5_2), Fielding makes an eyebrow-raising claim about Uniform Resource Identifiers (URIs): "Any information that can be named can be a resource: a document or image, a temporal service (e.g. "today's weather in Los Angeles"), a collection of other resources, a non-virtual object (e.g. a person), and so on. In other words, any concept that might be the target of an author's hypertext reference must fit within the definition of a resource." That earlier claim is the lens through which we should see the constraint that REST requires the "manipulation of resources through representations." Because a URI can refer to _anything_, from "the set of search results for the term 'philosophy'" to "the person who is Raphael Luckom," we can't expect that _the resource itself_ will be something that can be sent over the internet. Instead, Fielding distinguishes between the resource itself, and some representation of the resource that can be expressed over the internet. It is the system designer's job to pick a representation of a resource that enables the application to perform its function.
 
-[^4]: Specific pieces of information that Fielding says should be required on every request include: the name of the _host_ (domain name) the message is for; the _encoding_ of the message (like how and whether the content has been compressed (zipped) to take up less space); a consistent structure so that the receiver can distinguish the different _parts_ of the message even without necessarily being able to understand them (like how I could ask you to find the table of contents in a book, and you could generally do it even if you didn't understand the language the book was written in); specific signals that distinguish the phases of communication (like how, when you're talking on a radio, you're supposed to say "over" at the end of your statement so that the person on the other end knows that you're done talking and didn't get cut off); information about the _size_ of a message that a server can process (at least, a specific error that says "that was too long"); details about whether a response can be stored and reused, as discussed previously; and information about the _content type_ of resource representation that a client can accept (such as HTML or JSON).
+[^4]: Specific pieces of information that Fielding says should be required on every request include: 
+       1.  the name of the _host_ (domain name) the message is for; 
+       2. the _encoding_ of the message (like how and whether the content has been compressed (zipped) to take up less space); 
+       3. a consistent structure so that the receiver can distinguish the different _parts_ of the message even without necessarily being able to understand them (like how I could ask you to find the table of contents in a book, and you could generally do it even if you didn't understand the language the book was written in); 
+       4. specific signals that distinguish the phases of communication (like how, when you're talking on a radio, you're supposed to say "over" at the end of your statement so that the person on the other end knows that you're done talking and didn't get cut off);
+       5. information about the _size_ of a message that a server can process (at least, a specific error that says "that was too long"); 
+       6. details about whether a response can be stored and reused, as discussed previously; and 
+       7. information about the _content type_ of resource representation that a client can accept (such as HTML or JSON).
 
-[^5]: Fielding calls the idea that the resource representation should include details of how to interact with the resource, "hypermedia as the engine of application state," leading to the lovely acronym HATEOAS. Some sources then replace the H with "hypertext" rather than "hypermedia," giving the unfortunate impression that Fielding was specifically referring to HTML. Even those who [do not make that mistake](https://recaffeinate.co/post/what-is-hateoas/) tend to use as their example a narrow view of the idea of a "resource." For instance, some might argue that an HTML page that references a JavaScript application you need to download to interact with a resource is not RESTful, because the HTML page itself doesn't include the API information present in the JavaScript application. I appreciate this view, but I think another view is possible in which the "resource" the HTML page represents is actually "the list of things" (JS, CSS, etc.) required to do some further task, and the HTML page _does_ in fact contain all of the information needed to interact with that resource. I think this latter view tends to lead to better results in many common cases, and I'm happy to think it through with anyone interested. 
+[^5]: Fielding calls the idea that the resource representation should include 
+     details of how to interact with the resource, "hypermedia as the engine of application state," 
+     leading to the lovely acronym HATEOAS. Fielding
+     [does not consider there to be much distinction between "hypertext" and "hypermedia"](https://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven#comment-718):
+
+       > When I say hypertext, I mean the simultaneous presentation of information and controls such that the information
+       > becomes the affordance through which the user (or automaton) obtains choices and selects actions.
+       > Hypermedia is just an expansion on what text means to include temporal anchors within a media 
+       > stream; most researchers have dropped the distinction.
+
+       > Hypertext does not need to be HTML on a
+       > browser. Machines can follow links when they understand the data format and relationship types."
+
+     If anyone has time to teach me something, I would like to question how important it really is
+     that _automated clients specifically_ discover the URIs for individual resource types
+     starting with a single URI on the server, as opposed to providing those URIs to the clients at deployment time. 
+     
+     An application to [look up a word in an online dictionary](https://www.ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm#sec_5_3), 
+     takes two requests if you need to ask the server "where are you keeping words these days?" or one if you trust
+     a value supplied by the deployment system. In return for 100% extra requests, you get an assurance that
+     _if_ the server decides to move `words` to a different path _and_ does not also move to a different domain entirely,
+     you won't suffer a service degradation. This seems like a poor tradeoff except in very large,
+     somewhat pokey, very rapidly fluctuating environments. And yet, some 
+     [guidance](https://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven) on
+     out-of-band information is that 
+
+       > "Any effort spent describing what methods to use on what URIs of 
+       > interest should be entirely defined within the scope of the processing rules for a media type (and, 
+       > in most cases, already defined by existing media types). [_Failure here implies that out-of-band 
+       > information is driving interaction instead of hypertext._]" 
+
+     If I interpret this to mean that I'm allowed to include in my client a "resource URI" like 
+     `https://example.com/words/{word}`, but that the API's documentation should otherwise focus on the representation 
+     of a `word` in which that API traffics, then I get it.  But if the argument is that
+     there is something to be gained, in general, by requiring an automated system that looks up a word
+     to make a request to `https://example.com`, be handed a structure like `{"words": { "GET': "/words/{word}"}}`,
+     know that it needs the value in the `words` key, _and_ how to parse a URI template, _and_ that the
+     search term from its input corresponds to the term "word" in that template, _then_ construct the URI based
+     on the template and make the request--if that's what is meant by 
+
+       > allow servers to instruct clients on how to construct appropriate URIs, such as 
+       > is done in HTML forms and URI templates, by defining those 
+       > instructions within media types and link relations.
+
+     then it seems like an expensive choice to suggest _always_ making.
 
 [^6]: This requirement is not the same as assuming that an _adversary_ may insert itself between server and client--that's a security concern for a different context, though it has some similar features. The REST architectural style is specifically concerned with _enabling optimizations_ via intermediaries as a feature the system is capable of supporting, without denying that there are also cases where it's important to guard against hostile or misbehaving intermediaries.

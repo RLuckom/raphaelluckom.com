@@ -25,3 +25,7 @@ h4 {
 h4 + p {
   margin-top: 0px;
 }
+
+.footnotes > ol > li > p {
+  margin-bottom: 0.8em;
+}
