@@ -6,14 +6,14 @@ draft: false
 ---
 
 
-In the previous posts in this series, we've looked 
+In the previous posts in this series, we've looked at 
 [the internet into which the web emerged](https://www.raphaelluckom.com/posts/internet_history_000.html)
 and
 [its early history](https://www.raphaelluckom.com/posts/internet_history_001.html).
 We saw that Tim Berners-Lee, a scientist working at CERN, invented a way for people
 to collaborate by writing documents that could link to each other across web sites.
 We saw that when CERN released that technology into the public domain, _and_ internet
-networks were becoming available to the public (largely through commercial businesses), _and_ when
+networks were becoming available to the public (largely through commercial businesses), _and_
 the early browser Mosaic gave people an intuitive way to navigate this growing system,
 the World Wide Web really took off. We saw how it developed in many directions at once,
 for many different people who had many different goals, and how all of those people
@@ -40,16 +40,16 @@ chance of achieving the goal of getting it to everyone. But the constraint becom
 if it interferes with achieving the goal--if the message you need to send can't be made shorter than 27 words,
 then you need to change the constraint so that it accomodates the message, not the other way around.
 What Fielding is saying is that he wants to _keep evolving the constraints_ so that they
-continue to support the goal, _not_ pick a set of specific rules to set in stone. The _goal_ 
+continue to support the goal, _not_ pick a set of specific rules to carve in stone. The _goal_ 
 is to continually observe what the web is at its best, and work backwards from that to arrive
 at the constraints that support its success. We should pay the closest attention to what he identifies
 as the goal, and when we are satisfied that it's still valid, we should look at the constraints
-he proposes to help us get there. We should also expect that we will discover  _different_ goals that are
+he proposes to help us get there. We should expect that we will discover  _different_ goals that are _also_
 worth pursuing, and that those goals may be best supported by different sets of constraints.
 
 So what does Fielding identify as the goal? He [says](https://www.ics.uci.edu/~fielding/pubs/dissertation/web_arch_domain.htm#sec_4_1):
 
-> Berners-Lee [20] writes that the "Web's major goal was to be a shared information space 
+> Berners-Lee [[20](https://www.ics.uci.edu/~fielding/pubs/dissertation/references.htm#ref_20)] writes that the "Web's major goal was to be a shared information space 
 > through which people and machines could communicate." What was needed was a way for people 
 > to store and structure their own information, whether permanent or ephemeral in nature, such 
 > that it could be usable by themselves and others, and to be able to reference and structure the 
@@ -85,7 +85,7 @@ to take that into account so that it won't get overloaded or lose the flexibilit
 new people and ideas. To support these goals, he suggested using the following constraints.
 
 #### The basic interaction of the web is a client making a request to a server and the server sending a response
-The web uses a _client-server_ architecture. The client (the browser) is responsible for 
+The web uses a _client-server_ architecture. The client (often a browser) is responsible for 
    presenting the _user interface_, and may include processing components. The server is responsible
    for durable data storage and may also include processing components. The client and server
    programs should be able to evolve independently--servers should not work only with one specific
@@ -118,15 +118,15 @@ There are four things that should always be true about an interaction no matter 
 It should be possible to introduce intermediaries between the client and server to help out with different
    aspects of communication. One example of this was mentioned in #3 above, where if an intermediate server
    gets a request it has already seen, instead of asking the end server for a new response, it may sometimes use
-   the response from the last time something made that request. Another example would be that, when you make a cell phone
-   call, your cell phone is talking to a nearby cell phone tower, which is _relaying_ the conversation between you
-   and the other party. REST requires that clients and servers should not assume that they are talking to each other
+   the response from the last time something made that request. Another example would be that, when you look up a web site,
+   your computer is likely talking to your home router, which is _relaying_ the conversation between you
+   and the web site. REST requires that clients and servers should not assume that they are talking to each other
    _directly_, and must instead assume that intermediaries may be present[^6].
 
 #### The server is allowed to send _code_ to the client to help it interact with the resource
 The server is allowed to send a program (like JavaScript) to the client. Running that program should facilitate
   some specialized interaction with the resource not already built in to the browser. This is the only constraint 
-  that Fielding describes as "optional", reasoning "An optional constraint allows usto design an architecture that 
+  that Fielding describes as "optional", reasoning "An optional constraint allows us to design an architecture that 
   supports the desired behavior in the general case, but with the understanding that it may be disabled within some contexts."
 
 These six constraints represent the _entire_ set of requirements that Fielding says will enable a distributed
@@ -134,15 +134,17 @@ hypermedia system (the web) to achieve the goal he defined (be a shared informat
 numbers of people and machines can communicate). He also identifies 
 [specific nice things](https://www.ics.uci.edu/~fielding/pubs/dissertation/net_app_arch.htm#sec_2_3)
 that these rules help to balance within the system, including performance, scalability, simplicity, modifiability, 
-portability, and reliability. If you ask a group of engineers what REST is, you're likely to start an argument. 
+portability, and reliability. 
+
+If you ask a group of engineers what REST is, you're likely to start an argument. 
 That's unfortunate, because the argument usually focuses on the precise interpretation of Fielding's 
 constraints, and whether specific technical decisions do or do not satisfy them. A more productive conversation
 starts with the _motivations_ for each constraint and places them next to the _requirements_ of the system
 to be built. It is only with that perspective that the spirit of the REST architectural style can be fulfilled.
 
-In a way, this post brings us up to the present--the REST architectural style is still a popular one
+_In a way, this post brings us up to the present--the REST architectural style is still a popular one
 with system designers today. But this isn't going to be the last post in the series--there are many other
-histories to consider, and there are even (as Fielding himself [stated clearly](https://www.ics.uci.edu/~fielding/pubs/dissertation/software_arch.htm#sec_1_7)) other views of system design on which REST does not comment. 
+histories to consider, and there are even (as Fielding himself [stated clearly](https://www.ics.uci.edu/~fielding/pubs/dissertation/software_arch.htm#sec_1_7)) other dimensions of system design on which REST does not comment._ 
 
 [^1]: This requirement can make it challenging to design security elements like a "login session," in a way that follows the REST architectural style. Thankfully, good engineers are able to articulate [various sensible conclusions](https://stackoverflow.com/questions/319530/restful-authentication) about it. 
 
@@ -152,6 +154,6 @@ histories to consider, and there are even (as Fielding himself [stated clearly](
 
 [^4]: Specific pieces of information that Fielding says should be required on every request include: the name of the _host_ (domain name) the message is for; the _encoding_ of the message (like how and whether the content has been compressed (zipped) to take up less space); a consistent structure so that the receiver can distinguish the different _parts_ of the message even without necessarily being able to understand them (like how I could ask you to find the table of contents in a book, and you could generally do it even if you didn't understand the language the book was written in); specific signals that distinguish the phases of communication (like how, when you're talking on a radio, you're supposed to say "over" at the end of your statement so that the person on the other end knows that you're done talking and didn't get cut off); information about the _size_ of a message that a server can process (at least, a specific error that says "that was too long"); details about whether a response can be stored and reused, as discussed previously; and information about the _content type_ of resource representation that a client can accept (such as HTML or JSON).
 
-[^5]: Fielding calls the idea that the resource representation should include details of how to interact with the resource, "hypermedia as the engine of application state," leading to the lovely acronym HATEOAS. Some sources then replace the H with "hypertext" rather than "hypermedia," giving the unfortunate impression that Fielding was specifically referring to HTML. Even those who [do not make that mistake](https://recaffeinate.co/post/what-is-hateoas/) tend to use as their example a narrow view of the idea of a "resource." For instance, some might argue that an HTML page that references a JavaScript application you need to download to interact with a resource is not RESTful, because the HTML page itself doesn't include the API information present in the JavaScript application. I appreciate this view, but I think another view is possible in which the "resource" the HTML page represents is actually "the set of things" (JS, CSS, etc.) required to do some further task, and the HTML page _does_ in fact contain all of the information needed to interact with that resource. I think this latter view tends to lead to better results in many common cases, and I'm happy to think it through with anyone interested. 
+[^5]: Fielding calls the idea that the resource representation should include details of how to interact with the resource, "hypermedia as the engine of application state," leading to the lovely acronym HATEOAS. Some sources then replace the H with "hypertext" rather than "hypermedia," giving the unfortunate impression that Fielding was specifically referring to HTML. Even those who [do not make that mistake](https://recaffeinate.co/post/what-is-hateoas/) tend to use as their example a narrow view of the idea of a "resource." For instance, some might argue that an HTML page that references a JavaScript application you need to download to interact with a resource is not RESTful, because the HTML page itself doesn't include the API information present in the JavaScript application. I appreciate this view, but I think another view is possible in which the "resource" the HTML page represents is actually "the list of things" (JS, CSS, etc.) required to do some further task, and the HTML page _does_ in fact contain all of the information needed to interact with that resource. I think this latter view tends to lead to better results in many common cases, and I'm happy to think it through with anyone interested. 
 
 [^6]: This requirement is not the same as assuming that an _adversary_ may insert itself between server and client--that's a security concern for a different context, though it has some similar features. The REST architectural style is specifically concerned with _enabling optimizations_ via intermediaries as a feature the system is capable of supporting, without denying that there are also cases where it's important to guard against hostile or misbehaving intermediaries.

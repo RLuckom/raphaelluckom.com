@@ -48,10 +48,10 @@ several years, in which various groups had been adapting the existing HTTP proto
 to their needs. The 1.0 and 1.1 releases were an attempt to standardize parts of the way
 that HTTP was _already_ being used.
 
-The best way to see hw this process played out is through the [description](https://web.archive.org/web/20091111012314/http://tech.groups.yahoo.com/group/rest-discuss/message/6757) given by
+The best way to see how this process played out is through the [description](https://web.archive.org/web/20091111012314/http://tech.groups.yahoo.com/group/rest-discuss/message/6757) given by
 Roy Fielding, one of the principal authors of both HTTP 1.0 and HTTP 1.1. In this 
-quote, he is explaining the beginning of the design model that HTTP was meant
-to support:
+quote, he is explaining the beginning of the architectural style he developed 
+for thinking about the web:
 
 > We would discuss various proposals for HTTP (including our own) and
 > I would try to figure out why each fit (or didn't fit) the model, and
