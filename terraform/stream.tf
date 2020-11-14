@@ -1,5 +1,5 @@
 module "stream_items_table" {
-  source = "./modules/standard_dynamo_table"
+  source = "github.com/RLuckom/terraform_modules//aws/standard_dynamo_table"
   table_name = "stream_items"
   ttl = [{
     enabled = true
@@ -8,7 +8,7 @@ module "stream_items_table" {
 }
 
 module "stream_input_bucket" {
-  source = "./modules/permissioned_bucket"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_bucket"
   bucket = var.stream_input_bucket_name
   lifecycle_rules = [{
     id = "expire-processed"

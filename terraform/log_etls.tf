@@ -1,10 +1,10 @@
 module "logs_athena_bucket" {
-  source = "./modules/permissioned_bucket"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_bucket"
   bucket = var.athena_bucket_name
 }
 
 module "logs_partition_bucket" {
-  source = "./modules/permissioned_bucket"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_bucket"
   bucket = var.partitioned_bucket_name
 
   bucket_policy_statements = [
@@ -31,7 +31,7 @@ resource "aws_glue_catalog_database" "time_series_database" {
 }
 
 module "archive_cloudfront_logs" {
-  source = "./modules/permissioned_lambda"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   timeout_secs = 40
   mem_mb = 256
   environment_var_map = {
@@ -72,7 +72,7 @@ module "archive_cloudfront_logs" {
 }
 
 module "cloudformation_logs_glue_table" {
-  source = "./modules/standard_glue_table"
+  source = "github.com/RLuckom/terraform_modules//aws/standard_glue_table"
   table_name          = "${var.domain_name_prefix}_cf_logs_partitioned_gz"
   metadata_bucket_name = module.logs_partition_bucket.bucket.id
   external_storage_bucket_id = module.logs_partition_bucket.bucket.id
@@ -94,7 +94,7 @@ module "cloudformation_logs_glue_table" {
 }
 
 module "cloudwatch_logs_glue_table" {
-  source = "./modules/standard_glue_table"
+  source = "github.com/RLuckom/terraform_modules//aws/standard_glue_table"
   table_name          = var.cloudwatch_logs_table_name
   db = {
     name = aws_glue_catalog_database.time_series_database.name
@@ -115,7 +115,7 @@ module "cloudwatch_logs_glue_table" {
 }
 
 module "log_export_lambda" {
-  source = "./modules/permissioned_lambda"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   source_contents = [
     {
       file_contents = templatefile("./functions/templates/log_exports/config.js", {

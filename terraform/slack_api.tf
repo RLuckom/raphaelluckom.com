@@ -1,5 +1,5 @@
 module "slack_api_gateway_gateway" {
-  source = "./modules/apigatewayv2"
+  source = "github.com/RLuckom/terraform_modules//aws/apigatewayv2"
   name_stem = "slack_api"
   protocol = "HTTP"
   route_selection_expression = "$request.method $request.path"
@@ -18,7 +18,7 @@ module "slack_api_gateway_gateway" {
 }
 
 module "slack_api_handler_lambda" {
-  source = "./modules/permissioned_lambda"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   source_contents = [
     {
       file_name = "index.js"
@@ -60,7 +60,7 @@ module "slack_api_handler_lambda" {
 }
 
 module "web_api_gateway_gateway" {
-  source = "./modules/apigatewayv2"
+  source = "github.com/RLuckom/terraform_modules//aws/apigatewayv2"
   name_stem = "web_api"
   protocol = "HTTP"
   route_selection_expression = "$request.method $request.path"
@@ -79,7 +79,7 @@ module "web_api_gateway_gateway" {
 }
 
 module "web_api_handler_lambda" {
-  source = "./modules/permissioned_lambda"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   source_contents = [
     {
       file_name = "index.js"
@@ -114,7 +114,7 @@ module "web_api_handler_lambda" {
 }
 
 module "posts_table" {
-  source = "./modules/standard_dynamo_table"
+  source = "github.com/RLuckom/terraform_modules//aws/standard_dynamo_table"
   table_name = "posts"
   partition_key = {
     name = "id"

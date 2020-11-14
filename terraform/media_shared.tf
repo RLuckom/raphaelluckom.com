@@ -32,7 +32,7 @@ locals {
 }
 
 module "media_input_bucket" {
-  source = "./modules/permissioned_bucket"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_bucket"
   bucket = "rluckom-media-input"
   lifecycle_rules = [{
     id = "expire-processed"
@@ -48,12 +48,12 @@ module "media_input_bucket" {
 }
 
 module "media_table" {
-  source = "./modules/standard_dynamo_table"
+  source = "github.com/RLuckom/terraform_modules//aws/standard_dynamo_table"
   table_name = "media"
 }
 
 module "labeled_media_table" {
-  source = "./modules/standard_dynamo_table"
+  source = "github.com/RLuckom/terraform_modules//aws/standard_dynamo_table"
   table_name = "labeled_media"
   partition_key = {
     name = "label"

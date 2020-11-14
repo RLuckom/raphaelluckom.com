@@ -1,5 +1,5 @@
 module "test" {
-  source = "./modules/permissioned_lambda"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   source_contents = [
     {
       file_name = "index.js"

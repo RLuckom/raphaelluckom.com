@@ -1,5 +1,5 @@
 module "websocket_connections_table" {
-  source = "./modules/standard_dynamo_table"
+  source = "github.com/RLuckom/terraform_modules//aws/standard_dynamo_table"
   table_name = "websocket_connections"
   ttl = [{
     enabled = true
@@ -8,7 +8,7 @@ module "websocket_connections_table" {
 }
 
 module "websocket_api_gateway_gateway" {
-  source = "./modules/apigatewayv2"
+  source = "github.com/RLuckom/terraform_modules//aws/apigatewayv2"
   name_stem = "websocket_api"
   protocol = "WEBSOCKET"
   route_selection_expression = "$request.body.action"
@@ -28,7 +28,7 @@ module "websocket_api_gateway_gateway" {
 
 
 module "api_handler_test_lambda" {
-  source = "./modules/permissioned_lambda"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   source_contents = [
     {
       file_name = "index.js"

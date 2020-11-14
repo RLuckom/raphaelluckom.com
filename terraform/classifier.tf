@@ -1,5 +1,5 @@
 module "test_training_table" {
-  source = "./modules/standard_dynamo_table"
+  source = "github.com/RLuckom/terraform_modules//aws/standard_dynamo_table"
   table_name = var.classification_table_name
   partition_key = {
     name = "class"
@@ -12,7 +12,7 @@ module "test_training_table" {
 }
 
 module "test_classifier_crud_lambda" {
-  source = "./modules/permissioned_lambda"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   source_contents = [
     {
       file_name = "index.js"
@@ -61,6 +61,6 @@ module "test_classifier_crud_lambda" {
 }
 
 module "classification_model_bucket" {
-  source = "./modules/permissioned_bucket"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_bucket"
   bucket = var.classification_bucket_name
 }

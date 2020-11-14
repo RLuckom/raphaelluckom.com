@@ -7,7 +7,7 @@ resource "aws_s3_bucket" "lambda_bucket" {
 }
 
 module "scratch_bucket" {
-  source = "./modules/permissioned_bucket"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_bucket"
   bucket = var.scratch_bucket_name
 
   bucket_policy_statements = [

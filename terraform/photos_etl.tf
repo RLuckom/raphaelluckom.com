@@ -1,5 +1,5 @@
 module "photos_media_output_bucket" {
-  source = "./modules/permissioned_bucket"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_bucket"
   bucket = "rluckom.photos.partition"
 }
 
@@ -13,7 +13,7 @@ locals {
 }
 
 module "image_archive_lambda" {
-  source = "./modules/permissioned_lambda"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   mem_mb = 512
   source_contents = [
     {
