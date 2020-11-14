@@ -192,13 +192,13 @@ histories to consider, and there are even (as Fielding himself [stated clearly](
        > in most cases, already defined by existing media types). [_Failure here implies that out-of-band 
        > information is driving interaction instead of hypertext._]" 
 
-     If I interpret this to mean that I'm allowed to include in my client a "resource URI" like 
+     If I interpret this to mean that I'm allowed to include in my client a URI for the `word` resource like 
      `https://example.com/words/{word}`, but that the API's documentation should otherwise focus on the representation 
      of a `word` in which that API traffics, then I get it.  But if the argument is that
      there is something to be gained, in general, by requiring an automated system that looks up a word
-     to make a request to `https://example.com`, be handed a structure like `{"words": { "GET': "/words/{word}"}}`,
+     to make a request to `https://example.com`, be handed a structure like `{"words": { "GET': "https://example.com/words/{word}"}}`,
      know that it needs the value in the `words` key, _and_ how to parse a URI template, _and_ that the
-     search term from its input corresponds to the term "word" in that template, _then_ construct the URI based
+     search term from its input corresponds to the term `{word}` in that template, _then_ construct the URI based
      on the template and make the request--if that's what is meant by 
 
        > allow servers to instruct clients on how to construct appropriate URIs, such as 
