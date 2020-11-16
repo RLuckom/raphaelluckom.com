@@ -49,6 +49,16 @@ resource "aws_lambda_layer_version" "nlp" {
   }
 }
 
+resource "aws_lambda_layer_version" "markdown_tools" {
+  layer_name = "nlp"
+  s3_bucket = aws_s3_bucket.lambda_bucket.id
+  s3_key = "layers/markdown_tools/layer.zip"
+  compatible_runtimes = ["nodejs12.x"]
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 resource "aws_lambda_layer_version" "image_dependencies" {
   layer_name = "image_dependencies"
   s3_bucket = aws_s3_bucket.lambda_bucket.id
