@@ -587,9 +587,9 @@ mirror([1, 0, 0]) bezier(LEAF_EDGE_CONTROL_POINTS, 10) sphere(1);
 {{<figure src="/img/full_leaf_outline.png">}}
 
 We can add a line in the middle, by adding another set of control points with
-the same first and last points.:
+the same first and last points:
 
-````openscad
+```openscad
 use <./lib/bezier.scad>;
 
 LEAF_EDGE_CONTROL_POINTS = [
