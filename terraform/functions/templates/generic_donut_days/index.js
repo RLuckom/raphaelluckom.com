@@ -6,4 +6,9 @@ const helpers = fs.existsSync('./helpers.js') ? require('./helpers') : {}
 const recordCollectors = fs.existsSync('./recordCollectors.js') ? require('./recordCollectors') : {}
 const _ = require('lodash'); 
 
-exports.handler = createTask(config, helpers, dependencyHelpers, recordCollectors)
+exports.handler = (event, context, callback) => {
+  const ddConfig = config || {}
+  config.expectations = config.expectations || event.expectations || {}
+  const ddEvent = event.event || event || {}
+  createTask(_.cloneDeep(ddConfig), helpers, dependencyHelpers, recordCollectors)(ddEvent, context, callback)
+}

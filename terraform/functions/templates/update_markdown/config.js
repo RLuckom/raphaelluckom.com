@@ -17,7 +17,7 @@ const mdr = require('markdown-it')({
 
 //TODO: make this also accept toml, json front matter
 function parsePost(s) {
-  const t = _(s.split('\n')).filter().map(_.trim).value()
+  const t = _(s.split('\n')).map(_.trim).value()
   if (t[0] === '---') {
     let started = false
     let frontMatter = ''
@@ -52,8 +52,25 @@ function parsePost(s) {
 
 module.exports = {
   stages: {
-    getChangedItem: {
+    identifyItemToRender: {
       index: 0,
+      transformers: {
+        bucket: {
+          or: [
+            {ref: 'event.Records[0].s3.bucket.name'},
+            {ref: 'event.item.id.bucket'}
+          ]
+        },
+        key: {
+          or: [
+            {ref: 'event.Records[0].s3.object.key'},
+            {ref: 'event.item.id.key'}
+          ]
+        },
+      }
+    },
+    getItemToRender: {
+      index: 1,
       dependencies: {
         text: {
           action: 'exploranda',
@@ -61,8 +78,8 @@ module.exports = {
             accessSchema: {value: 'dataSources.AWS.s3.getObject'},
             params: {
               explorandaParams: {
-                Bucket: {ref: 'event.Records[0].s3.bucket.name' },
-                Key: {ref: 'event.Records[0].s3.object.key'},
+                Bucket: {ref: 'identifyItemToRender.vars.bucket' },
+                Key: {ref: 'identifyItemToRender.vars.key'},
               }
             }
           },
@@ -70,7 +87,7 @@ module.exports = {
       },
     },
     parseItemStructure: {
-      index: 1,
+      index: 2,
       transformers: {
         structuredItem: {
           helper: 'transform',
@@ -78,7 +95,33 @@ module.exports = {
             func: {
               value: (x) =>  parsePost(x.toString())
             },
-            arg: {ref: 'getChangedItem.results.text[0].Body' }
+            arg: {ref: 'getItemToRender.results.text[0].Body' }
+          }
+        },
+      }
+    },
+    resolveRenderDependencies: {
+      index: 3,
+      transformers: {
+        templateUri: {
+          helper: 'transform',
+          params: {
+            arg: { ref: 'parseItemStructure.vars.structuredItem.frontMatter' },
+            func: {
+              value: ({baseUrl, template}) => {
+                let url
+                if (_.isString(template)) {
+                  try {
+                    url = new URL(template)
+                  } catch(e) {
+                    url = new URL(template, baseUrl)
+                  }
+                } else {
+                  url = new URL(template.path, template.baseUrl)
+                }
+                return url.href
+              }
+            }
           }
         }
       },
@@ -89,27 +132,16 @@ module.exports = {
             accessSchema: {
               helper: 'transform',
               params: {
-                arg: { ref: 'stage.structuredItem.frontMatter' },
+                arg: { ref: 'stage.templateUri' },
                 func: {
-                  value: ({baseUrl, template}) => {
-                    let url
-                    if (_.isString(template)) {
-                      try {
-                        url = new URL(template)
-                      } catch(e) {
-                        url = new URL(template, baseUrl)
-                      }
-                    } else {
-                      url = new URL(template.path, template.baseUrl)
-                    }
-                    const as = {
+                  value: (uriString) => {
+                    let uri = new URL(uriString)
+                    return {
                       dataSource: 'GENERIC_API',
-                      host: url.host,
-                      path: url.pathname,
-                      protocol: _.trimEnd(url.protocol, ':') + '://',
+                      host: uri.host,
+                      path: uri.pathname,
+                      protocol: _.trimEnd(uri.protocol, ':') + '://',
                     }
-                    console.log(as)
-                    return as
                   }
                 }
               }
@@ -120,20 +152,20 @@ module.exports = {
       },
     },
     postItemToWebsiteBucket: {
-      index: 2,
+      index: 4,
       transformers: {
         fileContent: {
           helper: 'transform',
           params: {
             arg: {
               all: {
-                template: {ref: 'parseItemStructure.results.template[0].body' },
+                template: {ref: 'resolveRenderDependencies.results.template[0].body' },
                 doc: { ref: 'parseItemStructure.vars.structuredItem' },
               },
             },
             func: { 
               value: ({template, doc}) => {
-                return _.template(template.toString())({...doc.frontMatter, ...{ content: mdr.render(doc.content, {})}})
+                return _.template(template.toString())({...doc.frontMatter, ...{ content: mdr.render(doc.content)}})
               }
             }
           },
@@ -153,7 +185,7 @@ module.exports = {
                 Key: {
                   helper: 'transform', 
                   params:{
-                    arg: {ref: 'event.Records[0].s3.object.key'},
+                    arg: {ref: 'identifyItemToRender.vars.key' },
                     func: {
                       value: (key) => {
                         const ar = key.split('.')
@@ -169,6 +201,59 @@ module.exports = {
           },
         }
       },
-    }
+    },
+    IndicateDependencies: {
+      index: 5,
+      transformers: {
+        item: {
+          all: {
+            type: {value: 'S3_OBJECT'},
+            id: {ref: 'identifyItemToRender.vars' }
+          }
+        },
+        dependsOn: {
+          helper: 'transform',
+          params: {
+            arg: {
+              all: {
+                type: { value: 'URI'},
+                id: { ref: 'resolveRenderDependencies.vars.templateUri' },
+              }
+            },
+            func: {
+              value: (template) => [template]
+            }
+          }
+        }
+      },
+      dependencies: {
+        updateItemDependencies: {
+          action: 'DD',
+          params: {
+            FunctionName: {value: '${dependency_update_function}'},
+            event: { 
+              all: {
+                item: {
+                  helper: 'transform',
+                  params: {
+                    arg: {ref: 'stage.item'},
+                    func: { value: (x) => JSON.stringify(x)}
+                  }
+                },
+                dependsOn: {
+                  helper: 'transform',
+                  params: {
+                    arg: { ref: 'stage.dependsOn'},
+                    func: {
+                      value: (deps) => _.map(deps, (d) => JSON.stringify(d))
+                    }
+                  }
+                } 
+              }
+            }
+          }
+        }
+      }
+    },
   },
 }
