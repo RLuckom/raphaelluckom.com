@@ -1,85 +1,4 @@
 const _ = require('lodash')
-const converter = require('aws-sdk').DynamoDB.Converter;
-
-const query = {
-  dataSource: 'AWS',
-  namespaceDetails: {
-    name: 'DynamoDB',
-    constructorArgs: {}
-  },
-  name: 'Query',
-  value: {
-    path: ({Items}) => _.map(Items, (i) => converter.unmarshall(i))
-  },
-  incompleteIndicator: 'LastEvaluatedKey',
-  nextBatchParamConstructor: (params, {LastEvaluatedKey}) => {
-    return _.merge({}, params, {ExclusiveStartKey: LastEvaluatedKey});
-  },
-  requiredParams: {
-    TableName: {},
-  },
-  optionalParams: {
-    AttributesToGet: {},
-    ConditionalOperator: {},
-    ConsistentRead: {},
-    ExclusiveStartKey: {},
-    ExpressionAttributeNames: {},
-    ExpressionAttributeValues: {
-      formatter: (i) => _.reduce(i, (a, v, k) => {
-        if (_.isString(v)) {
-          a[k] = {'S': v}
-        } else if (_.isNumber(v)) {
-          a[k] = {'N': v}
-        } else if (v === true || v === false) {
-          a[k] = {'BOOL': v}
-        } else {
-          a[k] = converter.marshall(v)
-        }
-        return a
-      }, {})
-    },
-    FilterExpression: {},
-    IndexName: {},
-    KeyConditionExpression: {},
-    KeyConditions: {},
-    Limit: {},
-    ProjectionExpression: {},
-    QueryFilter: {},
-    ReturnConsumedCapacity: {},
-    ScanIndexForward: {},
-    Select: {},
-  },
-  apiMethod: 'query',
-};
-
-const deleteItem = {
-  dataSource: 'AWS',
-  namespaceDetails: {
-    name: 'DynamoDB',
-    constructorArgs: {}
-  },
-  name: 'Delete',
-  requiredParams: {
-    TableName: {},
-    Key: {
-      formatter: (i) => _.reduce(i, (a, v, k) => {
-        if (_.isString(v)) {
-          a[k] = {'S': v}
-        } else if (_.isNumber(v)) {
-          a[k] = {'N': v}
-        } else if (v === true || v === false) {
-          a[k] = {'BOOL': v}
-        } else if (_.isArray(v)) {
-          a[k] = _.map(v, converter.marshall)
-        } else {
-          a[k] = converter.marshall(v)
-        }
-        return a
-      }, {})
-    }
-  },
-  apiMethod: 'deleteItem',
-};
 
 module.exports = {
   stages: {
@@ -109,7 +28,7 @@ module.exports = {
         get: {
           action: 'exploranda',
           params: {
-            accessSchema: {value: query},
+            accessSchema: {value: 'dataSources.AWS.dynamodb.query'},
             params: {
               explorandaParams: {
                 apiConfig: {value: {region: 'us-east-1'}},
@@ -184,7 +103,7 @@ module.exports = {
           condition: { ref: 'stage.recordsToDelete.length' },
           action: 'exploranda',
           params: {
-            accessSchema: {value: deleteItem},
+            accessSchema: {value: 'dataSources.AWS.dynamodb.deleteItem'},
             params: {
               explorandaParams: {
                 apiConfig: {value: {region: 'us-east-1'}},
