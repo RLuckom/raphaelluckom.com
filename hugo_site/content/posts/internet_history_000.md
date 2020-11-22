@@ -23,8 +23,8 @@ if you wanted a new newsgroup, you could choose any name that wasn't already tak
 called the [Great Renaming](https://en.wikipedia.org/wiki/Great_Renaming), when the administrators of the most
 popular Usenet servers decided to impose some structure. They decided that there would be seven top-level-categories:
 `comp` (computing), `misc`, `news`, `rec` (recreation and entertainment), `sci`, `soc` (social content), and 
-`talk` (basically, any discussion likely to devolve into a fight, like politics or religion). Either as part of
-the Great Renaming, or else in reaction to it, a top-level category called `alt` was also formed, with the
+`talk` (basically, any discussion likely to devolve into a fight, like politics or religion). As a reaction to the 
+great renaming[^3], a top-level category called `alt` was also formed, with the
 intention of being an alternative to the nominally-official categories.
 Starting in 1987, the name of every newsgroup started with one of those words. Usenet 
 may have been the original source of some internet concepts we still use, such as _trolling_,
@@ -48,7 +48,7 @@ happened to arrive at a time when it could take advantage of improvements in com
 that established systems were prevented from using by their communities and functions.
 It's _possible_ that the design principles on which one system was built could affect
 its adoption relative to a similar system, but we should not assume that relationship
-just because we see one system outcompete another[^3].
+just because we see one system outcompete another[^4].
 
 In any case, in 1991, Tim Berners-Lee, working in the High Energy Physics
 group at CERN, distributed a design for a new way to publish documents between computers
@@ -72,7 +72,7 @@ describing the original HTTP implementation weighs in at 656 _words_.  What it c
 is a _protocol_--a structured way for computers to interact so that they can understand 
 each other. This protocol centers around two concepts: _request_ and _response_. One computer,
 the _client_, sends a small piece of text called a _request_ to another, the _server_.
-The server then builds a _response_ and sends it back[^4].
+The server then builds a _response_ and sends it back[^5].
 
 There's something curious about the 1991 protocol document. It says that every request
 must begin with the word `GET` followed by the document address. We would now refer to this
@@ -100,7 +100,7 @@ We can also see an important distinction between HTTP and Usenet, the bulletin b
 they use namespaces. In Usenet, the namespace is the set of newsgroups--that is, a name refers to
 an _ongoing conversation_. HTTP uses the domain name system as its main namespace. A _domain_ refers to
 the "place" where something "lives" on the internet. Where Usenet gives permanent names to _discussions_, 
-HTTP treats permanent names as _locations_[^5].
+HTTP treats permanent names as _locations_[^6].
 
 When we look at each of these elements of HTTP, we can see both how it describes the version of
 the internet that we know today, and how its design choices and intentions differed from other
@@ -121,8 +121,10 @@ are designed.
 
 [^2]: A [namespace](https://en.wikipedia.org/wiki/Namespace) is a collection of things with unique names. The set of Twitter users is a namespace, because each handle only refers to a _single_ account. The set of users on a Wordpress site is also a namespace; each username again refers to only one account. But if you take _two_ Wordpress sites, they would represent two separate namespaces, because a single username (e.g. 'admin') could exist identically on both systems yet not be the same account. Namespaces solve the problem of connecting one identifier unambiguously with a single thing, but they present big challenges. For instance, domain names on the internet form a namespace, and in the domain name system (DNS) you can see examples of people fighting over domain names and hoarding them. The other big feature of a namespace is that someone, or a lot of people, have to agree on how to give out the names and generally manage the thing, which is a human-coordination challenge.
 
-[^3]: This is an argument we should consider any time it seems like a computing technology is "ruining" the internet. Is it really the case that a technology is having a deleterious effect on the internet, or is it just revealing or enabling some human trait that we prefer not to acknowledge? Further, on what authority are _we_ the judge? These aren't unanswerable questions--I've argued on this blog that certain common system designs are [evil and rude](http://www.catb.org/~esr/jargon/html/E/evil-and-rude.html). Any time I make a statement like that, I try to provide answers to the questions of how I think the technology interacts with human tendencies and the grounds on which I consider it to be bad. By stating this chain of reasoning, I hope to offer well-intentioned critics the tools to help me understand better.
+[^3]: The alt hierarchy was originally conceived by Brian Reid (a member of the "Backbone Cabal" of network admins who had decided on the great renaming), Gordon Moffett, and John Gilmore (who went on to become a founder of the EFF) at G.T.'s Sunset Barbecue in Mountain View, CA in 1987. A description quoted in many places ([example](https://broadbandnow.com/internet/u/ui_alt.htm)) quotes Reid, "John’s home computer was ‘hoptoad’; my home computer was ‘mejac’. We set up a link between us, and each of us set up a link to amdahl, and we vowed to pass all alt traffic to each other and to nurse the net along. In those days one sent out numerous newgroup messages in the hopes that one would ‘take’; by the end of May the groups alt.test, alt.config, alt.drugs, and alt.gourmand were active. At the time I also managed ‘decwrl’, so I quietly added ‘alt’ to the list of groups that it carried."
 
-[^4]: Not all systems work this way. For instance, a TV with an antenna doesn't "request" a channel, and the tv station doesn't "respond" to any specific TV. TV stations _broadcast_ and TVs _receive_. 
+[^4]: This is an argument we should consider any time it seems like a computing technology is "ruining" the internet. Is it really the case that a technology is having a deleterious effect on the internet, or is it just revealing or enabling some human trait that we prefer not to acknowledge? Further, on what authority are _we_ the judge? These aren't unanswerable questions--I've argued on this blog that certain common system designs are [evil and rude](http://www.catb.org/~esr/jargon/html/E/evil-and-rude.html). Any time I make a statement like that, I try to provide answers to the questions of how I think the technology interacts with human tendencies and the grounds on which I consider it to be bad. By stating this chain of reasoning, I hope to offer well-intentioned critics the tools to help me understand better.
 
-[^5]: It's interesting to think about what the equivalent of a "home page" would have been on Usenet. It would have been technically possible to start a newsgroup about yourself, and Im sure some people must have done that. It would have been similar to a mailing list for people who interact with the person in the middle. I suspect that the more common structure would have been that a newsgroup would be the main "home" of a group of people in common, like members of a club.
+[^5]: Not all systems work this way. For instance, a TV with an antenna doesn't "request" a channel, and the tv station doesn't "respond" to any specific TV. TV stations _broadcast_ and TVs _receive_. 
+
+[^6]: It's interesting to think about what the equivalent of a "home page" would have been on Usenet. It would have been technically possible to start a newsgroup about yourself, and Im sure some people must have done that. It would have been similar to a mailing list for people who interact with the person in the middle. I suspect that the more common structure would have been that a newsgroup would be the main "home" of a group of people in common, like members of a club.
