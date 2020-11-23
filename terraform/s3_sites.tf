@@ -18,6 +18,30 @@ module "media_hosting_bucket" {
 
 module "test_site" {
   source = "github.com/RLuckom/terraform_modules//aws/static_site"
+  lambda_origins = [{
+    id = "lists"
+    path = "/meta/lists"
+    site_path = "/meta/lists/*"
+    apigateway_path = "/meta/lists/{list+}"
+    gateway_name_stem = "lists"
+    allowed_methods = ["GET", "HEAD", "OPTIONS"]
+    cached_methods = ["GET", "HEAD"]
+    compress = true
+    ttls = {
+      min = 0
+      default = 0
+      max = 0
+    }
+    forwarded_values = {
+      query_string = true
+      query_string_cache_keys = []
+      headers = []
+    }
+    lambda = {
+      arn = module.stub.lambda.arn
+      name = module.stub.lambda.function_name
+    }
+  }]
   route53_zone_name = var.route53_zone_name
   domain_name = var.test_domain_settings.domain_name
   allowed_origins = var.test_domain_settings.allowed_origins
@@ -33,11 +57,6 @@ module "test_site" {
 module "test_site_input" {
   source = "github.com/RLuckom/terraform_modules//aws/permissioned_bucket"
   bucket = "test-site-input"
-}
-
-module "test_site_templates" {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_bucket"
-  bucket = "test-site-templates"
 }
 
 module "site_renderer" {
@@ -71,7 +90,6 @@ module "site_renderer" {
     bucket = aws_s3_bucket.lambda_bucket.id
     policy_statements =  concat(
       module.test_site_input.permission_sets.read_and_tag,
-      module.test_site_templates.permission_sets.read_and_tag,
       module.test_site.website_bucket.permission_sets.put_object,
       module.site_item_dependency_updater.permission_sets.invoke
     )
@@ -216,6 +234,36 @@ module "template_dependent_resolver" {
   lambda_details = {
     action_name = "template_dependent_resolver"
     scope_name = "test"
+    bucket = aws_s3_bucket.lambda_bucket.id
+    policy_statements = concat(
+      module.site_dependency_table.permission_sets.read,
+    )
+  }
+  layers = [
+    aws_lambda_layer_version.donut_days.arn,
+  ]
+}
+
+module "stub" {
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  timeout_secs = 40
+  mem_mb = 128
+  environment_var_map = {
+    DONUT_DAYS_DEBUG = true
+  }
+  source_contents = [
+    {
+      file_name = "index.js"
+      file_contents = file("./functions/templates/generic_donut_days/index.js") 
+    },
+    {
+      file_name = "config.js"
+      file_contents = file("./functions/templates/generic_donut_days/stub_api_config.js")
+    }
+  ]
+  lambda_details = {
+    action_name = "stub"
+    scope_name = ""
     bucket = aws_s3_bucket.lambda_bucket.id
     policy_statements = concat(
       module.site_dependency_table.permission_sets.read,
