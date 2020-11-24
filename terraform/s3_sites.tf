@@ -1,5 +1,5 @@
 module "static_site" {
-  source = "github.com/RLuckom/terraform_modules//aws/static_site"
+  source = "github.com/RLuckom/terraform_modules//aws/cloudfront_s3_website"
   route53_zone_name = var.route53_zone_name
   domain_name = var.domain_name
   allowed_origins = ["https://${var.domain_name}", "http://localhost*"]
@@ -8,7 +8,7 @@ module "static_site" {
 }
 
 module "media_hosting_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/static_site"
+  source = "github.com/RLuckom/terraform_modules//aws/cloudfront_s3_website"
   route53_zone_name = var.route53_zone_name
   domain_name = var.media_domain_settings.domain_name
   allowed_origins = var.media_domain_settings.allowed_origins
@@ -17,7 +17,7 @@ module "media_hosting_bucket" {
 }
 
 module "test_site" {
-  source = "github.com/RLuckom/terraform_modules//aws/static_site"
+  source = "github.com/RLuckom/terraform_modules//aws/cloudfront_s3_website"
   lambda_origins = [{
     id = "lists"
     path = "/meta/lists"
@@ -45,6 +45,7 @@ module "test_site" {
   route53_zone_name = var.route53_zone_name
   domain_name = var.test_domain_settings.domain_name
   allowed_origins = var.test_domain_settings.allowed_origins
+  no_cache_s3_path_patterns = [ "/site_description.json" ]
   domain_name_prefix = var.test_domain_settings.domain_name_prefix
   subject_alternative_names = var.test_domain_settings.subject_alternative_names
   default_cloudfront_ttls = {
@@ -53,6 +54,14 @@ module "test_site" {
     max = 0
   }
 }
+
+resource "aws_s3_bucket_object" "object" {
+  bucket = module.test_site.website_bucket.bucket.id
+  key    = "site_description.json"
+  source = "./sites/test.raphaelluckom.com/site_description.json"
+  etag = filemd5("./sites/test.raphaelluckom.com/site_description.json")
+}
+
 
 module "test_site_input" {
   source = "github.com/RLuckom/terraform_modules//aws/permissioned_bucket"

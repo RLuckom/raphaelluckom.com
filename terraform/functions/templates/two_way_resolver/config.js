@@ -20,11 +20,16 @@ module.exports = {
       },
       dependencies: {
         forwardAssociations: {
-          condition: { 
-            helper: 'matches',
-            params: {
-              a: {ref: 'stage.keyType'},
-              b: {value: '${forward_key_type}' }
+          condition: {
+            every: {
+              isForward: { 
+                helper: 'matches',
+                params: {
+                  a: {ref: 'stage.keyType'},
+                  b: {value: '${forward_key_type}' }
+                }
+              },
+              idExists: {ref: 'stage.keyId'},
             }
           },
           action: 'exploranda',
@@ -46,10 +51,15 @@ module.exports = {
         },
         reverseAssociations: {
           condition: { 
-            helper: 'matches',
-            params: {
-              a: {ref: 'stage.keyType'},
-              b: {value: '${reverse_key_type}' }
+            every: {
+              isReverse: { 
+                helper: 'matches',
+                params: {
+                  a: {ref: 'stage.keyType'},
+                  b: {value: '${reverse_key_type}' }
+                }
+              },
+              idExists: {ref: 'stage.keyId'},
             }
           },
           action: 'exploranda',
@@ -82,6 +92,7 @@ module.exports = {
             or: [
               { ref: 'associations.results.forwardAssociations'},
               { ref: 'associations.results.reverseAssociations'},
+              { value: [] },
             ]
           },
           func: {value: (arg) => JSON.stringify(arg) }
