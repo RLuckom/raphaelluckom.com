@@ -1,0 +1,51 @@
+{
+  "siteDetails": {
+    "domainName": "test.raphaelluckom.com",
+    "title": "Test Site",
+    "maintainer": "Raphael Luckom",
+    "maintainerEmail": "raphaelluckom@gmail.com",
+    "relationEndpoint": "https://test.raphaelluckom.com/meta/relations"
+  },
+  "relations": {
+    "post": {
+      "relation" : "https://test.raphaelluckom.com/meta/relations/post",
+      "authoringFormat": "markdown",
+      "meta": {
+        "list": {
+          "posts": "https://test.raphaelluckom.com/meta/relations/lists/posts"
+        }
+      },
+      "formats": {
+        "markdown" : {
+          "idTemplate": "https://test.raphaelluckom.com/posts/{postName}.post.md"
+        },
+        "html" : {
+          "idTemplate": "https://test.raphaelluckom.com/posts/{postName}.html",
+          "views": {
+            "list": "https://test.raphaelluckom.com/posts.html"
+          },
+          "render": {
+            "template": "https://test.raphaelluckom.com/assets/templates/post.tpl"
+          }
+        }
+      }
+    },
+    "meta": {
+      "list": {
+        "relation" : "https://test.raphaelluckom.com/meta/relations/meta/list" ,
+        "meta": {
+          "list": {
+            "lists": "https://test.raphaelluckom.com/meta/relations/lists/lists"
+          }
+        },
+        "formats": {
+          "html" : {
+            "render": {
+              "template": "https://test.raphaelluckom.com/assets/templates/list.tpl"
+            }
+          }
+        }
+      }
+    }
+  }
+}

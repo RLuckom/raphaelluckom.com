@@ -258,7 +258,13 @@ module "stub" {
     },
     {
       file_name = "config.js"
-      file_contents = file("./functions/templates/generic_donut_days/stub_api_config.js")
+      file_contents = templatefile("./functions/templates/two_way_resolver/config.js",
+    {
+      table = module.site_dependency_table.table.name
+      forward_key_type = "depended"
+      reverse_key_type = "dependent"
+      reverse_association_index = "reverseDependencyIndex"
+    })
     }
   ]
   lambda_details = {
