@@ -8,40 +8,42 @@
   },
   "relations": {
     "post": {
-      "relation" : "https://test.raphaelluckom.com/meta/relations/post",
+      "relation" : "https://{domainName}/meta/relations/post",
       "authoringFormat": "markdown",
       "meta": {
         "list": {
-          "posts": "https://test.raphaelluckom.com/meta/relations/lists/posts"
+          "memberTemplate": "https://{domainName}/meta/relations/lists?keyType=member&keyId={name}",
+          "default": ["posts"]
         }
       },
       "formats": {
         "markdown" : {
-          "idTemplate": "https://test.raphaelluckom.com/posts/{postName}.post.md"
+          "idTemplate": "https://{domainName}/posts/{name}.post.md"
         },
         "html" : {
-          "idTemplate": "https://test.raphaelluckom.com/posts/{postName}.html",
+          "idTemplate": "https://{domainName}/posts/{name}.html",
           "views": {
-            "list": "https://test.raphaelluckom.com/posts.html"
+            "list": "https://{domainName}/posts.html"
           },
           "render": {
-            "template": "https://test.raphaelluckom.com/assets/templates/post.tpl"
+            "template": "https://{domainName}/assets/templates/post.tmpl"
           }
         }
       }
     },
     "meta": {
       "list": {
-        "relation" : "https://test.raphaelluckom.com/meta/relations/meta/list" ,
+        "relation" : "https://{domainName}/meta/relations/meta/list" ,
+        "idTemplate": "https://{domainName}/meta/relations/lists?keyType=list&keyId={name}",
         "meta": {
           "list": {
-            "lists": "https://test.raphaelluckom.com/meta/relations/lists/lists"
+            "lists": "https://{domainName}/meta/relations/lists/lists"
           }
         },
         "formats": {
           "html" : {
             "render": {
-              "template": "https://test.raphaelluckom.com/assets/templates/list.tpl"
+              "template": "https://{domainName}/assets/templates/list.tpl"
             }
           }
         }

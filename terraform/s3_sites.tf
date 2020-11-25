@@ -58,6 +58,7 @@ module "test_site" {
 resource "aws_s3_bucket_object" "object" {
   bucket = module.test_site.website_bucket.bucket.id
   key    = "site_description.json"
+  content_type = "application/json"
   source = "./sites/test.raphaelluckom.com/site_description.json"
   etag = filemd5("./sites/test.raphaelluckom.com/site_description.json")
 }
@@ -86,9 +87,11 @@ module "site_renderer" {
     },
     {
       file_name = "config.js"
-      file_contents = templatefile("./functions/templates/update_markdown/config.js",
+      file_contents = templatefile("./functions/templates/render_markdown_to_html/config.js",
     {
       website_bucket = module.test_site.website_bucket.bucket.id
+      domain_name = "test.raphaelluckom.com"
+      site_description_path = "site_description.json"
       dependency_update_function = module.site_item_dependency_updater.lambda.arn
     }) 
     }
@@ -112,7 +115,7 @@ module "site_renderer" {
     bucket = module.test_site_input.bucket.id
     events              = ["s3:ObjectCreated:*" ]
     filter_prefix       = ""
-    filter_suffix       = "md"
+    filter_suffix       = "post.md"
   }]
 }
 
