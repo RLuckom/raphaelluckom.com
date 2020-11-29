@@ -6,12 +6,12 @@ draft: false
 ---
 
 I reactivated my [twitter account](https://twitter.com/RLuckom) last week.
-I don't really enjoy using Twitter, but that doesn't stop me from acknowledging
+I don't really enjoy using Twitter, but I'll cheerfully acknowledge
 the place it occupies in public discourse. For many communities in which I
 want to participate, Twitter has justifiably outcompeted email and the phone system
 as the venue where it's acceptable to start a conversation with someone you don't
 already know[^1]. But just because it's obviously the best place to _start_ a conversation
-doesn't mean it's the best place to _have_ a conversation[^2]. The message-length linits
+doesn't mean it's the best place to _have_ a conversation[^2]. The message-length limits
 and the futility of trying to create a shared context--replicating the kind of
 smalltalk and emotional cues that keep IRL conversations from turning ugly--limit
 my use of Twitter beyond the role of a kind of phone book for conversations and
@@ -53,7 +53,7 @@ The Amazon Web Services cloud offers [exactly this](https://docs.aws.amazon.com/
 service. Google's cloud [does as well](https://cloud.google.com/storage/docs/hosting-static-website). So
 does [Azure](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-static-website), Microsoft's cloud.
 These services are _precisely_ comparable to the difficulty of putting a directory of static files
-behind an Apache or Nginx server[^9]. And they are _cheap af_ (If you want to dispute this, as people sometimes do,
+behind an Apache or Nginx server. And they are _cheap af_ (If you want to dispute this, as people sometimes do,
 be ready to cite real-world use cases and do some math with very small numbers). The type of person who finds Github Pages simple but an AWS 
 bucket complex is a software writer who's already familiar with git, but isn't familiar with
 cloud orchestration tools. That's kind of a niche use-case--a non-software-writer would instead be drawn
@@ -63,13 +63,13 @@ wonky experience.
 I see in cloud-skepticism a very similar pattern to computer-skepticism from before the 1990s,
 and internet-skepticism from around 1993-2010. That is, the skeptics would say--accurately--that
 first computers, and then the internet, would not be capable of _removing_ the complexity from
-areas of human experience. The propoents of those technologies--at least, the ones who weren't 
+areas of human experience. The proponents of those technologies--at least, the ones who weren't 
 trying to sell you something--would acknowledge complexity as a fact of life, but would argue
 that computers and the internet should be evaluated carefully and fairly as tools that provided
 previously-unavailable capabilities to their users. So it is with cloud technologies in 2020--they
 are not _simple_ (and it's on people like me to fix that) but they represent--in availability, reliability,
 safety, control, and cost--tools that have never before been practically available to small publishers.
-We--people like me, who like these tools--need to do a better job of making their good parts
+We--people like me, who see a kind of Unix-y elegance in these tools--need to do a better job of making their good parts
 widely available and stringing caution tape around some of the pointier hazards. But there's a lot
 of potential, and it would be a mistake to discount it.
 

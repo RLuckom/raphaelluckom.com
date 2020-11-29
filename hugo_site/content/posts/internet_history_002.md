@@ -174,6 +174,8 @@ histories to consider, and there are even (as Fielding himself [stated clearly](
        > Hypertext does not need to be HTML on a
        > browser. Machines can follow links when they understand the data format and relationship types."
 
+     _Edit: I added an answer to the following question two weeks later, in [another post](http://raphaelluckom.com/posts/revenge_of_hateoas.html)_
+
      If anyone has time to teach me something, I would like to question how important it really is
      that _automated clients specifically_ discover the URIs for individual resource types
      starting with a single URI on the server, as opposed to providing those URIs to the clients at deployment time. 
