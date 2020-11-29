@@ -8,11 +8,11 @@
   },
   "relations": {
     "post": {
-      "relation" : "https://{domainName}/meta/relations/post",
+      "relation" : "{relationEndpoint}/post",
       "authoringFormat": "markdown",
+      "idTemplate": "https://{domainName}/posts/{name}.post.md",
       "meta": {
         "list": {
-          "memberTemplate": "https://{domainName}/meta/relations/lists?keyType=member&keyId={name}",
           "default": ["posts"]
         }
       },
@@ -33,11 +33,12 @@
     },
     "meta": {
       "list": {
-        "relation" : "https://{domainName}/meta/relations/meta/list" ,
-        "idTemplate": "https://{domainName}/meta/relations/lists?keyType=list&keyId={name}",
+        "relation" : "{+relationEndpoint}/meta/list" ,
+        "idTemplate": "{+relationEndpoint}/lists?keyType=list&keyId={name}",
+        "memberTemplate": "{+relationEndpoint}/lists?keyType=member&keyId={name}",
         "meta": {
           "list": {
-            "lists": "https://{domainName}/meta/relations/lists/lists"
+            "lists": "{+relationEndpoint}/lists/lists"
           }
         },
         "formats": {

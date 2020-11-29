@@ -98,6 +98,18 @@ module.exports = {
             } }
           }
         },
+        name: {
+          helper: 'transform',
+          params: {
+            arg: {ref: 'identifyItemToRender.vars.key'},
+            func: { value: (key) => {
+              const ar = key.split('.')
+              ar.pop()
+              ar.pop()
+              return ar.pop().split('/').pop()
+            } }
+          }
+        },
         siteDescription: {ref: 'identifyItemToRender.results.siteDescription[0].body'}, 
       },
       dependencies: {
@@ -166,6 +178,18 @@ module.exports = {
               }
             }
           }
+        },
+        selfUri: {
+          helper: 'transform',
+          params: {
+            arg: { ref: 'getItemToRender.vars' },
+            func: {
+              value: ({itemType, siteDescription, name}) => {
+                const template = urlTemplate.parse(_.get(siteDescription, ['relations', itemType, 'idTemplate']))
+                return template.expand({...siteDescription.siteDetails, ...{name}})
+              }
+            }
+          }
         }
       },
       dependencies: {
@@ -178,12 +202,9 @@ module.exports = {
                 arg: { ref: 'stage.templateUri' },
                 func: {
                   value: (uriString) => {
-                    let uri = new URL(uriString)
                     return {
                       dataSource: 'GENERIC_API',
-                      host: uri.host,
-                      path: uri.pathname,
-                      protocol: _.trimEnd(uri.protocol, ':') + '://',
+                      uri: uriString
                     }
                   }
                 }
@@ -194,8 +215,63 @@ module.exports = {
         },
       },
     },
-    postItemToWebsiteBucket: {
+    IndicateDependencies: {
       index: 4,
+      transformers: {
+        item: {
+          all: {
+            name: { ref: 'getItemToRender.vars.name' },
+            tagNames: {
+              helper: 'transform',
+              params: {
+                arg: {
+                  all: {
+                    specific: {ref: 'parseItemStructure.vars.structuredItem.frontMatter.meta.list'},
+                    general: { helper: 'transform',
+                      params: {
+                        arg: {
+                          all: {
+                            itemType: { ref: 'getItemToRender.vars.itemType' },
+                            siteDescription: {ref: 'identifyItemToRender.results.siteDescription[0].body'}, 
+                          }
+                        },
+                        func: {value: ({itemType, siteDescription}) => _.get(siteDescription, ['relations', itemType, 'meta', 'list', 'default']) }
+                      }
+                    }
+                  },
+                },
+                func: {value: ({specific, general}) => _.concat(specific, general) }
+              }
+            },
+            itemType: { ref: 'getItemToRender.vars.itemType' },
+            metadata: {ref: 'parseItemStructure.vars.structuredItem.frontMatter'},
+            id: {ref: 'resolveRenderDependencies.vars.selfUri' }
+          }
+        },
+      },
+      dependencies: {
+        updateItemDependencies: {
+          action: 'DD',
+          params: {
+            FunctionName: {value: '${dependency_update_function}'},
+            InvocationType: { value: 'RequestResponse' },
+            event: { 
+              all: {
+                item: {
+                  helper: 'transform',
+                  params: {
+                    arg: {ref: 'stage.item'},
+                    func: { value: (x) => JSON.stringify(x)}
+                  }
+                },
+              }
+            }
+          }
+        }
+      }
+    },
+    postItemToWebsiteBucket: {
+      index: 5,
       transformers: {
         fileContent: {
           helper: 'transform',
@@ -204,11 +280,17 @@ module.exports = {
               all: {
                 template: {ref: 'resolveRenderDependencies.results.template[0].body' },
                 doc: { ref: 'parseItemStructure.vars.structuredItem' },
+                metaDependencies: {
+                  helper: 'fromJson',
+                  params: {
+                    string: { ref: 'IndicateDependencies.results.updateItemDependencies[0].Payload' },
+                  }
+                }
               },
             },
             func: { 
-              value: ({template, doc}) => {
-                return _.template(template.toString())({...doc.frontMatter, ...{ content: mdr.render(doc.content)}})
+              value: ({template, doc, metaDependencies}) => {
+                return _.template(template.toString())({...doc.frontMatter, ...{ content: mdr.render(doc.content)}, ...metaDependencies})
               }
             }
           },
@@ -245,59 +327,6 @@ module.exports = {
           },
         }
       },
-    },
-    IndicateDependencies: {
-      index: 5,
-      transformers: {
-        item: {
-          all: {
-            type: {value: 'S3_OBJECT'},
-            id: {ref: 'identifyItemToRender.vars' }
-          }
-        },
-        dependsOn: {
-          helper: 'transform',
-          params: {
-            arg: {
-              all: {
-                type: { value: 'URI'},
-                id: { ref: 'resolveRenderDependencies.vars.templateUri' },
-              }
-            },
-            func: {
-              value: (template) => [template]
-            }
-          }
-        }
-      },
-      dependencies: {
-        updateItemDependencies: {
-          action: 'DD',
-          params: {
-            FunctionName: {value: '${dependency_update_function}'},
-            event: { 
-              all: {
-                item: {
-                  helper: 'transform',
-                  params: {
-                    arg: {ref: 'stage.item'},
-                    func: { value: (x) => JSON.stringify(x)}
-                  }
-                },
-                dependsOn: {
-                  helper: 'transform',
-                  params: {
-                    arg: { ref: 'stage.dependsOn'},
-                    func: {
-                      value: (deps) => _.map(deps, (d) => JSON.stringify(d))
-                    }
-                  }
-                } 
-              }
-            }
-          }
-        }
-      }
     },
   },
 }

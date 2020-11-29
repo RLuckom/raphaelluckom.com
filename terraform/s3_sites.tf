@@ -20,9 +20,9 @@ module "test_site" {
   source = "github.com/RLuckom/terraform_modules//aws/cloudfront_s3_website"
   lambda_origins = [{
     id = "lists"
-    path = "/meta/lists"
-    site_path = "/meta/lists/*"
-    apigateway_path = "/meta/lists/{list+}"
+    path = "/meta/relations/lists"
+    site_path = "/meta/relations/lists*"
+    apigateway_path = "/meta/relations/lists/{list+}"
     gateway_name_stem = "lists"
     allowed_methods = ["GET", "HEAD", "OPTIONS"]
     cached_methods = ["GET", "HEAD"]
@@ -119,50 +119,6 @@ module "site_renderer" {
   }]
 }
 
-module "site_template_updater" {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
-  timeout_secs = 40
-  mem_mb = 256
-  environment_var_map = {
-    DONUT_DAYS_DEBUG = true
-  }
-  source_contents = [
-    {
-      file_name = "index.js"
-      file_contents = file("./functions/templates/generic_donut_days/index.js") 
-    },
-    {
-      file_name = "config.js"
-      file_contents = templatefile("./functions/templates/update_template/config.js",
-    {
-      website_bucket = module.test_site.website_bucket.bucket.id
-      site_prefix = "https://test.raphaelluckom.com/"
-      render_function = module.site_renderer.lambda.arn
-      get_dependents_function = module.template_dependent_resolver.lambda.arn
-    })
-    }
-  ]
-  lambda_details = {
-    action_name = "site_template_updater"
-    scope_name = ""
-    bucket = aws_s3_bucket.lambda_bucket.id
-    policy_statements =  concat(
-      module.site_renderer.permission_sets.invoke,
-      module.template_dependent_resolver.permission_sets.invoke
-    )
-  }
-  layers = [
-    aws_lambda_layer_version.donut_days.arn,
-  ]
-
-  bucket_notifications = [{
-    bucket = module.test_site.website_bucket.bucket.id
-    events              = ["s3:ObjectCreated:*" ]
-    filter_prefix       = "assets/templates"
-    filter_suffix       = "tmpl"
-  }]
-}
-
 module "site_dependency_table" {
   source = "github.com/RLuckom/terraform_modules//aws/standard_dynamo_table"
   table_name = "site_dependency_table"
@@ -193,6 +149,7 @@ module "site_item_dependency_updater" {
   mem_mb = 128
   environment_var_map = {
     DONUT_DAYS_DEBUG = true
+    EXPLORANDA_DEBUG = true
   }
   source_contents = [
     {
@@ -201,10 +158,13 @@ module "site_item_dependency_updater" {
     },
     {
       file_name = "config.js"
-      file_contents = templatefile("./functions/templates/update_dependencies_dynamo/config.js",
+      file_contents = templatefile("./functions/templates/update_tags/config.js",
     {
       table = module.site_dependency_table.table.name,
-      reverseDependencyIndex = "reverseDependencyIndex"
+      reverse_association_index = "reverseDependencyIndex"
+      domain_name = var.test_domain_settings.domain_name
+      site_description_path = "site_description.json"
+      self_type = "relations.meta.list"
     })
     }
   ]
