@@ -221,7 +221,7 @@ module.exports = {
         item: {
           all: {
             name: { ref: 'getItemToRender.vars.name' },
-            tagNames: {
+            trailNames: {
               helper: 'transform',
               params: {
                 arg: {

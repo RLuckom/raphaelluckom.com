@@ -63,7 +63,6 @@ resource "aws_s3_bucket_object" "object" {
   etag = filemd5("./sites/test.raphaelluckom.com/site_description.json")
 }
 
-
 module "test_site_input" {
   source = "github.com/RLuckom/terraform_modules//aws/permissioned_bucket"
   bucket = "test-site-input"
@@ -123,18 +122,18 @@ module "site_dependency_table" {
   source = "github.com/RLuckom/terraform_modules//aws/standard_dynamo_table"
   table_name = "site_dependency_table"
   partition_key = {
-    name = "depended"
+    name = "trailName"
     type = "S"
   }
   range_key = {
-    name = "dependent"
+    name = "memberName"
     type = "S"
   }
   global_indexes = [
     {
       name = "reverseDependencyIndex"
-      hash_key = "dependent"
-      range_key = "depended"
+      hash_key = "memberName"
+      range_key = "trailName"
       write_capacity = 0
       read_capacity = 0
       projection_type = "ALL"
@@ -233,8 +232,8 @@ module "stub" {
       file_contents = templatefile("./functions/templates/two_way_resolver/config.js",
     {
       table = module.site_dependency_table.table.name
-      forward_key_type = "depended"
-      reverse_key_type = "dependent"
+      forward_key_type = "trailName"
+      reverse_key_type = "memberName"
       reverse_association_index = "reverseDependencyIndex"
     })
     }

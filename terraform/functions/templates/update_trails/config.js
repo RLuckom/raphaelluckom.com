@@ -37,14 +37,14 @@ module.exports = {
           params: {
             arg: {
               all: {
-                tagNames: {ref: 'sources.vars.item.tagNames'},
+                trailNames: {ref: 'sources.vars.item.trailNames'},
                 siteDescription: { ref: 'sources.results.siteDescription[0].body' }, 
               }
             },
             func: {
-              value: ({tagNames, siteDescription}) => {
+              value: ({trailNames, siteDescription}) => {
                 const template = urlTemplate.parse(_.get(siteDescription, '${self_type}.idTemplate'))
-                return _.map(tagNames, (v, k) => {
+                return _.map(trailNames, (v, k) => {
                   return template.expand({...siteDescription.siteDetails, ...{name: encodeURIComponent(v)}})
                 })
               }
@@ -56,14 +56,14 @@ module.exports = {
           params: {
             arg: {
               all: {
-                itemId: {ref: 'sources.vars.item.id'},
+                itemName: {ref: 'sources.vars.item.name'},
                 siteDescription: { ref: 'sources.results.siteDescription[0].body' }, 
               }
             },
             func: {
-              value: ({itemId, siteDescription}) => {
+              value: ({itemName, siteDescription}) => {
                 const membershipTemplate = urlTemplate.parse(_.get(siteDescription, '${self_type}.memberTemplate'))
-                return membershipTemplate.expand({...siteDescription.siteDetails, ...{name: encodeURIComponent(itemId)}})
+                return membershipTemplate.expand({...siteDescription.siteDetails, ...{name: encodeURIComponent(itemName)}})
               }
             }
           }
@@ -93,7 +93,7 @@ module.exports = {
               all: {
                 response: {ref: 'updateDependencies.results.trails' },
                 trails: {ref: 'updateDependencies.vars.trails' },
-                trailNames: {ref: 'sources.vars.item.tagNames'},
+                trailNames: {ref: 'sources.vars.item.trailNames'},
               }
             },
             func: {value: ({trails, trailNames, response}) => {
@@ -123,14 +123,13 @@ module.exports = {
             arg: {
               all: {
                 trails: { ref: 'parseLists.vars.trails' },
-                trailNames: {ref: 'updateDependencies.vars.trails' },
+                trailNames: {ref: 'sources.vars.item.trailNames'},
                 existingMemberships: { ref: 'parseLists.vars.existingMemberships' },
                 siteDescription: { ref: 'sources.results.siteDescription[0].body' }, 
                 item: { ref: 'sources.vars.item' },
               }
             },
             //TODO: extract && test this
-            // TODO: create neighbord data structure using newLists
             func: { value: ({trails, existingMemberships, siteDescription, item, trailNames}) => {
               const updates = {
                 neighborsToReRender: [],
@@ -139,28 +138,28 @@ module.exports = {
                 dynamoDeletes: [],
                 neighbors: {}
               }
-              const trailIdTemplate = urlTemplate.parse(_.get(siteDescription, '${self_type}.idTemplate'))
+              const trailUriTemplate = urlTemplate.parse(_.get(siteDescription, '${self_type}.idTemplate'))
               const trailsListName = 'trails'
-              const trailsListId = trailIdTemplate.expand({...siteDescription.siteDetails, ...{name: encodeURIComponent(trailsListName)}})
+              const trailsListId = trailUriTemplate.expand({...siteDescription.siteDetails, ...{name: encodeURIComponent(trailsListName)}})
               _.each(existingMemberships, (trail) => {
-                if (!_.find(trailNames, (i) => i === trail.trailId)) {
+                if (!_.find(trailNames, (name) => name === trail.trailName)) {
                   updates.dynamoDeletes.push({
-                    memberId: item.id,
-                    trailId: trail.trailId
+                    memberName: item.name,
+                    trailName: trail.trailName
                   })
                 }
               })
-              _.each(trails, ({members, trailName}, trailId) => {
+              _.each(trails, ({members, trailName}, trailUri) => {
                 const newList = _.cloneDeep(members)
-                const currentPosition = _.findIndex(members, (member) => {
-                  return menber.memberId === item.id && _.isEqual(member.memberMetadata, item.metadata)
+                const currentIndex = _.findIndex(members, (member) => {
+                  return member.memberUri === item.id && _.isEqual(member.memberMetadata, item.metadata)
                 })
-                const previousIndex = _.findIndex(members, (member) => member.memberId === item.id)
+                const previousIndex = _.findIndex(members, (member) => member.memberUri === item.id)
                 if (members.length === 0) {
                   updates.dynamoPuts.push({
-                    trailId: trailsListId,
+                    trailUri: trailsListId,
                     trailName: trailsListName,
-                    memberId: trailId,
+                    memberUri: trailUri,
                     memberName: trailName,
                     memberType: 'trail',
                     memberMetadata: {
@@ -168,31 +167,37 @@ module.exports = {
                     }
                   })
                   updates.trailsToReRender.push(trailsListId)
-                  updates.trailsToReRender.push(trailId)
+                  updates.trailsToReRender.push(trailUri)
                 }
-                if (currentPosition === -1) {
+                if (currentIndex === -1) {
                   if (previousIndex !== -1) {
                     updates.neighborsToReRender.push(members[previousIndex + 1])
                     updates.neighborsToReRender.push(members[previousIndex - 1])
                     newList.splice(previousIndex, 1)
                   }
                   const trailMember = {
-                    trailId: trailId,
+                    trailUri: trailUri,
                     trailName,
-                    memberId: item.id,
+                    memberUri: item.id,
                     memberName: item.name,
                     memberType: item.itemType,
                     memberMetadata: item.metadata
                   }
                   newList.push(trailMember)
                   updates.dynamoPuts.push(trailMember)
-                  const newIndex = _(newList).sortBy(['memberMetadata', 'date']).findIndex((i) => i.memberId === item.id && _.isEqual(i.memberMetadata, item.metadata))
+                  const newIndex = _(newList).sortBy(['memberMetadata', 'date']).findIndex((i) => i.memberUri === item.id && _.isEqual(i.memberMetadata, item.metadata))
                   updates.neighborsToReRender.push(newList[newIndex + 1])
                   updates.neighborsToReRender.push(newList[newIndex - 1])
-                  updates.neighbors[trailId] = {
+                  updates.neighbors[trailUri] = {
                     trailName,
                     previousNeighbor: newList[newIndex - 1] || null,
                     nextNeighbor: newList[newIndex - 1] || null,
+                  }
+                } else {
+                  updates.neighbors[trailUri] = {
+                    trailName,
+                    previousNeighbor: newList[currentIndex - 1] || null,
+                    nextNeighbor: newList[currentIndex - 1] || null,
                   }
                 }
               })
@@ -200,7 +205,7 @@ module.exports = {
               updates.neighborsToReRender = _(updates.neighborsToReRender).uniq().filter().value()
               updates.dynamoPuts = _(updates.dynamoPuts).uniq().filter().value()
               updates.dynamoDeletes = _(updates.dynamoDeletes).uniq().filter().value()
-              updates.trailsListId = trailsListId
+              updates.trailsListName = trailsListName
               return updates
             } }
           }
@@ -213,11 +218,17 @@ module.exports = {
             url: {
               helper: 'transform',
               params: {
-                arg: { ref: 'stage.updates.dynamoDeletes'},
-                func: (deletes) => {
-                  console.log(deletes)
-                  console.log( _.map(deletes, 'trailId'))
-                  return _.map(deletes, 'trailId')
+                arg: {
+                  all: {
+                    deletes: { ref: 'stage.updates.dynamoDeletes'},
+                    siteDescription: { ref: 'sources.results.siteDescription[0].body' }, 
+                  }
+                },
+                func: ({deletes, siteDescription}) => {
+                  const trailUriTemplate = urlTemplate.parse(_.get(siteDescription, '${self_type}.idTemplate'))
+                  return _.map(deletes, ({trailName}) => {
+                    return trailUriTemplate.expand({...siteDescription.siteDetails, ...{name: encodeURIComponent(trailName)}})
+                  })
                 }
               }
             }
@@ -238,13 +249,13 @@ module.exports = {
             },
             func: {
               value: ({trailsWithDeletedMembers, plannedUpdates}) => {
-                const {trailsToReRender, neighborsToReRender, dynamoPuts, dynamoDeletes, trailsListId} = plannedUpdates
+                const {trailsToReRender, neighborsToReRender, dynamoPuts, dynamoDeletes, trailsListName} = plannedUpdates
                 const additionalDeletes = []
                 _.each(trailsWithDeletedMembers, ({body}, i) => {
                   if (JSON.parse(body).length < 2) {
                     additionalDeletes.push({
-                      memberId: dynamoDeletes[i].trailId,
-                      trailId: trailsListId
+                      memberName: dynamoDeletes[i].trailName,
+                      trailName: trailsListName
                     })
                   }
                 })
@@ -258,7 +269,37 @@ module.exports = {
             }
           }
         }
-      }
+      },
+      dependencies: {
+        dynamoPuts: {
+          action: 'exploranda',
+          condition: { ref: 'stage.allUpdates.dynamoPuts.length' },
+          params: {
+            accessSchema: {value: 'dataSources.AWS.dynamodb.putItem'},
+            params: {
+              explorandaParams: {
+                apiConfig: {value: {region: 'us-east-1'}},
+                TableName: '${table}',
+                Item: { ref: 'stage.allUpdates.dynamoPuts' }
+              }
+            }
+          }
+        },
+        dynamodeletes: {
+          action: 'exploranda',
+          condition: { ref: 'stage.allUpdates.dynamoDeletes.length' },
+          params: {
+            accessSchema: {value: 'dataSources.AWS.dynamodb.deleteItem'},
+            params: {
+              explorandaParams: {
+                apiConfig: {value: {region: 'us-east-1'}},
+                TableName: '${table}',
+                Key: { ref: 'stage.allUpdates.dynamoDeletes' }
+              }
+            }
+          }
+        }
+      },
     },
     foo: { bar: {
       dependencies: {

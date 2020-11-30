@@ -34,8 +34,8 @@
     "meta": {
       "trail": {
         "relation" : "{+relationEndpoint}/meta/trail" ,
-        "idTemplate": "{+relationEndpoint}/trails?keyType=trail&keyId={name}",
-        "memberTemplate": "{+relationEndpoint}/trails?keyType=member&keyId={name}",
+        "idTemplate": "{+relationEndpoint}/trails?keyType=trailName&keyId={name}",
+        "memberTemplate": "{+relationEndpoint}/trails?keyType=memberName&keyId={name}",
         "meta": {
           "trail": {
             "trails": "{+relationEndpoint}/trails/trails"
