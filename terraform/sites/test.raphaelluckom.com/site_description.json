@@ -12,7 +12,7 @@
       "authoringFormat": "markdown",
       "idTemplate": "https://{domainName}/posts/{name}.post.md",
       "meta": {
-        "list": {
+        "trail": {
           "default": ["posts"]
         }
       },
@@ -23,7 +23,7 @@
         "html" : {
           "idTemplate": "https://{domainName}/posts/{name}.html",
           "views": {
-            "list": "https://{domainName}/posts.html"
+            "trail": "https://{domainName}/posts.html"
           },
           "render": {
             "template": "https://{domainName}/assets/templates/post.tmpl"
@@ -32,19 +32,19 @@
       }
     },
     "meta": {
-      "list": {
-        "relation" : "{+relationEndpoint}/meta/list" ,
-        "idTemplate": "{+relationEndpoint}/lists?keyType=list&keyId={name}",
-        "memberTemplate": "{+relationEndpoint}/lists?keyType=member&keyId={name}",
+      "trail": {
+        "relation" : "{+relationEndpoint}/meta/trail" ,
+        "idTemplate": "{+relationEndpoint}/trails?keyType=trail&keyId={name}",
+        "memberTemplate": "{+relationEndpoint}/trails?keyType=member&keyId={name}",
         "meta": {
-          "list": {
-            "lists": "{+relationEndpoint}/lists/lists"
+          "trail": {
+            "trails": "{+relationEndpoint}/trails/trails"
           }
         },
         "formats": {
           "html" : {
             "render": {
-              "template": "https://{domainName}/assets/templates/list.tpl"
+              "template": "https://{domainName}/assets/templates/trail.tpl"
             }
           }
         }

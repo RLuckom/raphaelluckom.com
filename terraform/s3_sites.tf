@@ -19,11 +19,11 @@ module "media_hosting_bucket" {
 module "test_site" {
   source = "github.com/RLuckom/terraform_modules//aws/cloudfront_s3_website"
   lambda_origins = [{
-    id = "lists"
-    path = "/meta/relations/lists"
-    site_path = "/meta/relations/lists*"
-    apigateway_path = "/meta/relations/lists/{list+}"
-    gateway_name_stem = "lists"
+    id = "trails"
+    path = "/meta/relations/trails"
+    site_path = "/meta/relations/trails*"
+    apigateway_path = "/meta/relations/trails/{trail+}"
+    gateway_name_stem = "trails"
     allowed_methods = ["GET", "HEAD", "OPTIONS"]
     cached_methods = ["GET", "HEAD"]
     compress = true
@@ -158,13 +158,13 @@ module "site_item_dependency_updater" {
     },
     {
       file_name = "config.js"
-      file_contents = templatefile("./functions/templates/update_tags/config.js",
+      file_contents = templatefile("./functions/templates/update_trails/config.js",
     {
       table = module.site_dependency_table.table.name,
       reverse_association_index = "reverseDependencyIndex"
       domain_name = var.test_domain_settings.domain_name
       site_description_path = "site_description.json"
-      self_type = "relations.meta.list"
+      self_type = "relations.meta.trail"
     })
     }
   ]

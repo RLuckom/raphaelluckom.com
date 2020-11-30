@@ -226,7 +226,7 @@ module.exports = {
               params: {
                 arg: {
                   all: {
-                    specific: {ref: 'parseItemStructure.vars.structuredItem.frontMatter.meta.list'},
+                    specific: {ref: 'parseItemStructure.vars.structuredItem.frontMatter.meta.trail'},
                     general: { helper: 'transform',
                       params: {
                         arg: {
@@ -235,7 +235,7 @@ module.exports = {
                             siteDescription: {ref: 'identifyItemToRender.results.siteDescription[0].body'}, 
                           }
                         },
-                        func: {value: ({itemType, siteDescription}) => _.get(siteDescription, ['relations', itemType, 'meta', 'list', 'default']) }
+                        func: {value: ({itemType, siteDescription}) => _.get(siteDescription, ['relations', itemType, 'meta', 'trail', 'default']) }
                       }
                     }
                   },

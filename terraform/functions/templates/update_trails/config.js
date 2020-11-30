@@ -32,7 +32,7 @@ module.exports = {
     },
     updateDependencies: {
       transformers: {
-        lists: {
+        trails: {
           helper: 'transform',
           params: {
             arg: {
@@ -70,10 +70,10 @@ module.exports = {
         },
       },
       dependencies: {
-        lists: {
+        trails: {
           action: 'genericApi',
           params: {
-            url: { ref: 'stage.lists' }
+            url: { ref: 'stage.trails' }
           }
         },
         existingMemberships: {
@@ -86,21 +86,21 @@ module.exports = {
     },
     parseLists: {
       transformers: {
-        lists: { 
+        trails: { 
           helper: 'transform',
           params: {
             arg: { 
               all: {
-                response: {ref: 'updateDependencies.results.lists' },
-                lists: {ref: 'updateDependencies.vars.lists' },
-                listNames: {ref: 'sources.vars.item.tagNames'},
+                response: {ref: 'updateDependencies.results.trails' },
+                trails: {ref: 'updateDependencies.vars.trails' },
+                trailNames: {ref: 'sources.vars.item.tagNames'},
               }
             },
-            func: {value: ({lists, listNames, response}) => {
-              return _.reduce(lists, (a, v, k) => {
+            func: {value: ({trails, trailNames, response}) => {
+              return _.reduce(trails, (a, v, k) => {
                 a[v] = {
                   members: _.sortBy(JSON.parse(response[k].body), ['metadata', 'date']),
-                  listName: listNames[k]
+                  trailName: trailNames[k]
                 }
                 return a
               }, {})
@@ -122,8 +122,8 @@ module.exports = {
           params: {
             arg: {
               all: {
-                lists: { ref: 'parseLists.vars.lists' },
-                listNames: {ref: 'updateDependencies.vars.lists' },
+                trails: { ref: 'parseLists.vars.trails' },
+                trailNames: {ref: 'updateDependencies.vars.trails' },
                 existingMemberships: { ref: 'parseLists.vars.existingMemberships' },
                 siteDescription: { ref: 'sources.results.siteDescription[0].body' }, 
                 item: { ref: 'sources.vars.item' },
@@ -131,26 +131,26 @@ module.exports = {
             },
             //TODO: extract && test this
             // TODO: create neighbord data structure using newLists
-            func: { value: ({lists, existingMemberships, siteDescription, item, listNames}) => {
+            func: { value: ({trails, existingMemberships, siteDescription, item, trailNames}) => {
               const updates = {
                 neighborsToReRender: [],
-                listsToReRender: [],
+                trailsToReRender: [],
                 dynamoPuts: [],
                 dynamoDeletes: [],
                 neighbors: {}
               }
-              const listIdTemplate = urlTemplate.parse(_.get(siteDescription, '${self_type}.idTemplate'))
-              const listsListName = 'lists'
-              const listsListId = listIdTemplate.expand({...siteDescription.siteDetails, ...{name: encodeURIComponent(listsListName)}})
-              _.each(existingMemberships, (list) => {
-                if (!_.find(listNames, (i) => i === list.listId)) {
+              const trailIdTemplate = urlTemplate.parse(_.get(siteDescription, '${self_type}.idTemplate'))
+              const trailsListName = 'trails'
+              const trailsListId = trailIdTemplate.expand({...siteDescription.siteDetails, ...{name: encodeURIComponent(trailsListName)}})
+              _.each(existingMemberships, (trail) => {
+                if (!_.find(trailNames, (i) => i === trail.trailId)) {
                   updates.dynamoDeletes.push({
                     memberId: item.id,
-                    listId: list.listId
+                    trailId: trail.trailId
                   })
                 }
               })
-              _.each(lists, ({members, listName}, listId) => {
+              _.each(trails, ({members, trailName}, trailId) => {
                 const newList = _.cloneDeep(members)
                 const currentPosition = _.findIndex(members, (member) => {
                   return menber.memberId === item.id && _.isEqual(member.memberMetadata, item.metadata)
@@ -158,17 +158,17 @@ module.exports = {
                 const previousIndex = _.findIndex(members, (member) => member.memberId === item.id)
                 if (members.length === 0) {
                   updates.dynamoPuts.push({
-                    listId: listsListId,
-                    listName: listsListName,
-                    memberId: listId,
-                    memberName: listName,
-                    memberType: 'list',
+                    trailId: trailsListId,
+                    trailName: trailsListName,
+                    memberId: trailId,
+                    memberName: trailName,
+                    memberType: 'trail',
                     memberMetadata: {
                       date: new Date().toISOString(),
                     }
                   })
-                  updates.listsToReRender.push(listsListId)
-                  updates.listsToReRender.push(listId)
+                  updates.trailsToReRender.push(trailsListId)
+                  updates.trailsToReRender.push(trailId)
                 }
                 if (currentPosition === -1) {
                   if (previousIndex !== -1) {
@@ -176,38 +176,38 @@ module.exports = {
                     updates.neighborsToReRender.push(members[previousIndex - 1])
                     newList.splice(previousIndex, 1)
                   }
-                  const listMember = {
-                    listId: listId,
-                    listName,
+                  const trailMember = {
+                    trailId: trailId,
+                    trailName,
                     memberId: item.id,
                     memberName: item.name,
                     memberType: item.itemType,
                     memberMetadata: item.metadata
                   }
-                  newList.push(listMember)
-                  updates.dynamoPuts.push(listMember)
+                  newList.push(trailMember)
+                  updates.dynamoPuts.push(trailMember)
                   const newIndex = _(newList).sortBy(['memberMetadata', 'date']).findIndex((i) => i.memberId === item.id && _.isEqual(i.memberMetadata, item.metadata))
                   updates.neighborsToReRender.push(newList[newIndex + 1])
                   updates.neighborsToReRender.push(newList[newIndex - 1])
-                  updates.neighbors[listId] = {
-                    listName,
+                  updates.neighbors[trailId] = {
+                    trailName,
                     previousNeighbor: newList[newIndex - 1] || null,
                     nextNeighbor: newList[newIndex - 1] || null,
                   }
                 }
               })
-              updates.listsToReRender = _.uniq(updates.listsToReRender)
+              updates.trailsToReRender = _.uniq(updates.trailsToReRender)
               updates.neighborsToReRender = _(updates.neighborsToReRender).uniq().filter().value()
               updates.dynamoPuts = _(updates.dynamoPuts).uniq().filter().value()
               updates.dynamoDeletes = _(updates.dynamoDeletes).uniq().filter().value()
-              updates.listsListId = listsListId
+              updates.trailsListId = trailsListId
               return updates
             } }
           }
         }
       },
       dependencies: {
-        listsWithDeletedMembers: {
+        trailsWithDeletedMembers: {
           action: 'genericApi',
           params: {
             url: {
@@ -216,8 +216,8 @@ module.exports = {
                 arg: { ref: 'stage.updates.dynamoDeletes'},
                 func: (deletes) => {
                   console.log(deletes)
-                  console.log( _.map(deletes, 'listId'))
-                  return _.map(deletes, 'listId')
+                  console.log( _.map(deletes, 'trailId'))
+                  return _.map(deletes, 'trailId')
                 }
               }
             }
@@ -233,23 +233,23 @@ module.exports = {
             arg: {
               all: {
                 plannedUpdates: { ref: 'determineUpdates.vars.updates' },
-                listsWithDeletedMembers: {ref: 'determineUpdates.results.listsWithDeletedMembers' }
+                trailsWithDeletedMembers: {ref: 'determineUpdates.results.trailsWithDeletedMembers' }
               }
             },
             func: {
-              value: ({listsWithDeletedMembers, plannedUpdates}) => {
-                const {listsToReRender, neighborsToReRender, dynamoPuts, dynamoDeletes, listsListId} = plannedUpdates
+              value: ({trailsWithDeletedMembers, plannedUpdates}) => {
+                const {trailsToReRender, neighborsToReRender, dynamoPuts, dynamoDeletes, trailsListId} = plannedUpdates
                 const additionalDeletes = []
-                _.each(listsWithDeletedMembers, ({body}, i) => {
+                _.each(trailsWithDeletedMembers, ({body}, i) => {
                   if (JSON.parse(body).length < 2) {
                     additionalDeletes.push({
-                      memberId: dynamoDeletes[i].listId,
-                      listId: listsListId
+                      memberId: dynamoDeletes[i].trailId,
+                      trailId: trailsListId
                     })
                   }
                 })
                 return {
-                  listsToReRender,
+                  trailsToReRender,
                   neighborsToReRender,
                   dynamoPuts,
                   dynamoDeletes: _.concat(dynamoDeletes, additionalDeletes)
