@@ -44,16 +44,15 @@ step they provide many possible options, not just the ones that are most relevan
 
 This example shows how HATEOAS is meant to work--not just that the service _provides_ links to available
 actions, but that those links are the _primary way_ that the user _identifies_ the available choices. If we
-return to the example from my objection--a script to list airport departutres--we see that there are no choices
+return to the example from my objection--a script to list airport departures--we see that there are no choices
 being made. The basic premise of the script is that the list of departures exists at a location and we want to get it.
 There is no discovery of _resources_, only (potentially) discovery of _location_. Discovery of location is
-only a very small part of what REST cares about, and it's not relevant to every us
-of decisions based on new information it gets from an API.
+only a very small part of what REST cares about, and it's not relevant to every use case.
 
-Fortunately, we can modify the example a tiny bit to change it into just such a use case. Imagine that the
+Fortunately, we can modify the example a tiny bit to change it into an example of _resource_ discovery rather than merely _location_ discovery. Imagine that the
 airport website treats departures as first-class resources--instead of one endpoint that sends you all the
 departure _objects_ in a list, the list endpoint simply sends a list of the IDs (perhaps a _universal resource ID_)
-referring to currently-scheduled departure. In _this_ scenario, the script first gets the list
+referring to currently-scheduled departures. In _this_ scenario, the script first gets the list
 of current departures, and then it uses that information to make further choices about what to do--it can use
 the provided links to resolve each departure, or it can look to see if a specific one exists, or it can
 simply show the user the links it retrieved. Now the script is making navigational choices based on information that it
