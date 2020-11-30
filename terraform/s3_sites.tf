@@ -38,8 +38,8 @@ module "test_site" {
       headers = []
     }
     lambda = {
-      arn = module.stub.lambda.arn
-      name = module.stub.lambda.function_name
+      arn = module.two_way_resolver.lambda.arn
+      name = module.two_way_resolver.lambda.function_name
     }
   }]
   route53_zone_name = var.route53_zone_name
@@ -91,7 +91,7 @@ module "site_renderer" {
       website_bucket = module.test_site.website_bucket.bucket.id
       domain_name = "test.raphaelluckom.com"
       site_description_path = "site_description.json"
-      dependency_update_function = module.site_item_dependency_updater.lambda.arn
+      dependency_update_function = module.trails_updater.lambda.arn
     }) 
     }
   ]
@@ -102,7 +102,7 @@ module "site_renderer" {
     policy_statements =  concat(
       module.test_site_input.permission_sets.read_and_tag,
       module.test_site.website_bucket.permission_sets.put_object,
-      module.site_item_dependency_updater.permission_sets.invoke
+      module.trails_updater.permission_sets.invoke
     )
   }
   layers = [
@@ -118,9 +118,9 @@ module "site_renderer" {
   }]
 }
 
-module "site_dependency_table" {
+module "trails_table" {
   source = "github.com/RLuckom/terraform_modules//aws/standard_dynamo_table"
-  table_name = "site_dependency_table"
+  table_name = "trails_table"
   partition_key = {
     name = "trailName"
     type = "S"
@@ -142,7 +142,7 @@ module "site_dependency_table" {
   ]
 }
 
-module "site_item_dependency_updater" {
+module "trails_updater" {
   source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   timeout_secs = 40
   mem_mb = 128
@@ -159,7 +159,7 @@ module "site_item_dependency_updater" {
       file_name = "config.js"
       file_contents = templatefile("./functions/templates/update_trails/config.js",
     {
-      table = module.site_dependency_table.table.name,
+      table = module.trails_table.table.name,
       reverse_association_index = "reverseDependencyIndex"
       domain_name = var.test_domain_settings.domain_name
       site_description_path = "site_description.json"
@@ -168,13 +168,13 @@ module "site_item_dependency_updater" {
     }
   ]
   lambda_details = {
-    action_name = "site_item_dependency_updater"
+    action_name = "trails_updater"
     scope_name = "test"
     bucket = aws_s3_bucket.lambda_bucket.id
     policy_statements = concat(
-      module.site_dependency_table.permission_sets.read,
-      module.site_dependency_table.permission_sets.write,
-      module.site_dependency_table.permission_sets.delete_item,
+      module.trails_table.permission_sets.read,
+      module.trails_table.permission_sets.write,
+      module.trails_table.permission_sets.delete_item,
     )
   }
   layers = [
@@ -182,40 +182,7 @@ module "site_item_dependency_updater" {
   ]
 }
 
-module "template_dependent_resolver" {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
-  timeout_secs = 40
-  mem_mb = 128
-  environment_var_map = {
-    DONUT_DAYS_DEBUG = true
-  }
-  source_contents = [
-    {
-      file_name = "index.js"
-      file_contents = file("./functions/templates/generic_donut_days/index.js") 
-    },
-    {
-      file_name = "config.js"
-      file_contents = templatefile("./functions/templates/get_dependencies_dynamo/config.js",
-    {
-      table = module.site_dependency_table.table.name,
-    })
-    }
-  ]
-  lambda_details = {
-    action_name = "template_dependent_resolver"
-    scope_name = "test"
-    bucket = aws_s3_bucket.lambda_bucket.id
-    policy_statements = concat(
-      module.site_dependency_table.permission_sets.read,
-    )
-  }
-  layers = [
-    aws_lambda_layer_version.donut_days.arn,
-  ]
-}
-
-module "stub" {
+module "two_way_resolver" {
   source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   timeout_secs = 40
   mem_mb = 128
@@ -231,7 +198,7 @@ module "stub" {
       file_name = "config.js"
       file_contents = templatefile("./functions/templates/two_way_resolver/config.js",
     {
-      table = module.site_dependency_table.table.name
+      table = module.trails_table.table.name
       forward_key_type = "trailName"
       reverse_key_type = "memberName"
       reverse_association_index = "reverseDependencyIndex"
@@ -239,11 +206,11 @@ module "stub" {
     }
   ]
   lambda_details = {
-    action_name = "stub"
+    action_name = "two_way_resolver"
     scope_name = ""
     bucket = aws_s3_bucket.lambda_bucket.id
     policy_statements = concat(
-      module.site_dependency_table.permission_sets.read,
+      module.trails_table.permission_sets.read,
     )
   }
   layers = [

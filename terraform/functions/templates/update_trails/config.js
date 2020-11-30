@@ -170,11 +170,6 @@ module.exports = {
                   updates.trailsToReRender.push(trailUri)
                 }
                 if (currentIndex === -1) {
-                  if (previousIndex !== -1) {
-                    updates.neighborsToReRender.push(members[previousIndex + 1])
-                    updates.neighborsToReRender.push(members[previousIndex - 1])
-                    newList.splice(previousIndex, 1)
-                  }
                   const trailMember = {
                     trailUri: trailUri,
                     trailName,
@@ -186,18 +181,23 @@ module.exports = {
                   newList.push(trailMember)
                   updates.dynamoPuts.push(trailMember)
                   const newIndex = _(newList).sortBy(['memberMetadata', 'date']).findIndex((i) => i.memberUri === item.id && _.isEqual(i.memberMetadata, item.metadata))
+                  if (previousIndex !== -1 && newIndex !== previousIndex) {
+                    updates.neighborsToReRender.push(members[previousIndex + 1])
+                    updates.neighborsToReRender.push(members[previousIndex - 1])
+                    newList.splice(previousIndex, 1)
+                  }
                   updates.neighborsToReRender.push(newList[newIndex + 1])
                   updates.neighborsToReRender.push(newList[newIndex - 1])
-                  updates.neighbors[trailUri] = {
+                  updates.neighbors[trailName] = {
                     trailName,
                     previousNeighbor: newList[newIndex - 1] || null,
-                    nextNeighbor: newList[newIndex - 1] || null,
+                    nextNeighbor: newList[newIndex + 1] || null,
                   }
                 } else {
                   updates.neighbors[trailUri] = {
                     trailName,
                     previousNeighbor: newList[currentIndex - 1] || null,
-                    nextNeighbor: newList[currentIndex - 1] || null,
+                    nextNeighbor: newList[currentIndex + 1] || null,
                   }
                 }
               })
@@ -301,98 +301,5 @@ module.exports = {
         }
       },
     },
-    foo: { bar: {
-      dependencies: {
-        get: {
-          action: 'exploranda',
-          params: {
-            accessSchema: {value: 'dataSources.AWS.dynamodb.query'},
-            params: {
-              explorandaParams: {
-                apiConfig: {value: {region: 'us-east-1'}},
-                TableName: '${table}',
-                IndexName: '${reverse_association_index}',
-                ExpressionAttributeValues: {
-                  all: {
-                    ':item': {ref: 'stage.item'}
-                  }
-                },
-                KeyConditionExpression: 'dependent = :item'
-              }
-            },
-          }
-        },
-        update: {
-          action: 'exploranda',
-          params: {
-            accessSchema: {value: 'dataSources.AWS.dynamodb.putItem'},
-            params: {
-              explorandaParams: {
-                apiConfig: {value: {region: 'us-east-1'}},
-                TableName: '${table}',
-                Item: {
-                  helper: 'transform',
-                  params: {
-                    arg: {ref: 'stage.item'},
-                    func: {
-                      value: ({item, memberOf}) => _.isArray(memberOf) ? _.map(memberOf, (depended) => {
-                        return {
-                          dependent: item,
-                          depended
-                        }
-                      }) : { dependent: item, depended: JSON.stringify(memberOf) }
-                    }
-                  }
-                }
-              }
-            },
-          }
-        },
-      },
-      deleteOldDependencies: {
-        index: 1,
-        transformers: {
-          recordsToDelete: {
-            helper: 'transform',
-            params: {
-              arg: {
-                all: {
-                  memberOf: {ref: 'getAndUpdateDependencies.vars.memberOf' },
-                  existingRecords: { ref: 'getAndUpdateDependencies.results.get' }
-                }
-              },
-              func: {
-                value: ({memberOf, existingRecords}) => {
-                  const keys = _.filter(existingRecords, (itm) => {
-                    if (_.isString(memberOf)) {
-                      return itm.depended !== memberOf
-                    }
-                    return memberOf.indexOf(itm.depended) === -1
-                  })
-                  return keys
-                }
-              }
-            }
-          }
-        },
-        dependencies: {
-          delete: {
-            condition: { ref: 'stage.recordsToDelete.length' },
-            action: 'exploranda',
-            params: {
-              accessSchema: {value: 'dataSources.AWS.dynamodb.deleteItem'},
-              params: {
-                explorandaParams: {
-                  apiConfig: {value: {region: 'us-east-1'}},
-                  TableName: '${table}',
-                  Key: {ref : 'stage.recordsToDelete'}
-                },
-              }
-            },
-          },
-        },
-      },
-    }
-    }
   }
 }
