@@ -51,17 +51,37 @@ function parsePost(s) {
   }
 }
 
+function identifyItem(resourcePath, siteDescription, selectionPath) {
+  if (!selectionPath) {
+    selectionPath = ['relations']
+  }
+  for (key in _.get(siteDescription, selectionPath)) {
+    const reString = _.get(siteDescription, _.concat(selectionPath, [key, 'pathNameRegex']))
+    if (key !== 'meta' && reString) {
+      const re = new RegExp(reString)
+      if (re.test(resourcePath)) {
+        const name = re.exec(resourcePath)[1]
+        selectionPath.push(key)
+        return {
+          type: key,
+          typeDef: _.get(siteDescription, selectionPath),
+          name,
+          uri: urlTemplate.parse(_.get(siteDescription, _.concat(selectionPath, ['idTemplate']))).expand({...siteDescription.siteDetails, ...{name}})
+        }
+      }
+    }
+  }
+  if (_.get(siteDescription, _.concat(selectionPath, ['meta']))) {
+    selectionPath.push('meta')
+    return identifyItem(resourcePath, siteDescription, selectionPath)
+  }
+}
+
 module.exports = {
   stages: {
     identifyItemToRender: {
       index: 0,
       transformers: {
-        bucket: {
-          or: [
-            {ref: 'event.Records[0].s3.bucket.name'},
-            {ref: 'event.item.id.bucket'}
-          ]
-        },
         key: {
           or: [
             {ref: 'event.Records[0].s3.object.key'},
@@ -87,43 +107,26 @@ module.exports = {
     getItemToRender: {
       index: 1,
       transformers: {
-        itemType: {
+        item: {
           helper: 'transform',
           params: {
-            arg: {ref: 'identifyItemToRender.vars.key'},
-            func: { value: (key) => {
-              const ar = key.split('.')
-              ar.pop()
-              return ar.pop()
-            } }
-          }
-        },
-        name: {
-          helper: 'transform',
-          params: {
-            arg: {ref: 'identifyItemToRender.vars.key'},
-            func: { value: (key) => {
-              const ar = key.split('.')
-              ar.pop()
-              ar.pop()
-              return ar.pop().split('/').pop()
-            } }
+            arg: {
+              all: {
+                siteDescription: {ref: 'identifyItemToRender.results.siteDescription[0].body'}, 
+                resourcePath: {ref: 'identifyItemToRender.vars.key'},
+              }
+            },
+            func: ({resourcePath, siteDescription}) => identifyItem(resourcePath, siteDescription)
           }
         },
         siteDescription: {ref: 'identifyItemToRender.results.siteDescription[0].body'}, 
       },
       dependencies: {
         text: {
-          action: 'exploranda',
+          action: 'genericApi',
           params: {
-            accessSchema: {value: 'dataSources.AWS.s3.getObject'},
-            params: {
-              explorandaParams: {
-                Bucket: {ref: 'identifyItemToRender.vars.bucket' },
-                Key: {ref: 'identifyItemToRender.vars.key'},
-              }
-            }
-          },
+            url: {ref: 'stage.item.uri'}
+          }
         }
       },
     },
@@ -134,9 +137,9 @@ module.exports = {
           helper: 'transform',
           params: {
             func: {
-              value: (x) =>  parsePost(x.toString())
+              value: parsePost
             },
-            arg: {ref: 'getItemToRender.results.text[0].Body' }
+            arg: {ref: 'getItemToRender.results.text[0].body' }
           }
         },
       }
@@ -170,27 +173,20 @@ module.exports = {
         templateUri: {
           helper: 'transform',
           params: {
-            arg: { ref: 'getItemToRender.vars' },
+            arg: {
+              all: {
+               item: { ref: 'getItemToRender.vars.item' },
+               siteDescription: {ref: 'identifyItemToRender.results.siteDescription[0].body'}, 
+              }
+            },
             func: {
-              value: ({itemType, siteDescription}) => {
-                const template = urlTemplate.parse(_.get(siteDescription, ['relations', itemType, 'formats', 'html', 'render', 'template']))
+              value: ({item, siteDescription}) => {
+                const template = urlTemplate.parse(_.get(item, ['typeDef', 'formats', 'html', 'render', 'template']))
                 return template.expand(siteDescription.siteDetails)
               }
             }
           }
         },
-        selfUri: {
-          helper: 'transform',
-          params: {
-            arg: { ref: 'getItemToRender.vars' },
-            func: {
-              value: ({itemType, siteDescription, name}) => {
-                const template = urlTemplate.parse(_.get(siteDescription, ['relations', itemType, 'idTemplate']))
-                return template.expand({...siteDescription.siteDetails, ...{name}})
-              }
-            }
-          }
-        }
       },
       dependencies: {
         template: {
@@ -220,32 +216,21 @@ module.exports = {
       transformers: {
         item: {
           all: {
-            name: { ref: 'getItemToRender.vars.name' },
+            name: { ref: 'getItemToRender.vars.item.name' },
             trailNames: {
               helper: 'transform',
               params: {
                 arg: {
                   all: {
                     specific: {ref: 'parseItemStructure.vars.structuredItem.frontMatter.meta.trail'},
-                    general: { helper: 'transform',
-                      params: {
-                        arg: {
-                          all: {
-                            itemType: { ref: 'getItemToRender.vars.itemType' },
-                            siteDescription: {ref: 'identifyItemToRender.results.siteDescription[0].body'}, 
-                          }
-                        },
-                        func: {value: ({itemType, siteDescription}) => _.get(siteDescription, ['relations', itemType, 'meta', 'trail', 'default']) }
-                      }
-                    }
+                    general: { ref: 'getItemToRender.vars.item.typeDef.meta.trail.default' },
                   },
                 },
                 func: {value: ({specific, general}) => _.concat(specific, general) }
               }
             },
-            itemType: { ref: 'getItemToRender.vars.itemType' },
             metadata: {ref: 'parseItemStructure.vars.structuredItem.frontMatter'},
-            id: {ref: 'resolveRenderDependencies.vars.selfUri' }
+            id: { ref: 'getItemToRender.vars.item.uri' },
           }
         },
       },

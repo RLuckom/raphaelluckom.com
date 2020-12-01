@@ -43,7 +43,7 @@ module.exports = {
             },
             func: {
               value: ({trailNames, siteDescription}) => {
-                const template = urlTemplate.parse(_.get(siteDescription, '${self_type}.idTemplate'))
+                const template = urlTemplate.parse(_.get(siteDescription, '${self_type}.setTemplate'))
                 return _.map(trailNames, (v, k) => {
                   return template.expand({...siteDescription.siteDetails, ...{name: encodeURIComponent(v)}})
                 })
@@ -62,7 +62,7 @@ module.exports = {
             },
             func: {
               value: ({itemName, siteDescription}) => {
-                const membershipTemplate = urlTemplate.parse(_.get(siteDescription, '${self_type}.memberTemplate'))
+                const membershipTemplate = urlTemplate.parse(_.get(siteDescription, '${self_type}.setTemplate'))
                 return membershipTemplate.expand({...siteDescription.siteDetails, ...{name: encodeURIComponent(itemName)}})
               }
             }
@@ -138,7 +138,7 @@ module.exports = {
                 dynamoDeletes: [],
                 neighbors: {}
               }
-              const trailUriTemplate = urlTemplate.parse(_.get(siteDescription, '${self_type}.idTemplate'))
+              const trailUriTemplate = urlTemplate.parse(_.get(siteDescription, '${self_type}.setTemplate'))
               const trailsListName = 'trails'
               const trailsListId = trailUriTemplate.expand({...siteDescription.siteDetails, ...{name: encodeURIComponent(trailsListName)}})
               _.each(existingMemberships, (trail) => {
@@ -225,7 +225,7 @@ module.exports = {
                   }
                 },
                 func: ({deletes, siteDescription}) => {
-                  const trailUriTemplate = urlTemplate.parse(_.get(siteDescription, '${self_type}.idTemplate'))
+                  const trailUriTemplate = urlTemplate.parse(_.get(siteDescription, '${self_type}.setTemplate'))
                   return _.map(deletes, ({trailName}) => {
                     return trailUriTemplate.expand({...siteDescription.siteDetails, ...{name: encodeURIComponent(trailName)}})
                   })

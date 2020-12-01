@@ -55,17 +55,12 @@ module "test_site" {
   }
 }
 
-resource "aws_s3_bucket_object" "object" {
+resource "aws_s3_bucket_object" "site_description" {
   bucket = module.test_site.website_bucket.bucket.id
   key    = "site_description.json"
   content_type = "application/json"
   source = "./sites/test.raphaelluckom.com/site_description.json"
   etag = filemd5("./sites/test.raphaelluckom.com/site_description.json")
-}
-
-module "test_site_input" {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_bucket"
-  bucket = "test-site-input"
 }
 
 module "site_renderer" {
@@ -100,7 +95,6 @@ module "site_renderer" {
     scope_name = ""
     bucket = aws_s3_bucket.lambda_bucket.id
     policy_statements =  concat(
-      module.test_site_input.permission_sets.read_and_tag,
       module.test_site.website_bucket.permission_sets.put_object,
       module.trails_updater.permission_sets.invoke
     )
@@ -111,10 +105,10 @@ module "site_renderer" {
   ]
 
   bucket_notifications = [{
-    bucket = module.test_site_input.bucket.id
+    bucket = module.test_site.website_bucket.bucket.id
     events              = ["s3:ObjectCreated:*" ]
     filter_prefix       = ""
-    filter_suffix       = "post.md"
+    filter_suffix       = ".md"
   }]
 }
 

@@ -9,8 +9,8 @@
   "relations": {
     "post": {
       "relation" : "{relationEndpoint}/post",
-      "authoringFormat": "markdown",
-      "idTemplate": "https://{domainName}/posts/{name}.post.md",
+      "idTemplate": "https://{domainName}/posts/{name}.md",
+      "pathNameRegex": "^/?posts/([^/]*).md$",
       "meta": {
         "trail": {
           "default": ["posts"]
@@ -18,7 +18,8 @@
       },
       "formats": {
         "markdown" : {
-          "idTemplate": "https://{domainName}/posts/{name}.post.md"
+          "authoring": true,
+          "idTemplate": "https://{domainName}/posts/{name}.md"
         },
         "html" : {
           "idTemplate": "https://{domainName}/posts/{name}.html",
@@ -33,16 +34,23 @@
     },
     "meta": {
       "trail": {
-        "relation" : "{+relationEndpoint}/meta/trail" ,
-        "idTemplate": "{+relationEndpoint}/trails?keyType=trailName&keyId={name}",
-        "memberTemplate": "{+relationEndpoint}/trails?keyType=memberName&keyId={name}",
+        "relation" : "{+relationEndpoint}/meta/trail",
+        "idTemplate": "https://{domainName}/trails/{name}.md",
+        "pathNameRegex": "^/?trails/([^/]*).md$",
+        "setTemplate": "{+relationEndpoint}/trails?keyType=trailName&keyId={name}",
+        "membersTemplate": "{+relationEndpoint}/trails?keyType=memberName&keyId={name}",
         "meta": {
           "trail": {
-            "trails": "{+relationEndpoint}/trails/trails"
+            "default": ["trails"]
           }
         },
         "formats": {
+          "markdown" : {
+            "authoring": true,
+            "idTemplate": "https://{domainName}/trails/{name}.trail.md"
+          },
           "html" : {
+          "idTemplate": "https://{domainName}/trails/{name}.html",
             "render": {
               "template": "https://{domainName}/assets/templates/trail.tpl"
             }
