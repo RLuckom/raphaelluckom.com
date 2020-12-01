@@ -123,9 +123,19 @@ module.exports = {
       },
       dependencies: {
         text: {
-          action: 'genericApi',
+          action: 'exploranda',
           params: {
-            url: {ref: 'stage.item.uri'}
+            accessSchema: {
+              all: {
+                dataSource: { value: 'GENERIC_API' },
+                url: {ref: 'stage.item.uri'},
+                onError: (err, res) => {
+                  console.log(err)
+                  console.log(res)
+                  return {err, res}
+                }
+              }
+            }
           }
         }
       },
