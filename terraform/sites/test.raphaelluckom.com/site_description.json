@@ -4,7 +4,19 @@
     "title": "Test Site",
     "maintainer": "Raphael Luckom",
     "maintainerEmail": "raphaelluckom@gmail.com",
-    "relationEndpoint": "https://test.raphaelluckom.com/meta/relations"
+    "relationEndpoint": "https://test.raphaelluckom.com/meta/relations",
+    "pathRegex": "^https://test.raphaelluckom.com/(.*)$",
+    "formats": {
+      "html": {
+        "sections": {
+          "index": {
+            "renderFrom": "https://test.raphaelluckom.com/trails/posts.md",
+            "renderTo": "/index.html",
+            "sectionTitle": "Home"
+          }
+        }
+      }
+    }
   },
   "relations": {
     "post": {
@@ -47,10 +59,10 @@
         "formats": {
           "markdown" : {
             "authoring": true,
-            "idTemplate": "https://{domainName}/trails/{name}.trail.md"
+            "idTemplate": "https://{domainName}/trails/{name}.md"
           },
           "html" : {
-          "idTemplate": "https://{domainName}/trails/{name}.html",
+            "idTemplate": "https://{domainName}/trails/{name}.html",
             "render": {
               "template": "https://{domainName}/assets/templates/trail.tpl"
             }

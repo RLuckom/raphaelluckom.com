@@ -1,22 +1,21 @@
 <!DOCTYPE html>
 <html lang="en-us">
 <link rel="stylesheet" href="/assets/static/css/main.css">
+<link rel="stylesheet" href="/assets/static/css/highlight.css">
   <head>
     <title>
          <%= title %>
     </title>
   </head>
   <body>
-
-<section id=content>
-  <h1> also, also <%= title %> </h1>
-
-  
-    <div id=sub-header>
+<article id="content">
+  <h1><%= title %> </h1>
+    <p class="subtitle">
       <%= date %>
-    </div>
-    <div class="entry-content">
+    </p>
+<section>
 <%= content %>
-    </div>
+</section>
+</article>
   </body>
 </html>

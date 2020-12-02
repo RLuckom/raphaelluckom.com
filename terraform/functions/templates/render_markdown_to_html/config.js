@@ -6,6 +6,7 @@ const hljs = require('highlight.js');
 const urlTemplate = require('url-template')
 
 const mdr = require('markdown-it')({
+  html: true,
   highlight: function (str, lang) {
     if (lang && hljs.getLanguage(lang)) {
       try {
@@ -15,6 +16,50 @@ const mdr = require('markdown-it')({
     return ''; // use external default escaping
   }
 }).use(require('markdown-it-footnote'))
+
+function unwrap(params) { 
+  return _.reduce(params, (a, v, k) => {
+    a[k] = v[0]
+    return a
+  }, {})
+}
+
+function unwrapHttpResponse(params) {
+  return _.reduce(unwrap(params), (a, v, k) => {
+    a[k] = v.body
+    return a
+  }, {})
+}
+
+function unwrapFunctionPayload(params) {
+  return _.reduce(unwrap(params), (a, v, k) => {
+    a[k] = JSON.parse(v.Payload)
+    return a
+  }, {})
+}
+
+function firstKey(params) {
+  return params[_.keys(params)[0]]
+}
+
+function only(f) {
+  return function(params) {
+    return firstKey(f(params))
+  }
+}
+
+const formatters = {
+  singleValue: {
+    unwrap: only(unwrap),
+    unwrapHttpResponse: only(unwrapHttpResponse),
+    unwrapFunctionPayload: only(unwrapFunctionPayload),
+  },
+  multiValue: {
+    unwrap,
+    unwrapHttpResponse,
+    unwrapFunctionPayload
+  }
+}
 
 //TODO: make this also accept toml, json front matter
 function parsePost(s) {
@@ -43,7 +88,6 @@ function parsePost(s) {
       }
       return { frontMatter: fm, content, raw:s }
     } catch(e) {
-      console.log(e)
       return { raw: s} 
     }
   } else {
@@ -55,6 +99,11 @@ function identifyItem(resourcePath, siteDescription, selectionPath) {
   if (!selectionPath) {
     selectionPath = ['relations']
   }
+  const pathRegexString = _.get(siteDescription, 'siteDetails.pathRegex')
+  const pathRe = new RegExp(pathRegexString)
+  if (pathRe.test(resourcePath)) {
+    resourcePath = pathRe.exec(resourcePath)[1]
+  }
   for (key in _.get(siteDescription, selectionPath)) {
     const reString = _.get(siteDescription, _.concat(selectionPath, [key, 'pathNameRegex']))
     if (key !== 'meta' && reString) {
@@ -62,11 +111,26 @@ function identifyItem(resourcePath, siteDescription, selectionPath) {
       if (re.test(resourcePath)) {
         const name = re.exec(resourcePath)[1]
         selectionPath.push(key)
+        const typeDef = _.get(siteDescription, selectionPath)
+        const uriTemplateArgs = {...siteDescription.siteDetails, ...{name}}
+        const formatUrls = _.reduce(_.get(typeDef, 'formats'), (a, v, k) => {
+          const uriTemplateString = v.idTemplate
+          if (uriTemplateString) {
+            const formatUri = urlTemplate.parse(uriTemplateString).expand(uriTemplateArgs)
+            a[k] = {
+              uri: formatUri,
+              path: pathRe.exec(formatUri)[1]
+            }
+          }
+          return a
+        }, {})
         return {
           type: key,
-          typeDef: _.get(siteDescription, selectionPath),
+          typeDef,
           name,
-          uri: urlTemplate.parse(_.get(siteDescription, _.concat(selectionPath, ['idTemplate']))).expand({...siteDescription.siteDetails, ...{name}})
+          formatUrls,
+          uri: urlTemplate.parse(_.get(siteDescription, _.concat(selectionPath, ['idTemplate']))).expand(uriTemplateArgs),
+          path: resourcePath
         }
       }
     }
@@ -79,7 +143,7 @@ function identifyItem(resourcePath, siteDescription, selectionPath) {
 
 module.exports = {
   stages: {
-    identifyItemToRender: {
+    siteDescription: {
       index: 0,
       transformers: {
         key: {
@@ -92,6 +156,7 @@ module.exports = {
       dependencies: {
         siteDescription: {
           action: 'exploranda',
+          formatter: formatters.singleValue.unwrapHttpResponse,
           params: {
             accessSchema: {
               value: {
@@ -104,32 +169,32 @@ module.exports = {
         }
       },
     },
-    getItemToRender: {
+    item: {
       index: 1,
       transformers: {
-        item: {
+        metadata: {
           helper: 'transform',
           params: {
             arg: {
               all: {
-                siteDescription: {ref: 'identifyItemToRender.results.siteDescription[0].body'}, 
-                resourcePath: {ref: 'identifyItemToRender.vars.key'},
+                siteDescription: {ref: 'siteDescription.results.siteDescription'}, 
+                resourcePath: {ref: 'siteDescription.vars.key'},
               }
             },
             func: ({resourcePath, siteDescription}) => identifyItem(resourcePath, siteDescription)
           }
         },
-        siteDescription: {ref: 'identifyItemToRender.results.siteDescription[0].body'}, 
+        siteDescription: {ref: 'siteDescription.results.siteDescription'}, 
       },
       dependencies: {
-        text: {
+        parsed: {
           action: 'exploranda',
-          formatter: ({text}) => text[0] === 404 ? null : text,
+          formatter: ({parsed}) => parsed[0] === 404 ? null : parsePost(parsed[0].body),
           params: {
             accessSchema: {
               all: {
                 dataSource: { value: 'GENERIC_API' },
-                url: {ref: 'stage.item.uri'},
+                url: {ref: 'stage.metadata.uri'},
                 onError: (err, res) => {
                   if (err && res.statusCode === 404) {
                     return {res: 404}
@@ -142,23 +207,8 @@ module.exports = {
         }
       },
     },
-    parseItemStructure: {
-      condition: { ref: 'getItemToRender.results.text[0]' },
-      index: 2,
-      transformers: {
-        structuredItem: {
-          helper: 'transform',
-          params: {
-            func: {
-              value: parsePost
-            },
-            arg: {ref: 'getItemToRender.results.text[0].body' }
-          }
-        },
-      }
-    },
-    resolveRenderDependencies: {
-      condition: { ref: 'getItemToRender.results.text[0]' },
+    renderDependencies: {
+      condition: { ref: 'item.results.parsed' },
       index: 3,
       transformers: {
         metaResources: {
@@ -166,8 +216,8 @@ module.exports = {
           params: {
             arg: {
               all: {
-                frontMatter: {ref: 'parseItemStructure.vars.structuredItem.frontMatter'},
-                siteDescription: {ref: 'getItemToRender.vars.siteDescription'},
+                frontMatter: {ref: 'item.results.parsed.frontMatter'},
+                siteDescription: {ref: 'siteDescription.results.siteDescription'},
               }
             },
             func: {
@@ -189,8 +239,8 @@ module.exports = {
           params: {
             arg: {
               all: {
-               item: { ref: 'getItemToRender.vars.item' },
-               siteDescription: {ref: 'identifyItemToRender.results.siteDescription[0].body'}, 
+               item: { ref: 'item.vars.metadata' },
+               siteDescription: {ref: 'siteDescription.results.siteDescription'}, 
               }
             },
             func: {
@@ -205,6 +255,7 @@ module.exports = {
       dependencies: {
         template: {
           action: 'exploranda',
+          formatter: formatters.singleValue.unwrapHttpResponse,
           params: {
             accessSchema: {
               helper: 'transform',
@@ -225,33 +276,34 @@ module.exports = {
         },
       },
     },
-    IndicateDependencies: {
-      condition: { ref: 'getItemToRender.results.text[0]' },
+    meta: {
+      condition: { ref: 'item.results.parsed' },
       index: 4,
       transformers: {
         item: {
           all: {
-            name: { ref: 'getItemToRender.vars.item.name' },
+            name: { ref: 'item.vars.metadata.name' },
             trailNames: {
               helper: 'transform',
               params: {
                 arg: {
                   all: {
-                    specific: {ref: 'parseItemStructure.vars.structuredItem.frontMatter.meta.trail'},
-                    general: { ref: 'getItemToRender.vars.item.typeDef.meta.trail.default' },
+                    specific: {ref: 'item.results.parsed.frontMatter.meta.trail'},
+                    general: { ref: 'item.vars.metadata.typeDef.meta.trail.default' },
                   },
                 },
-                func: {value: ({specific, general}) => _.concat(specific, general) }
+                func: {value: ({specific, general}) => (specific && general) ? _.concat(specific, general) : specific || general || []}
               }
             },
-            metadata: {ref: 'parseItemStructure.vars.structuredItem.frontMatter'},
-            id: { ref: 'getItemToRender.vars.item.uri' },
+            metadata: {ref: 'item.results.parsed.frontMatter'},
+            id: { ref: 'item.vars.metadata.uri' },
           }
         },
       },
       dependencies: {
-        updateItemDependencies: {
+        trails: {
           action: 'DD',
+          formatter: formatters.singleValue.unwrapFunctionPayload,
           params: {
             FunctionName: {value: '${dependency_update_function}'},
             InvocationType: { value: 'RequestResponse' },
@@ -271,7 +323,7 @@ module.exports = {
       }
     },
     postItemToWebsiteBucket: {
-      condition: { ref: 'getItemToRender.results.text[0]' },
+      condition: { ref: 'item.results.parsed' },
       index: 5,
       transformers: {
         fileContent: {
@@ -279,14 +331,9 @@ module.exports = {
           params: {
             arg: {
               all: {
-                template: {ref: 'resolveRenderDependencies.results.template[0].body' },
-                doc: { ref: 'parseItemStructure.vars.structuredItem' },
-                metaDependencies: {
-                  helper: 'fromJson',
-                  params: {
-                    string: { ref: 'IndicateDependencies.results.updateItemDependencies[0].Payload' },
-                  }
-                }
+                template: {ref: 'renderDependencies.results.template' },
+                doc: { ref: 'item.results.parsed' },
+                metaDependencies: { ref: 'meta.results.trails' },
               },
             },
             func: { 
@@ -307,22 +354,7 @@ module.exports = {
                 Body: {ref: 'stage.fileContent' },
                 Bucket: '${website_bucket}',
                 ContentType: 'text/html; charset=utf-8',
-                CacheControl: 'no-cache',
-                Key: {
-                  helper: 'transform', 
-                  params:{
-                    arg: {ref: 'identifyItemToRender.vars.key' },
-                    func: {
-                      value: (key) => {
-                        const ar = key.split('.')
-                        ar.pop()
-                        ar.pop()
-                        ar.push('html')
-                        return ar.join('.')
-                      }
-                    }
-                  }
-                }
+                Key: { ref: 'item.vars.metadata.formatUrls.html.path' },
               }
             }
           },
