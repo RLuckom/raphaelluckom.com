@@ -124,14 +124,16 @@ module.exports = {
       dependencies: {
         text: {
           action: 'exploranda',
+          formatter: ({text}) => text[0] === 404 ? null : text,
           params: {
             accessSchema: {
               all: {
                 dataSource: { value: 'GENERIC_API' },
                 url: {ref: 'stage.item.uri'},
                 onError: (err, res) => {
-                  console.log(err)
-                  console.log(res)
+                  if (err && res.statusCode === 404) {
+                    return {res: 404}
+                  }
                   return {err, res}
                 }
               }
@@ -141,6 +143,7 @@ module.exports = {
       },
     },
     parseItemStructure: {
+      condition: { ref: 'getItemToRender.results.text[0]' },
       index: 2,
       transformers: {
         structuredItem: {
@@ -155,6 +158,7 @@ module.exports = {
       }
     },
     resolveRenderDependencies: {
+      condition: { ref: 'getItemToRender.results.text[0]' },
       index: 3,
       transformers: {
         metaResources: {
@@ -222,6 +226,7 @@ module.exports = {
       },
     },
     IndicateDependencies: {
+      condition: { ref: 'getItemToRender.results.text[0]' },
       index: 4,
       transformers: {
         item: {
@@ -266,6 +271,7 @@ module.exports = {
       }
     },
     postItemToWebsiteBucket: {
+      condition: { ref: 'getItemToRender.results.text[0]' },
       index: 5,
       transformers: {
         fileContent: {
