@@ -10,12 +10,6 @@ module.exports = {
   stages: {
     sources: {
       index: 0,
-      transformers: {
-        item: {
-          helper: 'fromJson',
-          params: { string: { ref: 'event.item' }},
-        },
-      },
       dependencies: {
         siteDescription: {
           action: 'genericApi',
@@ -31,13 +25,14 @@ module.exports = {
       },
     },
     updateDependencies: {
+      index: 1,
       transformers: {
         trails: {
           helper: 'transform',
           params: {
             arg: {
               all: {
-                trailNames: {ref: 'sources.vars.item.trailNames'},
+                trailNames: {ref: 'event.trailNames'},
                 siteDescription: { ref: 'sources.results.siteDescription[0].body' }, 
               }
             },
@@ -56,7 +51,7 @@ module.exports = {
           params: {
             arg: {
               all: {
-                itemName: {ref: 'sources.vars.item.name'},
+                itemName: {ref: 'event.item.name'},
                 siteDescription: { ref: 'sources.results.siteDescription[0].body' }, 
               }
             },
@@ -93,7 +88,7 @@ module.exports = {
               all: {
                 response: {ref: 'updateDependencies.results.trails' },
                 trails: {ref: 'updateDependencies.vars.trails' },
-                trailNames: {ref: 'sources.vars.item.trailNames'},
+                trailNames: {ref: 'event.trailNames'},
               }
             },
             func: {value: ({trails, trailNames, response}) => {
@@ -123,10 +118,10 @@ module.exports = {
             arg: {
               all: {
                 trails: { ref: 'parseLists.vars.trails' },
-                trailNames: {ref: 'sources.vars.item.trailNames'},
+                trailNames: {ref: 'event.trailNames'},
                 existingMemberships: { ref: 'parseLists.vars.existingMemberships' },
                 siteDescription: { ref: 'sources.results.siteDescription[0].body' }, 
-                item: { ref: 'sources.vars.item' },
+                item: { ref: 'event.item' },
               }
             },
             //TODO: extract && test this

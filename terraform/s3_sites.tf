@@ -77,7 +77,7 @@ module "site_renderer" {
     },
     {
       file_name = "helpers.js"
-      file_contents = file("./functions/templates/generic_donut_days/helpers.js") 
+      file_contents = file("./functions/templates/render_markdown_to_html/helpers.js")
     },
     {
       file_name = "config.js"
