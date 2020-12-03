@@ -150,6 +150,10 @@ module "trails_updater" {
       file_contents = file("./functions/templates/generic_donut_days/index.js") 
     },
     {
+      file_name = "helpers.js"
+      file_contents = file("./functions/templates/render_markdown_to_html/helpers.js")
+    },
+    {
       file_name = "config.js"
       file_contents = templatefile("./functions/templates/update_trails/config.js",
     {
@@ -173,6 +177,7 @@ module "trails_updater" {
   }
   layers = [
     aws_lambda_layer_version.donut_days.arn,
+    aws_lambda_layer_version.markdown_tools.arn,
   ]
 }
 

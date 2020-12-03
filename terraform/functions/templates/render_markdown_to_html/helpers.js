@@ -41,6 +41,27 @@ function firstKey(params) {
   return params[_.keys(params)[0]]
 }
 
+function unwrapHttpResponseArray(params) {
+  return _.reduce(params, (a, v, k) => {
+    a[k] = _.map(v, 'body')
+    return a
+  }, {})
+}
+
+function unwrapJsonHttpResponseArray(params) {
+  return _.reduce(params, (a, v, k) => {
+    a[k] = _.map(v, 'body')
+    return a
+  }, {})
+}
+
+function unwrapFunctionPayloadArray(params) {
+  return _.reduce(params, (a, v, k) => {
+    a[k] = _.map(v, (i) => JSON.parse(i))
+    return a
+  }, {})
+}
+
 function only(f) {
   return function(params) {
     return firstKey(f(params))
@@ -51,13 +72,17 @@ const formatters = {
   singleValue: {
     unwrap: only(unwrap),
     unwrapHttpResponse: only(unwrapHttpResponse),
+    unwrapHttpResponseArray: only(unwrapHttpResponseArray),
     unwrapFunctionPayload: only(unwrapFunctionPayload),
+    unwrapFunctionPayloadArray: only(unwrapFunctionPayloadArray),
   },
   multiValue: {
     unwrap,
     unwrapHttpResponse,
-    unwrapFunctionPayload
-  }
+    unwrapFunctionPayload,
+    unwrapHttpResponseArray,
+    unwrapFunctionPayloadArray,
+  },
 }
 
 //TODO: make this also accept toml, json front matter
@@ -148,8 +173,39 @@ function expandUrlTemplate({templateString, templateParams}) {
   return urlTemplate.parse(templateString).expand(templateParams)
 }
 
+function expandUrlTemplateWithNames({templateString, siteDetails, names}) {
+  const template = urlTemplate.parse(templateString)
+  return _.map(names, (v, k) => {
+    return template.expand({...siteDetails, ...{name: encodeURIComponent(v)}})
+  })
+}
+
+function expandUrlTemplateWithName({templateString, siteDetails, name}) {
+  return urlTemplate.parse(templateString).expand({...siteDetails, ...{name: encodeURIComponent(name)}})
+}
+
+
+function siteDescriptionDependency(domainName, siteDescriptionPath) {
+  return {
+    action: 'exploranda',
+    formatter: formatters.singleValue.unwrapHttpResponse,
+    params: {
+      accessSchema: {
+        value: {
+          dataSource: 'GENERIC_API',
+          host: domainName,
+          path: siteDescriptionPath,
+        }
+      },
+    },
+  }
+}
+
 module.exports = {
   formatters,
+  siteDescriptionDependency,
+  expandUrlTemplateWithNames,
+  expandUrlTemplateWithName,
   parsePost,
   identifyItem,
   renderMarkdown,

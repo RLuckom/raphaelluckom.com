@@ -1,5 +1,6 @@
 const _ = require('lodash')
 const urlTemplate = require('url-template')
+const {formatters, siteDescriptionDependency } = require('./helpers')
 
 module.exports = {
   cleanup: {
@@ -8,71 +9,43 @@ module.exports = {
     }
   },
   stages: {
-    sources: {
+    siteDescription: {
       index: 0,
       dependencies: {
-        siteDescription: {
-          action: 'genericApi',
-          params: {
-            apiConfig: {
-              value: {
-                host: '${domain_name}',
-                path: '${site_description_path}',
-              }
-            },
-          },
-        },
+        siteDescription: siteDescriptionDependency('${domain_name}', '${site_description_path}')
       },
     },
     updateDependencies: {
       index: 1,
       transformers: {
         trails: {
-          helper: 'transform',
+          helper: 'expandUrlTemplateWithNames',
           params: {
-            arg: {
-              all: {
-                trailNames: {ref: 'event.trailNames'},
-                siteDescription: { ref: 'sources.results.siteDescription[0].body' }, 
-              }
-            },
-            func: {
-              value: ({trailNames, siteDescription}) => {
-                const template = urlTemplate.parse(_.get(siteDescription, '${self_type}.setTemplate'))
-                return _.map(trailNames, (v, k) => {
-                  return template.expand({...siteDescription.siteDetails, ...{name: encodeURIComponent(v)}})
-                })
-              }
-            }
+            templateString: {ref: 'siteDescription.results.siteDescription.${self_type}.setTemplate'},
+            siteDetails: {ref: 'siteDescription.results.siteDescription.siteDetails'},
+            names: {ref: 'event.trailNames'},
           }
         },
         existingMemberships: {
-          helper: 'transform',
+          helper: 'expandUrlTemplateWithNames',
           params: {
-            arg: {
-              all: {
-                itemName: {ref: 'event.item.name'},
-                siteDescription: { ref: 'sources.results.siteDescription[0].body' }, 
-              }
-            },
-            func: {
-              value: ({itemName, siteDescription}) => {
-                const membershipTemplate = urlTemplate.parse(_.get(siteDescription, '${self_type}.setTemplate'))
-                return membershipTemplate.expand({...siteDescription.siteDetails, ...{name: encodeURIComponent(itemName)}})
-              }
-            }
+            templateString: {ref: 'siteDescription.results.siteDescription.${self_type}.setTemplate'},
+            siteDetails: {ref: 'siteDescription.results.siteDescription.siteDetails'},
+            name: {ref: 'event.item.name'},
           }
         },
       },
       dependencies: {
         trails: {
           action: 'genericApi',
+          formatter: formatters.singleValue.unwrapJsonHttpResponseArray,
           params: {
             url: { ref: 'stage.trails' }
           }
         },
         existingMemberships: {
           action: 'genericApi',
+          formatter: formatters.singleValue.unwrapFunctionPayload,
           params: {
             url: { ref: 'stage.existingMemberships'}
           }
@@ -84,30 +57,24 @@ module.exports = {
         trails: { 
           helper: 'transform',
           params: {
-            arg: { 
+            arg: {
               all: {
-                response: {ref: 'updateDependencies.results.trails' },
-                trails: {ref: 'updateDependencies.vars.trails' },
+                trailArrays: {ref: 'updateDependencies.results.trails' },
+                trailUrls: {ref: 'updateDependencies.vars.trails' },
                 trailNames: {ref: 'event.trailNames'},
               }
             },
-            func: {value: ({trails, trailNames, response}) => {
-              return _.reduce(trails, (a, v, k) => {
-                a[v] = {
-                  members: _.sortBy(JSON.parse(response[k].body), ['metadata', 'date']),
-                  trailName: trailNames[k]
+            func: {value: ({trailUrls, trailNames, trailArrays}) => {
+              return _.reduce(trailUrls, (a, trailUrl, index) => {
+                a[trailUrl] = {
+                  members: _.sortBy(trailArrays[index], ['metadata', 'date']),
+                  trailName: trailNames[index]
                 }
                 return a
               }, {})
             } }
           }
         },
-        existingMemberships: {
-          helper: 'fromJson',
-          params: {
-            string: {ref: 'updateDependencies.results.existingMemberships[0].body'}
-          }
-        }
       }
     },
     determineUpdates: {
@@ -119,8 +86,8 @@ module.exports = {
               all: {
                 trails: { ref: 'parseLists.vars.trails' },
                 trailNames: {ref: 'event.trailNames'},
-                existingMemberships: { ref: 'parseLists.vars.existingMemberships' },
-                siteDescription: { ref: 'sources.results.siteDescription[0].body' }, 
+                existingMemberships: { ref: 'updateDependencies.results.existingMemberships' },
+                siteDescription: { ref: 'siteDescription.results.siteDescription' }, 
                 item: { ref: 'event.item' },
               }
             },
@@ -216,7 +183,7 @@ module.exports = {
                 arg: {
                   all: {
                     deletes: { ref: 'stage.updates.dynamoDeletes'},
-                    siteDescription: { ref: 'sources.results.siteDescription[0].body' }, 
+                    siteDescription: { ref: 'siteDescription.results.siteDescription' }, 
                   }
                 },
                 func: ({deletes, siteDescription}) => {
@@ -280,7 +247,7 @@ module.exports = {
             }
           }
         },
-        dynamodeletes: {
+        dynamorDeletes: {
           action: 'exploranda',
           condition: { ref: 'stage.allUpdates.dynamoDeletes.length' },
           params: {

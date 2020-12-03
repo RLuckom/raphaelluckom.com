@@ -1,5 +1,5 @@
 const _ = require('lodash')
-const { formatters, parsePost } = require('./helpers.js')
+const { formatters, parsePost, siteDescriptionDependency } = require('./helpers.js')
 
 module.exports = {
   stages: {
@@ -9,24 +9,15 @@ module.exports = {
         key: {
           or: [
             {ref: 'event.Records[0].s3.object.key'},
-            {ref: 'event.item.id.key'}
+            {ref: 'event.item.path'},
+            {ref: 'event.item.url'},
+            {ref: 'event.item.uri'},
+            {ref: 'event.item.id'},
           ]
         },
       },
       dependencies: {
-        siteDescription: {
-          action: 'exploranda',
-          formatter: formatters.singleValue.unwrapHttpResponse,
-          params: {
-            accessSchema: {
-              value: {
-                dataSource: 'GENERIC_API',
-                host: '${domain_name}',
-                path: '${site_description_path}',
-              }
-            },
-          },
-        }
+        siteDescription: siteDescriptionDependency('${domain_name}', '${site_description_path}')
       },
     },
     item: {
