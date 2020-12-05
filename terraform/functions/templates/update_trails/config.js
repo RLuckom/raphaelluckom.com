@@ -102,7 +102,9 @@ module.exports = {
         trailsWithDeletedMembers: {
           condition: { ref: 'stage.updates.dynamoDeletes.length'},
           action: 'genericApi',
+          formatter: formatters.singleValue.unwrapJsonHttpResponseArray,
           params: {
+            mergeIndividual: _.identity,
             url: {
               helper: 'transform',
               params: {
@@ -137,24 +139,7 @@ module.exports = {
               }
             },
             func: {
-              value: ({trailsWithDeletedMembers, plannedUpdates}) => {
-                const {trailsToReRender, neighborsToReRender, dynamoPuts, dynamoDeletes, trailsListName} = plannedUpdates
-                const additionalDeletes = []
-                _.each(trailsWithDeletedMembers, (trails, i) => {
-                  if (trails.length < 2) {
-                    additionalDeletes.push({
-                      memberName: dynamoDeletes[i].trailName,
-                      trailName: trailsListName
-                    })
-                  }
-                })
-                return {
-                  trailsToReRender,
-                  neighborsToReRender,
-                  dynamoPuts,
-                  dynamoDeletes: _.concat(dynamoDeletes, additionalDeletes)
-                }
-              }
+              value: trails.checkForEmptyLists,
             }
           }
         }

@@ -86,7 +86,23 @@ module.exports = {
             InvocationType: { value: 'RequestResponse' },
             event: { 
               all: {
-                item: {ref: 'item.vars.metadata'},
+                item: {
+                  helper: 'transform',
+                  params: {
+                    arg: {
+                      all: {
+                        description: {ref: 'item.vars.metadata'},
+                        frontMatter: {ref: 'item.results.parsed.frontMatter'},
+                      }
+                    },
+                    func: ({description, frontMatter}) => {
+                      const item = {...description}
+                      item.metadata = frontMatter
+                      delete item.typeDef
+                      return item
+                    }
+                  }
+                },
                 trailNames: { ref: 'stage.trailNames'}
               }
             }

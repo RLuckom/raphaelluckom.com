@@ -1,6 +1,25 @@
 const _ = require('lodash')
 const urlTemplate = require('url-template')
 
+function checkForEmptyLists({trailsWithDeletedMembers, plannedUpdates}) {
+	const {trailsToReRender, neighborsToReRender, dynamoPuts, dynamoDeletes, trailsListName} = plannedUpdates
+	const additionalDeletes = []
+	_.each(trailsWithDeletedMembers, (trails, i) => {
+		if (trails.length < 2) {
+			additionalDeletes.push({
+				memberName: dynamoDeletes[i].trailName,
+				trailName: trailsListName
+			})
+		}
+	})
+	return {
+		trailsToReRender,
+		neighborsToReRender,
+		dynamoPuts,
+		dynamoDeletes: _.concat(dynamoDeletes, additionalDeletes)
+	}
+}
+
 function determineUpdates({trails, existingMemberships, siteDescription, item, trailNames}) {
   const updates = {
     neighborsToReRender: [],
@@ -9,16 +28,16 @@ function determineUpdates({trails, existingMemberships, siteDescription, item, t
     dynamoDeletes: [],
     neighbors: {}
   }
-  const trailUriTemplate = urlTemplate.parse(_.get(siteDescription, 'relations.meta.trail.setTemplate'))
+  const trailUriTemplate = urlTemplate.parse(_.get(siteDescription, 'relations.meta.trail.idTemplate'))
   const trailsListName = 'trails'
   const trailsListId = trailUriTemplate.expand({...siteDescription.siteDetails, ...{name: encodeURIComponent(trailsListName)}})
   _.each(existingMemberships, (trail) => {
-    console.log(trail)
     if (!_.find(trailNames, (name) => name === trail.trailName)) {
       updates.dynamoDeletes.push({
         memberName: item.name,
         trailName: trail.trailName
       })
+      updates.trailsToReRender.push(trailUriTemplate.expand({...siteDescription.siteDetails, ...{name: trail.trailName}}))
     }
   })
   _.each(trails, ({members, trailName}, trailUri) => {
@@ -48,22 +67,23 @@ function determineUpdates({trails, existingMemberships, siteDescription, item, t
         memberUri: item.uri,
         memberName: item.name,
         memberType: item.type,
-        memberMetadata: item.typeDef
+        memberMetadata: item.metadata
       }
       newList.push(trailMember)
       updates.dynamoPuts.push(trailMember)
-      const newIndex = _(newList).sortBy(['memberMetadata', 'date']).findIndex((i) => i.memberUri === item.id && _.isEqual(i.memberMetadata, item.metadata))
+      const sortedNewList = _.sortBy(newList, ['memberMetadata', 'date'])
+      const newIndex = sortedNewList.findIndex((i) => i.memberUri === item.id && _.isEqual(i.memberMetadata, item.metadata))
       if (previousIndex !== -1 && newIndex !== previousIndex) {
         updates.neighborsToReRender.push(members[previousIndex + 1])
         updates.neighborsToReRender.push(members[previousIndex - 1])
         newList.splice(previousIndex, 1)
       }
-      updates.neighborsToReRender.push(newList[newIndex + 1])
-      updates.neighborsToReRender.push(newList[newIndex - 1])
+      updates.neighborsToReRender.push(sortedNewList[newIndex + 1])
+      updates.neighborsToReRender.push(sortedNewList[newIndex - 1])
       updates.neighbors[trailName] = {
         trailName,
-        previousNeighbor: newList[newIndex - 1] || null,
-        nextNeighbor: newList[newIndex + 1] || null,
+        previousNeighbor: sortedNewList[newIndex - 1] || null,
+        nextNeighbor: sortedNewList[newIndex + 1] || null,
       }
     } else {
       updates.neighbors[trailUri] = {
@@ -74,11 +94,13 @@ function determineUpdates({trails, existingMemberships, siteDescription, item, t
     }
   })
   updates.trailsToReRender = _.uniq(updates.trailsToReRender)
-  updates.neighborsToReRender = _(updates.neighborsToReRender).uniq().filter().value()
+  updates.neighborsToReRender = _(updates.neighborsToReRender).filter().uniqWith((arg1, arg2) => {
+    return arg1.memberUri === arg2.memberUri && arg2.memberType === arg2.memberType
+  }).value()
   updates.dynamoPuts = _(updates.dynamoPuts).uniq().filter().value()
   updates.dynamoDeletes = _(updates.dynamoDeletes).uniq().filter().value()
   updates.trailsListName = trailsListName
   return updates
 } 
 
-module.exports = {determineUpdates}
+module.exports = {determineUpdates, checkForEmptyLists}
