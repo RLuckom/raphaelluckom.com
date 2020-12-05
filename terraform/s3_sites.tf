@@ -136,6 +136,18 @@ module "trails_table" {
   ]
 }
 
+locals {
+  render_arn = "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:site_render"
+  render_invoke_permission = [{
+    actions   =  [
+      "lambda:InvokeFunction"
+    ]
+    resources = [
+      "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:site_render",
+    ]
+  }]
+}
+
 module "trails_updater" {
   source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   timeout_secs = 40
@@ -154,6 +166,10 @@ module "trails_updater" {
       file_contents = file("./functions/templates/render_markdown_to_html/helpers.js")
     },
     {
+      file_name = "trails.js"
+      file_contents = file("./functions/npmscratch/trails.js")
+    },
+    {
       file_name = "config.js"
       file_contents = templatefile("./functions/templates/update_trails/config.js",
     {
@@ -161,6 +177,7 @@ module "trails_updater" {
       reverse_association_index = "reverseDependencyIndex"
       domain_name = var.test_domain_settings.domain_name
       site_description_path = "site_description.json"
+      render_function = local.render_arn
       self_type = "relations.meta.trail"
     })
     }
@@ -170,6 +187,7 @@ module "trails_updater" {
     scope_name = "test"
     bucket = aws_s3_bucket.lambda_bucket.id
     policy_statements = concat(
+      local.render_invoke_permission,
       module.trails_table.permission_sets.read,
       module.trails_table.permission_sets.write,
       module.trails_table.permission_sets.delete_item,

@@ -30,6 +30,13 @@ function unwrapHttpResponse(params) {
   }, {})
 }
 
+function unwrapJsonHttpResponse(params) {
+  return _.reduce(unwrap(params), (a, v, k) => {
+    a[k] = JSON.parse(v.body)
+    return a
+  }, {})
+}
+
 function unwrapFunctionPayload(params) {
   return _.reduce(unwrap(params), (a, v, k) => {
     a[k] = JSON.parse(v.Payload)
@@ -50,7 +57,7 @@ function unwrapHttpResponseArray(params) {
 
 function unwrapJsonHttpResponseArray(params) {
   return _.reduce(params, (a, v, k) => {
-    a[k] = _.map(v, 'body')
+    a[k] = _.map(v, (i) => JSON.parse(i.body))
     return a
   }, {})
 }
@@ -72,6 +79,8 @@ const formatters = {
   singleValue: {
     unwrap: only(unwrap),
     unwrapHttpResponse: only(unwrapHttpResponse),
+    unwrapJsonHttpResponse: only(unwrapJsonHttpResponse),
+    unwrapJsonHttpResponseArray: only(unwrapJsonHttpResponseArray),
     unwrapHttpResponseArray: only(unwrapHttpResponseArray),
     unwrapFunctionPayload: only(unwrapFunctionPayload),
     unwrapFunctionPayloadArray: only(unwrapFunctionPayloadArray),
@@ -79,8 +88,10 @@ const formatters = {
   multiValue: {
     unwrap,
     unwrapHttpResponse,
+    unwrapJsonHttpResponse,
     unwrapFunctionPayload,
     unwrapHttpResponseArray,
+    unwrapJsonHttpResponseArray,
     unwrapFunctionPayloadArray,
   },
 }

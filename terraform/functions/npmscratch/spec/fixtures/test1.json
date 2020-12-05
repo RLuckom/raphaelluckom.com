@@ -1,0 +1,223 @@
+{
+  "neighborsToReRender": [
+    {
+      "trailUri": "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=check-in",
+      "trailName": "check-in",
+      "memberUri": "https://test.raphaelluckom.com/posts/blork3.md",
+      "memberName": "blork3",
+      "memberType": "post",
+      "memberMetadata": {
+        "relation": "{relationEndpoint}/post",
+        "idTemplate": "https://{domainName}/posts/{name}.md",
+        "pathNameRegex": "^/?posts/([^/]*).md$",
+        "meta": {
+          "trail": {
+            "default": [
+              "posts"
+            ]
+          }
+        },
+        "formats": {
+          "markdown": {
+            "authoring": true,
+            "idTemplate": "https://{domainName}/posts/{name}.md"
+          },
+          "html": {
+            "idTemplate": "https://{domainName}/posts/{name}.html",
+            "views": {
+              "trail": "https://{domainName}/posts.html"
+            },
+            "render": {
+              "template": "https://{domainName}/assets/templates/post.tmpl"
+            }
+          }
+        }
+      }
+    },
+    {
+      "trailUri": "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=posts",
+      "trailName": "posts",
+      "memberUri": "https://test.raphaelluckom.com/posts/blork3.md",
+      "memberName": "blork3",
+      "memberType": "post",
+      "memberMetadata": {
+        "relation": "{relationEndpoint}/post",
+        "idTemplate": "https://{domainName}/posts/{name}.md",
+        "pathNameRegex": "^/?posts/([^/]*).md$",
+        "meta": {
+          "trail": {
+            "default": [
+              "posts"
+            ]
+          }
+        },
+        "formats": {
+          "markdown": {
+            "authoring": true,
+            "idTemplate": "https://{domainName}/posts/{name}.md"
+          },
+          "html": {
+            "idTemplate": "https://{domainName}/posts/{name}.html",
+            "views": {
+              "trail": "https://{domainName}/posts.html"
+            },
+            "render": {
+              "template": "https://{domainName}/assets/templates/post.tmpl"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "trailsToReRender": [],
+  "dynamoPuts": [
+    {
+      "trailUri": "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=check-in",
+      "trailName": "check-in",
+      "memberUri": "https://test.raphaelluckom.com/posts/blork3.md",
+      "memberName": "blork3",
+      "memberType": "post",
+      "memberMetadata": {
+        "relation": "{relationEndpoint}/post",
+        "idTemplate": "https://{domainName}/posts/{name}.md",
+        "pathNameRegex": "^/?posts/([^/]*).md$",
+        "meta": {
+          "trail": {
+            "default": [
+              "posts"
+            ]
+          }
+        },
+        "formats": {
+          "markdown": {
+            "authoring": true,
+            "idTemplate": "https://{domainName}/posts/{name}.md"
+          },
+          "html": {
+            "idTemplate": "https://{domainName}/posts/{name}.html",
+            "views": {
+              "trail": "https://{domainName}/posts.html"
+            },
+            "render": {
+              "template": "https://{domainName}/assets/templates/post.tmpl"
+            }
+          }
+        }
+      }
+    },
+    {
+      "trailUri": "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=posts",
+      "trailName": "posts",
+      "memberUri": "https://test.raphaelluckom.com/posts/blork3.md",
+      "memberName": "blork3",
+      "memberType": "post",
+      "memberMetadata": {
+        "relation": "{relationEndpoint}/post",
+        "idTemplate": "https://{domainName}/posts/{name}.md",
+        "pathNameRegex": "^/?posts/([^/]*).md$",
+        "meta": {
+          "trail": {
+            "default": [
+              "posts"
+            ]
+          }
+        },
+        "formats": {
+          "markdown": {
+            "authoring": true,
+            "idTemplate": "https://{domainName}/posts/{name}.md"
+          },
+          "html": {
+            "idTemplate": "https://{domainName}/posts/{name}.html",
+            "views": {
+              "trail": "https://{domainName}/posts.html"
+            },
+            "render": {
+              "template": "https://{domainName}/assets/templates/post.tmpl"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "dynamoDeletes": [],
+  "neighbors": {
+    "check-in": {
+      "trailName": "check-in",
+      "previousNeighbor": {
+        "trailUri": "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=check-in",
+        "trailName": "check-in",
+        "memberUri": "https://test.raphaelluckom.com/posts/blork3.md",
+        "memberName": "blork3",
+        "memberType": "post",
+        "memberMetadata": {
+          "relation": "{relationEndpoint}/post",
+          "idTemplate": "https://{domainName}/posts/{name}.md",
+          "pathNameRegex": "^/?posts/([^/]*).md$",
+          "meta": {
+            "trail": {
+              "default": [
+                "posts"
+              ]
+            }
+          },
+          "formats": {
+            "markdown": {
+              "authoring": true,
+              "idTemplate": "https://{domainName}/posts/{name}.md"
+            },
+            "html": {
+              "idTemplate": "https://{domainName}/posts/{name}.html",
+              "views": {
+                "trail": "https://{domainName}/posts.html"
+              },
+              "render": {
+                "template": "https://{domainName}/assets/templates/post.tmpl"
+              }
+            }
+          }
+        }
+      },
+      "nextNeighbor": null
+    },
+    "posts": {
+      "trailName": "posts",
+      "previousNeighbor": {
+        "trailUri": "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=posts",
+        "trailName": "posts",
+        "memberUri": "https://test.raphaelluckom.com/posts/blork3.md",
+        "memberName": "blork3",
+        "memberType": "post",
+        "memberMetadata": {
+          "relation": "{relationEndpoint}/post",
+          "idTemplate": "https://{domainName}/posts/{name}.md",
+          "pathNameRegex": "^/?posts/([^/]*).md$",
+          "meta": {
+            "trail": {
+              "default": [
+                "posts"
+              ]
+            }
+          },
+          "formats": {
+            "markdown": {
+              "authoring": true,
+              "idTemplate": "https://{domainName}/posts/{name}.md"
+            },
+            "html": {
+              "idTemplate": "https://{domainName}/posts/{name}.html",
+              "views": {
+                "trail": "https://{domainName}/posts.html"
+              },
+              "render": {
+                "template": "https://{domainName}/assets/templates/post.tmpl"
+              }
+            }
+          }
+        }
+      },
+      "nextNeighbor": null
+    }
+  },
+  "trailsListName": "trails"
+}

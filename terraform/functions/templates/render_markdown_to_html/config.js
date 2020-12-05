@@ -9,10 +9,7 @@ module.exports = {
         key: {
           or: [
             {ref: 'event.Records[0].s3.object.key'},
-            {ref: 'event.item.path'},
-            {ref: 'event.item.url'},
-            {ref: 'event.item.uri'},
-            {ref: 'event.item.id'},
+            {ref: 'event.item.memberUri'},
           ]
         },
       },
@@ -33,21 +30,13 @@ module.exports = {
       },
       dependencies: {
         parsed: {
-          action: 'exploranda',
-          formatter: ({parsed}) => parsed[0] === 404 ? null : parsePost(parsed[0].body),
-            params: {
-            accessSchema: {
-              all: {
-                dataSource: { value: 'GENERIC_API' },
-                url: {ref: 'stage.metadata.uri'},
-                onError: (err, res) => {
-                  if (err && res.statusCode === 404) {
-                    return {res: 404}
-                  }
-                  return {err, res}
-                }
-              }
-            }
+          formatter: ({parsed}) => {
+            return parsed[0] === 404 ? null : parsePost(parsed[0].body)
+          },
+          action: 'genericApi',
+          params: {
+            url: {ref: 'stage.metadata.uri'},
+            allow404: { value: true },
           }
         }
       },
