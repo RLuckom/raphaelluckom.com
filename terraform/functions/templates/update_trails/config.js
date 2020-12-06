@@ -6,7 +6,7 @@ const trails = require('./trails.js')
 module.exports = {
   cleanup: {
     transformers: {
-      state: {ref: 'determineUpdates.vars.updates.neighbors' }
+      neighbors: {ref: 'determineUpdates.vars.updates.neighbors' }
     }
   },
   stages: {

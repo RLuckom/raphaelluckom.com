@@ -176,8 +176,8 @@ function identifyItem({resourcePath, siteDescription, selectionPath}) {
   }
 }
 
-function renderMarkdown({template, doc, metaDependencies}) {
-  return _.template(template.toString())({...doc.frontMatter, ...{ content: mdr.render(doc.content)}, ...metaDependencies})
+function renderMarkdown({template, doc, meta}) {
+  return _.template(template.toString())({...doc.frontMatter, ...{ content: mdr.render(doc.content), meta}})
 }
 
 function expandUrlTemplate({templateString, templateParams}) {
