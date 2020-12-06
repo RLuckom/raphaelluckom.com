@@ -4,26 +4,39 @@
     "title": "Test Site",
     "maintainer": "Raphael Luckom",
     "maintainerEmail": "raphaelluckom@gmail.com",
-    "relationEndpoint": "https://test.raphaelluckom.com/meta/relations"
+    "relationEndpoint": "https://test.raphaelluckom.com/meta/relations",
+    "pathRegex": "^https://test.raphaelluckom.com/(.*)$",
+    "formats": {
+      "html": {
+        "sections": {
+          "index": {
+            "renderFrom": "https://test.raphaelluckom.com/trails/posts.md",
+            "renderTo": "/index.html",
+            "sectionTitle": "Home"
+          }
+        }
+      }
+    }
   },
   "relations": {
     "post": {
-      "relation" : "https://{domainName}/meta/relations/post",
-      "authoringFormat": "markdown",
+      "relation" : "{relationEndpoint}/post",
+      "idTemplate": "https://{domainName}/posts/{name}.md",
+      "pathNameRegex": "^/?posts/([^/]*).md$",
       "meta": {
-        "list": {
-          "memberTemplate": "https://{domainName}/meta/relations/lists?keyType=member&keyId={name}",
+        "trail": {
           "default": ["posts"]
         }
       },
       "formats": {
         "markdown" : {
-          "idTemplate": "https://{domainName}/posts/{name}.post.md"
+          "authoring": true,
+          "idTemplate": "https://{domainName}/posts/{name}.md"
         },
         "html" : {
           "idTemplate": "https://{domainName}/posts/{name}.html",
           "views": {
-            "list": "https://{domainName}/posts.html"
+            "trail": "https://{domainName}/posts.html"
           },
           "render": {
             "template": "https://{domainName}/assets/templates/post.tmpl"
@@ -32,18 +45,26 @@
       }
     },
     "meta": {
-      "list": {
-        "relation" : "https://{domainName}/meta/relations/meta/list" ,
-        "idTemplate": "https://{domainName}/meta/relations/lists?keyType=list&keyId={name}",
+      "trail": {
+        "relation" : "{+relationEndpoint}/meta/trail",
+        "idTemplate": "https://{domainName}/trails/{name}.md",
+        "pathNameRegex": "^/?trails/([^/]*).md$",
+        "setTemplate": "{+relationEndpoint}/trails?keyType=trailName&keyId={name}",
+        "membersTemplate": "{+relationEndpoint}/trails?keyType=memberName&keyId={name}",
         "meta": {
-          "list": {
-            "lists": "https://{domainName}/meta/relations/lists/lists"
+          "trail": {
+            "default": ["trails"]
           }
         },
         "formats": {
+          "markdown" : {
+            "authoring": true,
+            "idTemplate": "https://{domainName}/trails/{name}.md"
+          },
           "html" : {
+            "idTemplate": "https://{domainName}/trails/{name}.html",
             "render": {
-              "template": "https://{domainName}/assets/templates/list.tpl"
+              "template": "https://{domainName}/assets/templates/trail.tpl"
             }
           }
         }
