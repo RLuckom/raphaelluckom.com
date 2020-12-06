@@ -4,7 +4,8 @@
       "memberUri": "https://test.raphaelluckom.com/posts/post2.md",
       "trailName": "check-in",
       "memberType": "post",
-      "trailUri": "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=check-in",
+      "memberKey": "post:post2",
+      "trailUri": "https://test.raphaelluckom.com/trails/check-in.md",
       "memberMetadata": {
         "date": "2018-07-13T00:00:00.000Z",
         "title": "Organic Parametric Shapes: Bézier Curves in OpenSCAD",
@@ -25,11 +26,12 @@
   ],
   "dynamoPuts": [
     {
-      "trailUri": "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=check-in",
+      "trailUri": "https://test.raphaelluckom.com/trails/check-in.md",
       "trailName": "check-in",
       "memberUri": "https://test.raphaelluckom.com/posts/post2.md",
       "memberName": "post2",
       "memberType": "post",
+      "memberKey": "post:post2",
       "memberMetadata": {
         "title": "Organic Parametric Shapes: Bézier Curves in OpenSCAD",
         "author": "Raphael Luckom",
@@ -43,11 +45,12 @@
       }
     },
     {
-      "trailUri": "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=posts",
+      "trailUri": "https://test.raphaelluckom.com/trails/posts.md",
       "trailName": "posts",
       "memberUri": "https://test.raphaelluckom.com/posts/post2.md",
       "memberName": "post2",
       "memberType": "post",
+      "memberKey": "post:post2",
       "memberMetadata": {
         "title": "Organic Parametric Shapes: Bézier Curves in OpenSCAD",
         "author": "Raphael Luckom",
@@ -63,7 +66,7 @@
   ],
   "dynamoDeletes": [
     {
-      "memberName": "post2",
+      "memberKey": "post:post2",
       "trailName": "random"
     }
   ],
@@ -75,7 +78,8 @@
         "memberUri": "https://test.raphaelluckom.com/posts/post2.md",
         "trailName": "check-in",
         "memberType": "post",
-        "trailUri": "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=check-in",
+        "memberKey": "post:post2",
+        "trailUri": "https://test.raphaelluckom.com/trails/check-in.md",
         "memberMetadata": {
           "date": "2018-07-13T00:00:00.000Z",
           "title": "Organic Parametric Shapes: Bézier Curves in OpenSCAD",
@@ -98,7 +102,8 @@
         "memberUri": "https://test.raphaelluckom.com/posts/post2.md",
         "trailName": "posts",
         "memberType": "post",
-        "trailUri": "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=posts",
+        "memberKey": "post:post2",
+        "trailUri": "https://test.raphaelluckom.com/trails/posts.md",
         "memberMetadata": {
           "date": "2018-07-13T00:00:00.000Z",
           "title": "Organic Parametric Shapes: Bézier Curves in OpenSCAD",

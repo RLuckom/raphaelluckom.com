@@ -7,7 +7,7 @@ function checkForEmptyLists({trailsWithDeletedMembers, plannedUpdates}) {
 	_.each(trailsWithDeletedMembers, (trails, i) => {
 		if (trails.length < 2) {
 			additionalDeletes.push({
-				memberName: dynamoDeletes[i].trailName,
+        memberKey: `trail:${dynamoDeletes[i].trailName}`,
 				trailName: trailsListName
 			})
 		}
@@ -34,25 +34,27 @@ function determineUpdates({trails, existingMemberships, siteDescription, item, t
   _.each(existingMemberships, (trail) => {
     if (!_.find(trailNames, (name) => name === trail.trailName)) {
       updates.dynamoDeletes.push({
-        memberName: item.name,
+        memberKey: `${item.type}:${item.name}`,
         trailName: trail.trailName
       })
       updates.trailsToReRender.push(trailUriTemplate.expand({...siteDescription.siteDetails, ...{name: trail.trailName}}))
     }
   })
-  _.each(trails, ({members, trailName}, trailUri) => {
+  _.each(trails, ({members, trailName}) => {
+    const trailUriTemplate = urlTemplate.parse(_.get(siteDescription, 'relations.meta.trail.idTemplate'))
     const newList = _.cloneDeep(members)
+    const trailUri = trailUriTemplate.expand({...siteDescription.siteDetails, ...{name: encodeURIComponent(trailName)}})
     const currentIndex = _.findIndex(members, (member) => {
-      return member.memberName === item.name && _.isEqual(member.memberMetadata, item.metadata)
+      return member.memberKey === `${item.type}:${item.name}` && _.isEqual(member.memberMetadata, item.metadata)
     })
     const previousIndex = _.findIndex(members, (member) => member.memberUri === item.id)
-    const trailUriTemplate = urlTemplate.parse(_.get(siteDescription, 'relations.meta.trail.idTemplate'))
     if (members.length === 0) {
       updates.dynamoPuts.push({
         trailUri: trailsListId,
         trailName: trailsListName,
         memberUri: trailUri,
         memberName: trailName,
+        memberKey: `trail:${trailName}`,
         memberType: 'trail',
         memberMetadata: {
           date: new Date().toISOString(),
@@ -66,6 +68,7 @@ function determineUpdates({trails, existingMemberships, siteDescription, item, t
         trailName,
         memberUri: item.uri,
         memberName: item.name,
+        memberKey: `${item.type}:${item.name}`,
         memberType: item.type,
         memberMetadata: item.metadata
       }

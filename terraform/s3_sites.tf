@@ -120,13 +120,13 @@ module "trails_table" {
     type = "S"
   }
   range_key = {
-    name = "memberName"
+    name = "memberKey"
     type = "S"
   }
   global_indexes = [
     {
       name = "reverseDependencyIndex"
-      hash_key = "memberName"
+      hash_key = "memberKey"
       range_key = "trailName"
       write_capacity = 0
       read_capacity = 0
@@ -217,7 +217,7 @@ module "two_way_resolver" {
     {
       table = module.trails_table.table.name
       forward_key_type = "trailName"
-      reverse_key_type = "memberName"
+      reverse_key_type = "memberKey"
       reverse_association_index = "reverseDependencyIndex"
     })
     }

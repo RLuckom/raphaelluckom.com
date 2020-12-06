@@ -191,8 +191,12 @@ function expandUrlTemplateWithNames({templateString, siteDetails, names}) {
   })
 }
 
-function expandUrlTemplateWithName({templateString, siteDetails, name}) {
-  return urlTemplate.parse(templateString).expand({...siteDetails, ...{name: encodeURIComponent(name)}})
+function expandUrlTemplateWithName({templateString, siteDetails, name, type}) {
+  const params = {...siteDetails, ...{name: encodeURIComponent(name)}}
+  if (type) {
+    params.type = encodeURIComponent(type)
+  }
+  return urlTemplate.parse(templateString).expand(params)
 }
 
 

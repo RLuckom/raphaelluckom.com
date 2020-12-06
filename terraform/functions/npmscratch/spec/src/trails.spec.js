@@ -5,11 +5,11 @@ const fs = require('fs')
 
 const arg1 = {
   "trails": {
-    "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=check-in": {
+    "https://test.raphaelluckom.com/trails/check-in.md": {
       "members": [],
       "trailName": "check-in"
     },
-    "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=posts": {
+    "https://test.raphaelluckom.com/trails/posts.md": {
       "members": [],
       "trailName": "posts"
     }
@@ -73,7 +73,7 @@ const arg1 = {
           "idTemplate": "https://{domainName}/trails/{name}.md",
           "pathNameRegex": "^/?trails/([^/]*).md$",
           "setTemplate": "{+relationEndpoint}/trails?keyType=trailName&keyId={name}",
-          "membersTemplate": "{+relationEndpoint}/trails?keyType=memberName&keyId={name}",
+          "membersTemplate": "{+relationEndpoint}/trails?keyType=memberKey&keyId={name}",
           "meta": {
             "trail": {
               "default": [
@@ -128,13 +128,13 @@ const arg1 = {
 
 const arg2 = {
   "trails": {
-    "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=check-in": {
+    "https://test.raphaelluckom.com/trails/check-in.md": {
       "members": [
         {
           "memberUri": "https://test.raphaelluckom.com/posts/post1.md",
           "trailName": "check-in",
           "memberType": "post",
-          "trailUri": "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=check-in",
+          "trailUri": "https://test.raphaelluckom.com/trails/check-in.md",
           "memberMetadata": {
             "date": "2018-07-13T00:00:00.000Z",
             "title": "Organic Parametric Shapes: Bézier Curves in OpenSCAD",
@@ -146,18 +146,19 @@ const arg2 = {
             },
             "draft": false
           },
-          "memberName": "post1"
+          "memberName": "post1",
+          "memberKey": "post:post1"
         }
       ],
       "trailName": "check-in"
     },
-    "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=posts": {
+    "https://test.raphaelluckom.com/trails/posts.md": {
       "members": [
         {
           "memberUri": "https://test.raphaelluckom.com/posts/post1.md",
           "trailName": "posts",
           "memberType": "post",
-          "trailUri": "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=posts",
+          "trailUri": "https://test.raphaelluckom.com/trails/posts.md",
           "memberMetadata": {
             "date": "2018-07-13T00:00:00.000Z",
             "title": "Organic Parametric Shapes: Bézier Curves in OpenSCAD",
@@ -169,7 +170,8 @@ const arg2 = {
             },
             "draft": false
           },
-          "memberName": "post1"
+          "memberName": "post1",
+          "memberKey": "post:post1"
         }
       ],
       "trailName": "posts"
@@ -184,7 +186,7 @@ const arg2 = {
       "memberUri": "https://test.raphaelluckom.com/posts/post1.md",
       "memberType": "post",
       "trailName": "check-in",
-      "trailUri": "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=check-in",
+      "trailUri": "https://test.raphaelluckom.com/trails/check-in.md",
       "memberMetadata": {
         "date": "2018-07-13T00:00:00.000Z",
         "title": "Organic Parametric Shapes: Bézier Curves in OpenSCAD",
@@ -196,13 +198,14 @@ const arg2 = {
         },
         "draft": false
       },
-      "memberName": "post1"
+      "memberName": "post1",
+      "memberKey": "post:post1"
     },
     {
       "memberUri": "https://test.raphaelluckom.com/posts/post1.md",
       "memberType": "post",
       "trailName": "posts",
-      "trailUri": "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=posts",
+      "trailUri": "https://test.raphaelluckom.com/trails/posts.md",
       "memberMetadata": {
         "date": "2018-07-13T00:00:00.000Z",
         "title": "Organic Parametric Shapes: Bézier Curves in OpenSCAD",
@@ -214,7 +217,8 @@ const arg2 = {
         },
         "draft": false
       },
-      "memberName": "post1"
+      "memberName": "post1",
+      "memberKey": "post:post1"
     }
   ],
   "siteDescription": {
@@ -271,7 +275,7 @@ const arg2 = {
           "idTemplate": "https://{domainName}/trails/{name}.md",
           "pathNameRegex": "^/?trails/([^/]*).md$",
           "setTemplate": "{+relationEndpoint}/trails?keyType=trailName&keyId={name}",
-          "membersTemplate": "{+relationEndpoint}/trails?keyType=memberName&keyId={name}",
+          "membersTemplate": "{+relationEndpoint}/trails?keyType=memberKey&keyId={name}",
           "meta": {
             "trail": {
               "default": [
@@ -326,13 +330,13 @@ const arg2 = {
 
 const arg3 = {
   "trails": {
-    "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=check-in": {
+    "https://test.raphaelluckom.com/trails/check-in.md": {
       "members": [
         {
           "memberUri": "https://test.raphaelluckom.com/posts/post2.md",
           "trailName": "check-in",
           "memberType": "post",
-          "trailUri": "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=check-in",
+          "trailUri": "https://test.raphaelluckom.com/trails/check-in.md",
           "memberMetadata": {
             "date": "2018-07-13T00:00:00.000Z",
             "title": "Organic Parametric Shapes: Bézier Curves in OpenSCAD",
@@ -345,18 +349,19 @@ const arg3 = {
             },
             "draft": false
           },
-          "memberName": "post2"
+          "memberName": "post2",
+          "memberKey": "post:post2"
         }
       ],
       "trailName": "check-in"
     },
-    "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=posts": {
+    "https://test.raphaelluckom.com/trails/posts.md": {
       "members": [
         {
           "memberUri": "https://test.raphaelluckom.com/posts/post2.md",
           "trailName": "posts",
           "memberType": "post",
-          "trailUri": "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=posts",
+          "trailUri": "https://test.raphaelluckom.com/trails/posts.md",
           "memberMetadata": {
             "date": "2018-07-13T00:00:00.000Z",
             "title": "Organic Parametric Shapes: Bézier Curves in OpenSCAD",
@@ -369,7 +374,8 @@ const arg3 = {
             },
             "draft": false
           },
-          "memberName": "post2"
+          "memberName": "post2",
+          "memberKey": "post:post2"
         }
       ],
       "trailName": "posts"
@@ -384,7 +390,7 @@ const arg3 = {
       "memberUri": "https://test.raphaelluckom.com/posts/post2.md",
       "memberType": "post",
       "trailName": "check-in",
-      "trailUri": "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=check-in",
+      "trailUri": "https://test.raphaelluckom.com/trails/check-in.md",
       "memberMetadata": {
         "date": "2018-07-13T00:00:00.000Z",
         "title": "Organic Parametric Shapes: Bézier Curves in OpenSCAD",
@@ -397,13 +403,14 @@ const arg3 = {
         },
         "draft": false
       },
-      "memberName": "post2"
+      "memberName": "post2",
+      "memberKey": "post:post2"
     },
     {
       "memberUri": "https://test.raphaelluckom.com/posts/post2.md",
       "memberType": "post",
       "trailName": "posts",
-      "trailUri": "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=posts",
+      "trailUri": "https://test.raphaelluckom.com/trails/posts.md",
       "memberMetadata": {
         "date": "2018-07-13T00:00:00.000Z",
         "title": "Organic Parametric Shapes: Bézier Curves in OpenSCAD",
@@ -416,7 +423,8 @@ const arg3 = {
         },
         "draft": false
       },
-      "memberName": "post2"
+      "memberName": "post2",
+      "memberKey": "post:post2"
     },
     {
       "memberUri": "https://test.raphaelluckom.com/posts/post2.md",
@@ -435,6 +443,7 @@ const arg3 = {
         },
         "draft": false
       },
+      "memberKey": "post:post2",
       "memberName": "post2"
     }
   ],
@@ -492,7 +501,7 @@ const arg3 = {
           "idTemplate": "https://{domainName}/trails/{name}.md",
           "pathNameRegex": "^/?trails/([^/]*).md$",
           "setTemplate": "{+relationEndpoint}/trails?keyType=trailName&keyId={name}",
-          "membersTemplate": "{+relationEndpoint}/trails?keyType=memberName&keyId={name}",
+          "membersTemplate": "{+relationEndpoint}/trails?keyType=memberKey&keyId={name}",
           "meta": {
             "trail": {
               "default": [

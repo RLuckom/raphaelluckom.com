@@ -4,12 +4,12 @@
   "dynamoPuts": [],
   "dynamoDeletes": [],
   "neighbors": {
-    "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=check-in": {
+    "https://test.raphaelluckom.com/trails/check-in.md": {
       "trailName": "check-in",
       "previousNeighbor": null,
       "nextNeighbor": null
     },
-    "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=posts": {
+    "https://test.raphaelluckom.com/trails/posts.md": {
       "trailName": "posts",
       "previousNeighbor": null,
       "nextNeighbor": null

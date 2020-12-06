@@ -50,7 +50,7 @@
         "idTemplate": "https://{domainName}/trails/{name}.md",
         "pathNameRegex": "^/?trails/([^/]*).md$",
         "setTemplate": "{+relationEndpoint}/trails?keyType=trailName&keyId={name}",
-        "membersTemplate": "{+relationEndpoint}/trails?keyType=memberName&keyId={name}",
+        "membersTemplate": "{+relationEndpoint}/trails?keyType=memberKey&keyId={type}:{name}",
         "meta": {
           "trail": {
             "default": ["trails"]

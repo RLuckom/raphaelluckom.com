@@ -10,6 +10,7 @@ module.exports = {
           or: [
             {ref: 'event.Records[0].s3.object.key'},
             {ref: 'event.item.memberUri'},
+            {ref: 'event.item.uri'},
           ]
         },
       },

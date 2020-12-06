@@ -6,8 +6,11 @@ const trails = require('./trails.js')
 module.exports = {
   cleanup: {
     transformers: {
-      neighbors: {ref: 'determineUpdates.vars.updates.neighbors' }
-    }
+      all: {
+        neighbors: {ref: 'determineUpdates.vars.updates.neighbors' },
+        members: {ref: 'updateDependencies.results.existingMembers' },
+      }
+    },
   },
   stages: {
     siteDescription: {
@@ -33,6 +36,21 @@ module.exports = {
             templateString: {ref: 'siteDescription.results.siteDescription.${self_type}.membersTemplate'},
             siteDetails: {ref: 'siteDescription.results.siteDescription.siteDetails'},
             name: {ref: 'event.item.name'},
+            type: {ref: 'event.item.type'},
+          }
+        },
+        existingMembers: {
+          helper: 'expandUrlTemplateWithName',
+          condition: {
+            matches: {
+              a: {ref: 'event.item.type'},
+              b: {value: 'trail'},
+            }
+          },
+          params: {
+            templateString: {ref: 'siteDescription.results.siteDescription.${self_type}.setTemplate'},
+            siteDetails: {ref: 'siteDescription.results.siteDescription.siteDetails'},
+            name: {ref: 'event.item.name'},
           }
         },
       },
@@ -49,6 +67,14 @@ module.exports = {
           formatter: formatters.singleValue.unwrapJsonHttpResponse,
           params: {
             url: { ref: 'stage.existingMemberships'}
+          }
+        },
+        existingMembers: {
+          action: 'genericApi',
+          condition: { ref: 'stage.existingMembers'},
+          formatter: formatters.singleValue.unwrapJsonHttpResponse,
+          params: {
+            url: { ref: 'stage.existingMembers'}
           }
         }
       },
@@ -173,7 +199,7 @@ module.exports = {
             }
           }
         },
-        trails: {
+        rerenderNeighbors: {
           action: 'invokeFunction',
           condition: { ref: 'stage.allUpdates.neighborsToReRender.length' },
           params: {
@@ -198,7 +224,33 @@ module.exports = {
               }
             }
           }
-        }
+        },
+        rerenderTrails: {
+          action: 'invokeFunction',
+          condition: { ref: 'stage.allUpdates.trailsToReRender.length' },
+          params: {
+            FunctionName: {value: '${render_function}'},
+            Payload: { 
+              helper: 'transform', 
+              params: {
+                arg: {
+                  all: {
+                    trailUris: {ref: 'stage.allUpdates.trailsToReRender'},
+                    bounceDepth: {ref: 'event.bounceDepth'},
+                  }
+                },
+                func: ({trailUris, bounceDepth}) => {
+                  return _.map(trailUris, (n) => {
+                    return JSON.stringify({
+                      item: { uri: n },
+                      bounceDepth: bounceDepth + 1
+                    })
+                  })
+                },
+              }
+            }
+          }
+        },
       },
     },
   }
