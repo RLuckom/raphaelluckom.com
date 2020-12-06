@@ -64,7 +64,7 @@
           "html" : {
             "idTemplate": "https://{domainName}/trails/{name}.html",
             "render": {
-              "template": "https://{domainName}/assets/templates/trail.tpl"
+              "template": "https://{domainName}/assets/templates/trail.tmpl"
             }
           }
         }
