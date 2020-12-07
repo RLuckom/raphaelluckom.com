@@ -120,7 +120,7 @@ module.exports = {
           params: {
             template: {ref: 'renderDependencies.results.template' },
             doc: { ref: 'item.results.parsed' },
-            meta: { ref: 'meta.results.trails.neighbors' },
+            meta: { ref: 'meta.results.trails' },
           },
         },
       },

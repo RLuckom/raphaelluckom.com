@@ -6,9 +6,11 @@ const trails = require('./trails.js')
 module.exports = {
   cleanup: {
     transformers: {
-      all: {
-        neighbors: {ref: 'determineUpdates.vars.updates.neighbors' },
-        members: {ref: 'updateDependencies.results.existingMembers' },
+      trails: { 
+        all: {
+          neighbors: {ref: 'determineUpdates.vars.updates.neighbors' },
+          members: {ref: 'updateDependencies.results.existingMembers' },
+        }
       }
     },
   },

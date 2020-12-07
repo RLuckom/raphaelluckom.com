@@ -14,6 +14,10 @@
     </p>
 <section>
 <%= content %>
+<%= JSON.stringify(meta) %>
+<ul>
+<% _.forEach(meta.trails.members, function(member) { %><li><a href="<%- member.memberUri %>"><%- member.memberMetadata.title %></li><% }); %>
+</ul>
 </section>
 </article>
   </body>
