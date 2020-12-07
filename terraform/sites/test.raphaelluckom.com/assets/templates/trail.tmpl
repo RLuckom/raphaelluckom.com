@@ -13,11 +13,7 @@
     <p class="subtitle">
     </p>
 <section>
-<%= content %>
-<%= JSON.stringify(meta) %>
-<ul>
-<% _.forEach(meta.trails.members, function(member) { %><li><a href="<%- member.memberUri %>"><%- member.memberMetadata.title %></li><% }); %>
-</ul>
+<% _.forEach(meta.trails.members, function(member) { %><div class="trail-member"><h3><a href="<%- member.memberUri %>"><%- member.memberMetadata.title %></a></h3><p><%- member.memberMetadata.author %></p><p><%- member.memberMetadata.date %></p></div><% }); %>
 </section>
 </article>
   </body>

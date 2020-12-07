@@ -1,14 +1,16 @@
 const _ = require('lodash')
 const urlTemplate = require('url-template')
+const TRAIL_TYPE = 'trail'
+const TRAILS_TRAIL_NAME = 'trails'
 
 function checkForEmptyLists({trailsWithDeletedMembers, plannedUpdates}) {
-	const {trailsToReRender, neighborsToReRender, dynamoPuts, dynamoDeletes, trailsListName} = plannedUpdates
+	const {trailsToReRender, neighborsToReRender, dynamoPuts, dynamoDeletes } = plannedUpdates
 	const additionalDeletes = []
 	_.each(trailsWithDeletedMembers, (trails, i) => {
 		if (trails.length < 2) {
 			additionalDeletes.push({
         memberKey: `trail:${dynamoDeletes[i].trailName}`,
-				trailName: trailsListName
+				trailName: TRAILS_TRAIL_NAME
 			})
 		}
 	})
@@ -20,7 +22,7 @@ function checkForEmptyLists({trailsWithDeletedMembers, plannedUpdates}) {
 	}
 }
 
-function determineUpdates({trails, existingMemberships, siteDescription, item, trailNames}) {
+function determineUpdates({trails, existingMemberships, existingMembers, siteDescription, item, trailNames}) {
   const updates = {
     neighborsToReRender: [],
     trailsToReRender: [],
@@ -29,10 +31,9 @@ function determineUpdates({trails, existingMemberships, siteDescription, item, t
     neighbors: {}
   }
   const trailUriTemplate = urlTemplate.parse(_.get(siteDescription, 'relations.meta.trail.idTemplate'))
-  const trailsListName = 'trails'
-  const trailsListId = trailUriTemplate.expand({...siteDescription.siteDetails, ...{name: encodeURIComponent(trailsListName)}})
+  const trailsListId = trailUriTemplate.expand({...siteDescription.siteDetails, ...{name: encodeURIComponent(TRAILS_TRAIL_NAME)}})
   _.each(existingMemberships, (trail) => {
-    if (!_.find(trailNames, (name) => name === trail.trailName)) {
+    if (!_.find(trailNames, (name) => name === trail.trailName) && trail.trailName !== TRAILS_TRAIL_NAME) {
       updates.dynamoDeletes.push({
         memberKey: `${item.type}:${item.name}`,
         trailName: trail.trailName
@@ -40,6 +41,13 @@ function determineUpdates({trails, existingMemberships, siteDescription, item, t
       updates.trailsToReRender.push(trailUriTemplate.expand({...siteDescription.siteDetails, ...{name: trail.trailName}}))
     }
   })
+  if (item.type === TRAIL_TYPE && !_.get(existingMembers, 'length')) {
+    updates.dynamoDeletes.push({
+      memberKey: `${item.type}:${item.name}`,
+      trailName: TRAILS_TRAIL_NAME
+    })
+    updates.trailsToReRender.push(trailUriTemplate.expand({...siteDescription.siteDetails, ...{name: TRAILS_TRAIL_NAME}}))
+  }
   _.each(trails, ({members, trailName}) => {
     const trailUriTemplate = urlTemplate.parse(_.get(siteDescription, 'relations.meta.trail.idTemplate'))
     const newList = _.cloneDeep(members)
@@ -51,7 +59,7 @@ function determineUpdates({trails, existingMemberships, siteDescription, item, t
     if (members.length === 0) {
       updates.dynamoPuts.push({
         trailUri: trailsListId,
-        trailName: trailsListName,
+        trailName: TRAILS_TRAIL_NAME,
         memberUri: trailUri,
         memberName: trailName,
         memberKey: `trail:${trailName}`,
@@ -73,6 +81,7 @@ function determineUpdates({trails, existingMemberships, siteDescription, item, t
         memberMetadata: item.metadata
       }
       newList.push(trailMember)
+      updates.trailsToReRender.push(trailUriTemplate.expand({...siteDescription.siteDetails, ...{name: trailName}}))
       updates.dynamoPuts.push(trailMember)
       const sortedNewList = _.sortBy(newList, ['memberMetadata', 'date'])
       const newIndex = sortedNewList.findIndex((i) => i.memberUri === item.id && _.isEqual(i.memberMetadata, item.metadata))
@@ -102,7 +111,6 @@ function determineUpdates({trails, existingMemberships, siteDescription, item, t
   }).value()
   updates.dynamoPuts = _(updates.dynamoPuts).uniq().filter().value()
   updates.dynamoDeletes = _(updates.dynamoDeletes).uniq().filter().value()
-  updates.trailsListName = trailsListName
   return updates
 } 
 

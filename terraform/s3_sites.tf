@@ -42,6 +42,22 @@ module "test_site" {
       name = module.two_way_resolver.lambda.function_name
     }
   }]
+  website_bucket_lambda_notifications = [
+    {
+      lambda_arn = local.render_arn
+      lambda_name = local.render_name
+    events              = ["s3:ObjectCreated:*" ]
+    filter_prefix       = ""
+    filter_suffix       = ".md"
+  },
+    {
+      lambda_arn = local.deletion_cleanup_arn
+      lambda_name = local.deletion_cleanup_name
+    events              = ["s3:ObjectRemoved:*" ]
+    filter_prefix       = ""
+    filter_suffix       = ".md"
+  }
+  ]
   route53_zone_name = var.route53_zone_name
   domain_name = var.test_domain_settings.domain_name
   allowed_origins = var.test_domain_settings.allowed_origins
@@ -103,13 +119,48 @@ module "site_renderer" {
     aws_lambda_layer_version.donut_days.arn,
     aws_lambda_layer_version.markdown_tools.arn,
   ]
+}
 
-  bucket_notifications = [{
-    bucket = module.test_site.website_bucket.bucket.id
-    events              = ["s3:ObjectCreated:*" ]
-    filter_prefix       = ""
-    filter_suffix       = ".md"
-  }]
+module "deletion_cleanup" {
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  timeout_secs = 40
+  mem_mb = 256
+  environment_var_map = {
+    DONUT_DAYS_DEBUG = true
+  }
+  source_contents = [
+    {
+      file_name = "index.js"
+      file_contents = file("./functions/templates/generic_donut_days/index.js") 
+    },
+    {
+      file_name = "helpers.js"
+      file_contents = file("./functions/templates/render_markdown_to_html/helpers.js")
+    },
+    {
+      file_name = "config.js"
+      file_contents = templatefile("./functions/templates/deletion_cleanup/config.js",
+    {
+      website_bucket = module.test_site.website_bucket.bucket.id
+      domain_name = "test.raphaelluckom.com"
+      site_description_path = "site_description.json"
+      dependency_update_function = module.trails_updater.lambda.arn
+    }) 
+    }
+  ]
+  lambda_details = {
+    action_name = "deletion_cleanup"
+    scope_name = ""
+    bucket = aws_s3_bucket.lambda_bucket.id
+    policy_statements =  concat(
+      module.test_site.website_bucket.permission_sets.delete_object,
+      module.trails_updater.permission_sets.invoke
+    )
+  }
+  layers = [
+    aws_lambda_layer_version.donut_days.arn,
+    aws_lambda_layer_version.markdown_tools.arn,
+  ]
 }
 
 module "trails_table" {
@@ -138,6 +189,9 @@ module "trails_table" {
 
 locals {
   render_arn = "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:site_render"
+  render_name = "site_render"
+  deletion_cleanup_arn = "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:deletion_cleanup"
+  deletion_cleanup_name = "deletion_cleanup"
   render_invoke_permission = [{
     actions   =  [
       "lambda:InvokeFunction"

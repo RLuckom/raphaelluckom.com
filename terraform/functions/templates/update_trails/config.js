@@ -59,6 +59,7 @@ module.exports = {
       dependencies: {
         trails: {
           action: 'genericApi',
+          condition: { ref: 'stage.trails.length'},
           formatter: formatters.singleValue.unwrapJsonHttpResponseArray,
           params: {
             url: { ref: 'stage.trails' }
