@@ -1,13 +1,19 @@
 {
   "siteDetails": {
     "domainName": "test.raphaelluckom.com",
-    "title": "Test Site",
+    "title": "Raphael Luckom's Test Site",
     "maintainer": "Raphael Luckom",
     "maintainerEmail": "raphaelluckom@gmail.com",
     "relationEndpoint": "https://test.raphaelluckom.com/meta/relations",
     "pathRegex": "^https://test.raphaelluckom.com/(.*)$",
     "formats": {
       "html": {
+        "nav": {
+          "links": [
+            {"name": "Posts", "target": "https://test.raphaelluckom.com/trails/posts.html"},
+            {"name": "Github", "target": "https://github.com/RLuckom"}
+          ]
+        },
         "sections": {
           "index": {
             "renderFrom": "https://test.raphaelluckom.com/trails/posts.md",

@@ -121,6 +121,7 @@ module.exports = {
             template: {ref: 'renderDependencies.results.template' },
             doc: { ref: 'item.results.parsed' },
             meta: { ref: 'meta.results.trails' },
+            siteDetails: {ref: 'siteDescription.results.siteDescription.siteDetails'}, 
           },
         },
       },

@@ -1,21 +1,29 @@
 <!DOCTYPE html>
 <html lang="en-us">
-<link rel="stylesheet" href="/assets/static/css/main.css">
-<link rel="stylesheet" href="/assets/static/css/highlight.css">
   <head>
+  <link rel="stylesheet" href="/assets/static/css/main.css">
+  <link rel="stylesheet" href="/assets/static/css/highlight.css">
     <title>
-         <%= title %>
+         <%= item.title %>
     </title>
   </head>
   <body>
-<article id="content">
-  <h1><%= title %> </h1>
-    <p class="subtitle">
-      <%= date %>
-    </p>
-<section>
-<%= content %>
+<section id="nav">
+<h1><%= siteDetails.title %></h1>
+<div class="nav-links">
+<% _.forEach(_.get(siteDetails, 'formats.html.nav.links'), function({name, target}) { 
+    %><div class="nav-link-ctr"><a class="nav-link" href="<%- target %>"><%- name  %></a></div><% 
+}); %>
+</div>
 </section>
+<section>
+<article id="content">
+  <h1><%= item.title %> </h1>
+    <p class="subtitle">
+      <%= item.date %>
+    </p>
+<%= item.content %>
 </article>
+</section>
   </body>
 </html>
