@@ -35,9 +35,9 @@ And as my focus shifts, the type of useful information I can share shifts too. T
 There's a certain type of veteran programmer, visible in every software-writing community, who is not just resistant to change but
 sees it as a direct insult to everything that has gone before. If only people would stop _reinventing_ things,
 this person thinks, we could finally perfect the adequate tools we already have--make them better, make them cheaper, make them more reliable--
-and then we could move on from this pointless and endless repackaging of the old to something truly new and useful. This person is first
+and then we could move on, from this pointless and endless repackaging of the old, to something truly new and useful. This person is first
 a comfort to the beginner, who wants to believe that the currently-available learning materials contain everything worth knowing. They
-are an antagonist to intermediate programmers, whose earnest attempts to make new things are so often the targets of their ire. To an expert
+are next an antagonist to intermediate programmers, whose earnest attempts to make new things are so often the targets of their ire. To an expert
 programmer, anti-change zealotry exists as an enticing choice--a way, now that a particular personal end has been reached[^1], of standing
 against the whole world when it irrationally insists on continuing to move. Zach Tellman, in his beautiful 2016 essay [standing in the shadow of giants](https://ideolalia.com/essays/standing-in-the-shadow-of-giants.html)
 captures the dynamic perfectly from a different angle:
@@ -68,16 +68,16 @@ New social media systems--distributed and otherwise--have particular vulnerabili
 and who use them earliest, are Tellman's "[people] who show up first," and whose "chief values will be autonomy and productivity,"
 the community enabled by each system becomes a reflection of those values. When you find the meeting-place that any new social media experiment
 uses for its social expression, you will never find it populated _mainly_ by ceramics enthusiasts, or by poets, or by sports fans. Those
-groups may be represented, but the primary enthusiasm of the community as a whole will be _conducting social media experiments_. This
-shared enthusiasm is then encountered by those who show up later, expecting that they may simply lay claim to a part of the new system, as a 
-ceramics community lays claim to a facebook group or podcast fans lay claim to a subreddit. But this influx of people appears to the OGs as 
-an invasion, dangerously bent on disrupting the focus of the community and preventing it from realizing its original values. The indignant 
+groups may be represented, but the primary enthusiasm of the community as a whole will be _conducting social media experiments_. When
+new people show up later, expecting that they may simply lay claim to a part of the new system, as a ceramics community lays claim to a 
+facebook group or podcast fans lay claim to a subreddit, they encounter this unifying enthusiasm as an uncomfortable social force. At the same time, 
+this influx of people[^4] appears to the OGs as an invasion, dangerously bent on disrupting the focus of the community and preventing it from realizing its original values. The indignant 
 reaction of these OGs to the perceived assault on their culture quickly turns into a reputation for eccentricity, elitism and insularity,
 which further discourages new people from joining. Some of those new people may then go on to form their own experimental communities,
 perpetuating the cycle.
 
 So what is to be done about this? How can we build the systems that we want to use, if part of what we want is for people who are _not like us_
-to want to use them as well? The question blurs into metaphysics, like the George Seferis quote[^4] "What can a flame remember?
+to want to use them as well? The question blurs into metaphysics, like the George Seferis quote[^5] "What can a flame remember?
 If it remembers a little less than is necessary, it goes out; if it remembers a little more than is necessary, it goes out. If only it could
 teach us, while it burns, to remember correctly." If our accessible-to-everyone systems are too recognizably _ours_, others won't use them. But if
 they are not recognizably _anyone's_, like the internet itself, no one will defend them from colonization by the most powerful state and corporate landlords.
@@ -89,4 +89,4 @@ compromise, adapt, and defend, as they are moved--is much easier said than done.
 [^2]: And financial.
 [^3]: like those unmistakably Taoist lines from Ecclesiastes, "What has been will be again / what has been done will be done again; / there is nothing new under the sun"
 [^4]: The fan group of a moderately-popular podcast would vastly outnumber the active participants in any experimental social media system.
-[^4]: From "Mr Stratis Thalassinos Describes A Man," translated from the original Greek by Edmund Keeley and Philip Sherrard
+[^5]: From "Mr Stratis Thalassinos Describes A Man," translated from the original Greek by Edmund Keeley and Philip Sherrard
