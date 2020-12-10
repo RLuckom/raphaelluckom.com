@@ -3,6 +3,7 @@ const yaml = require('js-yaml')
 const moment = require('moment')
 const hljs = require('highlight.js');
 const urlTemplate = require('url-template')
+const { Feed } = require('feed')
 
 const mdr = require('markdown-it')({
   html: true,
@@ -130,20 +131,27 @@ function parsePost(s) {
   }
 }
 
+function urlToPath(url, pathReString) {
+  let resourcePath = url
+  const pathRe = new RegExp(pathReString)
+  if (pathRe.test(resourcePath)) {
+    resourcePath = pathRe.exec(resourcePath)[1]
+  }
+  return resourcePath
+}
+
 function identifyItem({resourcePath, siteDescription, selectionPath}) {
   if (!selectionPath) {
     selectionPath = ['relations']
   }
-  const pathRegexString = _.get(siteDescription, 'siteDetails.pathRegex')
-  const pathRe = new RegExp(pathRegexString)
-  if (pathRe.test(resourcePath)) {
-    resourcePath = pathRe.exec(resourcePath)[1]
-  }
+  resourcePath = urlToPath(resourcePath, _.get(siteDescription, 'siteDetails.pathRegex')) || resourcePath
+  console.log(resourcePath)
   for (key in _.get(siteDescription, selectionPath)) {
     const reString = _.get(siteDescription, _.concat(selectionPath, [key, 'pathNameRegex']))
     if (key !== 'meta' && reString) {
       const re = new RegExp(reString)
       if (re.test(resourcePath)) {
+        console.log('tested')
         const name = re.exec(resourcePath)[1]
         selectionPath.push(key)
         const typeDef = _.get(siteDescription, selectionPath)
@@ -154,7 +162,7 @@ function identifyItem({resourcePath, siteDescription, selectionPath}) {
             const formatUri = urlTemplate.parse(uriTemplateString).expand(uriTemplateArgs)
             a[k] = {
               uri: formatUri,
-              path: pathRe.exec(formatUri)[1]
+              path: urlToPath(formatUri, _.get(siteDescription, 'siteDetails.pathRegex'))
             }
           }
           return a
@@ -176,8 +184,105 @@ function identifyItem({resourcePath, siteDescription, selectionPath}) {
   }
 }
 
-function renderMarkdown({template, doc, meta, siteDetails}) {
-  return _.template(template.toString())({ item: { ...doc.frontMatter,  ...{content: mdr.render(doc.content)}}, meta, siteDetails})
+function renderHTML({siteDetails, item, dependencies}) {
+  return _.template(dependencies.template.toString())({ item: { ...dependencies.doc.frontMatter,  ...{content: mdr.render(dependencies.doc.content)}}, meta: dependencies.trails, siteDetails})
+}
+
+function renderFeed(feedType, {siteDetails, item, dependencies}) {
+  const {doc, accumulators} = dependencies
+  const feed = new Feed({
+    title: `${item.name} ${item.type}`,
+    description: item.description || "",
+    id: item.formatUrls[feedType].uri,
+    link: item.formatUrls['html'].uri,
+    language: "en",
+    image: item.image || '',
+    favicon: item.favicon || '',
+    copyright: "CC-BY-NC-SA Raphael Luckom, 2020",
+    feedLinks: {
+      json: item.formatUrls['json1.0'].uri,
+      rss: item.formatUrls['rss2.0'].uri,
+      atom: item.formatUrls['atom1.0'].uri
+    },
+    author: {
+      name: "Raphael Luckom",
+      email: "raphaelluckom@gmail.com",
+      link: "https://raphaelluckom.com"
+    }
+  })
+  _.each(accumulators.members, (member) => {
+    const feedItem = {
+      title: _.get(member, 'memberMetadata.frontMatter.title'),
+      date: moment(_.get(member, 'memberMetadata.frontMatter.date')).toDate(),
+      description: _.get(member, 'memberMetadata.raw'),
+      content: _.get(member, 'memberMetadata.raw'),
+      id: _.get(member, 'memberUri'),
+      link: _.get(member, 'memberUri'),
+      author: [{
+        name: "Raphael Luckom",
+        email: "raphaelluckom@gmail.com",
+        link: "https://raphaelluckom.com",
+      }],
+      contributor: [],
+      image: '',
+    }
+    console.log(feedItem)
+    if (feedItem.title) {
+      feed.addItem(feedItem)
+    }
+  })
+  if (feedType === 'rss2.0') {
+    return feed.rss2()
+  } else if (feedType === 'atom1.0' ) {
+    return feed.atom1()
+  } else if (feedType === 'json1.0' ) {
+    return feed.json1()
+  }
+  return ''
+}
+
+const renderers = {
+  html: {
+    renderFunction: renderHTML,
+    ContentType: 'text/html; charset=utf-8',
+  },
+  'rss2.0': {
+    renderFunction: _.partial(renderFeed, 'rss2.0'),
+    ContentType: 'application/rss+xml; charset=utf-8',
+  },
+  'atom1.0': {
+    renderFunction: _.partial(renderFeed, 'atom1.0'),
+    ContentType: 'application/atom+xml; charset=utf-8',
+  },
+  'json1.0': {
+    renderFunction: _.partial(renderFeed, 'json1.0'),
+    ContentType: 'application/json; charset=utf-8',
+  },
+}
+
+function render({siteDetails, item, dependencies}) {
+  const targetFormats = item.typeDef.formats
+  const renderedFormats = {
+    content: [],
+    path: [],
+    ContentType: []
+  }
+  _.each(targetFormats, ({authoring, idTemplate}, formatName) => {
+    // never overwrite an authoring format
+    if (!authoring) {
+      try {
+        const url = expandUrlTemplateWithName({templateString: idTemplate, siteDetails, name: item.name})
+        const path = urlToPath(url, siteDetails.pathRegex)
+        const content = renderers[formatName].renderFunction({siteDetails, item, dependencies})
+        renderedFormats.content.push(content)
+        renderedFormats.path.push(path)
+        renderedFormats.ContentType.push(renderers[formatName].ContentType)
+      } catch(e) {
+        console.error(e)
+      }
+    }
+  })
+  return renderedFormats
 }
 
 function expandUrlTemplate({templateString, templateParams}) {
@@ -191,6 +296,13 @@ function expandUrlTemplateWithNames({templateString, siteDetails, names}) {
   })
 }
 
+function expandUrlTemplatesWithName({templateStrings, siteDetails, name}) {
+  return _.map(templateStrings, (templateString, k) => {
+    const template = urlTemplate.parse(templateString)
+    return template.expand({...siteDetails, ...{name: encodeURIComponent(name)}})
+  })
+}
+
 function expandUrlTemplateWithName({templateString, siteDetails, name, type}) {
   const params = {...siteDetails, ...{name: encodeURIComponent(name)}}
   if (type) {
@@ -199,6 +311,29 @@ function expandUrlTemplateWithName({templateString, siteDetails, name, type}) {
   return urlTemplate.parse(templateString).expand(params)
 }
 
+function accumulatorUrls({siteDetails, item}) {
+  return _.reduce(item.typeDef.accumulators, (a, {idTemplate}, type) => {
+    a.urls.push( expandUrlTemplateWithName({templateString: idTemplate, siteDetails, name: item.name}))
+    a.types.push(type)
+    return a
+  }, {urls: [], types: []})
+}
+
+function objectBuilder({keys, preformatter, defaultValue}) {
+  try { 
+    return (array) => {
+      if (_.isFunction(preformatter)) {
+        array = preformatter(array)
+      }
+      return _.zipObject(keys, array)
+    }
+  } catch(e) {
+    if (defaultValue) {
+      return defaultValue
+    }
+    throw e
+  }
+}
 
 function siteDescriptionDependency(domainName, siteDescriptionPath) {
   return {
@@ -218,11 +353,14 @@ function siteDescriptionDependency(domainName, siteDescriptionPath) {
 
 module.exports = {
   formatters,
+  accumulatorUrls,
   siteDescriptionDependency,
   expandUrlTemplateWithNames,
+  expandUrlTemplatesWithName,
   expandUrlTemplateWithName,
+  objectBuilder,
   parsePost,
   identifyItem,
-  renderMarkdown,
+  render,
   expandUrlTemplate,
 }

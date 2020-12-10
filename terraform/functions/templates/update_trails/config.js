@@ -98,7 +98,7 @@ module.exports = {
             func: {value: ({trailUrls, trailNames, trailArrays}) => {
               return _.reduce(trailUrls, (a, trailUrl, index) => {
                 a[trailUrl] = {
-                  members: _.sortBy(trailArrays[index], ['metadata', 'date']),
+                  members: _.sortBy(trailArrays[index], ['metadata', 'frontMatter', 'date']),
                   trailName: trailNames[index]
                 }
                 return a

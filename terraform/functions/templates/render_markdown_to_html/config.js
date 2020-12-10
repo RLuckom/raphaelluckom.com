@@ -93,12 +93,12 @@ module.exports = {
                     arg: {
                       all: {
                         description: {ref: 'item.vars.metadata'},
-                        frontMatter: {ref: 'item.results.parsed.frontMatter'},
+                        parsed: {ref: 'item.results.parsed'},
                       }
                     },
-                    func: ({description, frontMatter}) => {
+                    func: ({description, parsed}) => {
                       const item = {...description}
-                      item.metadata = frontMatter
+                      item.metadata = parsed
                       delete item.typeDef
                       return item
                     }
@@ -108,19 +108,57 @@ module.exports = {
               }
             }
           }
-        }
+        },
       }
     },
-    postItemToWebsiteBucket: {
+    accumulators: {
       condition: { ref: 'item.results.parsed' },
       index: 5,
       transformers: {
-        fileContent: {
-          helper: 'renderMarkdown',
+        accumulatorUrls: {
+          helper: 'accumulatorUrls',
           params: {
-            template: {ref: 'renderDependencies.results.template' },
-            doc: { ref: 'item.results.parsed' },
-            meta: { ref: 'meta.results.trails' },
+            siteDetails: {ref: 'siteDescription.results.siteDescription.siteDetails'}, 
+            item: {ref: 'item.vars.metadata'},
+          }
+        }
+      },
+      dependencies: {
+        accumulators: {
+          action: 'genericApi',
+          condition: { ref: 'stage.accumulatorUrls.urls.length' },
+          formatter: {
+            helper: 'objectBuilder',
+            params: {
+              preformatter: formatters.singleValue.unwrapJsonHttpResponseArray,
+              keys: { ref: 'stage.accumulatorUrls.types' },
+              default: { value: null },
+            }
+          },
+          params: {
+            allow404: true,
+            mergeIndividual: _.identity,
+            url: { ref: 'stage.accumulatorUrls.urls' }
+          }
+        },
+      }
+    },
+    postFormats: {
+      condition: { ref: 'item.results.parsed' },
+      index: 6,
+      transformers: {
+        renderedFormats: {
+          helper: 'render',
+          params: {
+            dependencies: {
+              all: {
+                template: {ref: 'renderDependencies.results.template' },
+                doc: { ref: 'item.results.parsed' },
+                trails: { ref: 'meta.results.trails' },
+                accumulators: { ref: 'accumulators.results.accumulators' },
+              },
+            },
+            item: {ref: 'item.vars.metadata'},
             siteDetails: {ref: 'siteDescription.results.siteDescription.siteDetails'}, 
           },
         },
@@ -132,10 +170,10 @@ module.exports = {
             accessSchema: {value: 'dataSources.AWS.s3.putObject'},
             params: {
               explorandaParams: {
-                Body: {ref: 'stage.fileContent' },
+                Body: {ref: 'stage.renderedFormats.content' },
                 Bucket: '${website_bucket}',
-                ContentType: 'text/html; charset=utf-8',
-                Key: { ref: 'item.vars.metadata.formatUrls.html.path' },
+                ContentType: { ref: 'stage.renderedFormats.ContentType' },
+                Key: { ref: 'stage.renderedFormats.path' },
               }
             }
           },
