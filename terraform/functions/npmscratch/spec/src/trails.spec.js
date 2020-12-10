@@ -553,6 +553,185 @@ const arg3 = {
     }
   }
 }
+
+const arg4 = {
+    "trails": {
+        "https://test.raphaelluckom.com/meta/relations/trails?keyType=trailName&keyId=trails": {
+            "members": [
+                {
+                    "trailName": "trails",
+                    "memberType": "trail",
+                    "trailUri": "https://test.raphaelluckom.com/trails/trails.md",
+                    "memberName": "check-in",
+                    "memberUri": "https://test.raphaelluckom.com/trails/check-in.md",
+                    "memberMetadata": {
+                        "date": "2020-12-06T19:35:57.011Z"
+                    },
+                    "memberKey": "trail:check-in"
+                },
+                {
+                    "trailName": "trails",
+                    "memberType": "trail",
+                    "trailUri": "https://test.raphaelluckom.com/trails/trails.md",
+                    "memberName": "random",
+                    "memberUri": "https://test.raphaelluckom.com/trails/random.md",
+                    "memberMetadata": {
+                        "date": "2020-12-07T20:08:45.245Z"
+                    },
+                    "memberKey": "trail:random"
+                }
+            ],
+            "trailName": "trails"
+        }
+    },
+    "trailNames": [
+        "trails"
+    ],
+    "existingMemberships": [],
+    "siteDescription": {
+        "siteDetails": {
+            "domainName": "test.raphaelluckom.com",
+            "title": "Raphael Luckom's Test Site",
+            "maintainer": "Raphael Luckom",
+            "maintainerEmail": "raphaelluckom@gmail.com",
+            "relationEndpoint": "https://test.raphaelluckom.com/meta/relations",
+            "pathRegex": "^https://test.raphaelluckom.com/(.*)$",
+            "formats": {
+                "html": {
+                    "nav": {
+                        "links": [
+                            {
+                                "name": "Posts",
+                                "target": "https://test.raphaelluckom.com/trails/posts.html"
+                            },
+                            {
+                                "name": "Github",
+                                "target": "https://github.com/RLuckom"
+                            }
+                        ]
+                    },
+                    "sections": {
+                        "index": {
+                            "renderFrom": "https://test.raphaelluckom.com/trails/posts.md",
+                            "renderTo": "/index.html",
+                            "sectionTitle": "Home"
+                        }
+                    }
+                }
+            }
+        },
+        "relations": {
+            "post": {
+                "relation": "{relationEndpoint}/post",
+                "idTemplate": "https://{domainName}/posts/{name}.md",
+                "pathNameRegex": "^/?posts/([^/]*).md$",
+                "meta": {
+                    "trail": {
+                        "default": [
+                            "posts"
+                        ]
+                    }
+                },
+                "formats": {
+                    "markdown": {
+                        "authoring": true,
+                        "idTemplate": "https://{domainName}/posts/{name}.md"
+                    },
+                    "html": {
+                        "idTemplate": "https://{domainName}/posts/{name}.html",
+                        "views": {
+                            "trail": "https://{domainName}/posts.html"
+                        },
+                        "render": {
+                            "template": "https://{domainName}/assets/templates/post.tmpl"
+                        }
+                    }
+                }
+            },
+            "meta": {
+                "trail": {
+                    "relation": "{+relationEndpoint}/meta/trail",
+                    "idTemplate": "https://{domainName}/trails/{name}.md",
+                    "pathNameRegex": "^/?trails/([^/]*).md$",
+                    "setTemplate": "{+relationEndpoint}/trails?keyType=trailName&keyId={name}",
+                    "membersTemplate": "{+relationEndpoint}/trails?keyType=memberKey&keyId={type}:{name}",
+                    "meta": {
+                        "trail": {
+                            "default": [
+                                "trails"
+                            ]
+                        },
+                        "meta": {
+                            "feed": {}
+                        }
+                    },
+                    "accumulators": {
+                        "members": {
+                            "idTemplate": "{+relationEndpoint}/trails?keyType=trailName&keyId={name}"
+                        }
+                    },
+                    "formats": {
+                        "markdown": {
+                            "authoring": true,
+                            "idTemplate": "https://{domainName}/trails/{name}.md"
+                        },
+                        "html": {
+                            "idTemplate": "https://{domainName}/trails/{name}.html",
+                            "render": {
+                                "template": "https://{domainName}/assets/templates/trail.tmpl"
+                            }
+                        },
+                        "atom1.0": {
+                            "idTemplate": "https://{domainName}/trails/atom1.0/{name}.xml"
+                        },
+                        "rss2.0": {
+                            "idTemplate": "https://{domainName}/trails/rss2.0/{name}.xml"
+                        },
+                        "json1.0": {
+                            "idTemplate": "https://{domainName}/trails/json1.0/{name}.json"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "item": {
+        "type": "trail",
+        "name": "posts",
+        "formatUrls": {
+            "markdown": {
+                "uri": "https://test.raphaelluckom.com/trails/posts.md",
+                "path": "trails/posts.md"
+            },
+            "html": {
+                "uri": "https://test.raphaelluckom.com/trails/posts.html",
+                "path": "trails/posts.html"
+            },
+            "atom1.0": {
+                "uri": "https://test.raphaelluckom.com/trails/atom1.0/posts.xml",
+                "path": "trails/atom1.0/posts.xml"
+            },
+            "rss2.0": {
+                "uri": "https://test.raphaelluckom.com/trails/rss2.0/posts.xml",
+                "path": "trails/rss2.0/posts.xml"
+            },
+            "json1.0": {
+                "uri": "https://test.raphaelluckom.com/trails/json1.0/posts.json",
+                "path": "trails/json1.0/posts.json"
+            }
+        },
+        "uri": "https://test.raphaelluckom.com/trails/posts.md",
+        "path": "trails/posts.md",
+        "metadata": {
+            "frontMatter": {
+                "title": "posts",
+                "color": "red"
+            },
+            "content": "\n",
+            "raw": "---\ntitle: \"posts\"\ncolor: \"red\"\n---\n"
+        }
+    }
+}
 describe('trails test', () => {
 
   it('test1', () => {
@@ -571,6 +750,12 @@ describe('trails test', () => {
     const updates = trails.determineUpdates(arg3)
     //fs.writeFileSync(`${__dirname}/../fixtures/test3.json`, JSON.stringify(updates, null, 2))
     expect(updates).toEqual(JSON.parse(fs.readFileSync(`${__dirname}/../fixtures/test3.json`)))
+  })
+
+  it('test4', () => {
+    const updates = trails.determineUpdates(arg4)
+    fs.writeFileSync(`${__dirname}/../fixtures/test4.json`, JSON.stringify(updates, null, 2))
+    expect(updates).toEqual(JSON.parse(fs.readFileSync(`${__dirname}/../fixtures/test4.json`)))
   })
 
 })

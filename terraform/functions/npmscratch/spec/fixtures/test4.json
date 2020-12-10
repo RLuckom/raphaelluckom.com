@@ -1,0 +1,59 @@
+{
+  "neighborsToReRender": [
+    {
+      "trailName": "trails",
+      "memberType": "trail",
+      "trailUri": "https://test.raphaelluckom.com/trails/trails.md",
+      "memberName": "check-in",
+      "memberUri": "https://test.raphaelluckom.com/trails/check-in.md",
+      "memberMetadata": {
+        "date": "2020-12-06T19:35:57.011Z"
+      },
+      "memberKey": "trail:check-in"
+    }
+  ],
+  "trailsToReRender": [
+    "https://test.raphaelluckom.com/trails/trails.md"
+  ],
+  "dynamoPuts": [
+    {
+      "trailUri": "https://test.raphaelluckom.com/trails/trails.md",
+      "trailName": "trails",
+      "memberUri": "https://test.raphaelluckom.com/trails/posts.md",
+      "memberName": "posts",
+      "memberKey": "trail:posts",
+      "memberType": "trail",
+      "memberMetadata": {
+        "frontMatter": {
+          "title": "posts",
+          "color": "red"
+        },
+        "content": "\n",
+        "raw": "---\ntitle: \"posts\"\ncolor: \"red\"\n---\n"
+      }
+    }
+  ],
+  "dynamoDeletes": [
+    {
+      "memberKey": "trail:posts",
+      "trailName": "trails"
+    }
+  ],
+  "neighbors": {
+    "trails": {
+      "trailName": "trails",
+      "previousNeighbor": null,
+      "nextNeighbor": {
+        "trailName": "trails",
+        "memberType": "trail",
+        "trailUri": "https://test.raphaelluckom.com/trails/trails.md",
+        "memberName": "check-in",
+        "memberUri": "https://test.raphaelluckom.com/trails/check-in.md",
+        "memberMetadata": {
+          "date": "2020-12-06T19:35:57.011Z"
+        },
+        "memberKey": "trail:check-in"
+      }
+    }
+  }
+}
