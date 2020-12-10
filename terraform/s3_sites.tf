@@ -221,7 +221,7 @@ module "trails_updater" {
     },
     {
       file_name = "trails.js"
-      file_contents = file("./functions/npmscratch/trails.js")
+      file_contents = file("./functions/libraries/trails.js")
     },
     {
       file_name = "config.js"

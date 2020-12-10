@@ -30,7 +30,7 @@ module "slack_api_handler_lambda" {
     }, 
     {
       file_name = "utils.js"
-      file_contents = file("./functions/npmscratch/utils.js") 
+      file_contents = file("./functions/libraries/utils.js") 
     }, 
     {
       file_name = "config.js"

@@ -22,15 +22,15 @@ module "image_archive_lambda" {
     },
     {
       file_name = "dependencyHelpers.js"
-      file_contents = file("./functions/npmscratch/imageDependencyHelpers.js")
+      file_contents = file("./functions/libraries/imageDependencyHelpers.js")
     },
     {
       file_name = "utils.js"
-      file_contents = file("./functions/npmscratch/utils.js") 
+      file_contents = file("./functions/libraries/utils.js") 
     }, 
     {
       file_name = "config.js"
-      file_contents = templatefile("./functions/npmscratch/imagePipelineConfig.js",
+      file_contents = templatefile("./functions/libraries/imagePipelineConfig.js",
       {
       photo_input_bucket = module.media_input_bucket.bucket.id
       media_storage_bucket = module.photos_media_output_bucket.bucket.id
@@ -45,7 +45,7 @@ module "image_archive_lambda" {
     },
     {
       file_name = "helpers.js"
-      file_contents = file("./functions/npmscratch/helpers.js")
+      file_contents = file("./functions/libraries/helpers.js")
     },
   ]
   lambda_details = {
