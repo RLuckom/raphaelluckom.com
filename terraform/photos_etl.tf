@@ -18,19 +18,19 @@ module "image_archive_lambda" {
   source_contents = [
     {
       file_name = "index.js"
-      file_contents = file("./functions/templates/event_configured_donut_days/index.js")
+      file_contents = file("./functions/libraries/src/entrypoints/event_configured_donut_days.js")
     },
     {
       file_name = "dependencyHelpers.js"
-      file_contents = file("./functions/libraries/imageDependencyHelpers.js")
+      file_contents = file("./functions/libraries/src/imageDependencyHelpers.js")
     },
     {
       file_name = "utils.js"
-      file_contents = file("./functions/libraries/utils.js") 
+      file_contents = file("./functions/libraries/src/utils.js") 
     }, 
     {
       file_name = "config.js"
-      file_contents = templatefile("./functions/libraries/imagePipelineConfig.js",
+      file_contents = templatefile("./functions/libraries/src/imagePipelineConfig.js",
       {
       photo_input_bucket = module.media_input_bucket.bucket.id
       media_storage_bucket = module.photos_media_output_bucket.bucket.id
@@ -42,10 +42,6 @@ module "image_archive_lambda" {
       slack_credentials_parameterstore_key = var.slack_credentials_parameterstore_key
 
       })
-    },
-    {
-      file_name = "helpers.js"
-      file_contents = file("./functions/libraries/helpers.js")
     },
   ]
   lambda_details = {

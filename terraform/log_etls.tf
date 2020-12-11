@@ -46,7 +46,7 @@ module "archive_cloudfront_logs" {
   source_contents = [
     {
       file_name = "index.js"
-      file_contents = file("./functions/templates/log_exports/cloudfrontExports.js") 
+      file_contents = file("./functions/libraries/src/entrypoints/cloudfrontExports.js") 
     } 
   ]
   lambda_details = {
@@ -118,7 +118,7 @@ module "log_export_lambda" {
   source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   source_contents = [
     {
-      file_contents = templatefile("./functions/templates/log_exports/config.js", {
+      file_contents = templatefile("./functions/configs/log_exports/config.js", {
         log_export_destination_bucket = module.logs_partition_bucket.bucket.id
         partition_prefix = var.cloudwatch_partition_prefix
         athena_db = aws_glue_catalog_database.time_series_database.name
@@ -129,7 +129,7 @@ module "log_export_lambda" {
     },
     {
       file_name = "index.js"
-      file_contents = file("./functions/templates/log_exports/index.js") 
+      file_contents = file("./functions/libraries/src/entrypoints/cloudwatchExports.js") 
     } 
   ]
   lambda_details = {

@@ -72,15 +72,15 @@ module "web_api_handler_lambda" {
   source_contents = [
     {
       file_name = "index.js"
-      file_contents = file("./functions/templates/generic_donut_days/index.js") 
+      file_contents = file("./functions/libraries/src/entrypoints/generic_donut_days.js") 
     }, 
     {
       file_name = "helpers.js"
-      file_contents = file("./functions/templates/generic_donut_days/helpers.js") 
+      file_contents = file("./functions/libraries/src/helpers/donut_days_helpers.js") 
     }, 
     {
       file_name = "config.js"
-      file_contents = templatefile("./functions/templates/web_api/config.js",
+      file_contents = templatefile("./functions/configs/web_api/config.js",
       {
         table_name = module.posts_table.table.name
       }

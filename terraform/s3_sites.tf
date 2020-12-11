@@ -89,15 +89,15 @@ module "site_renderer" {
   source_contents = [
     {
       file_name = "index.js"
-      file_contents = file("./functions/templates/generic_donut_days/index.js") 
+      file_contents = file("./functions/libraries/src/entrypoints/generic_donut_days.js") 
     },
     {
       file_name = "helpers.js"
-      file_contents = file("./functions/templates/render_markdown_to_html/helpers.js")
+      file_contents = file("./functions/libraries/src/helpers/render_helpers.js")
     },
     {
       file_name = "config.js"
-      file_contents = templatefile("./functions/templates/render_markdown_to_html/config.js",
+      file_contents = templatefile("./functions/configs/render_markdown_to_html/config.js",
     {
       website_bucket = module.test_site.website_bucket.bucket.id
       domain_name = "test.raphaelluckom.com"
@@ -131,15 +131,15 @@ module "deletion_cleanup" {
   source_contents = [
     {
       file_name = "index.js"
-      file_contents = file("./functions/templates/generic_donut_days/index.js") 
+      file_contents = file("./functions/libraries/src/entrypoints/generic_donut_days.js") 
     },
     {
       file_name = "helpers.js"
-      file_contents = file("./functions/templates/render_markdown_to_html/helpers.js")
+      file_contents = file("./functions/libraries/src/helpers/render_helpers.js")
     },
     {
       file_name = "config.js"
-      file_contents = templatefile("./functions/templates/deletion_cleanup/config.js",
+      file_contents = templatefile("./functions/configs/deletion_cleanup/config.js",
     {
       website_bucket = module.test_site.website_bucket.bucket.id
       domain_name = "test.raphaelluckom.com"
@@ -213,19 +213,19 @@ module "trails_updater" {
   source_contents = [
     {
       file_name = "index.js"
-      file_contents = file("./functions/templates/generic_donut_days/index.js") 
+      file_contents = file("./functions/libraries/src/entrypoints/generic_donut_days.js") 
     },
     {
       file_name = "helpers.js"
-      file_contents = file("./functions/templates/render_markdown_to_html/helpers.js")
+      file_contents = file("./functions/libraries/src/helpers/render_helpers.js")
     },
     {
       file_name = "trails.js"
-      file_contents = file("./functions/libraries/trails.js")
+      file_contents = file("./functions/libraries/src/trails.js")
     },
     {
       file_name = "config.js"
-      file_contents = templatefile("./functions/templates/update_trails/config.js",
+      file_contents = templatefile("./functions/configs/update_trails/config.js",
     {
       table = module.trails_table.table.name,
       reverse_association_index = "reverseDependencyIndex"
@@ -263,11 +263,11 @@ module "two_way_resolver" {
   source_contents = [
     {
       file_name = "index.js"
-      file_contents = file("./functions/templates/generic_donut_days/index.js") 
+      file_contents = file("./functions/libraries/src/entrypoints/generic_donut_days.js") 
     },
     {
       file_name = "config.js"
-      file_contents = templatefile("./functions/templates/two_way_resolver/config.js",
+      file_contents = templatefile("./functions/configs/two_way_resolver/config.js",
     {
       table = module.trails_table.table.name
       forward_key_type = "trailName"
