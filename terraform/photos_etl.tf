@@ -22,7 +22,7 @@ module "image_archive_lambda" {
     },
     {
       file_name = "dependencyHelpers.js"
-      file_contents = file("./functions/libraries/src/imageDependencyHelpers.js")
+      file_contents = file("./functions/libraries/src/dependencyhelpers/imageDependencyHelpers.js")
     },
     {
       file_name = "utils.js"
@@ -30,7 +30,7 @@ module "image_archive_lambda" {
     }, 
     {
       file_name = "config.js"
-      file_contents = templatefile("./functions/libraries/src/imagePipelineConfig.js",
+      file_contents = templatefile("./functions/configs/imagePipelineConfig.js",
       {
       photo_input_bucket = module.media_input_bucket.bucket.id
       media_storage_bucket = module.photos_media_output_bucket.bucket.id
