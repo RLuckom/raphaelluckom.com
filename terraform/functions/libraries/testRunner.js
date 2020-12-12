@@ -17,9 +17,9 @@ function parsePost(s) {
     let content = ''
     for (r of t.slice(1)) {
       if (_.trim(r) === '*/') {
-        if (!started) {
-          started = true
-        }
+  if (!started) {
+    started = true
+  }
       } else {
         if (started) {
           content += r + "\n"
@@ -53,7 +53,9 @@ const env = {
   PATH: process.env.PATH,
 }
 try {
-  execSync(`${__dirname}/${jasminePath} ${fileDir}/${parsed.frontMatter.tests}`, {env}).stdout.toString('utf8')
+  const result = execSync(`${__dirname}/${jasminePath} ${fileDir}/${parsed.frontMatter.tests}`, {env})
+  console.log(result.toString('utf8'))
 } catch(e) {
+  console.log(e)
   console.log(e.stdout.toString('utf8'))
 }

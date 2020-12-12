@@ -22,7 +22,9 @@
     }
   ],
   "trailsToReRender": [
-    "https://test.raphaelluckom.com/trails/random.md"
+    "https://test.raphaelluckom.com/trails/random.md",
+    "https://test.raphaelluckom.com/trails/check-in.md",
+    "https://test.raphaelluckom.com/trails/posts.md"
   ],
   "dynamoPuts": [
     {

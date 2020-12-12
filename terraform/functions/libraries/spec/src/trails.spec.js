@@ -732,12 +732,35 @@ const arg4 = {
         }
     }
 }
+
+function stripDates(i) {
+  _.map(i.dynamoPuts, (t) => {
+    delete t.memberMetadata.date
+  })
+  _.map(i.neighborsToReRender, (t) => {
+    delete t.memberMetadata.date
+  })
+  _.map(i.neighbors, (t) => {
+    if (_.get(t, 'memberMetadata.date')) {
+      delete t.memberMetadata.date
+    }
+    if (_.get(t, 'nextNeighbor.memberMetadata.date')) {
+      delete t.nextNeighbor.memberMetadata.date
+    }
+    if (_.get(t, 'previousNeighbor.memberMetadata.date')) {
+      delete t.previousNeighbor.memberMetadata.date
+    }
+  })
+  return i
+}
+
 describe('trails test', () => {
 
   it('test1', () => {
-    const updates = trails.determineUpdates(arg1)
+    const updates = stripDates(trails.determineUpdates(arg1))
+    const expectedResults = stripDates(JSON.parse(fs.readFileSync(`${__dirname}/../fixtures/test1.json`)))
     //fs.writeFileSync(`${__dirname}/../fixtures/test1.json`, JSON.stringify(updates, null, 2))
-    expect(updates).toEqual(JSON.parse(fs.readFileSync(`${__dirname}/../fixtures/test1.json`)))
+    expect(updates).toEqual(expectedResults)
   })
 
   it('test2', () => {
@@ -754,7 +777,7 @@ describe('trails test', () => {
 
   it('test4', () => {
     const updates = trails.determineUpdates(arg4)
-    fs.writeFileSync(`${__dirname}/../fixtures/test4.json`, JSON.stringify(updates, null, 2))
+    //fs.writeFileSync(`${__dirname}/../fixtures/test4.json`, JSON.stringify(updates, null, 2))
     expect(updates).toEqual(JSON.parse(fs.readFileSync(`${__dirname}/../fixtures/test4.json`)))
   })
 
