@@ -1,5 +1,5 @@
-const siteDescription = require('../../../../../sites/test.raphaelluckom.com/site_description')
-const trails = require('../../../trails')
+const siteDescription = require('../../../../sites/test.raphaelluckom.com/site_description')
+const trails = require('../../src/trails')
 const _ = require('lodash')
 const fs = require('fs')
 

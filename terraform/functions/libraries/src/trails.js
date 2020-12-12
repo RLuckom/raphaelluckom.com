@@ -1,3 +1,8 @@
+/*
+layers:
+  - donut_days
+tests: ../spec/src/trails.spec.js
+*/
 const _ = require('lodash')
 const urlTemplate = require('url-template')
 const TRAIL_TYPE = 'trail'
