@@ -1,5 +1,5 @@
 const _ = require('lodash')
-const { formatters, parsePost, siteDescriptionDependency } = require('./helpers.js')
+const { formatters, parsePost, siteDescriptionDependency } = require('./helpers.js').render
 
 module.exports = {
   stages: {
@@ -22,7 +22,7 @@ module.exports = {
       index: 1,
       transformers: {
         metadata: {
-          helper: 'identifyItem',
+          helper: 'render.identifyItem',
           params: {
             siteDescription: {ref: 'siteDescription.results.siteDescription'}, 
             resourcePath: {ref: 'siteDescription.vars.key'},
@@ -51,7 +51,7 @@ module.exports = {
           formatter: formatters.singleValue.unwrapHttpResponse,
           params: {
             uri: {
-              helper: 'expandUrlTemplate',
+              helper: 'render.expandUrlTemplate',
               params: {
                 templateString: { ref: 'item.vars.metadata.typeDef.formats.html.render.template' },
                 templateParams: {ref: 'siteDescription.results.siteDescription.siteDetails'}, 
@@ -116,7 +116,7 @@ module.exports = {
       index: 5,
       transformers: {
         accumulatorUrls: {
-          helper: 'accumulatorUrls',
+          helper: 'render.accumulatorUrls',
           params: {
             siteDetails: {ref: 'siteDescription.results.siteDescription.siteDetails'}, 
             item: {ref: 'item.vars.metadata'},
@@ -128,7 +128,7 @@ module.exports = {
           action: 'genericApi',
           condition: { ref: 'stage.accumulatorUrls.urls.length' },
           formatter: {
-            helper: 'objectBuilder',
+            helper: 'render.objectBuilder',
             params: {
               preformatter: formatters.singleValue.unwrapJsonHttpResponseArray,
               keys: { ref: 'stage.accumulatorUrls.types' },
@@ -148,7 +148,7 @@ module.exports = {
       index: 6,
       transformers: {
         renderedFormats: {
-          helper: 'render',
+          helper: 'render.render',
           params: {
             dependencies: {
               all: {

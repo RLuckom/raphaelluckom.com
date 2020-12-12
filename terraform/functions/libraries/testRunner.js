@@ -52,7 +52,6 @@ const env = {
   NODE_PATH: makeNodePath(parsed.frontMatter.layers),
   PATH: process.env.PATH,
 }
-console.log(env)
 try {
   execSync(`${__dirname}/${jasminePath} ${fileDir}/${parsed.frontMatter.tests}`, {env}).stdout.toString('utf8')
 } catch(e) {

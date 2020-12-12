@@ -93,7 +93,11 @@ module "site_renderer" {
     },
     {
       file_name = "helpers.js"
-      file_contents = file("./functions/libraries/src/helpers/render_helpers.js")
+      file_contents = file("./functions/libraries/src/helpers.js")
+    },
+    {
+      file_name = "helpers/render.js"
+      file_contents = file("./functions/libraries/src/helpers/render.js")
     },
     {
       file_name = "config.js"
@@ -135,7 +139,7 @@ module "deletion_cleanup" {
     },
     {
       file_name = "helpers.js"
-      file_contents = file("./functions/libraries/src/helpers/render_helpers.js")
+      file_contents = file("./functions/libraries/src/helpers/render.js")
     },
     {
       file_name = "config.js"
@@ -217,7 +221,7 @@ module "trails_updater" {
     },
     {
       file_name = "helpers.js"
-      file_contents = file("./functions/libraries/src/helpers/render_helpers.js")
+      file_contents = file("./functions/libraries/src/helpers/render.js")
     },
     {
       file_name = "trails.js"

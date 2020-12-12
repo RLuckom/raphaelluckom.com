@@ -76,7 +76,7 @@ module "web_api_handler_lambda" {
     }, 
     {
       file_name = "helpers.js"
-      file_contents = file("./functions/libraries/src/helpers/donut_days_helpers.js") 
+      file_contents = file("./functions/libraries/src/helpers/donut_days.js") 
     }, 
     {
       file_name = "config.js"
