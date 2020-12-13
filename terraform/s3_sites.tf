@@ -92,10 +92,6 @@ module "site_renderer" {
       file_contents = file("./functions/libraries/src/entrypoints/generic_donut_days.js") 
     },
     {
-      file_name = "helpers.js"
-      file_contents = file("./functions/libraries/src/helpers.js")
-    },
-    {
       file_name = "helpers/render.js"
       file_contents = file("./functions/libraries/src/helpers/render.js")
     },

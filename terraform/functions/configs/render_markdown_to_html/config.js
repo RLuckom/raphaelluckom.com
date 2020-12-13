@@ -1,5 +1,5 @@
 const _ = require('lodash')
-const { formatters, parsePost, siteDescriptionDependency } = require('./helpers.js').render
+const { formatters, parsePost, siteDescriptionDependency } = require('./helpers/render')
 
 module.exports = {
   stages: {
