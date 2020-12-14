@@ -1,6 +1,7 @@
 const _ = require('lodash')
 const urlTemplate = require('url-template')
-const {formatters, siteDescriptionDependency } = require('./helpers')
+const { siteDescriptionDependency } = require('./helpers/render')
+const formatters = require('./helpers/formatters')
 const trails = require('./trails.js')
 
 module.exports = {
@@ -25,7 +26,7 @@ module.exports = {
       index: 1,
       transformers: {
         trails: {
-          helper: 'expandUrlTemplateWithNames',
+          helper: 'idUtils.expandUrlTemplateWithNames',
           params: {
             templateString: {ref: 'siteDescription.results.siteDescription.${self_type}.setTemplate'},
             siteDetails: {ref: 'siteDescription.results.siteDescription.siteDetails'},
@@ -33,7 +34,7 @@ module.exports = {
           }
         },
         existingMemberships: {
-          helper: 'expandUrlTemplateWithName',
+          helper: 'idUtils.expandUrlTemplateWithName',
           params: {
             templateString: {ref: 'siteDescription.results.siteDescription.${self_type}.membersTemplate'},
             siteDetails: {ref: 'siteDescription.results.siteDescription.siteDetails'},
@@ -42,7 +43,7 @@ module.exports = {
           }
         },
         existingMembers: {
-          helper: 'expandUrlTemplateWithName',
+          helper: 'idUtils.expandUrlTemplateWithName',
           condition: {
             matches: {
               a: {ref: 'event.item.type'},
@@ -66,6 +67,7 @@ module.exports = {
           }
         },
         existingMemberships: {
+          condition: { ref: 'stage.existingMemberships'},
           action: 'genericApi',
           formatter: formatters.singleValue.unwrapJsonHttpResponse,
           params: {

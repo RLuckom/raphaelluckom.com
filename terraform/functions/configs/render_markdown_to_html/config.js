@@ -1,5 +1,6 @@
 const _ = require('lodash')
-const { formatters, parsePost, siteDescriptionDependency } = require('./helpers/render')
+const { parsePost, siteDescriptionDependency } = require('./helpers/render')
+const formatters = require('./helpers/formatters')
 
 module.exports = {
   stages: {
@@ -22,7 +23,7 @@ module.exports = {
       index: 1,
       transformers: {
         metadata: {
-          helper: 'render.identifyItem',
+          helper: 'idUtils.identifyItem',
           params: {
             siteDescription: {ref: 'siteDescription.results.siteDescription'}, 
             resourcePath: {ref: 'siteDescription.vars.key'},
@@ -51,7 +52,7 @@ module.exports = {
           formatter: formatters.singleValue.unwrapHttpResponse,
           params: {
             uri: {
-              helper: 'render.expandUrlTemplate',
+              helper: 'idUtils.expandUrlTemplate',
               params: {
                 templateString: { ref: 'item.vars.metadata.typeDef.formats.html.render.template' },
                 templateParams: {ref: 'siteDescription.results.siteDescription.siteDetails'}, 
@@ -116,7 +117,7 @@ module.exports = {
       index: 5,
       transformers: {
         accumulatorUrls: {
-          helper: 'render.accumulatorUrls',
+          helper: 'idUtils.accumulatorUrls',
           params: {
             siteDetails: {ref: 'siteDescription.results.siteDescription.siteDetails'}, 
             item: {ref: 'item.vars.metadata'},
@@ -128,7 +129,7 @@ module.exports = {
           action: 'genericApi',
           condition: { ref: 'stage.accumulatorUrls.urls.length' },
           formatter: {
-            helper: 'render.objectBuilder',
+            helper: 'formatters.objectBuilder',
             params: {
               preformatter: formatters.singleValue.unwrapJsonHttpResponseArray,
               keys: { ref: 'stage.accumulatorUrls.types' },

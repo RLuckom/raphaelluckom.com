@@ -96,6 +96,14 @@ module "site_renderer" {
       file_contents = file("./functions/libraries/src/helpers/render.js")
     },
     {
+      file_name = "helpers/idUtils.js"
+      file_contents = file("./functions/libraries/src/helpers/idUtils.js")
+    },
+    {
+      file_name = "helpers/formatters.js"
+      file_contents = file("./functions/libraries/src/formatters.js")
+    },
+    {
       file_name = "config.js"
       file_contents = templatefile("./functions/configs/render_markdown_to_html/config.js",
     {
@@ -134,7 +142,11 @@ module "deletion_cleanup" {
       file_contents = file("./functions/libraries/src/entrypoints/generic_donut_days.js") 
     },
     {
-      file_name = "helpers.js"
+      file_name = "helpers/idUtils.js"
+      file_contents = file("./functions/libraries/src/helpers/idUtils.js")
+    },
+    {
+      file_name = "helpers/render.js"
       file_contents = file("./functions/libraries/src/helpers/render.js")
     },
     {
@@ -216,8 +228,16 @@ module "trails_updater" {
       file_contents = file("./functions/libraries/src/entrypoints/generic_donut_days.js") 
     },
     {
-      file_name = "helpers.js"
+      file_name = "helpers/render.js"
       file_contents = file("./functions/libraries/src/helpers/render.js")
+    },
+    {
+      file_name = "helpers/formatters.js"
+      file_contents = file("./functions/libraries/src/formatters.js")
+    },
+    {
+      file_name = "helpers/idUtils.js"
+      file_contents = file("./functions/libraries/src/helpers/idUtils.js")
     },
     {
       file_name = "trails.js"

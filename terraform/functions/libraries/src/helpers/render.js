@@ -2,8 +2,9 @@ const _ = require('lodash')
 const yaml = require('js-yaml')
 const moment = require('moment')
 const hljs = require('highlight.js');
-const urlTemplate = require('url-template')
+const { urlToPath, expandUrlTemplateWithName } = require('./idUtils')
 const { Feed } = require('feed')
+const formatters = require('./formatters')
 
 const mdr = require('markdown-it')({
   html: true,
@@ -16,86 +17,6 @@ const mdr = require('markdown-it')({
     return ''; // use external default escaping
   }
 }).use(require('markdown-it-footnote'))
-
-function unwrap(params) { 
-  return _.reduce(params, (a, v, k) => {
-    a[k] = v[0]
-    return a
-  }, {})
-}
-
-function unwrapHttpResponse(params) {
-  return _.reduce(unwrap(params), (a, v, k) => {
-    a[k] = v.body
-    return a
-  }, {})
-}
-
-function unwrapJsonHttpResponse(params) {
-  return _.reduce(unwrap(params), (a, v, k) => {
-    a[k] = JSON.parse(v.body)
-    return a
-  }, {})
-}
-
-function unwrapFunctionPayload(params) {
-  return _.reduce(unwrap(params), (a, v, k) => {
-    a[k] = JSON.parse(v.Payload)
-    return a
-  }, {})
-}
-
-function firstKey(params) {
-  return params[_.keys(params)[0]]
-}
-
-function unwrapHttpResponseArray(params) {
-  return _.reduce(params, (a, v, k) => {
-    a[k] = _.map(v, 'body')
-    return a
-  }, {})
-}
-
-function unwrapJsonHttpResponseArray(params) {
-  return _.reduce(params, (a, v, k) => {
-    a[k] = _.map(v, (i) => JSON.parse(i.body))
-    return a
-  }, {})
-}
-
-function unwrapFunctionPayloadArray(params) {
-  return _.reduce(params, (a, v, k) => {
-    a[k] = _.map(v, (i) => JSON.parse(i))
-    return a
-  }, {})
-}
-
-function only(f) {
-  return function(params) {
-    return firstKey(f(params))
-  }
-}
-
-const formatters = {
-  singleValue: {
-    unwrap: only(unwrap),
-    unwrapHttpResponse: only(unwrapHttpResponse),
-    unwrapJsonHttpResponse: only(unwrapJsonHttpResponse),
-    unwrapJsonHttpResponseArray: only(unwrapJsonHttpResponseArray),
-    unwrapHttpResponseArray: only(unwrapHttpResponseArray),
-    unwrapFunctionPayload: only(unwrapFunctionPayload),
-    unwrapFunctionPayloadArray: only(unwrapFunctionPayloadArray),
-  },
-  multiValue: {
-    unwrap,
-    unwrapHttpResponse,
-    unwrapJsonHttpResponse,
-    unwrapFunctionPayload,
-    unwrapHttpResponseArray,
-    unwrapJsonHttpResponseArray,
-    unwrapFunctionPayloadArray,
-  },
-}
 
 //TODO: make this also accept toml, json front matter
 function parsePost(s) {
@@ -128,59 +49,6 @@ function parsePost(s) {
     }
   } else {
     return { raw: s }
-  }
-}
-
-function urlToPath(url, pathReString) {
-  let resourcePath = url
-  const pathRe = new RegExp(pathReString)
-  if (pathRe.test(resourcePath)) {
-    resourcePath = pathRe.exec(resourcePath)[1]
-  }
-  return resourcePath
-}
-
-function identifyItem({resourcePath, siteDescription, selectionPath}) {
-  if (!selectionPath) {
-    selectionPath = ['relations']
-  }
-  resourcePath = urlToPath(resourcePath, _.get(siteDescription, 'siteDetails.pathRegex')) || resourcePath
-  console.log(resourcePath)
-  for (key in _.get(siteDescription, selectionPath)) {
-    const reString = _.get(siteDescription, _.concat(selectionPath, [key, 'pathNameRegex']))
-    if (key !== 'meta' && reString) {
-      const re = new RegExp(reString)
-      if (re.test(resourcePath)) {
-        console.log('tested')
-        const name = re.exec(resourcePath)[1]
-        selectionPath.push(key)
-        const typeDef = _.get(siteDescription, selectionPath)
-        const uriTemplateArgs = {...siteDescription.siteDetails, ...{name}}
-        const formatUrls = _.reduce(_.get(typeDef, 'formats'), (a, v, k) => {
-          const uriTemplateString = v.idTemplate
-          if (uriTemplateString) {
-            const formatUri = urlTemplate.parse(uriTemplateString).expand(uriTemplateArgs)
-            a[k] = {
-              uri: formatUri,
-              path: urlToPath(formatUri, _.get(siteDescription, 'siteDetails.pathRegex'))
-            }
-          }
-          return a
-        }, {})
-        return {
-          type: key,
-          typeDef,
-          name,
-          formatUrls,
-          uri: urlTemplate.parse(_.get(siteDescription, _.concat(selectionPath, ['idTemplate']))).expand(uriTemplateArgs),
-          path: resourcePath
-        }
-      }
-    }
-  }
-  if (_.get(siteDescription, _.concat(selectionPath, ['meta']))) {
-    selectionPath.push('meta')
-    return identifyItem({resourcePath, siteDescription, selectionPath})
   }
 }
 
@@ -285,56 +153,6 @@ function render({siteDetails, item, dependencies}) {
   return renderedFormats
 }
 
-function expandUrlTemplate({templateString, templateParams}) {
-  return urlTemplate.parse(templateString).expand(templateParams)
-}
-
-function expandUrlTemplateWithNames({templateString, siteDetails, names}) {
-  const template = urlTemplate.parse(templateString)
-  return _.map(names, (v, k) => {
-    return template.expand({...siteDetails, ...{name: encodeURIComponent(v)}})
-  })
-}
-
-function expandUrlTemplatesWithName({templateStrings, siteDetails, name}) {
-  return _.map(templateStrings, (templateString, k) => {
-    const template = urlTemplate.parse(templateString)
-    return template.expand({...siteDetails, ...{name: encodeURIComponent(name)}})
-  })
-}
-
-function expandUrlTemplateWithName({templateString, siteDetails, name, type}) {
-  const params = {...siteDetails, ...{name: encodeURIComponent(name)}}
-  if (type) {
-    params.type = encodeURIComponent(type)
-  }
-  return urlTemplate.parse(templateString).expand(params)
-}
-
-function accumulatorUrls({siteDetails, item}) {
-  return _.reduce(item.typeDef.accumulators, (a, {idTemplate}, type) => {
-    a.urls.push( expandUrlTemplateWithName({templateString: idTemplate, siteDetails, name: item.name}))
-    a.types.push(type)
-    return a
-  }, {urls: [], types: []})
-}
-
-function objectBuilder({keys, preformatter, defaultValue}) {
-  try { 
-    return (array) => {
-      if (_.isFunction(preformatter)) {
-        array = preformatter(array)
-      }
-      return _.zipObject(keys, array)
-    }
-  } catch(e) {
-    if (defaultValue) {
-      return defaultValue
-    }
-    throw e
-  }
-}
-
 function siteDescriptionDependency(domainName, siteDescriptionPath) {
   return {
     action: 'exploranda',
@@ -352,15 +170,7 @@ function siteDescriptionDependency(domainName, siteDescriptionPath) {
 }
 
 module.exports = {
-  formatters,
-  accumulatorUrls,
   siteDescriptionDependency,
-  expandUrlTemplateWithNames,
-  expandUrlTemplatesWithName,
-  expandUrlTemplateWithName,
-  objectBuilder,
   parsePost,
-  identifyItem,
   render,
-  expandUrlTemplate,
 }
