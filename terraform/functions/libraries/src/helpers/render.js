@@ -94,7 +94,6 @@ function renderFeed(feedType, {siteDetails, item, dependencies}) {
       contributor: [],
       image: '',
     }
-    console.log(feedItem)
     if (feedItem.title) {
       feed.addItem(feedItem)
     }

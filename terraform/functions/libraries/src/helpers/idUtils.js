@@ -16,13 +16,11 @@ function identifyItem({resourcePath, siteDescription, selectionPath}) {
     selectionPath = ['relations']
   }
   resourcePath = urlToPath(resourcePath, _.get(siteDescription, 'siteDetails.pathRegex')) || resourcePath
-  console.log(resourcePath)
   for (key in _.get(siteDescription, selectionPath)) {
     const reString = _.get(siteDescription, _.concat(selectionPath, [key, 'pathNameRegex']))
     if (key !== 'meta' && reString) {
       const re = new RegExp(reString)
       if (re.test(resourcePath)) {
-        console.log('tested')
         const name = re.exec(resourcePath)[1]
         selectionPath.push(key)
         const typeDef = _.get(siteDescription, selectionPath)
