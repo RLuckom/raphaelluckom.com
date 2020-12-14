@@ -13,7 +13,7 @@
     <p class="subtitle">
     </p>
 <section>
-<% _.forEach(meta.trails.members, function(member) { %><div class="trail-member"><h3><a href="<%- member.memberUri %>"><%- member.memberMetadata.title %></a></h3><p><%- member.memberMetadata.author %></p><p><%- member.memberMetadata.date %></p></div><% }); %>
+<% _.forEach(meta.trails.members, function(member) { %><div class="trail-member"><h3><a href="<%- _.get(identifyUri(member.memberUri), 'browserUrl') %>"><%- member.memberMetadata.title %></a></h3><p><%- member.memberMetadata.author %></p><p><%- member.memberMetadata.date %></p></div><% }); %>
 </section>
 </article>
   </body>

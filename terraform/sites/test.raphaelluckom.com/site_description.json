@@ -28,6 +28,7 @@
     "post": {
       "relation" : "{relationEndpoint}/post",
       "idTemplate": "https://{domainName}/posts/{name}.md",
+      "browserUrlTemplate": "https://{domainName}/posts/{name}.html",
       "pathNameRegex": "^/?posts/([^/]*).md$",
       "meta": {
         "trail": {
@@ -54,6 +55,7 @@
       "trail": {
         "relation" : "{+relationEndpoint}/meta/trail",
         "idTemplate": "https://{domainName}/trails/{name}.md",
+        "browserUrlTemplate": "https://{domainName}/trails/{name}.html",
         "pathNameRegex": "^/?trails/([^/]*).md$",
         "setTemplate": "{+relationEndpoint}/trails?keyType=trailName&keyId={name}",
         "membersTemplate": "{+relationEndpoint}/trails?keyType=memberKey&keyId={type}:{name}",

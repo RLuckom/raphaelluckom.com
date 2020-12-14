@@ -2,7 +2,7 @@ const _ = require('lodash')
 const yaml = require('js-yaml')
 const moment = require('moment')
 const hljs = require('highlight.js');
-const { urlToPath, expandUrlTemplateWithName } = require('./idUtils')
+const { urlToPath, expandUrlTemplateWithName, identifyUriBuilder } = require('./idUtils')
 const { Feed } = require('feed')
 const formatters = require('./formatters')
 
@@ -52,8 +52,8 @@ function parsePost(s) {
   }
 }
 
-function renderHTML({siteDetails, item, dependencies}) {
-  return _.template(dependencies.template.toString())({ item: { ...dependencies.doc.frontMatter,  ...{content: mdr.render(dependencies.doc.content)}}, meta: dependencies.trails, siteDetails})
+function renderHTML({siteDetails, item, dependencies, identifyUri}) {
+  return _.template(dependencies.template.toString(), {imports: {identifyUri}})({ item: { ...dependencies.doc.frontMatter,  ...{content: mdr.render(dependencies.doc.content)}}, meta: dependencies.trails, siteDetails})
 }
 
 function renderFeed(feedType, {siteDetails, item, dependencies}) {
@@ -128,8 +128,10 @@ const renderers = {
   },
 }
 
-function render({siteDetails, item, dependencies}) {
+function render({siteDescription, item, dependencies}) {
   const targetFormats = item.typeDef.formats
+  const { siteDetails } = siteDescription
+  const identifyUri = identifyUriBuilder(siteDescription)
   const renderedFormats = {
     content: [],
     path: [],
@@ -141,7 +143,7 @@ function render({siteDetails, item, dependencies}) {
       try {
         const url = expandUrlTemplateWithName({templateString: idTemplate, siteDetails, name: item.name})
         const path = urlToPath(url, siteDetails.pathRegex)
-        const content = renderers[formatName].renderFunction({siteDetails, item, dependencies})
+        const content = renderers[formatName].renderFunction({siteDetails, item, dependencies, identifyUri})
         renderedFormats.content.push(content)
         renderedFormats.path.push(path)
         renderedFormats.ContentType.push(renderers[formatName].ContentType)
@@ -153,24 +155,7 @@ function render({siteDetails, item, dependencies}) {
   return renderedFormats
 }
 
-function siteDescriptionDependency(domainName, siteDescriptionPath) {
-  return {
-    action: 'exploranda',
-    formatter: formatters.singleValue.unwrapHttpResponse,
-    params: {
-      accessSchema: {
-        value: {
-          dataSource: 'GENERIC_API',
-          host: domainName,
-          path: siteDescriptionPath,
-        }
-      },
-    },
-  }
-}
-
 module.exports = {
-  siteDescriptionDependency,
   parsePost,
   render,
 }

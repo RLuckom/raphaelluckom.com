@@ -25,5 +25,10 @@
 <%= item.content %>
 </article>
 </section>
+<section id="trails">
+<% _.forEach(_.get(siteDetails, 'formats.html.nav.links'), function({name, target}) { 
+    %><div class="nav-link-ctr"><a class="nav-link" href="<%- target %>"><%- name  %></a></div><% 
+}); %>
+</section>
   </body>
 </html>

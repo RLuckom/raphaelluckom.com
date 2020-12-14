@@ -1,6 +1,6 @@
 const _ = require('lodash')
 const urlTemplate = require('url-template')
-const { siteDescriptionDependency } = require('./helpers/render')
+const { siteDescriptionDependency } = require('./helpers/idUtils')
 const formatters = require('./helpers/formatters')
 const trails = require('./trails.js')
 

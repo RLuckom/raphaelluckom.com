@@ -1,5 +1,6 @@
 const _ = require('lodash')
-const { parsePost, siteDescriptionDependency } = require('./helpers/render')
+const { parsePost } = require('./helpers/render')
+const { siteDescriptionDependency } = require('./helpers/idUtils')
 const formatters = require('./helpers/formatters')
 
 module.exports = {
@@ -160,7 +161,7 @@ module.exports = {
               },
             },
             item: {ref: 'item.vars.metadata'},
-            siteDetails: {ref: 'siteDescription.results.siteDescription.siteDetails'}, 
+            siteDescription: {ref: 'siteDescription.results.siteDescription'}, 
           },
         },
       },

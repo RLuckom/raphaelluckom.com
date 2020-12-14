@@ -1,5 +1,6 @@
 const _ = require('lodash')
 const urlTemplate = require('url-template')
+const formatters = require('./formatters')
 
 function urlToPath(url, pathReString) {
   let resourcePath = url
@@ -60,6 +61,12 @@ function identifyItem({resourcePath, siteDescription, selectionPath}) {
   }
 }
 
+function identifyUriBuilder(siteDescription) {
+  return function identifyUri(uri) {
+    return identifyItem({resourcePath: uri, siteDescription})
+  }
+}
+
 function expandUrlTemplate({templateString, templateParams}) {
   return urlTemplate.parse(templateString).expand(templateParams)
 }
@@ -94,8 +101,26 @@ function accumulatorUrls({siteDetails, item}) {
   }, {urls: [], types: []})
 }
 
+function siteDescriptionDependency(domainName, siteDescriptionPath) {
+  return {
+    action: 'exploranda',
+    formatter: formatters.singleValue.unwrapHttpResponse,
+    params: {
+      accessSchema: {
+        value: {
+          dataSource: 'GENERIC_API',
+          host: domainName,
+          path: siteDescriptionPath,
+        }
+      },
+    },
+  }
+}
+
 module.exports = {
+  siteDescriptionDependency,
   identifyItem,
+  identifyUriBuilder,
   urlToPath,
   accumulatorUrls,
   expandUrlTemplateWithNames,
