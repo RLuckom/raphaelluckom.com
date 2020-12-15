@@ -26,9 +26,16 @@
 </article>
 </section>
 <section id="trails">
-<% _.forEach(_.get(siteDetails, 'formats.html.nav.links'), function({name, target}) { 
-    %><div class="nav-link-ctr"><a class="nav-link" href="<%- target %>"><%- name  %></a></div><% 
-}); %>
+<% _.forEach(meta.trails.neighbors, function({trailName, previousNeighbor, nextNeighbor}, trailUri) { 
+%><div class="trail-links"><%
+  if (previousNeighbor) {
+   %><a href="<%- _.get(identifyUri(previousNeighbor.memberUri), 'browserUrl') %>"><%- _.get(previousNeighbor, "memberMetadata.frontMatter.title") %></a><% 
+} 
+%><a href="<%- _.get(identifyUri(trailUri), 'browserUrl') %>"><%- trailName %></a><% 
+if (nextNeighbor) {
+%><a href="<%- _.get(identifyUri(nextNeighbor.memberUri), 'browserUrl') %>"><%- _.get(nextNeighbor, "memberMetadata.frontMatter.title") %></a><%
+}
+%><% }) %>
 </section>
   </body>
 </html>
