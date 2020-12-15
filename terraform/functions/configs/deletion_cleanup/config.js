@@ -22,7 +22,7 @@ module.exports = {
       index: 1,
       transformers: {
         metadata: {
-          helper: 'identifyItem',
+          helper: 'idUtils.identifyItem',
           params: {
             siteDescription: {ref: 'siteDescription.results.siteDescription'}, 
             resourcePath: {ref: 'siteDescription.vars.key'},
