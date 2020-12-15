@@ -53,7 +53,10 @@ function parsePost(s) {
 }
 
 function renderHTML({siteDetails, item, dependencies, identifyUri}) {
-  return _.template(dependencies.template.toString(), {imports: {identifyUri}})({ item: { ...dependencies.doc.frontMatter,  ...{content: mdr.render(dependencies.doc.content)}}, meta: dependencies.trails, siteDetails})
+  const rawContent = _.get(dependencies, 'doc.content')
+  const content = rawContent ? mdr.render(rawContent) : undefined
+  const frontMatter = _.get(dependencies, 'doc.frontMatter') || {}
+  return _.template(dependencies.template.toString(), {imports: {identifyUri, formatDate: (n) => moment(n).format("MMM D Y hh:mma")}})({ item: { ...frontMatter,  content }, meta: dependencies.trails, siteDetails})
 }
 
 function renderFeed(feedType, {siteDetails, item, dependencies}) {

@@ -45,7 +45,6 @@ module.exports = {
       },
     },
     renderDependencies: {
-      condition: { ref: 'item.results.parsed' },
       index: 3,
       dependencies: {
         template: {
@@ -64,7 +63,6 @@ module.exports = {
       },
     },
     meta: {
-      condition: { ref: 'item.results.parsed' },
       index: 4,
       transformers: {
         trailNames: {
@@ -82,6 +80,7 @@ module.exports = {
       },
       dependencies: {
         trails: {
+          condition: { ref: 'stage.trailNames.length' },
           action: 'DD',
           formatter: formatters.singleValue.unwrapFunctionPayload,
           params: {
@@ -114,7 +113,6 @@ module.exports = {
       }
     },
     accumulators: {
-      condition: { ref: 'item.results.parsed' },
       index: 5,
       transformers: {
         accumulatorUrls: {
@@ -146,7 +144,6 @@ module.exports = {
       }
     },
     postFormats: {
-      condition: { ref: 'item.results.parsed' },
       index: 6,
       transformers: {
         renderedFormats: {
