@@ -146,8 +146,8 @@ module "deletion_cleanup" {
       file_contents = file("./functions/libraries/src/helpers/idUtils.js")
     },
     {
-      file_name = "helpers/render.js"
-      file_contents = file("./functions/libraries/src/helpers/render.js")
+      file_name = "helpers/formatters.js"
+      file_contents = file("./functions/libraries/src/formatters.js")
     },
     {
       file_name = "config.js"
@@ -226,10 +226,6 @@ module "trails_updater" {
     {
       file_name = "index.js"
       file_contents = file("./functions/libraries/src/entrypoints/generic_donut_days.js") 
-    },
-    {
-      file_name = "helpers/render.js"
-      file_contents = file("./functions/libraries/src/helpers/render.js")
     },
     {
       file_name = "helpers/formatters.js"

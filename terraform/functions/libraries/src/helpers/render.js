@@ -151,6 +151,20 @@ function render({siteDescription, item, dependencies}) {
       }
     }
   })
+  _.each(siteDetails.formats, ({sections}, formatName) => {
+    _.each(sections, ({renderFrom, renderTo, sectionTitle}) => {
+      if (renderFrom === item.uri) {
+        try {
+          const content = renderers[formatName].renderFunction({siteDetails, item, dependencies, identifyUri})
+          renderedFormats.content.push(content)
+          renderedFormats.path.push(_.trimStart(renderTo, '/'))
+          renderedFormats.ContentType.push(renderers[formatName].ContentType)
+        } catch(e) {
+          console.error(e)
+        }
+      }
+    })
+  })
   return renderedFormats
 }
 

@@ -1,5 +1,5 @@
 const _ = require('lodash')
-const { siteDescriptionDependency } = require('./helpers.js')
+const { siteDescriptionDependency } = require('./helpers/idUtils')
 
 module.exports = {
   stages: {
