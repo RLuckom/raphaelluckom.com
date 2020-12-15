@@ -8,6 +8,14 @@
     </title>
   </head>
   <body>
+<section id="nav">
+<h1><%= siteDetails.title %></h1>
+<div class="nav-links">
+<% _.forEach(_.get(siteDetails, 'formats.html.nav.links'), function({name, target}) { 
+    %><div class="nav-link-ctr"><a class="nav-link" href="<%- target %>"><%- name  %></a></div><% 
+}); %>
+</div>
+</section>
 <article id="content">
   <h1><%= item.name %> </h1>
     <p class="subtitle">
