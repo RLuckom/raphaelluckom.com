@@ -1,6 +1,7 @@
 {
   "siteDetails": {
     "domainName": "test.raphaelluckom.com",
+    "browserRoot": "https://test.raphaelluckom.com",
     "title": "Raphael Luckom's Test Site",
     "maintainer": "Raphael Luckom",
     "maintainerEmail": "raphaelluckom@gmail.com",

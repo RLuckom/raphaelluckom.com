@@ -88,7 +88,7 @@ function determineUpdates({trails, existingMemberships, existingMembers, siteDes
       newList.push(trailMember)
       updates.trailsToReRender.push(trailUriTemplate.expand({...siteDescription.siteDetails, ...{name: trailName}}))
       updates.dynamoPuts.push(trailMember)
-      const sortedNewList = _.sortBy(newList, ['memberMetadata', 'date'])
+      const sortedNewList = sortTrailMembers(newList)
       const newIndex = sortedNewList.findIndex((i) => i.memberUri === item.id && _.isEqual(i.memberMetadata, item.metadata))
       if (previousIndex !== -1 && newIndex !== previousIndex) {
         updates.neighborsToReRender.push(members[previousIndex + 1])
@@ -119,4 +119,8 @@ function determineUpdates({trails, existingMemberships, existingMembers, siteDes
   return updates
 } 
 
-module.exports = {determineUpdates, checkForEmptyLists}
+function sortTrailMembers(members) {
+  return _(members).sortBy((m) => _.get(m, 'memberMetadata.date') || _.get(m, 'memberMetadata.frontMatter.date')).reverse().value()
+}
+
+module.exports = {determineUpdates, checkForEmptyLists, sortTrailMembers}

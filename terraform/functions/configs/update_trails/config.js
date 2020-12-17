@@ -77,7 +77,13 @@ module.exports = {
         existingMembers: {
           action: 'genericApi',
           condition: { ref: 'stage.existingMembers'},
-          formatter: formatters.singleValue.unwrapJsonHttpResponse,
+          formatter: {
+            helper: 'formatters.multiStepFomatter',
+            params: {
+              preformatter: formatters.singleValue.unwrapJsonHttpResponse,
+              formatter: trails.sortTrailMembers 
+            },
+          },
           params: {
             url: { ref: 'stage.existingMembers'}
           }
@@ -100,7 +106,7 @@ module.exports = {
             func: {value: ({trailUrls, trailNames, trailArrays}) => {
               return _.reduce(trailUrls, (a, trailUrl, index) => {
                 a[trailUrl] = {
-                  members: _.sortBy(trailArrays[index], ['metadata', 'frontMatter', 'date']),
+                  members: trails.sortTrailMembers(trailArrays[index]),
                   trailName: trailNames[index]
                 }
                 return a

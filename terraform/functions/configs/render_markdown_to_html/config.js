@@ -132,7 +132,7 @@ module.exports = {
             params: {
               preformatter: formatters.singleValue.unwrapJsonHttpResponseArray,
               keys: { ref: 'stage.accumulatorUrls.types' },
-              default: { value: null },
+              defaultValue: { value: null },
             }
           },
           params: {

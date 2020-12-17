@@ -79,6 +79,25 @@ function objectBuilder({keys, preformatter, defaultValue}) {
   }
 }
 
+function multiStepFomatter({preformatter, formatter, defaultValue}) {
+  try { 
+    return (result) => {
+      if (_.isFunction(preformatter)) {
+        result = preformatter(result)
+      }
+      if (_.isFunction(formatter)) {
+        result = formatter(result)
+      }
+      return result
+    }
+  } catch(e) {
+    if (defaultValue) {
+      return defaultValue
+    }
+    throw e
+  }
+}
+
 module.exports = {
   singleValue: {
     unwrap: only(unwrap),
@@ -99,4 +118,5 @@ module.exports = {
     unwrapFunctionPayloadArray,
   },
   objectBuilder,
+  multiStepFomatter,
 }
