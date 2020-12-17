@@ -33,6 +33,7 @@ module.exports = {
       },
       dependencies: {
         parsed: {
+          condition: {ref: 'stage.metadata.uri' },
           formatter: ({parsed}) => {
             return parsed[0] === 404 ? null : parsePost(parsed[0].body)
           },

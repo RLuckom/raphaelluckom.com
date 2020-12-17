@@ -35,7 +35,7 @@ module "archive_cloudfront_logs" {
   timeout_secs = 40
   mem_mb = 256
   environment_var_map = {
-    INPUT_BUCKET = module.static_site.logging_bucket.bucket.id
+    INPUT_BUCKET = module.prod_site.logging_bucket.bucket.id
     PARTITION_BUCKET = module.logs_partition_bucket.bucket.id
     PARTITION_PREFIX = "partitioned/raphaelluckom.com"
     ATHENA_RESULT_BUCKET = "s3://${module.logs_athena_bucket.bucket.id}"
@@ -57,14 +57,14 @@ module "archive_cloudfront_logs" {
       local.permission_sets.athena_query, 
       module.cloudformation_logs_glue_table.permission_sets.create_partition_glue_permissions,
       module.logs_athena_bucket.permission_sets.athena_query_execution,
-      module.static_site.logging_bucket.permission_sets.move_objects_out,
+      module.prod_site.logging_bucket.permission_sets.move_objects_out,
       module.logs_partition_bucket.permission_sets.put_object
     )
   }
   layers = [aws_lambda_layer_version.donut_days.arn]
 
   bucket_notifications = [{
-    bucket = module.static_site.logging_bucket.bucket.id
+    bucket = module.prod_site.logging_bucket.bucket.id
     events              = ["s3:ObjectCreated:*"]
     filter_prefix       = ""
     filter_suffix       = ""
