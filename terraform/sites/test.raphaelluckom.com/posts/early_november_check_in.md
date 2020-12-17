@@ -5,7 +5,7 @@ date: 2020-11-04T14:09:34-05:00
 draft: false
 meta:
   trail:
-    - check-ins
+    - check-in
 ---
 
 Since my [last check-in post](https://www.raphaelluckom.com/posts/october_check_in.html)

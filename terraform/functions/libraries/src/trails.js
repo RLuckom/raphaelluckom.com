@@ -99,14 +99,14 @@ function determineUpdates({trails, existingMemberships, existingMembers, siteDes
       updates.neighborsToReRender.push(sortedNewList[newIndex - 1])
       updates.neighbors[trailName] = {
         trailName,
-        previousNeighbor: sortedNewList[newIndex - 1] || null,
-        nextNeighbor: sortedNewList[newIndex + 1] || null,
+        previousNeighbor: sortedNewList[newIndex + 1] || null,
+        nextNeighbor: sortedNewList[newIndex - 1] || null,
       }
     } else {
       updates.neighbors[trailUri] = {
         trailName,
-        previousNeighbor: newList[currentIndex - 1] || null,
-        nextNeighbor: newList[currentIndex + 1] || null,
+        previousNeighbor: newList[currentIndex + 1] || null,
+        nextNeighbor: newList[currentIndex - 1] || null,
       }
     }
   })

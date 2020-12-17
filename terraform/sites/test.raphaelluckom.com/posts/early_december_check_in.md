@@ -5,7 +5,7 @@ date: 2020-12-08T12:09:34-05:00
 draft: false
 meta:
   trail:
-    - check-ins
+    - check-in
 ---
 **The Story So Far:**
 In August I described what I've come to call [assertional making](https://www.raphaelluckom.com/posts/not_draft.html). At the time,

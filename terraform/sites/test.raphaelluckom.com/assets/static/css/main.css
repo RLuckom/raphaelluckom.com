@@ -45,7 +45,6 @@
 
 .nav-links {
   display: flex;
-  justify-content: flex-end;
   max-width: 1400px;
 }
 
@@ -56,6 +55,28 @@
 a.nav-link {
   font-family: "IBMPlex600";
   letter-spacing: 0.3rem;
+}
+
+.trail-links {
+  display: flex;
+  justify-content: space-evenly;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  width: 55%;
+}
+
+.trail-name::after {
+  content: "→";
+  margin-left: 2rem;
+}
+
+.trail-name::before {
+  content: "←";
+  margin-right: 2rem;
+}
+
+.trail-links a {
+  display: inline-block;
 }
 
 body {
@@ -111,12 +132,25 @@ hr {
 
 p.subtitle {
     font-family: "IBMPlex600";
-    font-style: italic;
     margin-top: 1rem;
     margin-bottom: 1rem;
-    font-size: 1.8rem;
     display: block;
     line-height: 1;
+}
+
+.trail-member {
+  margin-top: 1.8rem;
+  margin-bottom: 1.8rem;
+}
+
+.trail-member p {
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
+}
+
+.trail-member h3 {
+  margin-top: 0.2rem;
+  margin-bottom: 0.3rem;
 }
 
 .numeral {
@@ -125,10 +159,6 @@ p.subtitle {
 
 .danger {
     color: red;
-}
-
-article {
-    padding: 5rem 0rem;
 }
 
 section {
@@ -140,7 +170,7 @@ p,
 dl,
 ol,
 ul {
-    font-size: 1.4rem;
+    font-size: 1rem;
     line-height: 2rem;
 }
 
@@ -359,7 +389,7 @@ h3 > code {
 }
 
 pre > code {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     width: 52.5%;
     margin-left: 2.5%;
     overflow-x: auto;
