@@ -8,11 +8,12 @@ module "media_hosting_bucket" {
 }
 
 module "test_site" {
-  source = "./modules/serverless_site"
+  source = "./modules/extracted_serverless_site"
   domain_settings = var.test_domain_settings
   lambda_bucket = aws_s3_bucket.lambda_bucket.id
   site_description_content = file("./sites/test.raphaelluckom.com/site_description.json")
   site_name = "test"
+  debug = false
   route53_zone_name = var.route53_zone_name
   layer_arns = {
     donut_days = aws_lambda_layer_version.donut_days.arn,
@@ -26,6 +27,7 @@ module "prod_site" {
   lambda_bucket = aws_s3_bucket.lambda_bucket.id
   site_description_content = file("./sites/raphaelluckom.com/site_description.json")
   site_name = "prod"
+  debug = false
   route53_zone_name = var.route53_zone_name
   layer_arns = {
     donut_days = aws_lambda_layer_version.donut_days.arn,
