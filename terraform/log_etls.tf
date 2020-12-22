@@ -74,7 +74,6 @@ module "archive_cloudfront_logs" {
 module "cloudformation_logs_glue_table" {
   source = "github.com/RLuckom/terraform_modules//aws/standard_glue_table"
   table_name          = "${var.domain_name_prefix}_cf_logs_partitioned_gz"
-  metadata_bucket_name = module.logs_partition_bucket.bucket.id
   external_storage_bucket_id = module.logs_partition_bucket.bucket.id
   partition_prefix = "partitioned/raphaelluckom.com"
   db = {
