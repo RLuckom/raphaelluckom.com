@@ -29,42 +29,34 @@ module "scratch_bucket" {
   ]
 }
 
-resource "aws_lambda_layer_version" "donut_days" {
+module "donut_days" {
+  source = "github.com/RLuckom/terraform_modules//aws/lambda_layer"
   layer_name = "donut_days"
-  s3_bucket = aws_s3_bucket.lambda_bucket.id
-  s3_key = "layers/donut_days/layer.zip"
-  compatible_runtimes = ["nodejs12.x"]
-  lifecycle {
-    create_before_destroy = true
-  }
+  layer_path = "${path.root}/layers/donut_days/"
+  source_bucket = aws_s3_bucket.lambda_bucket.id
+  layer_zip_output_path = "${path.root}/layers/donut_days/layer.zip"
 }
 
-resource "aws_lambda_layer_version" "nlp" {
-  layer_name = "nlp"
-  s3_bucket = aws_s3_bucket.lambda_bucket.id
-  s3_key = "layers/nlp/layer.zip"
-  compatible_runtimes = ["nodejs12.x"]
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "aws_lambda_layer_version" "markdown_tools" {
-  layer_name = "nlp"
-  s3_bucket = aws_s3_bucket.lambda_bucket.id
-  s3_key = "layers/markdown_tools/layer.zip"
-  compatible_runtimes = ["nodejs12.x"]
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "aws_lambda_layer_version" "image_dependencies" {
+module "image_dependencies" {
+  source = "github.com/RLuckom/terraform_modules//aws/lambda_layer"
   layer_name = "image_dependencies"
-  s3_bucket = aws_s3_bucket.lambda_bucket.id
-  s3_key = "layers/image_dependencies/layer.zip"
-  compatible_runtimes = ["nodejs12.x"]
-  lifecycle {
-    create_before_destroy = true
-  }
+  layer_path = "${path.root}/layers/image_dependencies/"
+  source_bucket = aws_s3_bucket.lambda_bucket.id
+  layer_zip_output_path = "${path.root}/layers/image_dependencies/layer.zip"
+}
+
+module "markdown_tools" {
+  source = "github.com/RLuckom/terraform_modules//aws/lambda_layer"
+  layer_name = "markdown_tools"
+  layer_path = "${path.root}/layers/markdown_tools/"
+  source_bucket = aws_s3_bucket.lambda_bucket.id
+  layer_zip_output_path = "${path.root}/layers/markdown_tools/layer.zip"
+}
+
+module "nlp" {
+  source = "github.com/RLuckom/terraform_modules//aws/lambda_layer"
+  layer_name = "nlp"
+  layer_path = "${path.root}/layers/nlp/"
+  source_bucket = aws_s3_bucket.lambda_bucket.id
+  layer_zip_output_path = "${path.root}/layers/nlp/layer.zip"
 }

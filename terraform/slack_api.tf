@@ -56,5 +56,5 @@ module "slack_api_handler_lambda" {
   environment_var_map = {
     DONUT_DAYS_DEBUG = "true"
   }
-  layers = [aws_lambda_layer_version.donut_days.arn]
+  layers = [module.donut_days.layer.arn]
 }

@@ -37,7 +37,7 @@ module "image_archive_lambda" {
       media_storage_prefix = "images"
       media_dynamo_table = module.media_table.table.name
       labeled_media_dynamo_table = module.labeled_media_table.table.name
-      media_hosting_bucket = module.media_hosting_bucket.website_bucket.bucket.id
+      media_hosting_bucket = module.media_bucket.bucket.bucket.id
       post_input_bucket_name = module.stream_input_bucket.bucket.id 
       slack_credentials_parameterstore_key = var.slack_credentials_parameterstore_key
 
@@ -57,7 +57,7 @@ module "image_archive_lambda" {
       module.media_input_bucket.permission_sets.read_and_tag,
       module.stream_input_bucket.permission_sets.read_and_tag,
       module.stream_input_bucket.permission_sets.read_and_tag,
-      module.media_hosting_bucket.website_bucket.permission_sets.put_object,
+      module.media_bucket.bucket.permission_sets.put_object,
       module.photos_media_output_bucket.permission_sets.put_object,
     )
   }
@@ -65,7 +65,7 @@ module "image_archive_lambda" {
     DONUT_DAYS_DEBUG = "true"
   }
   layers = [
-    aws_lambda_layer_version.donut_days.arn,
-    aws_lambda_layer_version.image_dependencies.arn
+    module.donut_days.layer.arn,
+    module.image_dependencies.layer.arn
   ]
 }
