@@ -1,2 +1,2 @@
 #!/bin/bash
-cd ./nodejs && npm update && cd ../ && ./publish.sh
+cd ./nodejs && npm update
