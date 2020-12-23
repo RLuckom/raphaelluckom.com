@@ -56,6 +56,7 @@ function determineUpdates({trails, existingMemberships, existingMembers, siteDes
   _.each(trails, ({members, trailName}) => {
     const trailUriTemplate = urlTemplate.parse(_.get(siteDescription, 'relations.meta.trail.idTemplate'))
     const newList = _.cloneDeep(members)
+    const sortedNewList = sortTrailMembers(newList)
     const trailUri = trailUriTemplate.expand({...siteDescription.siteDetails, ...{name: encodeURIComponent(trailName)}})
     const currentIndex = _.findIndex(members, (member) => {
       return member.memberKey === `${item.type}:${item.name}` && _.isEqual(member.memberMetadata, item.metadata)
@@ -88,7 +89,6 @@ function determineUpdates({trails, existingMemberships, existingMembers, siteDes
       newList.push(trailMember)
       updates.trailsToReRender.push(trailUriTemplate.expand({...siteDescription.siteDetails, ...{name: trailName}}))
       updates.dynamoPuts.push(trailMember)
-      const sortedNewList = sortTrailMembers(newList)
       const newIndex = sortedNewList.findIndex((i) => i.memberUri === item.id && _.isEqual(i.memberMetadata, item.metadata))
       if (previousIndex !== -1 && newIndex !== previousIndex) {
         updates.neighborsToReRender.push(members[previousIndex + 1])
@@ -105,8 +105,8 @@ function determineUpdates({trails, existingMemberships, existingMembers, siteDes
     } else {
       updates.neighbors[trailUri] = {
         trailName,
-        previousNeighbor: newList[currentIndex + 1] || null,
-        nextNeighbor: newList[currentIndex - 1] || null,
+        previousNeighbor: sortedNewList[currentIndex + 1] || null,
+        nextNeighbor: sortedNewList[currentIndex - 1] || null,
       }
     }
   })
