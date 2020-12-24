@@ -24,6 +24,14 @@ locals {
       "arn:aws:s3:::${var.domain_settings.domain_name}/*",
     ]
   }]
+  logging_bucket_put_permission = [{
+    actions   =  [
+      "s3:PutObject"
+    ]
+    resources = [
+      "arn:aws:s3:::${var.logging_bucket}/*",
+    ]
+  }]
   site_bucket_delete_permission = [{
     actions   =  [
       "s3:DeleteObject"
@@ -40,11 +48,13 @@ module "site_render" {
   mem_mb = 256
   environment_var_map = {
     DONUT_DAYS_DEBUG = var.debug
+    LOG_BUCKET = var.logging_bucket
+    LOG_PREFIX = "${var.site_name}/lambda_render/"
   }
   source_contents = [
     {
       file_name = "index.js"
-      file_contents = file("${path.root}/functions/libraries/src/entrypoints/generic_donut_days.js") 
+      file_contents = file("${path.root}/functions/libraries/src/entrypoints/s3_logging_generic_dd.js") 
     },
     {
       file_name = "helpers/render.js"
@@ -75,6 +85,7 @@ module "site_render" {
     bucket = var.lambda_bucket
     policy_statements =  concat(
       local.site_bucket_put_permission,
+      local.logging_bucket_put_permission,
       module.trails_updater.permission_sets.invoke
     )
   }
@@ -90,11 +101,13 @@ module "deletion_cleanup" {
   mem_mb = 128
   environment_var_map = {
     DONUT_DAYS_DEBUG = var.debug
+    LOG_BUCKET = var.logging_bucket
+    LOG_PREFIX = "${var.site_name}/deletion_cleanup/"
   }
   source_contents = [
     {
       file_name = "index.js"
-      file_contents = file("${path.root}/functions/libraries/src/entrypoints/generic_donut_days.js") 
+      file_contents = file("${path.root}/functions/libraries/src/entrypoints/s3_logging_generic_dd.js") 
     },
     {
       file_name = "helpers/idUtils.js"
@@ -121,6 +134,7 @@ module "deletion_cleanup" {
     bucket = var.lambda_bucket
     policy_statements =  concat(
       local.site_bucket_delete_permission,
+      local.logging_bucket_put_permission,
       module.trails_updater.permission_sets.invoke
     )
   }
@@ -137,11 +151,13 @@ module "trails_updater" {
   environment_var_map = {
     DONUT_DAYS_DEBUG = var.debug
     EXPLORANDA_DEBUG = var.debug
+    LOG_BUCKET = var.logging_bucket
+    LOG_PREFIX = "${var.site_name}/trails_updater/"
   }
   source_contents = [
     {
       file_name = "index.js"
-      file_contents = file("${path.root}/functions/libraries/src/entrypoints/generic_donut_days.js") 
+      file_contents = file("${path.root}/functions/libraries/src/entrypoints/s3_logging_generic_dd.js") 
     },
     {
       file_name = "helpers/formatters.js"
@@ -174,6 +190,7 @@ module "trails_updater" {
     bucket = var.lambda_bucket
     policy_statements = concat(
       local.render_invoke_permission,
+      local.logging_bucket_put_permission,
       module.trails_table.permission_sets.read,
       module.trails_table.permission_sets.write,
       module.trails_table.permission_sets.delete_item,

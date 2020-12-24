@@ -30,6 +30,10 @@ variable layer_arns {
   })
 }
 
+variable logging_bucket {
+  type = string
+}
+
 variable debug {
   default = true
 }

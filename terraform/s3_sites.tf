@@ -21,10 +21,16 @@ module "media_hosting_site" {
   subject_alternative_names = var.media_domain_settings.subject_alternative_names
 }
 
+module "lambda_logging_bucket" {
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_logging_bucket"
+  bucket_name = "rluckom-lambda-logging"
+}
+
 module "test_site" {
   source = "./modules/serverless_site"
   domain_settings = var.test_domain_settings
   lambda_bucket = aws_s3_bucket.lambda_bucket.id
+  logging_bucket = module.lambda_logging_bucket.bucket.bucket.id
   site_description_content = file("./sites/test.raphaelluckom.com/site_description.json")
   site_name = "test"
   debug = false
@@ -39,6 +45,7 @@ module "prod_site" {
   source = "./modules/serverless_site"
   domain_settings = var.prod_domain_settings
   lambda_bucket = aws_s3_bucket.lambda_bucket.id
+  logging_bucket = module.lambda_logging_bucket.bucket.bucket.id
   site_description_content = file("./sites/raphaelluckom.com/site_description.json")
   site_name = "prod"
   debug = false
