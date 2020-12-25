@@ -67,8 +67,6 @@ This isn't a perfect solution, but it's about as good as I can come up with in a
 adds no dependencies on any new tools, and doesn't add structure that will be difficult to unwind later. Since module-storage decisions
 don't affect module use very much, it should be easy to switch to something better down the road.
 
-Terraform is [not intended to be a build tool](https://github.com/hashicorp/terraform/issues/8344#issuecomment-361014199)
-
 [^1]: If you decide to use any modules from a source like this that you don't control, I'd recommed using the `ref` parameter to ensure you get a known commit.
 
 [^2]: Another option that I'm not going to discuss in the main body is using the official terraform registry. Because the registry works by reading a git repo, it has the same drawbacks as using github, plus slightly more complexity.
