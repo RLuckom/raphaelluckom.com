@@ -1,3 +1,8 @@
+variable app_slack_channel {
+  type = string
+  default = "C01D71TDE0Z"
+}
+
 variable "domain_name" {
   type = string
   default = "raphaelluckom.com"

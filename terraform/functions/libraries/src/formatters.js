@@ -32,6 +32,13 @@ function unwrapFunctionPayload(params) {
   }, {})
 }
 
+function unwrapParameterStoreJsonPayload(params) {
+  return _.reduce(unwrap(params), (a, v, k) => {
+    a[k] = JSON.parse(v.Value)
+    return a
+  }, {})
+}
+
 function firstKey(params) {
   return params[_.keys(params)[0]]
 }
@@ -101,6 +108,7 @@ function multiStepFomatter({preformatter, formatter, defaultValue}) {
 module.exports = {
   singleValue: {
     unwrap: only(unwrap),
+    unwrapParameterStoreJsonPayload: only(unwrapParameterStoreJsonPayload),
     unwrapHttpResponse: only(unwrapHttpResponse),
     unwrapJsonHttpResponse: only(unwrapJsonHttpResponse),
     unwrapJsonHttpResponseArray: only(unwrapJsonHttpResponseArray),

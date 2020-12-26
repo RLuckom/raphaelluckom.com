@@ -61,6 +61,7 @@ module "archive_cloudfront_logs" {
       module.logs_partition_bucket.permission_sets.put_object
     )
   }
+  lambda_event_configs = local.notify_failure_and_success
   layers = [module.donut_days.layer.arn]
 
   bucket_notifications = [{
