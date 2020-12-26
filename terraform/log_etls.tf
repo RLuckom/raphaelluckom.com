@@ -61,7 +61,7 @@ module "archive_cloudfront_logs" {
       module.logs_partition_bucket.permission_sets.put_object
     )
   }
-  lambda_event_configs = local.notify_failure_and_success
+  lambda_event_configs = local.notify_failure_only
   layers = [module.donut_days.layer.arn]
 
   bucket_notifications = [{
@@ -150,6 +150,7 @@ module "log_export_lambda" {
   environment_var_map = {
     DONUT_DAYS_DEBUG = true
   }
+  lambda_event_configs = local.notify_failure_only
   self_invoke = {
     allowed = true
     concurrent_executions = 3

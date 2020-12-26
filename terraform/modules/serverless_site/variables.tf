@@ -7,6 +7,20 @@ variable "domain_settings" {
   })
 }
 
+variable lambda_event_configs {
+  type = list(object({
+    maximum_event_age_in_seconds = number
+    maximum_retry_attempts = number
+    on_success = list(object({
+      function_arn = string
+    }))
+    on_failure = list(object({
+      function_arn = string
+    }))
+  }))
+  default = []
+}
+
 variable lambda_bucket {
   type = string
 }

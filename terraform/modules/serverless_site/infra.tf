@@ -79,6 +79,7 @@ module "site_render" {
     }) 
     }
   ]
+  lambda_event_configs = var.lambda_event_configs
   lambda_details = {
     action_name = "site_render"
     scope_name = var.site_name
@@ -128,6 +129,7 @@ module "deletion_cleanup" {
     }) 
     }
   ]
+  lambda_event_configs = var.lambda_event_configs
   lambda_details = {
     action_name = "deletion_cleanup"
     scope_name = var.site_name
@@ -184,6 +186,7 @@ module "trails_updater" {
     })
     }
   ]
+  lambda_event_configs = var.lambda_event_configs
   lambda_details = {
     action_name = "trails_updater"
     scope_name = var.site_name

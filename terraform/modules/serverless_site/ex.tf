@@ -48,6 +48,7 @@ module "trails_resolver" {
     })
     }
   ]
+  lambda_event_configs = var.lambda_event_configs
   lambda_details = {
     action_name = "trails_resolver"
     scope_name = var.site_name

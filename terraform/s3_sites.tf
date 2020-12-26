@@ -34,6 +34,7 @@ module "test_site" {
   site_description_content = file("./sites/test.raphaelluckom.com/site_description.json")
   site_name = "test"
   debug = false
+  lambda_event_configs = local.notify_failure_only
   route53_zone_name = var.route53_zone_name
   layer_arns = {
     donut_days = module.donut_days.layer.arn,
@@ -47,6 +48,7 @@ module "prod_site" {
   lambda_bucket = aws_s3_bucket.lambda_bucket.id
   logging_bucket = module.lambda_logging_bucket.bucket.bucket.id
   site_description_content = file("./sites/raphaelluckom.com/site_description.json")
+  lambda_event_configs = local.notify_failure_only
   site_name = "prod"
   debug = false
   route53_zone_name = var.route53_zone_name
