@@ -1,7 +1,7 @@
 ---
 title: "The Story The Map Tells"
 author: "Raphael Luckom"
-date: 2020-09-05T07:09:34-05:00
+date: 2020-09-05T07:09:34
 draft: false
 meta:
   trail:
