@@ -20,7 +20,7 @@ to use diagrams like this collaboratively as well as on one's own. Almost every 
 someone needs to pick up a marker and draw some kind of picture on a whiteboard of the system under discussion. In these
 meetings, the diagram helps the group coalesce around a shared model of the system. A significant amount of time may
 be spent on critiquing the way the system is drawn, because a software-writer's way of portraying a system
-is actively understood to refect somee or all of:
+is actively understood to refect some or all of:
 
 1. The way that the writer is comfortable thinking about it[^1]
 2. Some goal the writer has for the system (i.e. the portrayal visually suggests that an intended change or addition makes sense)
@@ -28,16 +28,16 @@ is actively understood to refect somee or all of:
 4. The view of a system from the perspective of a particular domain (e.g. the security characteristics of the system)
 
 At the end of a meeting that produces a diagram like this, one of the participants usually takes a picture of the
-diagram and says the traditional prayer to the fickle gods of docuentation: "I'll put that on the wiki." 
+diagram and says the traditional prayer to the fickle gods of documentation: "I'll put that on the wiki." 
 
 Whether or not the thing actually makes it to the wiki, and if so, whether it's ever referenced again, is no one's
 primary concern. The goal of the diagram is not to _convey_ information the way a letter conveys information. Instead ,
-it's a mnemonic device that helps participants in the conversatiom maintain a shared context over a period of days,
+it's a mnemonic device that helps participants in the conversation maintain a shared context over a period of days,
 weeks, or months while they are working collaboratively on a system. If a system is familiar enough to everyone
 involved in building it (e.g. it is comparable to other systems they have built or understood) the diagram may function
 simply to validate their shared understanding, after which it is disposable, because it's not required for collaboration.
 If a new person joins the collaboration, they may be shown any relevant diagrams by one of the people who was at the
-meeting--in this case, the diagram serves as a compressed version of the original conversation, which the OG walks
+meeting--in this case, the diagram serves as a compressed version of the original conversation, which the OP walks
 through for the benefit of the new member[^2]. 
 
 There's another kind of software diagram that's also very common: I'm going to call it the _external-facing diagram_. 
@@ -77,7 +77,7 @@ provided by air-handler manufacturers, and, ideally, social forces create an inc
 it works, this process facilitates coordination across domain boundaries. Someone whose _work_ is in a specific domain
 is able to pick up the context of the adjacent domains[^6] and expect that it will be _legible_--that it will reflect
 a view of reality that is _consistent_ with her "home" domain even if it is too detailed, abstract, or incongruous to be of
-use generally. For instance, an HVAC system designer can build fluency the context of HVAC 
+use generally. For instance, an HVAC system designer can build fluency in the context of HVAC 
 installers, to better understand why some designs succeed and others don't. 
 
 But there isn't an identifiable type of diagram that facilitates this process--such a diagrammatic method would 
@@ -89,19 +89,19 @@ where the vocabulary of one domain gives way to that of another.
 You might accuse me of digression here. These are clearly separate topics--the concept of pragmatic vs external diagrams
 is about how _one_ system can be described in different ways, while the concept of a task-gradient broken into domains considers
 an interdependent _set_ of systems. But I think my software-writer comrades can probably already guess how this song goes: _software is both_.
-When we take a holistic view of a software system, we _might_ be talking about it as "the thing that would look totally 
-different described by a compliance officer compared to by its maintainer"  _or_ we might be talking about "The domain 
+When we take a holistic view of "a website," we _might_ be talking about it as "the thing that would look totally 
+different described by a compliance officer vs by its maintainer"  _or_ we might be talking about "The domain 
 within software development adjacent on one side to back-end and infrastructure, and on the other side to UX[^9]" And
 if you notice that _every_ domain in the software gradient--circuit design, firmware, operating systems, userland, network, services--
-has its own pairing of pragmatic an external diagrams, you see an interesting thing. At each layer, the
+has its own pairing of pragmatic and external diagrams, you see an interesting thing. At each layer, the
 diagrams that are available and legible to non-practitioners are the external-facing diagrams--which practitioners rarely
 use themselves, and may not even recognize. Across the entire software-production gradient, from silicon to CSS, there
 is a pragmatic practitioner oral tradition _and_ there is an outward-facing set of symbolic "official"[^10] representations. 
 The practitioner oral tradition _must_ preserve the adjacencies of the task gradient to be useful. This is what holds 
-it accountable to reality--I can wanter over to the desk of the person in an adjacent domain and ask them what they 
+it accountable to reality--I can wander over to the desk of the person in an adjacent domain and ask them what they 
 meant by something. But the external-facing representations have no incentive to form a continuous gradient, since
 the activities that those representations are meant to enable--selling, gaining approval, legislating--do not
-cause them to form one relative to each other.
+cause them to form a gradient relative to each other.
 
 As I begin to document my system, I'm going to be trying out some ways of publishing explicitly the practitioner
 oral tradition--the pragmatic[^11] understanding of the layers of the system as a task gradient. This will mean
@@ -128,6 +128,6 @@ conversations about how to build systems.
 
 [^9]: Ask five different software writers to pick the correct adjacencies, get six answers.
 
-[^10]: "official meaning "claimed publically to regulators, customers, etc.
+[^10]: "official" meaning "claimed publicly to regulators, customers, etc."
 
 [^11]: I'm only just remembering that "pragmatic programming" is already a buzzword. This is not that concept.
