@@ -2,6 +2,7 @@ const fs = require('fs')
 const _ = require('lodash')
 const yaml = require('js-yaml')
 const { execSync } = require('child_process')
+const { terraform_modules_repo } = require('./testSettings.json')
 const path = require('path')
 
 const fileName = `${__dirname}/${process.argv[2]}`
@@ -43,11 +44,13 @@ function parsePost(s) {
 }
 
 function makeNodePath(layers) {
-  return _.map(layers, (l) => `${__dirname}/../../layers/${l}/nodejs/node_modules/`).join(':')
+  return _.map(layers, (l) => `${__dirname}/${terraform_modules_repo}/support_stacks/src/aws/layers/${l}/nodejs/node_modules/`).join(':')
 }
 
 const jasminePath = 'spec/support/node_modules/jasmine/bin/jasmine.js'
 const parsed = parsePost(file)
+console.log(makeNodePath(parsed.frontMatter.layers))
+console.log(0)
 const env = {
   NODE_PATH: makeNodePath(parsed.frontMatter.layers),
   PATH: process.env.PATH,

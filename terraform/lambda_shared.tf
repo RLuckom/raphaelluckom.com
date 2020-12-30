@@ -90,33 +90,17 @@ locals {
 }
 
 module "donut_days" {
-  source = "github.com/RLuckom/terraform_modules//aws/lambda_layer"
-  layer_name = "donut_days"
-  layer_path = "${path.root}/layers/donut_days/"
-  source_bucket = aws_s3_bucket.lambda_bucket.id
-  layer_zip_output_path = "${path.root}/layers/donut_days/layer.zip"
+  source = "github.com/RLuckom/terraform_modules//aws/layers/donut_days"
 }
 
 module "image_dependencies" {
-  source = "github.com/RLuckom/terraform_modules//aws/lambda_layer"
-  layer_name = "image_dependencies"
-  layer_path = "${path.root}/layers/image_dependencies/"
-  source_bucket = aws_s3_bucket.lambda_bucket.id
-  layer_zip_output_path = "${path.root}/layers/image_dependencies/layer.zip"
+  source = "github.com/RLuckom/terraform_modules//aws/layers/image_dependencies"
 }
 
 module "markdown_tools" {
-  source = "github.com/RLuckom/terraform_modules//aws/lambda_layer"
-  layer_name = "markdown_tools"
-  layer_path = "${path.root}/layers/markdown_tools/"
-  source_bucket = aws_s3_bucket.lambda_bucket.id
-  layer_zip_output_path = "${path.root}/layers/markdown_tools/layer.zip"
+  source = "github.com/RLuckom/terraform_modules//aws/layers/markdown_tools"
 }
 
 module "nlp" {
-  source = "github.com/RLuckom/terraform_modules//aws/lambda_layer"
-  layer_name = "nlp"
-  layer_path = "${path.root}/layers/nlp/"
-  source_bucket = aws_s3_bucket.lambda_bucket.id
-  layer_zip_output_path = "${path.root}/layers/nlp/layer.zip"
+  source = "github.com/RLuckom/terraform_modules//aws/layers/nlp"
 }
