@@ -214,7 +214,7 @@ halfway_point = [
 So how do we define the `bezier_coordinate` function? To borrow from Pomax's excellent tutorial, the
 `bezier_coordinate` function is represented as:
 
-{{<figure src="/img/bezier_equation.svg" title="Image credit Pomax">}}
+![img](/img/bezier_equation.svg)
 
 This specifies a polynomial with a number of terms equal to the number of control points. To
 start calculating the x-coordinate of our point at `t=0.5`, we have:
