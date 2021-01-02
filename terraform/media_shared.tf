@@ -75,10 +75,6 @@ module "web_api_handler_lambda" {
       file_contents = file("./functions/libraries/src/entrypoints/generic_donut_days.js") 
     }, 
     {
-      file_name = "helpers.js"
-      file_contents = file("./functions/libraries/src/helpers/donut_days.js") 
-    }, 
-    {
       file_name = "config.js"
       file_contents = templatefile("./functions/configs/web_api/config.js",
       {

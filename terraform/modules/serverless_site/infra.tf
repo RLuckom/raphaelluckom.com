@@ -43,139 +43,81 @@ locals {
 }
 
 module "site_render" {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
   timeout_secs = 40
   mem_mb = 256
-  environment_var_map = {
-    DONUT_DAYS_DEBUG = var.debug
-    LOG_BUCKET = var.logging_bucket
-    LOG_PREFIX = "${var.site_name}/lambda_render/"
-  }
-  source_contents = [
-    {
-      file_name = "index.js"
-      file_contents = file("${path.root}/functions/libraries/src/entrypoints/s3_logging_generic_dd.js") 
-    },
-    {
-      file_name = "helpers/render.js"
-      file_contents = file("${path.root}/functions/libraries/src/helpers/render.js")
-    },
-    {
-      file_name = "helpers/idUtils.js"
-      file_contents = file("${path.root}/functions/libraries/src/helpers/idUtils.js")
-    },
-    {
-      file_name = "helpers/formatters.js"
-      file_contents = file("${path.root}/functions/libraries/src/formatters.js")
-    },
-    {
-      file_name = "config.js"
-      file_contents = templatefile("${path.root}/functions/configs/render_markdown_to_html/config.js",
+  debug = var.debug
+  config_contents = templatefile("${path.root}/functions/configs/render_markdown_to_html/config.js",
     {
       website_bucket = local.site_bucket
       domain_name = var.domain_settings.domain_name
       site_description_path = "site_description.json"
       dependency_update_function = module.trails_updater.lambda.arn
-    }) 
-    }
+    })
+  additional_helpers = [
+    {
+      helper_name = "render.js"
+      file_contents = file("${path.root}/functions/libraries/src/helpers/render.js")
+    },
+    {
+      helper_name = "idUtils.js"
+      file_contents = file("${path.root}/functions/libraries/src/helpers/idUtils.js")
+    },
   ]
   lambda_event_configs = var.lambda_event_configs
-  lambda_details = {
-    action_name = "site_render"
-    scope_name = var.site_name
-    bucket = var.lambda_bucket
-    policy_statements =  concat(
-      local.site_bucket_put_permission,
-      local.logging_bucket_put_permission,
-      module.trails_updater.permission_sets.invoke
-    )
-  }
-  layers = [
-    var.layer_arns.donut_days,
+  action_name = "site_render"
+  scope_name = var.site_name
+  source_bucket = var.lambda_bucket
+  policy_statements =  concat(
+    local.site_bucket_put_permission,
+    module.trails_updater.permission_sets.invoke
+  )
+  donut_days_layer_arn = var.layer_arns.donut_days
+  additional_layers = [
     var.layer_arns.markdown_tools,
   ]
 }
 
 module "deletion_cleanup" {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
   timeout_secs = 40
   mem_mb = 128
-  environment_var_map = {
-    DONUT_DAYS_DEBUG = var.debug
-    LOG_BUCKET = var.logging_bucket
-    LOG_PREFIX = "${var.site_name}/deletion_cleanup/"
-  }
-  source_contents = [
+  debug = var.debug
+  log_bucket = var.logging_bucket
+  config_contents = templatefile("${path.root}/functions/configs/deletion_cleanup/config.js",
+  {
+    website_bucket = local.site_bucket
+    domain_name = var.domain_settings.domain_name
+    site_description_path = "site_description.json"
+    dependency_update_function = module.trails_updater.lambda.arn
+  }) 
+  additional_helpers = [
     {
-      file_name = "index.js"
-      file_contents = file("${path.root}/functions/libraries/src/entrypoints/s3_logging_generic_dd.js") 
-    },
-    {
-      file_name = "helpers/idUtils.js"
+      helper_name = "idUtils.js"
       file_contents = file("${path.root}/functions/libraries/src/helpers/idUtils.js")
     },
-    {
-      file_name = "helpers/formatters.js"
-      file_contents = file("${path.root}/functions/libraries/src/formatters.js")
-    },
-    {
-      file_name = "config.js"
-      file_contents = templatefile("${path.root}/functions/configs/deletion_cleanup/config.js",
-    {
-      website_bucket = local.site_bucket
-      domain_name = var.domain_settings.domain_name
-      site_description_path = "site_description.json"
-      dependency_update_function = module.trails_updater.lambda.arn
-    }) 
-    }
   ]
   lambda_event_configs = var.lambda_event_configs
-  lambda_details = {
-    action_name = "deletion_cleanup"
-    scope_name = var.site_name
-    bucket = var.lambda_bucket
-    policy_statements =  concat(
-      local.site_bucket_delete_permission,
-      local.logging_bucket_put_permission,
-      module.trails_updater.permission_sets.invoke
-    )
-  }
-  layers = [
-    var.layer_arns.donut_days,
+  action_name = "deletion_cleanup"
+  scope_name = var.site_name
+  source_bucket = var.lambda_bucket
+  policy_statements =  concat(
+    local.site_bucket_delete_permission,
+    module.trails_updater.permission_sets.invoke
+  )
+  donut_days_layer_arn = var.layer_arns.donut_days
+  additional_layers = [
     var.layer_arns.markdown_tools,
   ]
 }
 
 module "trails_updater" {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
   timeout_secs = 40
   mem_mb = 192
-  environment_var_map = {
-    DONUT_DAYS_DEBUG = var.debug
-    EXPLORANDA_DEBUG = var.debug
-    LOG_BUCKET = var.logging_bucket
-    LOG_PREFIX = "${var.site_name}/trails_updater/"
-  }
-  source_contents = [
-    {
-      file_name = "index.js"
-      file_contents = file("${path.root}/functions/libraries/src/entrypoints/s3_logging_generic_dd.js") 
-    },
-    {
-      file_name = "helpers/formatters.js"
-      file_contents = file("${path.root}/functions/libraries/src/formatters.js")
-    },
-    {
-      file_name = "helpers/idUtils.js"
-      file_contents = file("${path.root}/functions/libraries/src/helpers/idUtils.js")
-    },
-    {
-      file_name = "trails.js"
-      file_contents = file("${path.root}/functions/libraries/src/trails.js")
-    },
-    {
-      file_name = "config.js"
-      file_contents = templatefile("${path.root}/functions/configs/update_trails/config.js",
+  debug = var.debug
+  log_bucket = var.logging_bucket
+  config_contents = templatefile("${path.root}/functions/configs/update_trails/config.js",
     {
       table = module.trails_table.table.name,
       reverse_association_index = "reverseDependencyIndex"
@@ -184,23 +126,28 @@ module "trails_updater" {
       render_function = local.render_arn
       self_type = "relations.meta.trail"
     })
-    }
+  additional_helpers = [
+    {
+      helper_name = "idUtils.js"
+      file_contents = file("${path.root}/functions/libraries/src/helpers/idUtils.js")
+    },
+    {
+      helper_name = "trails.js"
+      file_contents = file("${path.root}/functions/libraries/src/trails.js")
+    },
   ]
   lambda_event_configs = var.lambda_event_configs
-  lambda_details = {
-    action_name = "trails_updater"
-    scope_name = var.site_name
-    bucket = var.lambda_bucket
-    policy_statements = concat(
-      local.render_invoke_permission,
-      local.logging_bucket_put_permission,
-      module.trails_table.permission_sets.read,
-      module.trails_table.permission_sets.write,
-      module.trails_table.permission_sets.delete_item,
-    )
-  }
-  layers = [
-    var.layer_arns.donut_days,
+  action_name = "trails_updater"
+  scope_name = var.site_name
+  source_bucket = var.lambda_bucket
+  policy_statements = concat(
+    local.render_invoke_permission,
+    module.trails_table.permission_sets.read,
+    module.trails_table.permission_sets.write,
+    module.trails_table.permission_sets.delete_item,
+  )
+  donut_days_layer_arn = var.layer_arns.donut_days
+  additional_layers = [
     var.layer_arns.markdown_tools,
   ]
 }

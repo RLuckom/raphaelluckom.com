@@ -26,40 +26,26 @@ module "trails_table" {
 }
 
 module "trails_resolver" {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
   timeout_secs = 40
   mem_mb = 128
-  environment_var_map = {
-    DONUT_DAYS_DEBUG = var.debug
-  }
-  source_contents = [
-    {
-      file_name = "index.js"
-      file_contents = file("${path.root}/functions/libraries/src/entrypoints/generic_donut_days.js") 
-    },
-    {
-      file_name = "config.js"
-      file_contents = templatefile("${path.root}/functions/configs/two_way_resolver/config.js",
-    {
-      table = module.trails_table.table.name
-      forward_key_type = "trailName"
-      reverse_key_type = "memberKey"
-      reverse_association_index = "reverseDependencyIndex"
-    })
-    }
-  ]
+  debug = var.debug
+  log_bucket = var.logging_bucket
+  config_contents = templatefile("${path.root}/functions/configs/two_way_resolver/config.js",
+  {
+    table = module.trails_table.table.name
+    forward_key_type = "trailName"
+    reverse_key_type = "memberKey"
+    reverse_association_index = "reverseDependencyIndex"
+  })
   lambda_event_configs = var.lambda_event_configs
-  lambda_details = {
-    action_name = "trails_resolver"
-    scope_name = var.site_name
-    bucket = var.lambda_bucket
-    policy_statements = concat(
-      module.trails_table.permission_sets.read,
-    )
-  }
-  layers = [
-    var.layer_arns.donut_days,
-  ]
+  action_name = "trails_resolver"
+  scope_name = var.site_name
+  policy_statements = concat(
+    module.trails_table.permission_sets.read,
+  )
+  source_bucket = var.lambda_bucket
+  donut_days_layer_arn = var.layer_arns.donut_days
 }
 
 module "website_bucket" {
