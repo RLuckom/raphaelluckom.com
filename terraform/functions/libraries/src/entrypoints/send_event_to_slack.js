@@ -7,7 +7,23 @@ const slackChannel = process.env.SLACK_CHANNEL
 
 function constructReadableError(evt) {
   const err = _.isString(_.get(evt, 'responsePayload')) ? JSON.parse(_.get(evt, 'responsePayload')) : _.get(evt, 'responsePayload')
-  return `Function: ${_.get(evt, 'requestContext.functionArn')}\nResult: ${_.get(evt, 'requestContext.condition')}\nRequestId: ${_.get(evt, 'requestContext.requestId')}\nErrorType: ${_.get(err, 'errorType')}\nError Message: ${_.get(err, 'errorMessage')}\nStack trace --\n${_.get(err, 'trace[0]')}`
+  let errString
+  let logLocation = `s3://{bucket}/{prefix}/${createDatedS3Key(null, _.get(evt, 'requestContext.requestId'))}`
+  if (err) {
+    errString = `ErrorType: ${_.get(err, 'errorType')}\nError Message: ${_.get(err, 'errorMessage')}\nStack trace --\n${_.get(err, 'trace[0]')}`
+  } else {
+    errString = `Error was not recognized: full event --\n${JSON.stringify(evt)}`
+  }
+  return `Function: ${_.get(evt, 'requestContext.functionArn')}\nResult: ${_.get(evt, 'requestContext.condition')}\nRequestId: ${_.get(evt, 'requestContext.requestId')}\nLikely Logs: ${logLocation}\n${errString}`
+}
+
+function createDatedS3Key(prefix, suffix, date) {
+  date = _.isString(date) ? Date.parse(date) : (date instanceof Date ? date : new Date())
+  const year = date.getUTCFullYear()
+  const month = date.getUTCMonth() + 1
+  const day = date.getUTCDate()
+  const hour = date.getUTCHours()
+  return `${_.trimEnd(prefix, '/')}${prefix ? '/' : ''}year=${year}/month=${month}/day=${day}/hour=${hour}/${suffix || 'undefined'}.log`
 }
 
 function main(event, context, callback) {
