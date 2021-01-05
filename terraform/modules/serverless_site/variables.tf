@@ -7,6 +7,16 @@ variable "domain_settings" {
   })
 }
 
+variable log_sink {
+  type = list(object({
+    filter_prefix = string
+    filter_suffix = string
+    lambda_arn = string
+    lambda_name = string
+  }))
+  default = []
+}
+
 variable lambda_event_configs {
   type = list(object({
     maximum_event_age_in_seconds = number

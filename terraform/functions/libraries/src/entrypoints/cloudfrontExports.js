@@ -22,6 +22,16 @@ const apiConfig = {
   region: ATHENA_REGION
 }
 
+function athenaPartitionQuery(athenaDb, athenaTable, year, month, day, hour) {
+  return `ALTER TABLE ${ATHENA_DB}.${ATHENA_TABLE}
+          ADD IF NOT EXISTS 
+          PARTITION (
+            year = '${year}',
+            month = '${month}',
+            day = '${day}',
+            hour = '${hour}' );`
+}
+
 function dependencies({CopySource, SourceKey,  InputBucket, DestKey, year, month, day, hour}) {
   return {
     addPartitions: {
@@ -29,13 +39,7 @@ function dependencies({CopySource, SourceKey,  InputBucket, DestKey, year, month
       params: {
         apiConfig: {value: apiConfig},
         QueryString: {
-          value : `ALTER TABLE ${ATHENA_DB}.${ATHENA_TABLE}
-          ADD IF NOT EXISTS 
-          PARTITION (
-            year = '${year}',
-              month = '${month}',
-              day = '${day}',
-              hour = '${hour}' );`
+          value : athenaPartitionQuery(ATHENA_DB, ATHENA_TABLE, year, month, day, hour)
         },
         QueryExecutionContext: {
           value: {

@@ -42,6 +42,41 @@ module "test_site" {
   }
 }
 
+
+module "throwaway_athena_bucket" {
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_logging_bucket"
+  bucket_name = "rluckom-athena-throwaway"
+}
+
+module "throwaway_partition_bucket" {
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_bucket"
+  bucket = "rluckom-partition-throwaway"
+}
+
+module test_glue_pipeline {
+  source = "./modules/glue_pipeline"
+  name_stem = "test_glue_pipeline"
+  athena_result_bucket = {
+    id = module.throwaway_athena_bucket.bucket.bucket.id
+    athena_query_permission = module.throwaway_athena_bucket.bucket.permission_sets.athena_query_execution
+  }
+  partitioned_data_sink = {
+    bucket = module.throwaway_partition_bucket.bucket.id
+    prefix = ""
+    put_object_permission = module.throwaway_partition_bucket.permission_sets.put_object
+  }
+  lambda_source_bucket = aws_s3_bucket.lambda_bucket.id
+  ser_de_info = {
+    name                  = "test_sink"
+    serialization_library = "org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe"
+    parameters = {
+      "field.delim"="\t"
+      "serialization.format"="\t"
+    }
+  }
+  columns = local.cloudfront_access_log_schema.columns
+}
+
 module "prod_site" {
   source = "./modules/serverless_site"
   domain_settings = var.prod_domain_settings
