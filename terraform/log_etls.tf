@@ -1,10 +1,10 @@
 module "logs_athena_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_bucket"
+  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_bucket"
   bucket = var.athena_bucket_name
 }
 
 module "logs_partition_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_bucket"
+  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_bucket"
   bucket = var.partitioned_bucket_name
 
   bucket_policy_statements = [
@@ -35,7 +35,7 @@ module "archive_cloudfront_logs" {
   timeout_secs = 40
   mem_mb = 256
   environment_var_map = {
-    INPUT_BUCKET = module.prod_site.logging_bucket.bucket.bucket.id
+    INPUT_BUCKET = module.prod_site.logging_bucket.bucket.id
     PARTITION_BUCKET = module.logs_partition_bucket.bucket.id
     PARTITION_PREFIX = "partitioned/raphaelluckom.com"
     ATHENA_RESULT_BUCKET = "s3://${module.logs_athena_bucket.bucket.id}"
@@ -57,7 +57,7 @@ module "archive_cloudfront_logs" {
       local.permission_sets.athena_query, 
       module.cloudformation_logs_glue_table.permission_sets.create_partition_glue_permissions,
       module.logs_athena_bucket.permission_sets.athena_query_execution,
-      module.prod_site.logging_bucket.bucket.permission_sets.move_objects_out,
+      module.prod_site.logging_bucket.permission_sets.move_objects_out,
       module.logs_partition_bucket.permission_sets.put_object
     )
   }
@@ -65,7 +65,7 @@ module "archive_cloudfront_logs" {
   layers = [module.donut_days.layer.arn]
 
   bucket_notifications = [{
-    bucket = module.prod_site.logging_bucket.bucket.bucket.id
+    bucket = module.prod_site.logging_bucket.bucket.id
     events              = ["s3:ObjectCreated:*"]
     filter_prefix       = ""
     filter_suffix       = ""

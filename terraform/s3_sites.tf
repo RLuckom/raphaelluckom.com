@@ -1,12 +1,12 @@
 module "media_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_website_bucket"
+  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_website_bucket"
   bucket_name = var.media_domain_settings.domain_name
   origin_id = var.media_domain_settings.domain_name_prefix
   allowed_origins = var.media_domain_settings.allowed_origins
 }
 
 module "media_logging_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_logging_bucket"
+  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket"
   bucket_name = var.media_domain_settings.domain_name
 }
 
@@ -22,7 +22,7 @@ module "media_hosting_site" {
 }
 
 module "lambda_logging_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_logging_bucket"
+  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket"
   bucket_name = "rluckom-lambda-logging"
 }
 
@@ -30,7 +30,7 @@ module "test_site" {
   source = "./modules/serverless_site"
   domain_settings = var.test_domain_settings
   lambda_bucket = aws_s3_bucket.lambda_bucket.id
-  logging_bucket = module.lambda_logging_bucket.bucket.bucket.id
+  logging_bucket = module.lambda_logging_bucket.bucket.id
   site_description_content = file("./sites/test.raphaelluckom.com/site_description.json")
   site_name = "test"
   debug = false
@@ -44,12 +44,12 @@ module "test_site" {
 
 
 module "throwaway_athena_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_logging_bucket"
+  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket"
   bucket_name = "rluckom-athena-throwaway"
 }
 
 module "throwaway_partition_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_bucket"
+  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_bucket"
   bucket = "rluckom-partition-throwaway"
 }
 
@@ -57,8 +57,8 @@ module test_glue_pipeline {
   source = "./modules/glue_pipeline"
   name_stem = "test_glue_pipeline"
   athena_result_bucket = {
-    id = module.throwaway_athena_bucket.bucket.bucket.id
-    athena_query_permission = module.throwaway_athena_bucket.bucket.permission_sets.athena_query_execution
+    id = module.throwaway_athena_bucket.bucket.id
+    athena_query_permission = module.throwaway_athena_bucket.permission_sets.athena_query_execution
   }
   partitioned_data_sink = {
     bucket = module.throwaway_partition_bucket.bucket.id
@@ -81,7 +81,7 @@ module "prod_site" {
   source = "./modules/serverless_site"
   domain_settings = var.prod_domain_settings
   lambda_bucket = aws_s3_bucket.lambda_bucket.id
-  logging_bucket = module.lambda_logging_bucket.bucket.bucket.id
+  logging_bucket = module.lambda_logging_bucket.bucket.id
   site_description_content = file("./sites/raphaelluckom.com/site_description.json")
   lambda_event_configs = local.notify_failure_only
   site_name = "prod"

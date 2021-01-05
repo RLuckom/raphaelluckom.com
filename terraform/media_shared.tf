@@ -1,5 +1,5 @@
 module "media_input_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_bucket"
+  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_bucket"
   bucket = "rluckom-media-input"
   lifecycle_rules = [{
     id = "expire-processed"
@@ -33,7 +33,7 @@ module "labeled_media_table" {
 }
 
 module "stream_input_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_bucket"
+  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_bucket"
   bucket = var.stream_input_bucket_name
   lifecycle_rules = [{
     id = "expire-processed"

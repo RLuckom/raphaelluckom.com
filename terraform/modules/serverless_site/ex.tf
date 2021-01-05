@@ -49,7 +49,7 @@ module "trails_resolver" {
 }
 
 module "website_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_website_bucket"
+  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_website_bucket"
   bucket_name = var.domain_settings.domain_name
   origin_id = var.domain_settings.domain_name_prefix
   allowed_origins = var.domain_settings.allowed_origins
@@ -73,12 +73,12 @@ module "website_bucket" {
 }
 
 module "logging_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_logging_bucket"
+  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket"
   bucket_name = var.domain_settings.domain_name
 }
 
 resource "aws_s3_bucket_object" "site_description" {
-  bucket = module.website_bucket.bucket.bucket.id
+  bucket = module.website_bucket.bucket.id
   key    = "site_description.json"
   content_type = "application/json"
   content = var.site_description_content
