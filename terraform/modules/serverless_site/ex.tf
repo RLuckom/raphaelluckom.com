@@ -56,15 +56,19 @@ module "website_bucket" {
 
   lambda_notifications = [
     {
-      lambda_arn = local.render_arn
-      lambda_name = local.render_name
+      lambda_arn = module.site_render.lambda.arn
+      lambda_name = module.site_render.lambda.function_name
+      lambda_role_arn = module.site_render.role.arn
+      permission_type = "put_object"
       events              = ["s3:ObjectCreated:*" ]
       filter_prefix       = ""
       filter_suffix       = ".md"
     },
     {
-      lambda_arn = local.deletion_cleanup_arn
-      lambda_name = local.deletion_cleanup_name
+      lambda_arn = module.deletion_cleanup.lambda.arn
+      lambda_name = module.deletion_cleanup.lambda.function_name
+      lambda_role_arn = module.deletion_cleanup.role.arn
+      permission_type = "delete_object"
       events              = ["s3:ObjectRemoved:*" ]
       filter_prefix       = ""
       filter_suffix       = ".md"

@@ -53,6 +53,22 @@ module "throwaway_partition_bucket" {
   bucket = "rluckom-partition-throwaway"
 }
 
+module "throwaway_log_input_bucket" {
+  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_bucket?ref=bucket-evt-perm"
+  bucket = "rluckom-log-input-throwaway"
+  lambda_notifications = [
+    {
+      lambda_arn = module.test_glue_pipeline.ingest_function.lambda.arn
+      lambda_name = module.test_glue_pipeline.ingest_function.lambda.function_name
+      lambda_role_arn = module.test_glue_pipeline.ingest_function.role.arn
+      events              = ["s3:ObjectCreated:*"]
+      filter_prefix       = ""
+      filter_suffix       = ""
+      permission_type       = "move_known_object_out"
+    }
+  ]
+}
+
 module test_glue_pipeline {
   source = "./modules/glue_pipeline"
   name_stem = "test_glue_pipeline"

@@ -3,15 +3,6 @@ module "photos_media_output_bucket" {
   bucket = "rluckom.photos.partition"
 }
 
-locals {
-  photo_etl_bucket_notifications = [{
-    bucket = module.media_input_bucket.bucket.id
-    events              = ["s3:ObjectCreated:*"]
-    filter_prefix       = ""
-    filter_suffix       = ""
-  }]
-}
-
 module "image_archive_lambda" {
   source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   mem_mb = 512
@@ -54,9 +45,6 @@ module "image_archive_lambda" {
       module.media_table.permission_sets.put_item,
       module.labeled_media_table.permission_sets.put_item,
       local.permission_sets.rekognition_image_analysis,
-      module.media_input_bucket.permission_sets.read_and_tag,
-      module.stream_input_bucket.permission_sets.read_and_tag,
-      module.stream_input_bucket.permission_sets.read_and_tag,
       module.media_bucket.permission_sets.put_object,
       module.photos_media_output_bucket.permission_sets.put_object,
     )

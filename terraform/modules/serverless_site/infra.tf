@@ -69,7 +69,6 @@ module "site_render" {
   scope_name = var.site_name
   source_bucket = var.lambda_bucket
   policy_statements =  concat(
-    local.site_bucket_put_permission,
     module.trails_updater.permission_sets.invoke
   )
   donut_days_layer_arn = var.layer_arns.donut_days
@@ -102,7 +101,6 @@ module "deletion_cleanup" {
   scope_name = var.site_name
   source_bucket = var.lambda_bucket
   policy_statements =  concat(
-    local.site_bucket_delete_permission,
     module.trails_updater.permission_sets.invoke
   )
   donut_days_layer_arn = var.layer_arns.donut_days

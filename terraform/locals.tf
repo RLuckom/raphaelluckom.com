@@ -3,6 +3,8 @@ locals {
     {
       lambda_arn = module.image_archive_lambda.lambda.arn
       lambda_name = module.image_archive_lambda.lambda.function_name
+      lambda_role_arn = module.image_archive_lambda.role.arn
+      permission_type     = "read_and_tag_known"
       events              = ["s3:ObjectCreated:*"]
       filter_prefix       = ""
       filter_suffix       = "JPG"
@@ -10,6 +12,8 @@ locals {
     {
       lambda_arn = module.image_archive_lambda.lambda.arn
       lambda_name = module.image_archive_lambda.lambda.function_name
+      lambda_role_arn = module.image_archive_lambda.role.arn
+      permission_type     = "read_and_tag_known"
       events              = ["s3:ObjectCreated:*"]
       filter_prefix       = ""
       filter_suffix       = "jpeg"
@@ -17,6 +21,8 @@ locals {
     {
       lambda_arn = module.image_archive_lambda.lambda.arn
       lambda_name = module.image_archive_lambda.lambda.function_name
+      lambda_role_arn = module.image_archive_lambda.role.arn
+      permission_type     = "read_and_tag_known"
       events              = ["s3:ObjectCreated:*"]
       filter_prefix       = ""
       filter_suffix       = "jpg"
@@ -24,6 +30,8 @@ locals {
     {
       lambda_arn = module.image_archive_lambda.lambda.arn
       lambda_name = module.image_archive_lambda.lambda.function_name
+      lambda_role_arn = module.image_archive_lambda.role.arn
+      permission_type     = "read_and_tag_known"
       events              = ["s3:ObjectCreated:*"]
       filter_prefix       = ""
       filter_suffix       = "JPEG"
