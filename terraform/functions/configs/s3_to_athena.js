@@ -1,6 +1,6 @@
 const _ = require('lodash')
-const {utils} = require('./helpers/formatters')
-const { parseKeyDate, athenaPartitionQuery } = require('./helpers/athenaHelpers')
+const formatters = require('./helpers/formatters')
+const { parseKeyDate, athenaPartitionQuery, createDatedS3Key} = require('./helpers/athenaHelpers')
 
 module.exports = {
   stages: {
@@ -10,34 +10,36 @@ module.exports = {
         partitions: {
           action: 'exploranda',
           params: {
-            accessSchema: 'dataSources.AWS.athena.startQueryExecution',
-            explorandaParams: {
-              apiConfig: {value: {region: '${athena_region}'}},
-              QueryString: {
-                helper: 'transform',
-                params: {
-                  arg: {
-                    all: {
-                      athenaDb: {value: '${athena_db}'},
-                      athenaTable: {value: '${athena_table}'},
-                      date: {ref: 'event.Records[0].s3.object.key'},
+            accessSchema: {value: 'dataSources.AWS.athena.startQueryExecution'},
+            params: {
+              explorandaParams: {
+                apiConfig: {value: {region: '${athena_region}'}},
+                QueryString: {
+                  helper: 'transform',
+                  params: {
+                    arg: {
+                      all: {
+                        athenaDb: {value: '${athena_db}'},
+                        athenaTable: {value: '${athena_table}'},
+                        objectKey: {ref: 'event.Records[0].s3.object.key'},
+                      },
                     },
-                  },
-                  func: athenaPartitionQuery,
-                }
-              },
-              QueryExecutionContext: {
-                value: {
-                  Catalog: '${athena_catalog}',
-                  Database: '${athena_db}',
-                }
-              },
-              ResultConfiguration: {
-                value: {
-                  OutputLocation: '${athena_result_bucket}',
+                    func: athenaPartitionQuery,
+                  }
+                },
+                QueryExecutionContext: {
+                  value: {
+                    Catalog: '${athena_catalog}',
+                    Database: '${athena_db}',
+                  }
+                },
+                ResultConfiguration: {
+                  value: {
+                    OutputLocation: '${athena_result_bucket}',
+                  }
                 }
               }
-            }
+            },
           },
         },
       },
@@ -49,10 +51,12 @@ module.exports = {
           action: 'exploranda',
           formatter: formatters.singleValue.unwrap,
           params: {
-            accessSchema: 'dataSources.AWS.athena.getQueryExecution',
-            explorandaParams: {
-              apiConfig: {value: {region: '${athena_region}'}},
-              QueryExecutionId: { ref: 'addPartitions.results.partitions'} 
+            accessSchema: { value: 'dataSources.AWS.athena.getQueryExecution' },
+            params: {
+              explorandaParams: {
+                apiConfig: {value: {region: '${athena_region}'}},
+                QueryExecutionId: { ref: 'addPartitions.results.partitions'} 
+              },
             },
             behaviors: {
               value: {
@@ -83,22 +87,16 @@ module.exports = {
       dependencies: {
         partitionResults: {
           action: 'exploranda',
-          formatter: formatters.singleValue.unwrap,
           params: {
-            accessSchema: 'dataSources.AWS.athena.getQueryResults',
-            explorandaParams: {
-              apiConfig: {value: {region: '${athena_region}'}},
-              QueryExecutionId: {
-                helper: 'transform',
-                params: {
-                  arg: { ref: 'waitForPartitions.results.completion' },
-                  func: (completion) => {
-                  return _.map(completion, 'QueryExecutionId')
-                }
-              }
-            }
-          },
-        }
+            accessSchema: {value: 'dataSources.AWS.athena.getQueryResults'},
+            params: {
+              explorandaParams: {
+                apiConfig: {value: {region: '${athena_region}'}},
+                QueryExecutionId: { ref: 'addPartitions.results.partitions'} 
+              },
+            },
+          }
+        },
       },
     },
     copy: {
@@ -114,7 +112,7 @@ module.exports = {
             },
             func: ({key}) => {
               const { date, uniqId, year, month, day, hour } = parseKeyDate(key)
-              return utils.createDatedS3Key("${partition_prefix}",  date + '.' + uniqId + '.gz', { year, month, day, hour })
+              return createDatedS3Key("${partition_prefix}",  date + '.' + uniqId + '.gz', { year, month, day, hour })
             },
           }
         },
@@ -135,11 +133,13 @@ module.exports = {
         copy: {
           action: 'exploranda',
           params: {
-            accessSchema: 'dataSources.AWS.s3.copyObject',
-            explorandaParams: {
-              Bucket: '${partition_bucket}',
-              CopySource: {ref: 'stage.copySource'},
-              Key: { ref: 'stage.destKey'} 
+            accessSchema: {value: 'dataSources.AWS.s3.copyObject'},
+            params: {
+              explorandaParams: {
+                Bucket: '${partition_bucket}',
+                CopySource: {ref: 'stage.copySource'},
+                Key: { ref: 'stage.destKey'} 
+              }
             }
           },
         }
@@ -151,11 +151,13 @@ module.exports = {
         delete: {
           action: 'exploranda',
           params: {
-            accessSchema: exploranda.dataSources.AWS.s3.deleteObject,
-            explorandaParams: {
-              Bucket: {ref: 'event.Records[0].s3.bucket.name'},
-              Key: {ref: 'event.Records[0].s3.object.key'},
-            },
+            accessSchema: {value: 'dataSources.AWS.s3.deleteObject'},
+            params: {
+              explorandaParams: {
+                Bucket: {ref: 'event.Records[0].s3.bucket.name'},
+                Key: {ref: 'event.Records[0].s3.object.key'},
+              },
+            }
           }
         },
       }
