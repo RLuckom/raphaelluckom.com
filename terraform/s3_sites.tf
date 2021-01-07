@@ -72,8 +72,9 @@ module "throwaway_log_input_bucket" {
 module test_glue_pipeline {
   source = "./modules/glue_pipeline"
   name_stem = "test_glue_pipeline"
-  athena_result_bucket = {
-    id = module.throwaway_athena_bucket.bucket.id
+  athena_results = {
+    bucket = module.throwaway_athena_bucket.bucket.id
+    path = "athena/partition_logs/"
     athena_query_permission = module.throwaway_athena_bucket.permission_sets.athena_query_execution
   }
   partitioned_data_sink = {

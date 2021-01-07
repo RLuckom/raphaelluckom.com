@@ -35,7 +35,7 @@ module.exports = {
                 },
                 ResultConfiguration: {
                   value: {
-                    OutputLocation: '${athena_result_bucket}',
+                    OutputLocation: '${athena_result_location}',
                   }
                 }
               }

@@ -28,7 +28,7 @@ module "archive_function" {
     athena_db = module.glue_table.table.database_name
     athena_table = module.glue_table.table.name 
     athena_catalog = "AwsDataCatalog"
-    athena_result_bucket = "s3://${var.athena_result_bucket.id}"
+    athena_result_location = "s3://${var.athena_results.bucket}${var.athena_results.path == "" ? "" : "/"}${trimprefix(var.athena_results.path, "")}"
     partition_prefix = var.partitioned_data_sink.prefix
     partition_bucket = var.partitioned_data_sink.bucket
   })
@@ -45,7 +45,7 @@ module "archive_function" {
     local.athena_query_permission,
     module.glue_table.permission_sets.create_partition_glue_permissions,
     var.partitioned_data_sink.put_object_permission,
-    var.athena_result_bucket.athena_query_permission,
+    var.athena_results.athena_query_permission,
   )
   source_bucket = var.lambda_source_bucket
   donut_days_layer_arn = var.donut_days_layer_arn

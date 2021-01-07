@@ -2,9 +2,10 @@ variable name_stem {
   type = string
 }
 
-variable athena_result_bucket {
+variable athena_results {
   type = object({
-    id = string
+    bucket = string
+    path = string
     athena_query_permission = list(object({
       actions = list(string)
       resources = list(string)
