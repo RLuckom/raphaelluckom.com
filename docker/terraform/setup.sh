@@ -1,4 +1,4 @@
-!#/bin/bash
+!#/bin/sh
 set -e
 
 docker build -t terraform -f Dockerfile .
