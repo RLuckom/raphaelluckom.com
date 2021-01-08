@@ -75,6 +75,54 @@ locals {
       resources = ["*"]
     }]
   }
+  lambda_logs_schema = {
+    partition_keys = [
+      {
+        name = "year"
+        type = "string"
+      },
+      {
+        name = "month"
+        type = "string"
+      },
+      {
+        name = "day"
+        type = "string"
+      },
+      {
+        name = "hour"
+        type = "string"
+      },
+    ]
+
+    columns = [
+      {
+        name = "level"
+        type = "string"
+      },
+      {
+        name = "source"
+        type = "string"
+      },
+      {
+        name = "sourceInstance"
+        type = "string"
+      },
+      {
+        name = "timestamp"
+        type = "string"
+      },
+      {
+        name = "tags"
+        type = "array<string>"
+      },
+      {
+        name = "metadata"
+        type = "map<string,string>"
+      }
+    ]
+  }
+
   generic_cloudwatch_logs_schema = {
     partition_keys = [
       {

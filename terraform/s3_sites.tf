@@ -26,6 +26,27 @@ module "lambda_logging_bucket" {
   bucket_name = "rluckom-lambda-logging"
 }
 
+resource "aws_glue_catalog_database" "lambda_logs" {
+  name = "lambda_logs"
+}
+
+module "lambda_logging_table" {
+  source = "github.com/RLuckom/terraform_modules//aws/standard_glue_table"
+  table_name          = "lambda_logs"
+  external_storage_bucket_id = module.lambda_logging_bucket.bucket.id
+  db = {
+    name = aws_glue_catalog_database.lambda_logs.name
+    arn = aws_glue_catalog_database.lambda_logs.arn
+  }
+  skip_header_line_count = 0
+  ser_de_info = {
+    name                  = "lambda_logs"
+    serialization_library = "org.openx.data.jsonserde.JsonSerDe"
+    parameters = {}
+  }
+  columns = local.lambda_logs_schema.columns
+}
+
 module "test_site" {
   source = "./modules/serverless_site"
   domain_settings = var.test_domain_settings
@@ -33,7 +54,7 @@ module "test_site" {
   logging_bucket = module.lambda_logging_bucket.bucket.id
   site_description_content = file("./sites/test.raphaelluckom.com/site_description.json")
   site_name = "test"
-  debug = false
+  debug = true
   lambda_event_configs = local.notify_failure_only
   route53_zone_name = var.route53_zone_name
   layer_arns = {
@@ -41,7 +62,6 @@ module "test_site" {
     markdown_tools =module.markdown_tools.layer.arn,
   }
 }
-
 
 module "throwaway_athena_bucket" {
   source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket"
@@ -54,7 +74,7 @@ module "throwaway_partition_bucket" {
 }
 
 module "throwaway_log_input_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_bucket?ref=bucket-evt-perm"
+  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_bucket"
   bucket = "rluckom-log-input-throwaway"
   lambda_notifications = [
     {
