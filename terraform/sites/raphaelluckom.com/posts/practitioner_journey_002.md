@@ -174,7 +174,7 @@ resource "aws_budgets_budget" "overall" {
 
 Now it's time to apply this terraform configuration and make the alert. For this exercise, I'm assuming that you've already
 created your terraform state bucket and an admin role for your instance. If that's not the case, just follow the instructions in the previous post.
-Using the instructions in the previous post, start an Ubuntu 20.04[^4] instance (remember to apply the admin security role) and log in.
+Using those instructions, start an Ubuntu 20.04[^4] instance (remember to apply the admin security role) and log in.
 
 Once again, we're going to use a setup script to install terraform. It's a little shorter than the one from the last exercise[^5]. Download
 the repository from github just like last time:
@@ -209,7 +209,13 @@ that it was created.
 ![image of mkdir command](/img/practitioner_journey/002/mkdir.png)
 
 Now enter "`cd terraform`" to move into the `terraform` directory you just made. We want to download the file we just put in S3, so 
-use the instruction `aws s3 cp s3://{YOUR-TRANSFER-BUCKET}/budget.tf budget.tf` (replacing the bucket name) to copy the file to
+use the instruction 
+
+```
+aws s3 cp s3://{YOUR-TRANSFER-BUCKET}/budget.tf budget.tf`
+```
+
+(replacing the bucket name) to copy the file to
 the VM. If you enter `ls`, you should see that the file has appeared.
 
 ![image of s3 cp command](/img/practitioner_journey/002/s3_cp.png)
@@ -218,8 +224,8 @@ Now run "`terraform init`" and "`terraform apply`", like last time, to create th
 
 ![image of s3 cp command](/img/practitioner_journey/002/tf_init_apply.png)
 
-When terraform finishes creating the bucket, we're done! You should see thast a budget has been created on the [budgets](https://console.aws.amazon.com/billing/home?region=us-east-1#/budgets)
-page.
+When terraform finishes creating the budget, we're done! You should see thast a budget has been created on 
+the [budgets](https://console.aws.amazon.com/billing/home?region=us-east-1#/budgets) page.
 
 ![image of s3 cp command](/img/practitioner_journey/002/budget_created.png)
 
