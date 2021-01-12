@@ -45,7 +45,7 @@ On the installation page, search for "language-terraform." Select and install th
 
 #### Terraform Project Setup
 
-Create a new file in the editor and save it as "alerts.tf." Add the following to the top of the file (notice that you need
+Create a new file in the editor and save it as "budgets.tf." Add the following to the top of the file (notice that you need
 to replace "`{YOUR-TERRAFORM-STATE-BUCKET}`" with the actual name of the terraform state bucket you created in the last exercise. If
 you haven't done so yet, do it now and meet back here when you're done):
 
@@ -212,7 +212,7 @@ Now enter "`cd terraform`" to move into the `terraform` directory you just made.
 use the instruction 
 
 ```
-aws s3 cp s3://{YOUR-TRANSFER-BUCKET}/budget.tf budget.tf`
+aws s3 cp s3://{YOUR-TRANSFER-BUCKET}/budget.tf budget.tf
 ```
 
 (replacing the bucket name) to copy the file to
@@ -224,10 +224,14 @@ Now run "`terraform init`" and "`terraform apply`", like last time, to create th
 
 ![image of s3 cp command](/img/practitioner_journey/002/tf_init_apply.png)
 
-When terraform finishes creating the budget, we're done! You should see thast a budget has been created on 
-the [budgets](https://console.aws.amazon.com/billing/home?region=us-east-1#/budgets) page.
+When terraform finishes running, you should see thast a budget has been created on 
+the [budgets](https://console.aws.amazon.com/billing/home?region=us-east-1#/budgets) page. Since we're allowed
+to have two free budgets according to the [pricing page](https://aws.amazon.com/aws-cost-management/pricing/),
+we're not going to use "`terraform destroy`" to delete the budget. But we _do_ still need to shut down the instance
+that we used to make it. Find the instance on the [instances page](https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#).
+select it using the checkbox in the list, and use the "Instance State" dropdown to terminate it.
 
-![image of s3 cp command](/img/practitioner_journey/002/budget_created.png)
+![image of ec2 console](/img/practitioner_journey/002/instance_delete.png)
 
 #### Conclusion
 
