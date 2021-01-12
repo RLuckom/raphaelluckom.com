@@ -105,7 +105,7 @@ locals {
         type = "string"
       },
       {
-        name = "sourceInstance"
+        name = "sourceinstance"
         type = "string"
       },
       {
