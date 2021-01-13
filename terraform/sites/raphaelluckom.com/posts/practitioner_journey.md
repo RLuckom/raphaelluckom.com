@@ -77,7 +77,8 @@ Navigate to the [create bucket](https://s3.console.aws.amazon.com/s3/bucket/crea
 have to be unique--like Twitter handles, two people can't both have the same bucket name, even in different accounts.
 One common practice is to use some kind of personal prefix with your bucket names--for instance, I use `rluckom`, and name
 my buckets things like `rluckom-logging`, `rluckom-terraform-state`, etc. Choose a name for your terraform state bucket,
-and at the bottom of the form, select the circle to enable object versioning. You don't need to change any of the other options[^4]
+and at the bottom of the form, select the circle to enable object versioning. You don't need to change any of the other options[^4].
+Use the "Create bucket" button to create the bucket.
 
 ![View of the S3 bucket creation flow showing the enable object versioning selector](/img/practitioner_journey/000/s3_enable.png)
 
@@ -118,7 +119,7 @@ to just click on the row.
 ![View of the IAM role creation flow showing admin access checked](/img/practitioner_journey/000/iam_admin_access.png)
 
 Click through the Tags page--there's no reason to add any now--and on the next screen give the role
-a descriptive name like `ec2-admin-role`.
+a descriptive name like `ec2-admin-role`. Click the "Create role" button to create the role.
 
 #### Start A VM and Log In
 
@@ -433,7 +434,12 @@ goes above $5 or $10 in a month, because that would obviously be _crazy_.
 
 [^4]: The two other options are encryption and object locking. Object locking lets you prevent objects from being deleted,
       but we get most of the benefits from versioning. There's also an option to enable encryption of your objects on disk.
-      It's up to you if you want this; note that it doesn't protect against access through the AWS APIs.
+      It's up to you if you want this; note that it doesn't protect against access through the AWS APIs. If you use encryption,
+      it will be provided through AWS Key Management Service, which charges $0.03 per 10,000 requests. Of the encryption options,
+      "AWS Key Management Service key (SSE-KMS)" uses KMS directly, meaning that every time you access an object you also
+      incur a KMS request. The other encryption option, "Amazon S3 key (SSE-S3)", holds its key _outside_ of KMS, so in
+      theory it doesn't use a KMS request for each object access, making it slightly cheaper. [This](https://docs.aws.amazon.com/AmazonS3/latest/dev/serv-side-encryption.html)
+      is an AWS-authored description of the encryption options.
 
 [^5]: Virtual machines are regular computers that you log in to remotely. They are called "virtual" because of the way
       that they are hosted. They are also referred to as "instances." The AWS service for running VMs is EC2.
