@@ -30,7 +30,7 @@ to create and manage infrastructure. The _result_ of this exercise will be a sta
 using handwritten HTML--the most basic type of website there is. Together, these two things
 represent a foundation on which we will be able to build _anything_. Let's jump in.
 
-#### Making an AWS Account
+#### Make an AWS Account
 
 **Requires:**
 
@@ -45,8 +45,9 @@ represent a foundation on which we will be able to build _anything_. Let's jump 
 **Time:** 3-7 minutes
 
 To save time, and prevent these instructions from becoming outdated, I'm not going to document the standard AWS
-account creation process. Use the materials above, and the instructions [provided by aws](https://aws.amazon.com/premiumsupport/knowledge-center/create-and-activate-aws-account/)
-to open an account. Use a good password and set up MFA (I like Google Authenticator).
+account creation process. If you are the type of person who likes to read the instructions, AWS has some [here](https://aws.amazon.com/premiumsupport/knowledge-center/create-and-activate-aws-account/), 
+but my advice is to just jump into [creating your account](https://portal.aws.amazon.com/gp/aws/developer/registration/index.html). It’s simple. Once your account is set up, you can set 
+up MFA by signing onto the management console and selecting the security configuration option from your account menu.
 
 #### Make an S3 Bucket to store Terraform state
 
@@ -76,14 +77,14 @@ Navigate to the [create bucket](https://s3.console.aws.amazon.com/s3/bucket/crea
 have to be unique--like Twitter handles, two people can't both have the same bucket name, even in different accounts.
 One common practice is to use some kind of personal prefix with your bucket names--for instance, I use `rluckom`, and name
 my buckets things like `rluckom-logging`, `rluckom-terraform-state`, etc. Choose a name for your terraform state bucket,
-and at the bottom of the form, select the circle to enable object versioning.
+and at the bottom of the form, select the circle to enable object versioning. You don't need to change any of the other options[^4]
 
 ![View of the S3 bucket creation flow showing the enable object versioning selector](/img/practitioner_journey/000/s3_enable.png)
 
 #### Make an Administrator Server Role
 
 In this step, we're going to create an administrator-level access role within our account. We'll use it 
-In the next step after this one, when we start a _virtual machine_[^4] (VM) on which to run terraform.
+In the next step after this one, when we start a _virtual machine_[^5] (VM) on which to run terraform.
 Because we're going to want terraform to create infrastructure on our behalf, we need to give it administrator
 access to our account. This is a pretty big deal, so we're going to follow some security precautions
 around this role:
@@ -94,7 +95,7 @@ around this role:
    That means that we can connect to it through the AWS website while we are logged in, but there is 
    no other way to log in to the computer.
 3. As soon as we are done running terraform to create the infrastructure we want, we will permanently destroy
-   the VM. We can make a new one with the same role if we want to re-run terraform later[^5].
+   the VM. We can make a new one with the same role if we want to re-run terraform later[^6].
 
 **Results:**
 
@@ -292,7 +293,7 @@ Enter `yes` to create the infrastructure.
 #### Upload an index.html page and look at the website
 
 Now we're going to upload a minimal webpage to the bucket. AWS provides a command-line-interface (CLI) for interacting
-with S3. We're going to use that to _copy_ (`cp`) an index.html file from our instance to the S3 bucket[^6]. 
+with S3. We're going to use that to _copy_ (`cp`) an index.html file from our instance to the S3 bucket[^7]. 
 
 **Requires:**
 
@@ -430,15 +431,19 @@ goes above $5 or $10 in a month, because that would obviously be _crazy_.
       and very little data transfer). You can view your month-to-date billing balance (after you set up an account) on
       the [billing dashboard](https://console.aws.amazon.com/billing/). 
 
-[^4]: Virtual machines are regular computers that you log in to remotely. They are called "virtual" because of the way
+[^4]: The two other options are encryption and object locking. Object locking lets you prevent objects from being deleted,
+      but we get most of the benefits from versioning. There's also an option to enable encryption of your objects on disk.
+      It's up to you if you want this; note that it doesn't protect against access through the AWS APIs.
+
+[^5]: Virtual machines are regular computers that you log in to remotely. They are called "virtual" because of the way
       that they are hosted. They are also referred to as "instances." The AWS service for running VMs is EC2.
 
-[^5]: If you get tired of setting up a new VM every time, you can also simply _shut down_ the VM when you're not using it.
+[^6]: If you get tired of setting up a new VM every time, you can also simply _shut down_ the VM when you're not using it.
       Storing a small, shut-down VM is [slightly more expensive](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html)
       than destroying it completely. At the time of writing, if you follow the instructions in this post but shut down your
       instance instead of terminating it, it would cost $0.80 / month.
 
-[^6]: From here on, the bucket is a _static site_. What that means is that any files you add to the bucket will be available to
+[^7]: From here on, the bucket is a _static site_. What that means is that any files you add to the bucket will be available to
       anyone over the internet. Some people find that this is [all they want](https://blog.steren.fr/2020/my-stack-will-outlive-yours/).
       Another philosophy, summarized as "manual until it hurts," suggests that once you reach a point like this, where you
       _have_ a capability (static website) but the process to update it seems hard (write HTML and put it in the bucket), you
