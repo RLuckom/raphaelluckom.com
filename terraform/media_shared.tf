@@ -15,12 +15,12 @@ module "media_input_bucket" {
 }
 
 module "media_table" {
-  source = "github.com/RLuckom/terraform_modules//aws/standard_dynamo_table"
+  source = "github.com/RLuckom/terraform_modules//aws/state/permissioned_dynamo_table"
   table_name = "media"
 }
 
 module "labeled_media_table" {
-  source = "github.com/RLuckom/terraform_modules//aws/standard_dynamo_table"
+  source = "github.com/RLuckom/terraform_modules//aws/state/permissioned_dynamo_table"
   table_name = "labeled_media"
   partition_key = {
     name = "label"
@@ -99,7 +99,7 @@ module "web_api_handler_lambda" {
 }
 
 module "posts_table" {
-  source = "github.com/RLuckom/terraform_modules//aws/standard_dynamo_table"
+  source = "github.com/RLuckom/terraform_modules//aws/state/permissioned_dynamo_table"
   table_name = "posts"
   partition_key = {
     name = "id"

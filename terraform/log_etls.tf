@@ -73,7 +73,7 @@ module "archive_cloudfront_logs" {
 }
 
 module "cloudformation_logs_glue_table" {
-  source = "github.com/RLuckom/terraform_modules//aws/standard_glue_table"
+  source = "github.com/RLuckom/terraform_modules//aws/state/permissioned_glue_table"
   table_name          = "${var.domain_name_prefix}_cf_logs_partitioned_gz"
   external_storage_bucket_id = module.logs_partition_bucket.bucket.id
   partition_prefix = "partitioned/raphaelluckom.com"
@@ -90,5 +90,5 @@ module "cloudformation_logs_glue_table" {
       "serialization.format"="\t"
     }
   }
-  columns = local.cloudfront_access_log_schema.columns
+  columns = module.temporary_schemas.cloudfront_access_log_columns
 }

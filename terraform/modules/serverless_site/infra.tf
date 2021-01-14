@@ -1,3 +1,5 @@
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
 
 locals {
   render_arn = "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:site_render-${var.site_name}"
@@ -148,4 +150,74 @@ module "trails_updater" {
   additional_layers = [
     var.layer_arns.markdown_tools,
   ]
+}
+
+module "site" {
+  source = "github.com/RLuckom/terraform_modules//aws/cloudfront_s3_website"
+  website_buckets = [{
+    origin_id = var.domain_settings.domain_name_prefix
+    regional_domain_name = "${local.site_bucket}.s3.${data.aws_region.current.name == "us-east-1" ? "" : "${data.aws_region.current.name}."}amazonaws.com"
+  }]
+  logging_config = module.logging_bucket.cloudfront_logging
+  lambda_origins = [{
+    id = "trails"
+    path = "/meta/relations/trails"
+    site_path = "/meta/relations/trails*"
+    apigateway_path = "/meta/relations/trails/{trail+}"
+    gateway_name_stem = "trails"
+    allowed_methods = ["GET", "HEAD", "OPTIONS"]
+    cached_methods = ["GET", "HEAD"]
+    compress = true
+    ttls = {
+      min = 0
+      default = 0
+      max = 0
+    }
+    forwarded_values = {
+      query_string = true
+      query_string_cache_keys = []
+      headers = []
+    }
+    lambda = {
+      arn = module.trails_resolver.lambda.arn
+      name = module.trails_resolver.lambda.function_name
+    }
+  }]
+  route53_zone_name = var.route53_zone_name
+  domain_name = var.domain_settings.domain_name
+  no_cache_s3_path_patterns = [ "/site_description.json" ]
+  domain_name_prefix = var.domain_settings.domain_name_prefix
+  subject_alternative_names = var.domain_settings.subject_alternative_names
+  default_cloudfront_ttls = var.default_cloudfront_ttls
+}
+
+resource "aws_s3_bucket_object" "site_description" {
+  bucket = local.site_bucket
+  key    = "site_description.json"
+  content_type = "application/json"
+  content = var.site_description_content
+  etag = md5(var.site_description_content)
+}
+
+module "trails_resolver" {
+  source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
+  timeout_secs = 40
+  mem_mb = 128
+  debug = var.debug
+  log_bucket = var.logging_bucket
+  config_contents = templatefile("${path.root}/functions/configs/two_way_resolver/config.js",
+  {
+    table = module.trails_table.table.name
+    forward_key_type = "trailName"
+    reverse_key_type = "memberKey"
+    reverse_association_index = "reverseDependencyIndex"
+  })
+  lambda_event_configs = var.lambda_event_configs
+  action_name = "trails_resolver"
+  scope_name = var.site_name
+  policy_statements = concat(
+    module.trails_table.permission_sets.read,
+  )
+  source_bucket = var.lambda_bucket
+  donut_days_layer_arn = var.layer_arns.donut_days
 }

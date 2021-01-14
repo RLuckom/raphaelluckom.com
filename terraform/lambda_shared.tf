@@ -6,29 +6,6 @@ resource "aws_s3_bucket" "lambda_bucket" {
   }
 }
 
-module "scratch_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_bucket"
-  bucket = var.scratch_bucket_name
-
-  bucket_policy_statements = [
-    {
-      actions = ["s3:GetBucketAcl"]
-      principals = [{
-        type = "Service"
-        identifiers = ["logs.amazonaws.com" ]
-      }]
-    }]
-
-    object_policy_statements = [{
-      actions = ["s3:PutObject"]
-      principals = [{
-        type = "Service"
-        identifiers = ["logs.amazonaws.com" ]
-      }]
-    }
-  ]
-}
-
 module "slack_event_relay" {
   source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   timeout_secs = 2

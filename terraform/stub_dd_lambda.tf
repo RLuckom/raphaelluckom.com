@@ -1,5 +1,5 @@
 module "dd-stub" {
-  count = 1
+  count = 0
   source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
   config_contents = "module.exports = {"
   lambda_event_configs = local.notify_failure_only

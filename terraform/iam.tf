@@ -85,28 +85,3 @@ resource "aws_iam_user_policy_attachment" "phone_policy_attachment" {
   user       = aws_iam_user.phone.name
   policy_arn = aws_iam_policy.phone_upload_policy.arn
 }
-
-module "apigateway_service_role" {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_role"
-  role_name = "api_gateway_cloudwatch_global_n"
-  role_policy = [{
-    actions   =  [
-      "logs:CreateLogGroup",
-      "logs:CreateLogStream",
-      "logs:DescribeLogGroups",
-      "logs:DescribeLogStreams",
-      "logs:PutLogEvents",
-      "logs:GetLogEvents",
-      "logs:FilterLogEvents"
-    ]
-    resources = ["*"]
-  }]
-  principals = [{
-    type = "Service"
-    identifiers = ["apigateway.amazonaws.com"]
-  }]
-}
-
-resource "aws_api_gateway_account" "apigateway" {
-  cloudwatch_role_arn = module.apigateway_service_role.role.arn
-}

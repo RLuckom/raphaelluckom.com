@@ -31,7 +31,7 @@ resource "aws_glue_catalog_database" "lambda_logs" {
 }
 
 module "lambda_logging_table" {
-  source = "github.com/RLuckom/terraform_modules//aws/standard_glue_table"
+  source = "github.com/RLuckom/terraform_modules//aws/state/permissioned_glue_table"
   table_name          = "lambda_logs"
   external_storage_bucket_id = module.lambda_logging_bucket.bucket.id
   db = {
@@ -44,7 +44,7 @@ module "lambda_logging_table" {
     serialization_library = "org.openx.data.jsonserde.JsonSerDe"
     parameters = {}
   }
-  columns = local.lambda_logs_schema.columns
+  columns = module.temporary_schemas.lambda_log_columns
 }
 
 module "test_site" {
@@ -111,7 +111,7 @@ module test_glue_pipeline {
       "serialization.format"="\t"
     }
   }
-  columns = local.cloudfront_access_log_schema.columns
+  columns = module.temporary_schemas.cloudfront_access_log_columns
 }
 
 module "prod_site" {

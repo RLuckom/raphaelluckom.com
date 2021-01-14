@@ -52,7 +52,7 @@ module "archive_function" {
 }
 
 module "glue_table" {
-  source = "github.com/RLuckom/terraform_modules//aws/standard_glue_table"
+  source = "github.com/RLuckom/terraform_modules//aws/state/permissioned_glue_table"
   table_name          = var.name_stem
   external_storage_bucket_id = var.partitioned_data_sink.bucket
   partition_prefix = var.partitioned_data_sink.prefix

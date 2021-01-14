@@ -1,3 +1,7 @@
+module temporary_schemas {
+  source = "github.com/RLuckom/terraform_modules//aws/common_log_schemas"
+}
+
 variable app_slack_channel {
   type = string
   default = "C01D71TDE0Z"
