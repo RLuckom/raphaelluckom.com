@@ -58,7 +58,7 @@ variable athena_region {
 }
 
 variable donut_days_layer_arn {
-  default = ""
+  default = null
 }
 
 variable lambda_event_configs {
