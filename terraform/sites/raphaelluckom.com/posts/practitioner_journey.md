@@ -158,11 +158,13 @@ and launch the instance.
 ![View of the instance creation flow showing the launch instance dialog](/img/practitioner_journey/000/ec2_launch_instance.png)
 
 Back on the [instances](https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#Instances:) page, you should see that your
-instance is starting up. Click on its ID, then wait a few moments for the "Connect" button to be enabled.
+instance is starting up. Click on its ID, and at the top of the table click "Connect." When the instance is first starting, 
+there's a short time (under a minute) when you can't click "Connect" so if it's disabled at first give it a few seconds. 
 
 ![View of the instance page showing the connection dialog](/img/practitioner_journey/000/ec2_connection.png)
 
-When the connect button is enabled, click it, then click "Connect" on the next screen. You should see a screen that looks about like this:
+The next screen presents options for connecting. We're going to use the default of EC2 Instance connect, so just
+click the orange "Connect" button under the "Connect To Instance" panel. You should see a screen that looks about like this:
 
 ![View of the instance connection page](/img/practitioner_journey/000/ec2_ssh.png)
 
@@ -178,29 +180,6 @@ This prompt has three parts, separated by `@`, `:`, and ending with `$`. The fir
 The second part, `ip-172-31-27-94`, is the name of the host--since this is an AWS instance, it is simply named for its IP address. 
 The last part of the prompt--the character `~`, is the _path_, or "what directory you're currently in." The `~` path is special;
 it means that you're in the logged in user's _home_ directory. You can see which directory you're in at any time by entering `pwd`.
-
-This exercise and subsequent ones will rely on three basic commands: `pwd` (check the current directory), `cd <new directory>` (move
-to a new directory from the current one) and `ls` (list the contents of the current directory). The following lines show how each is used:
-`ls` and `pwd` are entered by themselves. When you use `cd`, you need to specify _which_ directory you want to move _to_. So `cd practitioner-journey/`
-means "move _from_ the current directory into the "practitioner journey" directory. Note the use of `cd ..`, to move "up" into the 
-_parent_ of the current directory. [This](https://www.digitalocean.com/community/tutorials/basic-linux-navigation-and-file-management) is a more
-detailed introduction to navigating at the command line.
-
-```
-ubuntu@ip-172-31-27-94:~$ ls
-practitioner-journey
-ubuntu@ip-172-31-27-94:~$ cd practitioner-journey/
-ubuntu@ip-172-31-27-94:~/practitioner-journey$ ls
-000  README.md
-ubuntu@ip-172-31-27-94:~/practitioner-journey$ cd 000
-ubuntu@ip-172-31-27-94:~/practitioner-journey/000$ ls
-Dockerfile  index.html  setup.sh  terraform
-ubuntu@ip-172-31-27-94:~/practitioner-journey/000$ pwd
-/home/ubuntu/practitioner-journey/000
-ubuntu@ip-172-31-27-94:~/practitioner-journey/000$ cd ..
-ubuntu@ip-172-31-27-94:~/practitioner-journey$ pwd
-/home/ubuntu/practitioner-journey
-```
 
 #### Install Tools and Set Terraform State Bucket
 
@@ -218,7 +197,10 @@ ubuntu@ip-172-31-27-94:~/practitioner-journey$ pwd
 
 For the next few steps, I'm going to describe the commands you need to run and also provide
 screenshots of what the output looks like. I've tried to make sure that I included the full text of each command.
-When in doubt, use the screenshots to see exactly what I typed.
+When in doubt, use the screenshots to see exactly what I typed. Also note that the console tends to get
+disconnected (The UI will freeze and you'll have to re-login through the "Connect" page on the instance
+if it is idle for more than about 5 minutes. If this happens, log back in and repeat any commands starting with
+"`cd`" to get back to the right directory.
 
 Before we can run terraform, we need to install it. Actually, we need to install a few things
 using a [_script_](https://github.com/RLuckom/practitioner-journey/blob/main/000/setup.sh).
@@ -237,7 +219,8 @@ We're going to download the script using git. Copy and paste the following comma
 git clone https://github.com/RLuckom/practitioner-journey.git
 ```
 
-Now use `ls` again to see that the download succeeded:
+Now use `ls` again to see that the download succeeded (your output will not be exactly the same; the number of objects
+at least will be different):
 
 ![View of the instance connection page showing a series of output](/img/practitioner_journey/000/ec2_clone_success.png)
 
@@ -251,14 +234,14 @@ Now we're going to use `cd` to _change directory_ into the directory the script 
 ```
 
 Use `ls` to see what's in the directory. You should see a green file called `setup.sh`.  This script requires elevated
-permissions, so we're going to run it as the _super user_. When the installation is finished, it will ask you to enter the name of
-the S3 bucket you made for the terraform state:
+permissions, so we're going to run it as the _super user_. The last step in the script asks you to enter the name of the 
+S3 bucket you made for the terraform state. Type in the bucket name and press Return.
 
 ```
 sudo ./setup.sh
 ```
 
-If you make a mistake entering the bucket, you can just cancel with Ctrl-C and run the script again the same way.
+If you make a mistake entering the bucket, you can run the script again the same way and enter the right name.
 
 #### Run Terraform and Create Static Site
 
@@ -278,14 +261,14 @@ commands to orient ourselves within the system, moving around and looking for fi
 
 **Time:** 3-5 minutes
 
-Now we're going to `cd` into the terraform directory (type `cd terraform`) and run `terraform init` so that terraform can get ready to run:
+Now run "`cd terraform`" to move into the "`terraform`" directory.
+
+Run "`terraform init`" to set up terraform. 
 
 ![View of the instance connection page showing a series of output](/img/practitioner_journey/000/ec2_terraform_init.png)
 
-Once terraform initializes, we can create the website using `terraform plan` and `terraform apply`. Running `terraform plan` is
-optional--it just shows you what terraform would do without offering to do it. Today we'll be using [this terraform file](https://github.com/RLuckom/practitioner-journey/blob/main/000/terraform/bucket.tf)
-to create a bucket, in a static website configuration, with the appropriate permissions. When you run `terraform apply`, you
-should see a set of changes like the following: 
+Next, run "`terraform apply`". In this step, terraform is going to create the infrastructure. You will see a plan that creates
+3 resources, modifies 0, and deletes 0. Type "yes" at the prompt to accept, and press Enter. The output should look like the following: 
 
 ![View of the instance connection page showing a series of output](/img/practitioner_journey/000/ec2_terraform_apply.png)
 
@@ -294,7 +277,7 @@ Enter `yes` to create the infrastructure.
 #### Upload an index.html page and look at the website
 
 Now we're going to upload a minimal webpage to the bucket. AWS provides a command-line-interface (CLI) for interacting
-with S3. We're going to use that to _copy_ (`cp`) an index.html file from our instance to the S3 bucket[^7]. 
+with S3. We're going to use that to copy an index.html file from our instance to the S3 bucket[^7]. 
 
 **Requires:**
 
@@ -305,25 +288,24 @@ with S3. We're going to use that to _copy_ (`cp`) an index.html file from our in
 
 3. An S3 bucket configured as a static site.
 
-Let's look at the [s3 console](https://s3.console.aws.amazon.com/s3/home?region=us-east-1) to find the name of the new
+Look at the [s3 console](https://s3.console.aws.amazon.com/s3/home?region=us-east-1) to find the name of the new
 bucket (yours will have a different random string at the end than mine)
 
 ![View of the instance connection page showing a series of output](/img/practitioner_journey/000/s3_website_bucket.png)
 
-First, `cd` back into the parent directory by typing `cd ..`. The special path `..` is used when you want to go "up a level" in the
+Run "`cd ..`" to move into the parent of the current directory. The special path `..` is used when you want to go "up a level" in the
 directory hierarchy--when you want to move from the _present working directory_ (`pwd`) into the parent directory.
-Then, use `aws s3 cp ./index.html s3://{your-bucket-name}` (replacing `{your-bucket-name}` with the actual name of your bucket) 
-to upload the `index.html` file to the bucket (the `curl` command in the following is unnecessary): 
+Then, run "`aws s3 cp ./index.html s3://{your-bucket-name}`" (replacing "`{your-bucket-name}`" with the actual name of your bucket). 
+This uploads the `index.html` file to the bucket (the `curl` command in the following is unnecessary): 
 
 ![View of the instance connection page showing a series of output](/img/practitioner_journey/000/ec2_s3_cp.png)
 
-Now we can find the website endpoint by going to the [s3 console](https://s3.console.aws.amazon.com/s3/home?region=us-east-1),
-clicking on the website bucket, and finding its website configuration at the bottom of the Properties
-panel:
+Go to the [s3 console](https://s3.console.aws.amazon.com/s3/home?region=us-east-1) and click on the website bucket. On the
+bucket page, go to the Properties panel. Scroll all the way to the bottom to find the bucket's website configuration:
 
 ![View of the S3 console page showing the bucket website hosting settings](/img/practitioner_journey/000/s3_website_config.png)
 
-We can see the website in a browser by clicking on the link:
+Click the link in the bucket configuration to see the hosted page:
 
 ![View of the static website in a browser](/img/practitioner_journey/000/s3_website_in_browser.png)
 
@@ -333,11 +315,12 @@ Now that we've finished the exercise, we need to clean up. If you continue on th
 find that these little experimental pieces of infrastructure can stick around for ages. 
 
 First, we need to delete the `index.html` file that we added to the bucket. At the command line,
-enter `aws s3 rm s3://{your-bucket-name}/index.html` (replacing `{your-bucket-name}` with the actual name of your bucket). This
+enter "`aws s3 rm s3://{your-bucket-name}/index.html`" (replacing "`{your-bucket-name}`" with the actual name of your bucket). This
 will delete the `index.html` file from the bucket. In the next step, we're going to run `terraform destroy` to delete the bucket,
 and if we hadn't deleted the `index.html` file first, terraform would refuse to delete the non-empty bucket.
 
-So we're going to `cd` back into the terraform directory (`cd terraform`) and use `terraform destroy` to clean up.
+Now enter "`cd terraform`" to move into the terraform directory. Enter "`terraform destroy`" to clean up, and enter "yes" at the
+confirmation prompt.
 
 ![View of the instance connection page showing a series of output](/img/practitioner_journey/000/ec2_terraform_destroy.png)
 
