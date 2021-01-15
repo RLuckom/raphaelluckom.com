@@ -47,22 +47,6 @@ module "lambda_logging_table" {
   columns = module.temporary_schemas.lambda_log_columns
 }
 
-module "test_site" {
-  source = "./modules/serverless_site"
-  domain_settings = var.test_domain_settings
-  lambda_bucket = aws_s3_bucket.lambda_bucket.id
-  logging_bucket = module.lambda_logging_bucket.bucket.id
-  site_description_content = file("./sites/test.raphaelluckom.com/site_description.json")
-  site_name = "test"
-  debug = true
-  lambda_event_configs = local.notify_failure_only
-  route53_zone_name = var.route53_zone_name
-  layer_arns = {
-    donut_days = module.donut_days.layer.arn,
-    markdown_tools =module.markdown_tools.layer.arn,
-  }
-}
-
 module "throwaway_athena_bucket" {
   source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket"
   bucket_name = "rluckom-athena-throwaway"

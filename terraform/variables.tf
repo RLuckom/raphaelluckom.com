@@ -88,6 +88,17 @@ variable prod_additional_allowed_origins {
   default =  ["http://localhost*"]
 }
 
+variable test_domain_parts {
+  default = {
+    top_level_domain = "com"
+    controlled_domain_part = "test.raphaelluckom"
+  }
+}
+
+variable test_additional_allowed_origins {
+  default =  ["http://localhost*"]
+}
+
 variable "cloudwatch_logs_table_name" {
   type = string
   default = "cloudwatch_logs"
