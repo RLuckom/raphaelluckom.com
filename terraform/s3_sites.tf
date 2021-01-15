@@ -113,19 +113,3 @@ module test_glue_pipeline {
   }
   columns = module.temporary_schemas.cloudfront_access_log_columns
 }
-
-module "prod_site" {
-  source = "./modules/serverless_site"
-  domain_settings = var.prod_domain_settings
-  lambda_bucket = aws_s3_bucket.lambda_bucket.id
-  logging_bucket = module.lambda_logging_bucket.bucket.id
-  site_description_content = file("./sites/raphaelluckom.com/site_description.json")
-  lambda_event_configs = local.notify_failure_only
-  site_name = "prod"
-  debug = false
-  route53_zone_name = var.route53_zone_name
-  layer_arns = {
-    donut_days = module.donut_days.layer.arn,
-    markdown_tools =module.markdown_tools.layer.arn,
-  }
-}

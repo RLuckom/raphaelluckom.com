@@ -77,6 +77,17 @@ variable "prod_domain_settings" {
   }
 }
 
+variable prod_domain_parts {
+  default = {
+    top_level_domain = "com"
+    controlled_domain_part = "raphaelluckom"
+  }
+}
+
+variable prod_additional_allowed_origins {
+  default =  ["http://localhost*"]
+}
+
 variable "cloudwatch_logs_table_name" {
   type = string
   default = "cloudwatch_logs"
