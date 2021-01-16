@@ -1,11 +1,11 @@
 module "test_site_plumbing" {
-  source = "github.com/RLuckom/terraform_modules//aws/serverless_site_plumbing"
+  source = "github.com/RLuckom/terraform_modules//aws/serverless_site_plumbing?ref=hoist-bucket-permissions"
   domain_parts = var.test_domain_parts
   purpose_descriptor = "test"
   site_bucket = "test.raphaelluckom.com"
   subject_alternative_names = ["www.test.raphaelluckom.com"]
   lambda_bucket = aws_s3_bucket.lambda_bucket.id
-  lambda_logging_bucket = module.lambda_logging_bucket.bucket.id
+  default_lambda_logging_config = local.test_logging_config
   site_logging_bucket = module.test_logging_bucket.bucket.id
   trails_table = {
     name = module.test_trails_table.table.name
@@ -17,7 +17,6 @@ module "test_site_plumbing" {
   }
   site_description_content = file("./sites/test.raphaelluckom.com/site_description.json")
   lambda_event_configs = local.notify_failure_only
-  debug = true
   route53_zone_name = var.route53_zone_name
   layer_arns = {
     donut_days = module.donut_days.layer.arn,
@@ -65,9 +64,9 @@ module "test_website_bucket" {
       filter_suffix       = ".md"
     },
     {
-      lambda_arn = module.test_site_plumbing.deletion_function.arn
-      lambda_name = module.test_site_plumbing.deletion_function.name
-      lambda_role_arn = module.test_site_plumbing.deletion_function.role_arn
+      lambda_arn = module.test_site_plumbing.deletion_cleanup_function.arn
+      lambda_name = module.test_site_plumbing.deletion_cleanup_function.name
+      lambda_role_arn = module.test_site_plumbing.deletion_cleanup_function.role_arn
       permission_type = "delete_object"
       events              = ["s3:ObjectRemoved:*" ]
       filter_prefix       = ""
@@ -76,7 +75,8 @@ module "test_website_bucket" {
   ]
 }
 
-module "test_logging_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket"
-  bucket_name = "test.raphaelluckom.com"
+
+module test_logging_bucket {
+  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket?ref=hoist-bucket-permissions"
+  bucket_name = "logs.test.raphaelluckom.com"
 }
