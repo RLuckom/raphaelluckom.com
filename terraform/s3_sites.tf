@@ -1,8 +1,10 @@
 module "media_bucket" {
   source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_website_bucket"
-  bucket_name = var.media_domain_settings.domain_name
-  origin_id = var.media_domain_settings.domain_name_prefix
-  allowed_origins = var.media_domain_settings.allowed_origins
+  domain_parts = {
+    top_level_domain = "com"
+    controlled_domain_part = "media.raphaelluckom"
+  }
+  additional_allowed_origins = var.media_domain_settings.allowed_origins
 }
 
 module "media_logging_bucket" {
@@ -12,7 +14,10 @@ module "media_logging_bucket" {
 
 module "media_hosting_site" {
   source = "github.com/RLuckom/terraform_modules//aws/cloudfront_s3_website"
-  website_buckets = [module.media_bucket.cloudfront_origin]
+  website_buckets = [{
+    origin_id = "media.raphaelluckom"
+    regional_domain_name = "media.raphaelluckom.com.s3.amazonaws.com"
+  }]
   logging_config = module.media_logging_bucket.cloudfront_logging
   route53_zone_name = var.route53_zone_name
   domain_name = var.media_domain_settings.domain_name

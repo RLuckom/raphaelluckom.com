@@ -1,5 +1,5 @@
 module "prod_site_plumbing" {
-  source = "github.com/RLuckom/terraform_modules//aws/serverless_site_plumbing?ref=serverless-site-plumbing"
+  source = "github.com/RLuckom/terraform_modules//aws/serverless_site_plumbing"
   domain_parts = var.prod_domain_parts
   purpose_descriptor = "prod"
   site_bucket = "raphaelluckom.com"
@@ -50,7 +50,7 @@ module "prod_trails_table" {
 }
 
 module "prod_website_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_website_bucket?ref=serverless-site-plumbing"
+  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_website_bucket"
   domain_parts = var.prod_domain_parts
   additional_allowed_origins = var.prod_additional_allowed_origins
 

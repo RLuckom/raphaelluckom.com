@@ -42,7 +42,7 @@ variable "media_domain_settings" {
   default = {
     domain_name = "media.raphaelluckom.com"
     domain_name_prefix = "media.raphaelluckom"
-    allowed_origins = ["https://media.raphaelluckom.com", "http://localhost*", "https://raphaelluckom.com", "https://www.raphaelluckom.com"]
+    allowed_origins = ["http://localhost*", "https://raphaelluckom.com", "https://www.raphaelluckom.com"]
     subject_alternative_names = ["www.media.raphaelluckom.com"]
   }
 }
