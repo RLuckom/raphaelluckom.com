@@ -6,10 +6,6 @@ variable athena_results {
   type = object({
     bucket = string
     path = string
-    athena_query_permission = list(object({
-      actions = list(string)
-      resources = list(string)
-    }))
   })
 }
 
@@ -17,10 +13,6 @@ variable partitioned_data_sink {
   type = object({
     bucket = string
     prefix = string
-    put_object_permission = list(object({
-      actions = list(string)
-      resources = list(string)
-    }))
   })
 }
 

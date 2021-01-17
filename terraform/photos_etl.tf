@@ -1,6 +1,30 @@
 module "photos_media_output_bucket" {
   source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_bucket"
-  bucket = "rluckom.photos.partition"
+  bucket = local.media_output_bucket_name
+  object_policy_statements = [
+    local.media_storage_policy,
+  ]
+}
+
+locals {
+  media_output_bucket_name = "rluckom.photos.partition"
+  media_storage_config = {
+    bucket = local.media_output_bucket_name
+    prefix = ""
+    debug = false
+  }
+  media_storage_policy = {
+    prefix = local.media_storage_config.prefix
+    actions = ["s3:PutObject"]
+    principals = [
+      {
+        type = "AWS"
+        identifiers = [
+          module.image_archive_lambda.role.arn,
+        ]
+      }
+    ]
+  }
 }
 
 module "image_archive_lambda" {
@@ -35,6 +59,7 @@ module "image_archive_lambda" {
       })
     },
   ]
+  lambda_event_configs = local.notify_failure_only
   lambda_details = {
     action_name = "image_archive"
     scope_name = ""
@@ -45,8 +70,6 @@ module "image_archive_lambda" {
       module.media_table.permission_sets.put_item,
       module.labeled_media_table.permission_sets.put_item,
       local.permission_sets.rekognition_image_analysis,
-      module.media_bucket.permission_sets.put_object,
-      module.photos_media_output_bucket.permission_sets.put_object,
     )
   }
   environment_var_map = {

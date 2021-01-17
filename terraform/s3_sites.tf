@@ -5,11 +5,14 @@ module "media_bucket" {
     controlled_domain_part = "media.raphaelluckom"
   }
   additional_allowed_origins = var.media_domain_settings.allowed_origins
+  object_policy_statements = [
+    local.media_storage_policy,
+  ]
 }
 
 module "media_logging_bucket" {
   source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket"
-  bucket_name = var.media_domain_settings.domain_name
+  bucket_name = "logs.${var.media_domain_settings.domain_name}"
 }
 
 module "media_hosting_site" {
@@ -18,17 +21,17 @@ module "media_hosting_site" {
     origin_id = "media.raphaelluckom"
     regional_domain_name = "media.raphaelluckom.com.s3.amazonaws.com"
   }]
-  logging_config = module.media_logging_bucket.cloudfront_logging
+  logging_config = local.media_site_cloudfront_logging_config
   route53_zone_name = var.route53_zone_name
   domain_name = var.media_domain_settings.domain_name
   allowed_origins = var.media_domain_settings.allowed_origins
-  domain_name_prefix = var.media_domain_settings.domain_name_prefix
+  controlled_domain_part = var.media_domain_settings.domain_name_prefix
   subject_alternative_names = var.media_domain_settings.subject_alternative_names
 }
 
 module "lambda_logging_bucket" {
   source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket"
-  bucket_name = "rluckom-lambda-logging"
+  bucket_name = "logs.rluckom-lambda-logging"
 }
 
 resource "aws_glue_catalog_database" "lambda_logs" {
@@ -84,13 +87,8 @@ module test_glue_pipeline {
   athena_results = {
     bucket = module.throwaway_athena_bucket.bucket.id
     path = "athena/partition_logs/"
-    athena_query_permission = module.throwaway_athena_bucket.permission_sets.athena_query_execution
   }
-  partitioned_data_sink = {
-    bucket = module.throwaway_partition_bucket.bucket.id
-    prefix = ""
-    put_object_permission = module.throwaway_partition_bucket.permission_sets.put_object
-  }
+  partitioned_data_sink = local.test_glue_pipe_logging_config
   lambda_source_bucket = aws_s3_bucket.lambda_bucket.id
   ser_de_info = {
     name                  = "test_sink"

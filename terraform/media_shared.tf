@@ -95,6 +95,7 @@ module "web_api_handler_lambda" {
   environment_var_map = {
     DONUT_DAYS_DEBUG = "true"
   }
+  lambda_event_configs = local.notify_failure_only
   layers = [module.donut_days.layer.arn]
 }
 

@@ -1,5 +1,5 @@
 module "prod_site_plumbing" {
-  source = "github.com/RLuckom/terraform_modules//aws/serverless_site_plumbing?ref=hoist-bucket-permissions"
+  source = "github.com/RLuckom/terraform_modules//aws/serverless_site_plumbing"
   domain_parts = var.prod_domain_parts
   purpose_descriptor = "prod"
   site_bucket = "raphaelluckom.com"
@@ -77,5 +77,36 @@ module "prod_website_bucket" {
 
 module "prod_logging_bucket" {
   source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket"
-  bucket_name = "raphaelluckom.com"
+  bucket_name = "logs.raphaelluckom.com"
+  bucket_policy_statements = [{
+    actions = [
+      "s3:ListBucket"
+    ]
+    principals = [
+      {
+        type = "AWS"
+        identifiers = [
+          module.archive_cloudfront_logs.role.arn
+        ]
+      }
+    ]
+  }]
+  object_policy_statements = concat(
+    [local.prod_site_cloudfront_logging_policy], 
+    [{
+      actions = [
+        "s3:GetObject",
+        "s3:DeleteObject",
+      ]
+      prefix = ""
+      principals = [
+        {
+          type = "AWS"
+          identifiers = [
+            module.archive_cloudfront_logs.role.arn
+          ]
+        }
+      ]
+    }]
+  )
 }

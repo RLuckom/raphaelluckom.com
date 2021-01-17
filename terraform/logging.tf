@@ -5,11 +5,6 @@ locals {
     prefix = "test"
     debug = false
   }
-  test_site_cloudfront_logging_config = {
-    bucket = local.log_bucket_name
-    prefix = "test.raphaelluckom.com"
-    include_cookies = false
-  }
   test_site_lambda_logging_policy = {
     prefix = local.test_site_lambda_logging_config.prefix
     actions = ["s3:PutObject"]
@@ -24,6 +19,11 @@ locals {
         ]
       }
     ]
+  }
+  test_site_cloudfront_logging_config = {
+    bucket = local.log_bucket_name
+    prefix = "test.raphaelluckom.com"
+    include_cookies = false
   }
   test_site_cloudfront_logging_policy = {
     prefix = local.test_site_cloudfront_logging_config.prefix
@@ -42,11 +42,6 @@ locals {
     prefix = "prod"
     debug = false
   }
-  prod_site_cloudfront_logging_config = {
-    bucket = "logs.raphaelluckom.com"
-    prefix = "raphaelluckom"
-    include_cookies = false
-  }
   prod_site_lambda_logging_policy = {
     prefix = local.prod_site_lambda_logging_config.prefix
     actions = ["s3:PutObject"]
@@ -62,6 +57,11 @@ locals {
       }
     ]
   }
+  prod_site_cloudfront_logging_config = {
+    bucket = "logs.raphaelluckom.com"
+    prefix = "raphaelluckom"
+    include_cookies = false
+  }
   prod_site_cloudfront_logging_policy = {
     prefix = local.prod_site_cloudfront_logging_config.prefix
     actions = ["s3:PutObject"]
@@ -74,13 +74,47 @@ locals {
       }
     ]
   }
+  media_site_cloudfront_logging_config = {
+    bucket = local.log_bucket_name
+    prefix = "media.raphaelluckom"
+    include_cookies = false
+  }
+  media_site_cloudfront_logging_policy = {
+    prefix = local.prod_site_cloudfront_logging_config.prefix
+    actions = ["s3:PutObject"]
+    principals = [
+      {
+        type = "AWS"
+        identifiers = [
+          module.media_hosting_site.cloudfront_log_delivery_identity.iam_arn
+        ]
+      }
+    ]
+  }
+  test_glue_pipe_logging_config = {
+    prefix = "test-glue-pipeline"
+    bucket = local.log_bucket_name
+  }
+  test_glue_pipe_logging_policy = {
+    prefix = local.test_glue_pipe_logging_config.prefix
+    actions = ["s3:PutObject"]
+    principals = [
+      {
+        type = "AWS"
+        identifiers = [
+          module.test_glue_pipeline.ingest_function.role.arn
+        ]
+      }
+    ]
+  }
 }
 
 module logging_bucket {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket?ref=hoist-bucket-permissions"
+  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket"
   bucket_name = local.log_bucket_name
   object_policy_statements = [
     local.test_site_lambda_logging_policy,
+    local.test_glue_pipe_logging_policy,
     local.prod_site_lambda_logging_policy
   ]
 }

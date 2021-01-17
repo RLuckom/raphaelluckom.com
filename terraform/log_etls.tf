@@ -1,6 +1,37 @@
 module "logs_athena_bucket" {
   source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_bucket"
   bucket = var.athena_bucket_name
+  bucket_policy_statements = [{
+    actions = [
+      "s3:GetBucketLocation",
+      "s3:GetBucketAcl",
+      "s3:ListBucket"
+    ]
+    principals = [
+      {
+        type = "AWS"
+        identifiers = [
+          module.archive_cloudfront_logs.role.arn
+        ]
+      }
+    ]
+  }]
+  object_policy_statements = [{
+    actions = [
+      "s3:GetObject",
+      "s3:ListMultipartUploadParts",
+      "s3:PutObject",
+    ]
+    prefix = ""
+    principals = [
+      {
+        type = "AWS"
+        identifiers = [
+          module.archive_cloudfront_logs.role.arn
+        ]
+      }
+    ]
+  }]
 }
 
 module "logs_partition_bucket" {
@@ -18,12 +49,26 @@ module "logs_partition_bucket" {
 
     object_policy_statements = [{
       actions = ["s3:PutObject"]
-      principals = [{
-        type = "Service"
-        identifiers = ["logs.amazonaws.com" ]
-      }]
+      prefix = ""
+      principals = [
+        {
+          type = "Service"
+          identifiers = ["logs.amazonaws.com" ]
+        },
+        {
+          type = "AWS"
+          identifiers = [
+            module.archive_cloudfront_logs.role.arn
+          ]
+        }
+      ]
     }
   ]
+}
+
+locals {
+  athena_bucket_name = var.athena_bucket_name
+
 }
 
 resource "aws_glue_catalog_database" "time_series_database" {
@@ -56,9 +101,6 @@ module "archive_cloudfront_logs" {
     policy_statements =  concat(
       local.permission_sets.athena_query, 
       module.cloudformation_logs_glue_table.permission_sets.create_partition_glue_permissions,
-      module.logs_athena_bucket.permission_sets.athena_query_execution,
-      module.prod_logging_bucket.permission_sets.move_objects_out,
-      module.logs_partition_bucket.permission_sets.put_object
     )
   }
   lambda_event_configs = local.notify_failure_only

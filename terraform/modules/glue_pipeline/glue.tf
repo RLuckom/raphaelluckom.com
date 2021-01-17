@@ -20,8 +20,11 @@ module "archive_function" {
   source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
   timeout_secs = 15
   mem_mb = 128
-  debug = true
-  log_bucket = var.lambda_log_bucket
+  logging_config = {
+    bucket = var.lambda_log_bucket
+    prefix = ""
+    debug = true
+  }
   config_contents = templatefile("${path.root}/functions/configs/s3_to_athena.js",
   {
     athena_region = var.athena_region
@@ -43,9 +46,6 @@ module "archive_function" {
   scope_name = var.name_stem
   policy_statements = concat(
     local.athena_query_permission,
-    module.glue_table.permission_sets.create_partition_glue_permissions,
-    var.partitioned_data_sink.put_object_permission,
-    var.athena_results.athena_query_permission,
   )
   source_bucket = var.lambda_source_bucket
   donut_days_layer_arn = var.donut_days_layer_arn

@@ -1,5 +1,5 @@
 module "test_site_plumbing" {
-  source = "github.com/RLuckom/terraform_modules//aws/serverless_site_plumbing?ref=hoist-bucket-permissions"
+  source = "github.com/RLuckom/terraform_modules//aws/serverless_site_plumbing"
   domain_parts = var.test_domain_parts
   purpose_descriptor = "test"
   site_bucket = "test.raphaelluckom.com"
@@ -77,6 +77,6 @@ module "test_website_bucket" {
 
 
 module test_logging_bucket {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket?ref=hoist-bucket-permissions"
+  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket"
   bucket_name = "logs.test.raphaelluckom.com"
 }
