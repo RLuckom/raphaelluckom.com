@@ -5,8 +5,8 @@ module "test_site_plumbing" {
   site_bucket = "test.raphaelluckom.com"
   subject_alternative_names = ["www.test.raphaelluckom.com"]
   lambda_bucket = aws_s3_bucket.lambda_bucket.id
-  default_lambda_logging_config = local.test_logging_config
-  site_logging_bucket = module.test_logging_bucket.bucket.id
+  default_lambda_logging_config = local.test_site_lambda_logging_config
+  site_logging_config = local.test_site_cloudfront_logging_config 
   trails_table = {
     name = module.test_trails_table.table.name
     permission_sets = {

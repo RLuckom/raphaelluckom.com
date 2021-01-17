@@ -1,12 +1,12 @@
 module "prod_site_plumbing" {
-  source = "github.com/RLuckom/terraform_modules//aws/serverless_site_plumbing"
+  source = "github.com/RLuckom/terraform_modules//aws/serverless_site_plumbing?ref=hoist-bucket-permissions"
   domain_parts = var.prod_domain_parts
   purpose_descriptor = "prod"
   site_bucket = "raphaelluckom.com"
   subject_alternative_names = ["www.raphaelluckom.com"]
   lambda_bucket = aws_s3_bucket.lambda_bucket.id
-  lambda_logging_bucket = module.lambda_logging_bucket.bucket.id
-  site_logging_bucket = module.prod_logging_bucket.bucket.id
+  default_lambda_logging_config = local.prod_site_lambda_logging_config
+  site_logging_config = local.prod_site_cloudfront_logging_config 
   trails_table = {
     name = module.prod_trails_table.table.name
     permission_sets = {
@@ -17,7 +17,6 @@ module "prod_site_plumbing" {
   }
   site_description_content = file("./sites/raphaelluckom.com/site_description.json")
   lambda_event_configs = local.notify_failure_only
-  debug = false
   route53_zone_name = var.route53_zone_name
   layer_arns = {
     donut_days = module.donut_days.layer.arn,
@@ -65,9 +64,9 @@ module "prod_website_bucket" {
       filter_suffix       = ".md"
     },
     {
-      lambda_arn = module.prod_site_plumbing.deletion_function.arn
-      lambda_name = module.prod_site_plumbing.deletion_function.name
-      lambda_role_arn = module.prod_site_plumbing.deletion_function.role_arn
+      lambda_arn = module.prod_site_plumbing.deletion_cleanup_function.arn
+      lambda_name = module.prod_site_plumbing.deletion_cleanup_function.name
+      lambda_role_arn = module.prod_site_plumbing.deletion_cleanup_function.role_arn
       permission_type = "delete_object"
       events              = ["s3:ObjectRemoved:*" ]
       filter_prefix       = ""
