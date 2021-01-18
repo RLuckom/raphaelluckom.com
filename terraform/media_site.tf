@@ -87,27 +87,6 @@ module "photos_media_output_bucket" {
   ]
 }
 
-locals {
-  media_output_bucket_name = "rluckom.photos.partition"
-  media_storage_config = {
-    bucket = local.media_output_bucket_name
-    prefix = ""
-    debug = false
-  }
-  media_storage_policy = {
-    prefix = local.media_storage_config.prefix
-    actions = ["s3:PutObject"]
-    principals = [
-      {
-        type = "AWS"
-        identifiers = [
-          module.image_archive_lambda.role.arn,
-        ]
-      }
-    ]
-  }
-}
-
 module "image_archive_lambda" {
   source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   mem_mb = 512

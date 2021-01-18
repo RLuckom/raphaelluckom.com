@@ -179,11 +179,6 @@ module "logs_partition_bucket" {
   ]
 }
 
-locals {
-  athena_bucket_name = var.athena_bucket_name
-
-}
-
 resource "aws_glue_catalog_database" "time_series_database" {
   name = var.time_series_db_name
 }

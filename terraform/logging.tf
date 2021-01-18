@@ -1,7 +1,37 @@
+module visibility_bucket {
+  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket"
+  bucket_name = local.visibility_bucket_name
+  object_policy_statements = [
+    local.test_site_lambda_logging_policy,
+    local.test_glue_pipe_logging_policy,
+    local.prod_site_lambda_logging_policy
+  ]
+}
+
 locals {
-  log_bucket_name = "${var.bucket_prefix}-logs"
+  athena_bucket_name = var.athena_bucket_name
+  cloudfront_delivery_bucket_name = "${var.bucket_prefix}-visibility-data"
+  visibility_bucket_name = "${var.bucket_prefix}-visibility-data"
+  media_output_bucket_name = "rluckom.photos.partition"
+  media_storage_config = {
+    bucket = local.media_output_bucket_name
+    prefix = ""
+    debug = false
+  }
+  media_storage_policy = {
+    prefix = local.media_storage_config.prefix
+    actions = ["s3:PutObject"]
+    principals = [
+      {
+        type = "AWS"
+        identifiers = [
+          module.image_archive_lambda.role.arn,
+        ]
+      }
+    ]
+  }
   test_site_lambda_logging_config = {
-    bucket = local.log_bucket_name
+    bucket = local.visibility_bucket_name
     prefix = "test"
     debug = false
   }
@@ -21,7 +51,7 @@ locals {
     ]
   }
   test_site_cloudfront_logging_config = {
-    bucket = local.log_bucket_name
+    bucket = local.visibility_bucket_name
     prefix = "test.raphaelluckom.com"
     include_cookies = false
   }
@@ -38,7 +68,7 @@ locals {
     ]
   }
   prod_site_lambda_logging_config = {
-    bucket = local.log_bucket_name
+    bucket = local.visibility_bucket_name
     prefix = "prod"
     debug = false
   }
@@ -75,7 +105,7 @@ locals {
     ]
   }
   media_site_cloudfront_logging_config = {
-    bucket = local.log_bucket_name
+    bucket = local.visibility_bucket_name
     prefix = "media.raphaelluckom"
     include_cookies = false
   }
@@ -93,7 +123,7 @@ locals {
   }
   test_glue_pipe_logging_config = {
     prefix = "test-glue-pipeline"
-    bucket = local.log_bucket_name
+    bucket = local.visibility_bucket_name
   }
   test_glue_pipe_logging_policy = {
     prefix = local.test_glue_pipe_logging_config.prefix
@@ -107,14 +137,4 @@ locals {
       }
     ]
   }
-}
-
-module logging_bucket {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket"
-  bucket_name = local.log_bucket_name
-  object_policy_statements = [
-    local.test_site_lambda_logging_policy,
-    local.test_glue_pipe_logging_policy,
-    local.prod_site_lambda_logging_policy
-  ]
 }
