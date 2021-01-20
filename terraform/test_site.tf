@@ -62,35 +62,3 @@ module "test_website_bucket" {
     }
   ]
 }
-
-
-module test_logging_bucket {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket"
-  bucket_name = "logs.test.raphaelluckom.com"
-}
-
-module "lambda_logging_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket"
-  bucket_name = "logs.rluckom-lambda-logging"
-}
-
-resource "aws_glue_catalog_database" "lambda_logs" {
-  name = "lambda_logs"
-}
-
-module "lambda_logging_table" {
-  source = "github.com/RLuckom/terraform_modules//aws/state/permissioned_glue_table"
-  table_name          = "lambda_logs"
-  external_storage_bucket_id = module.lambda_logging_bucket.bucket.id
-  db = {
-    name = aws_glue_catalog_database.lambda_logs.name
-    arn = aws_glue_catalog_database.lambda_logs.arn
-  }
-  skip_header_line_count = 0
-  ser_de_info = {
-    name                  = "lambda_logs"
-    serialization_library = "org.openx.data.jsonserde.JsonSerDe"
-    parameters = {}
-  }
-  columns = module.temporary_schemas.lambda_log_columns
-}
