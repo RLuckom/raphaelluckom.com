@@ -62,3 +62,10 @@ module "test_website_bucket" {
     }
   ]
 }
+
+module test_data_warehouse {
+  source = "github.com/RLuckom/terraform_modules//aws/state/data_warehouse?ref=tape-deck-storage"
+  scope = "test"
+  data_bucket = module.visibility_data_coordinator.visibility_data_bucket
+
+}
