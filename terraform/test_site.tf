@@ -1,12 +1,9 @@
 module "test_site_plumbing" {
-  source = "github.com/RLuckom/terraform_modules//aws/serverless_site_plumbing"
-  domain_parts = var.test_domain_parts
-  purpose_descriptor = "test"
+  source = "github.com/RLuckom/terraform_modules//aws/serverless_site_plumbing?ref=tape-deck-storage"
   site_bucket = "test.raphaelluckom.com"
+  coordinator_data = module.visibility_data_coordinator.cloudfront_distributions["test"]
   subject_alternative_names = ["www.test.raphaelluckom.com"]
   lambda_bucket = aws_s3_bucket.lambda_bucket.id
-  default_lambda_logging_config = local.test_site_lambda_logging_config
-  site_logging_config = local.test_site_cloudfront_logging_config 
   trails_table = {
     name = module.test_trails_table.table.name
     permission_sets = {
@@ -55,15 +52,6 @@ module "test_website_bucket" {
 
   lambda_notifications = [
     {
-      lambda_arn = module.test_site_plumbing.render_function.arn
-      lambda_name = module.test_site_plumbing.render_function.name
-      lambda_role_arn = module.test_site_plumbing.render_function.role_arn
-      permission_type = "put_object"
-      events              = ["s3:ObjectCreated:*" ]
-      filter_prefix       = ""
-      filter_suffix       = ".md"
-    },
-    {
       lambda_arn = module.test_site_plumbing.deletion_cleanup_function.arn
       lambda_name = module.test_site_plumbing.deletion_cleanup_function.name
       lambda_role_arn = module.test_site_plumbing.deletion_cleanup_function.role_arn
@@ -105,50 +93,4 @@ module "lambda_logging_table" {
     parameters = {}
   }
   columns = module.temporary_schemas.lambda_log_columns
-}
-
-module "throwaway_athena_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket"
-  bucket_name = "rluckom-athena-throwaway"
-}
-
-module "throwaway_partition_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_bucket"
-  bucket = "rluckom-partition-throwaway"
-}
-
-module "throwaway_log_input_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_bucket"
-  bucket = "rluckom-log-input-throwaway"
-  lambda_notifications = [
-    {
-      lambda_arn = module.test_glue_pipeline.ingest_function.lambda.arn
-      lambda_name = module.test_glue_pipeline.ingest_function.lambda.function_name
-      lambda_role_arn = module.test_glue_pipeline.ingest_function.role.arn
-      events              = ["s3:ObjectCreated:*"]
-      filter_prefix       = ""
-      filter_suffix       = ""
-      permission_type       = "move_known_object_out"
-    }
-  ]
-}
-
-module test_glue_pipeline {
-  source = "./modules/glue_pipeline"
-  name_stem = "test_glue_pipeline"
-  athena_results = {
-    bucket = module.throwaway_athena_bucket.bucket.id
-    path = "athena/partition_logs/"
-  }
-  partitioned_data_sink = local.test_glue_pipe_logging_config
-  lambda_source_bucket = aws_s3_bucket.lambda_bucket.id
-  ser_de_info = {
-    name                  = "test_sink"
-    serialization_library = "org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe"
-    parameters = {
-      "field.delim"="\t"
-      "serialization.format"="\t"
-    }
-  }
-  columns = module.temporary_schemas.cloudfront_access_log_columns
 }

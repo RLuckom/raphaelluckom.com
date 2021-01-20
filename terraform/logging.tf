@@ -1,11 +1,37 @@
+module visibility_data_coordinator {
+  source = "github.com/RLuckom/terraform_modules//aws/coordinators/visibility_data?ref=tape-deck-storage"
+  scopes = ["test", "prod"]
+  cloudfront_delivery_bucket = "${var.bucket_prefix}-cloudfront-delivery"
+  visibility_data_bucket = "${var.bucket_prefix}-visibility-data"
+  lambda_source_bucket = "${var.bucket_prefix}-visibility-data"
+  cloudfront_distributions = {
+    prod = {
+      top_level_domain = "com"
+      controlled_domain_part = "raphaelluckom"
+    }
+    test = {
+      top_level_domain = "com"
+      controlled_domain_part = "test.raphaelluckom"
+    }
+    media = {
+      top_level_domain = "com"
+      controlled_domain_part = "media.raphaelluckom"
+    }
+  }
+}
+
+module log_delivery_bucket {
+  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket?ref=tape-deck-storage"
+  bucket_name = module.visibility_data_coordinator.cloudfront_delivery_bucket
+}
+
 module visibility_bucket {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket"
-  bucket_name = local.visibility_bucket_name
-  object_policy_statements = [
-    local.test_site_lambda_logging_policy,
-    local.test_glue_pipe_logging_policy,
-    local.prod_site_lambda_logging_policy
-  ]
+  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/visibility_data_bucket?ref=tape-deck-storage"
+  bucket_name = module.visibility_data_coordinator.visibility_data_bucket
+  prefix_put_permissions = [{
+    prefix = module.visibility_data_coordinator.lambda_log_configs["test"].log_prefix,
+    arns = module.test_site_plumbing.logging_lambda_role_arns
+  }]
 }
 
 locals {
@@ -124,17 +150,5 @@ locals {
   test_glue_pipe_logging_config = {
     prefix = "test-glue-pipeline"
     bucket = local.visibility_bucket_name
-  }
-  test_glue_pipe_logging_policy = {
-    prefix = local.test_glue_pipe_logging_config.prefix
-    actions = ["s3:PutObject"]
-    principals = [
-      {
-        type = "AWS"
-        identifiers = [
-          module.test_glue_pipeline.ingest_function.role.arn
-        ]
-      }
-    ]
   }
 }

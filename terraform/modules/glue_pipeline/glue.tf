@@ -23,8 +23,8 @@ module "archive_function" {
   logging_config = {
     bucket = var.lambda_log_bucket
     prefix = ""
-    debug = true
   }
+  debug = true
   config_contents = templatefile("${path.root}/functions/configs/s3_to_athena.js",
   {
     athena_region = var.athena_region
