@@ -9,17 +9,20 @@ module visibility_data_coordinator {
   scopes = ["test", "prod"]
   cloudfront_delivery_bucket = "${var.bucket_prefix}-cloudfront-delivery"
   visibility_data_bucket = "${var.bucket_prefix}-visibility-data"
-  lambda_source_bucket = "${var.bucket_prefix}-visibility-data"
-  cloudfront_distributions = {
+  lambda_source_bucket = aws_s3_bucket.lambda_bucket.id
+  serverless_site_configs = {
     prod = {
+      athena_region = "us-east-1" 
       top_level_domain = "com"
       controlled_domain_part = "raphaelluckom"
     }
     test = {
+      athena_region = "us-east-1" 
       top_level_domain = "com"
       controlled_domain_part = "test.raphaelluckom"
     }
     media = {
+      athena_region = "us-east-1" 
       top_level_domain = "com"
       controlled_domain_part = "media.raphaelluckom"
     }

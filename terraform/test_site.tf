@@ -1,7 +1,7 @@
 module "test_site_plumbing" {
   source = "github.com/RLuckom/terraform_modules//aws/serverless_site_plumbing?ref=tape-deck-storage"
   site_bucket = "test.raphaelluckom.com"
-  coordinator_data = module.visibility_data_coordinator.cloudfront_distributions["test"]
+  coordinator_data = module.visibility_data_coordinator.serverless_site_configs["test"]
   subject_alternative_names = ["www.test.raphaelluckom.com"]
   lambda_bucket = aws_s3_bucket.lambda_bucket.id
   trails_table = {
@@ -67,5 +67,6 @@ module test_data_warehouse {
   source = "github.com/RLuckom/terraform_modules//aws/state/data_warehouse?ref=tape-deck-storage"
   scope = "test"
   data_bucket = module.visibility_data_coordinator.visibility_data_bucket
-
+  database_name = module.visibility_data_coordinator.data_warehouse_configs["test"].glue_database_name
+  table_configs = module.visibility_data_coordinator.data_warehouse_configs["test"].glue_table_configs
 }
