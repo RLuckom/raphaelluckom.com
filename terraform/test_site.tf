@@ -1,6 +1,7 @@
 module test_site_plumbing {
   source = "github.com/RLuckom/terraform_modules//aws/serverless_site_plumbing?ref=tape-deck-storage"
   site_bucket = "test.raphaelluckom.com"
+  log_level = true
   coordinator_data = module.visibility_data_coordinator.serverless_site_configs["test"]
   subject_alternative_names = ["www.test.raphaelluckom.com"]
   lambda_bucket = aws_s3_bucket.lambda_bucket.id
@@ -57,6 +58,15 @@ module "test_website_bucket" {
       lambda_role_arn = module.test_site_plumbing.deletion_cleanup_function.role_arn
       permission_type = "delete_object"
       events              = ["s3:ObjectRemoved:*" ]
+      filter_prefix       = ""
+      filter_suffix       = ".md"
+    },
+    {
+      lambda_arn = module.test_site_plumbing.render_function.arn
+      lambda_name = module.test_site_plumbing.render_function.name
+      lambda_role_arn = module.test_site_plumbing.render_function.role_arn
+      permission_type = "put_object"
+      events              = ["s3:ObjectCreated:*" ]
       filter_prefix       = ""
       filter_suffix       = ".md"
     }
