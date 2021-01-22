@@ -39,6 +39,15 @@ and moves them into the visibility bucket.
 module log_delivery_bucket {
   source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket?ref=tape-deck-storage"
   bucket_name = module.visibility_data_coordinator.cloudfront_delivery_bucket
+  move_objects_out_permissions = [
+    {
+      prefix = module.visibility_data_coordinator.serverless_site_configs["test"].cloudfront_log_delivery_prefix
+      arns = [module.test_site_plumbing.archive_function.role_arn]
+    },
+  ]
+  lambda_notifications = [
+    module.test_site_plumbing.archive_function_notification_config
+  ]
 }
 
 /*
@@ -51,10 +60,25 @@ module visibility_bucket {
   // coordinator. This protects us from cases where an error in the logging module
   // sets the log prefix incorrectly. By using the prefix from the coordinator, we
   // ensure that writes to any incorrect location will fail.
-  prefix_put_permissions = [{
-    prefix = module.visibility_data_coordinator.lambda_log_configs["test"].log_prefix,
-    arns = module.test_site_plumbing.logging_lambda_role_arns
-  }]
+  prefix_athena_query_permissions = [
+    {
+      prefix = module.visibility_data_coordinator.serverless_site_configs["test"].cloudfront_result_prefix
+      arns = [module.test_site_plumbing.archive_function.role_arn]
+    },
+  ]
+  prefix_put_permissions = [
+    {
+      prefix = module.visibility_data_coordinator.serverless_site_configs["test"].cloudfront_log_storage_prefix
+      arns = [module.test_site_plumbing.archive_function.role_arn]
+    },
+    {
+      prefix = module.visibility_data_coordinator.lambda_log_configs["test"].log_prefix,
+      arns = module.test_site_plumbing.logging_lambda_role_arns
+    }
+  ]
+  list_bucket_permission_arns = [
+    module.test_site_plumbing.archive_function.role_arn
+  ]
 }
 
 locals {

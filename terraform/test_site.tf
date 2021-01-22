@@ -1,4 +1,4 @@
-module "test_site_plumbing" {
+module test_site_plumbing {
   source = "github.com/RLuckom/terraform_modules//aws/serverless_site_plumbing?ref=tape-deck-storage"
   site_bucket = "test.raphaelluckom.com"
   coordinator_data = module.visibility_data_coordinator.serverless_site_configs["test"]
@@ -21,7 +21,7 @@ module "test_site_plumbing" {
   }
 }
 
-module "test_trails_table" {
+module test_trails_table {
   source = "github.com/RLuckom/terraform_modules//aws/state/permissioned_dynamo_table"
   table_name = "test-trails_table"
   partition_key = {
@@ -69,4 +69,5 @@ module test_data_warehouse {
   data_bucket = module.visibility_data_coordinator.visibility_data_bucket
   database_name = module.visibility_data_coordinator.data_warehouse_configs["test"].glue_database_name
   table_configs = module.visibility_data_coordinator.data_warehouse_configs["test"].glue_table_configs
+  table_permission_names = module.test_site_plumbing.glue_table_permission_names
 }

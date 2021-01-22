@@ -1,5 +1,4 @@
 const _ = require('lodash')
-const formatters = require('./helpers/formatters')
 const { parseKeyDate, athenaPartitionQuery, createDatedS3Key} = require('./helpers/athenaHelpers')
 
 module.exports = {
@@ -49,7 +48,6 @@ module.exports = {
       dependencies: {
         completion: {
           action: 'exploranda',
-          formatter: formatters.singleValue.unwrap,
           params: {
             accessSchema: { value: 'dataSources.AWS.athena.getQueryExecution' },
             params: {
