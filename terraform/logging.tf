@@ -5,7 +5,7 @@ cases where we need to know the logging location to build a function, but need t
 ID to allow it access to the logging location.
 */
 module visibility_data_coordinator {
-  source = "github.com/RLuckom/terraform_modules//aws/coordinators/visibility_data?ref=tape-deck-storage"
+  source = "github.com/RLuckom/terraform_modules//aws/coordinators/visibility_data"
   scopes = ["test", "prod"]
   cloudfront_delivery_bucket = "${var.bucket_prefix}-cloudfront-delivery"
   visibility_data_bucket = "${var.bucket_prefix}-visibility-data"
@@ -37,9 +37,13 @@ permanent data bucket. When cloudfront drops logs into this bucket, an archiver 
 and moves them into the visibility bucket.
 */
 module log_delivery_bucket {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket?ref=tape-deck-storage"
+  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket"
   bucket_name = module.visibility_data_coordinator.cloudfront_delivery_bucket
   move_objects_out_permissions = [
+    {
+      prefix = module.visibility_data_coordinator.serverless_site_configs["prod"].cloudfront_log_delivery_prefix
+      arns = [module.prod_site_plumbing.archive_function.role_arn]
+    },
     {
       prefix = module.visibility_data_coordinator.serverless_site_configs["test"].cloudfront_log_delivery_prefix
       arns = [module.test_site_plumbing.archive_function.role_arn]
@@ -54,7 +58,7 @@ module log_delivery_bucket {
 The visibility bucket is where we keep query-able data like cloudfront and lambda logs
 */
 module visibility_bucket {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/visibility_data_bucket?ref=tape-deck-storage"
+  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/visibility_data_bucket"
   bucket_name = module.visibility_data_coordinator.visibility_data_bucket
   // In the following list, the `prefix` of each record comes from the visibility data
   // coordinator. This protects us from cases where an error in the logging module
@@ -62,11 +66,25 @@ module visibility_bucket {
   // ensure that writes to any incorrect location will fail.
   prefix_athena_query_permissions = [
     {
+      prefix = module.visibility_data_coordinator.serverless_site_configs["prod"].cloudfront_result_prefix
+      arns = [
+        module.prod_site_plumbing.archive_function.role_arn]
+    },
+    {
       prefix = module.visibility_data_coordinator.serverless_site_configs["test"].cloudfront_result_prefix
-      arns = [module.test_site_plumbing.archive_function.role_arn]
+      arns = [
+        module.test_site_plumbing.archive_function.role_arn]
     },
   ]
   prefix_put_permissions = [
+    {
+      prefix = module.visibility_data_coordinator.serverless_site_configs["prod"].cloudfront_log_storage_prefix
+      arns = [module.prod_site_plumbing.archive_function.role_arn]
+    },
+    {
+      prefix = module.visibility_data_coordinator.lambda_log_configs["prod"].log_prefix,
+      arns = module.prod_site_plumbing.logging_lambda_role_arns
+    },
     {
       prefix = module.visibility_data_coordinator.serverless_site_configs["test"].cloudfront_log_storage_prefix
       arns = [module.test_site_plumbing.archive_function.role_arn]
@@ -74,10 +92,11 @@ module visibility_bucket {
     {
       prefix = module.visibility_data_coordinator.lambda_log_configs["test"].log_prefix,
       arns = module.test_site_plumbing.logging_lambda_role_arns
-    }
+    },
   ]
   list_bucket_permission_arns = [
-    module.test_site_plumbing.archive_function.role_arn
+    module.test_site_plumbing.archive_function.role_arn,
+    module.prod_site_plumbing.archive_function.role_arn
   ]
 }
 
@@ -103,50 +122,13 @@ locals {
       }
     ]
   }
-  prod_site_lambda_logging_config = {
-    bucket = local.visibility_bucket_name
-    prefix = "prod"
-    debug = false
-  }
-  prod_site_lambda_logging_policy = {
-    prefix = local.prod_site_lambda_logging_config.prefix
-    actions = ["s3:PutObject"]
-    principals = [
-      {
-        type = "AWS"
-        identifiers = [
-          module.prod_site_plumbing.render_function.role_arn,
-          module.prod_site_plumbing.deletion_cleanup_function.role_arn,
-          module.prod_site_plumbing.trails_resolver_function.role_arn,
-          module.prod_site_plumbing.trails_updater_function.role_arn
-        ]
-      }
-    ]
-  }
-  prod_site_cloudfront_logging_config = {
-    bucket = "logs.raphaelluckom.com"
-    prefix = "raphaelluckom"
-    include_cookies = false
-  }
-  prod_site_cloudfront_logging_policy = {
-    prefix = local.prod_site_cloudfront_logging_config.prefix
-    actions = ["s3:PutObject"]
-    principals = [
-      {
-        type = "AWS"
-        identifiers = [
-          module.prod_site_plumbing.cloudfront_log_delivery_identity.iam_arn
-        ]
-      }
-    ]
-  }
   media_site_cloudfront_logging_config = {
     bucket = local.visibility_bucket_name
     prefix = "media.raphaelluckom"
     include_cookies = false
   }
   media_site_cloudfront_logging_policy = {
-    prefix = local.prod_site_cloudfront_logging_config.prefix
+    prefix = "media"
     actions = ["s3:PutObject"]
     principals = [
       {
@@ -156,9 +138,5 @@ locals {
         ]
       }
     ]
-  }
-  test_glue_pipe_logging_config = {
-    prefix = "test-glue-pipeline"
-    bucket = local.visibility_bucket_name
   }
 }

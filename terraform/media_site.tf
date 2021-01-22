@@ -48,6 +48,9 @@ module "media_input_bucket" {
 module "media_table" {
   source = "github.com/RLuckom/terraform_modules//aws/state/permissioned_dynamo_table"
   table_name = "media"
+  put_item_permission_role_names = [
+    module.image_archive_lambda.role.name
+  ]
 }
 
 module "labeled_media_table" {
@@ -61,6 +64,9 @@ module "labeled_media_table" {
     name = "mediaId"
     type = "S"
   }
+  put_item_permission_role_names = [
+    module.image_archive_lambda.role.name
+  ]
 }
 
 module "stream_input_bucket" {
@@ -127,8 +133,6 @@ module "image_archive_lambda" {
 
     policy_statements = concat(
       local.permission_sets.read_slack_credentials,
-      module.media_table.permission_sets.put_item,
-      module.labeled_media_table.permission_sets.put_item,
       local.permission_sets.rekognition_image_analysis,
     )
   }

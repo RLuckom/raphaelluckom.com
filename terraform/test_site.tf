@@ -1,5 +1,5 @@
 module test_site_plumbing {
-  source = "github.com/RLuckom/terraform_modules//aws/serverless_site_plumbing?ref=tape-deck-storage"
+  source = "github.com/RLuckom/terraform_modules//aws/serverless_site_plumbing"
   site_bucket = "test.raphaelluckom.com"
   log_level = true
   coordinator_data = module.visibility_data_coordinator.serverless_site_configs["test"]
@@ -16,7 +16,7 @@ module test_site_plumbing {
 }
 
 module test_trails_table {
-  source = "github.com/RLuckom/terraform_modules//aws/state/permissioned_dynamo_table?ref=tape-deck-storage"
+  source = "github.com/RLuckom/terraform_modules//aws/state/permissioned_dynamo_table"
   table_name = "test-trails_table"
   delete_item_permission_role_names = [
     module.test_site_plumbing.trails_updater_function.role_name
@@ -49,7 +49,7 @@ module test_trails_table {
   ]
 }
 
-module "test_website_bucket" {
+module test_website_bucket {
   source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_website_bucket"
   domain_parts = var.test_domain_parts
   additional_allowed_origins = var.test_additional_allowed_origins
@@ -77,7 +77,7 @@ module "test_website_bucket" {
 }
 
 module test_data_warehouse {
-  source = "github.com/RLuckom/terraform_modules//aws/state/data_warehouse?ref=tape-deck-storage"
+  source = "github.com/RLuckom/terraform_modules//aws/state/data_warehouse"
   scope = "test"
   data_bucket = module.visibility_data_coordinator.visibility_data_bucket
   database_name = module.visibility_data_coordinator.data_warehouse_configs["test"].glue_database_name
