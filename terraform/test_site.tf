@@ -5,14 +5,7 @@ module test_site_plumbing {
   coordinator_data = module.visibility_data_coordinator.serverless_site_configs["test"]
   subject_alternative_names = ["www.test.raphaelluckom.com"]
   lambda_bucket = aws_s3_bucket.lambda_bucket.id
-  trails_table = {
-    name = module.test_trails_table.table.name
-    permission_sets = {
-      read = module.test_trails_table.permission_sets.read
-      write = module.test_trails_table.permission_sets.write
-      delete_item = module.test_trails_table.permission_sets.delete_item
-    }
-  }
+  trails_table_name = module.test_trails_table.table.name
   site_description_content = file("./sites/test.raphaelluckom.com/site_description.json")
   lambda_event_configs = local.notify_failure_only
   route53_zone_name = var.route53_zone_name
@@ -23,8 +16,18 @@ module test_site_plumbing {
 }
 
 module test_trails_table {
-  source = "github.com/RLuckom/terraform_modules//aws/state/permissioned_dynamo_table"
+  source = "github.com/RLuckom/terraform_modules//aws/state/permissioned_dynamo_table?ref=tape-deck-storage"
   table_name = "test-trails_table"
+  delete_item_permission_role_names = [
+    module.test_site_plumbing.trails_updater_function.role_name
+  ]
+  write_permission_role_names = [
+    module.test_site_plumbing.trails_updater_function.role_name
+  ]
+  read_permission_role_names = [
+    module.test_site_plumbing.trails_resolver_function.role_name,
+    module.test_site_plumbing.trails_updater_function.role_name
+  ]
   partition_key = {
     name = "trailName"
     type = "S"
