@@ -50,7 +50,8 @@ module log_delivery_bucket {
     },
   ]
   lambda_notifications = [
-    module.test_site_plumbing.archive_function_notification_config
+    module.test_site_plumbing.archive_function_notification_config,
+    module.prod_site_plumbing.archive_function_notification_config
   ]
 }
 
