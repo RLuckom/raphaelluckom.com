@@ -38,7 +38,6 @@ module "media_input_bucket" {
   source = "github.com/RLuckom/terraform_modules//aws/state/object_store/bucket"
   name = "rluckom-media-input"
   lifecycle_rules = [{
-    id = "expire-processed"
     prefix = ""
     tags = {
       processed = "true"

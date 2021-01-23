@@ -110,6 +110,7 @@ module visibility_bucket {
       ]
     }
   ]
+  lifecycle_rules = module.visibility_data_coordinator.visibility_lifecycle_rules
 }
 
 locals {
