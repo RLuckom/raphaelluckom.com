@@ -37,15 +37,17 @@ permanent data bucket. When cloudfront drops logs into this bucket, an archiver 
 and moves them into the visibility bucket.
 */
 module log_delivery_bucket {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket"
-  bucket_name = module.visibility_data_coordinator.cloudfront_delivery_bucket
-  move_objects_out_permissions = [
+  source = "github.com/RLuckom/terraform_modules//aws/state/object_store/logging_bucket"
+  name = module.visibility_data_coordinator.cloudfront_delivery_bucket
+  prefix_object_permissions = [
     {
       prefix = module.visibility_data_coordinator.serverless_site_configs["prod"].cloudfront_log_delivery_prefix
+      permission_type = "move_known_objects_out"
       arns = [module.prod_site_plumbing.archive_function.role_arn]
     },
     {
       prefix = module.visibility_data_coordinator.serverless_site_configs["test"].cloudfront_log_delivery_prefix
+      permission_type = "move_known_objects_out"
       arns = [module.test_site_plumbing.archive_function.role_arn]
     },
   ]
@@ -59,8 +61,8 @@ module log_delivery_bucket {
 The visibility bucket is where we keep query-able data like cloudfront and lambda logs
 */
 module visibility_bucket {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/visibility_data_bucket"
-  bucket_name = module.visibility_data_coordinator.visibility_data_bucket
+  source = "github.com/RLuckom/terraform_modules//aws/state/object_store/visibility_data_bucket"
+  name = module.visibility_data_coordinator.visibility_data_bucket
   // In the following list, the `prefix` of each record comes from the visibility data
   // coordinator. This protects us from cases where an error in the logging module
   // sets the log prefix incorrectly. By using the prefix from the coordinator, we
@@ -77,27 +79,36 @@ module visibility_bucket {
         module.test_site_plumbing.archive_function.role_arn]
     },
   ]
-  prefix_put_permissions = [
+  prefix_object_permissions = [
     {
       prefix = module.visibility_data_coordinator.serverless_site_configs["prod"].cloudfront_log_storage_prefix
+      permission_type = "put_object"
       arns = [module.prod_site_plumbing.archive_function.role_arn]
     },
     {
       prefix = module.visibility_data_coordinator.lambda_log_configs["prod"].log_prefix,
+      permission_type = "put_object"
       arns = module.prod_site_plumbing.logging_lambda_role_arns
     },
     {
       prefix = module.visibility_data_coordinator.serverless_site_configs["test"].cloudfront_log_storage_prefix
+      permission_type = "put_object"
       arns = [module.test_site_plumbing.archive_function.role_arn]
     },
     {
       prefix = module.visibility_data_coordinator.lambda_log_configs["test"].log_prefix,
+      permission_type = "put_object"
       arns = module.test_site_plumbing.logging_lambda_role_arns
     },
   ]
-  list_bucket_permission_arns = [
-    module.test_site_plumbing.archive_function.role_arn,
-    module.prod_site_plumbing.archive_function.role_arn
+  bucket_permissions = [
+    {
+      permission_type = "list_bucket"
+      arns = [
+        module.test_site_plumbing.archive_function.role_arn,
+        module.prod_site_plumbing.archive_function.role_arn
+      ]
+    }
   ]
 }
 

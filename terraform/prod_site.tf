@@ -50,8 +50,9 @@ module prod_trails_table {
 }
 
 module prod_website_bucket {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_website_bucket"
+  source = "github.com/RLuckom/terraform_modules//aws/state/object_store/website_bucket"
   domain_parts = var.prod_domain_parts
+  name = module.visibility_data_coordinator.serverless_site_configs["prod"].domain
   additional_allowed_origins = var.prod_additional_allowed_origins
 
   lambda_notifications = [

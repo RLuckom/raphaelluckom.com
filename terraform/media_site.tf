@@ -1,18 +1,23 @@
 module "media_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_website_bucket"
+  source = "github.com/RLuckom/terraform_modules//aws/state/object_store/website_bucket"
   domain_parts = {
     top_level_domain = "com"
     controlled_domain_part = "media.raphaelluckom"
   }
+  name = module.visibility_data_coordinator.serverless_site_configs["media"].domain
   additional_allowed_origins = var.media_domain_settings.allowed_origins
-  object_policy_statements = [
-    local.media_storage_policy,
+  prefix_object_permissions = [
+    {
+      prefix = ""
+      permission_type = "put_object"
+      arns = [module.image_archive_lambda.role.arn]
+    },
   ]
 }
 
 module "media_logging_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_logging_bucket"
-  bucket_name = "logs.${var.media_domain_settings.domain_name}"
+  source = "github.com/RLuckom/terraform_modules//aws/state/object_store/logging_bucket"
+  name = "logs.${var.media_domain_settings.domain_name}"
 }
 
 module "media_hosting_site" {
@@ -30,8 +35,8 @@ module "media_hosting_site" {
 }
 
 module "media_input_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_bucket"
-  bucket = "rluckom-media-input"
+  source = "github.com/RLuckom/terraform_modules//aws/state/object_store/bucket"
+  name = "rluckom-media-input"
   lifecycle_rules = [{
     id = "expire-processed"
     prefix = ""
@@ -70,8 +75,8 @@ module "labeled_media_table" {
 }
 
 module "stream_input_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_bucket"
-  bucket = var.stream_input_bucket_name
+  source = "github.com/RLuckom/terraform_modules//aws/state/object_store/bucket"
+  name = var.stream_input_bucket_name
   lifecycle_rules = [{
     id = "expire-processed"
     prefix = ""
@@ -86,10 +91,14 @@ module "stream_input_bucket" {
 }
 
 module "photos_media_output_bucket" {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_bucket"
-  bucket = local.media_output_bucket_name
-  object_policy_statements = [
-    local.media_storage_policy,
+  source = "github.com/RLuckom/terraform_modules//aws/state/object_store/bucket"
+  name = local.media_output_bucket_name
+  prefix_object_permissions = [
+    {
+      prefix = ""
+      permission_type = "put_object"
+      arns = [module.image_archive_lambda.role.arn]
+    },
   ]
 }
 

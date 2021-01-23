@@ -50,7 +50,8 @@ module test_trails_table {
 }
 
 module test_website_bucket {
-  source = "github.com/RLuckom/terraform_modules//aws/state/objectstore/permissioned_website_bucket"
+  source = "github.com/RLuckom/terraform_modules//aws/state/object_store/website_bucket"
+  name = module.visibility_data_coordinator.serverless_site_configs["test"].domain
   domain_parts = var.test_domain_parts
   additional_allowed_origins = var.test_additional_allowed_origins
 
