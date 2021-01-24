@@ -11,7 +11,7 @@ module test_site_plumbing {
   route53_zone_name = var.route53_zone_name
   layer_arns = {
     donut_days = module.donut_days.layer.arn,
-    markdown_tools =module.markdown_tools.layer.arn,
+    markdown_tools = module.markdown_tools.layer.arn,
   }
 }
 
@@ -54,6 +54,7 @@ module test_website_bucket {
   name = module.visibility_data_coordinator.serverless_site_configs["test"].domain
   domain_parts = var.test_domain_parts
   additional_allowed_origins = var.test_additional_allowed_origins
+  website_access_principals = [module.test_site_plumbing.cloudfront_origin_access_principal]
 
   lambda_notifications = [
     {

@@ -54,6 +54,7 @@ module prod_website_bucket {
   domain_parts = var.prod_domain_parts
   name = module.visibility_data_coordinator.serverless_site_configs["prod"].domain
   additional_allowed_origins = var.prod_additional_allowed_origins
+  website_access_principals = [module.prod_site_plumbing.cloudfront_origin_access_principal]
 
   lambda_notifications = [
     {

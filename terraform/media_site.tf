@@ -6,6 +6,7 @@ module "media_bucket" {
   }
   name = module.visibility_data_coordinator.serverless_site_configs["media"].domain
   additional_allowed_origins = var.media_domain_settings.allowed_origins
+  allow_direct_access = true
   prefix_object_permissions = [
     {
       prefix = ""
