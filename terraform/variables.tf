@@ -1,5 +1,23 @@
-module temporary_schemas {
-  source = "github.com/RLuckom/terraform_modules//aws/common_log_schemas"
+variable maintainer {
+  default = {
+    name = "Raphael Luckom"
+    email = "raphaelluckom@gmail.com"
+  }
+}
+
+variable nav_links {
+  default = [{
+    name = "Github"
+    target = "https://github.com/RLuckom"
+  }]
+}
+
+variable test_site_title {
+  default = "Raphael Luckom's Test Site"
+}
+
+variable prod_site_title {
+  default = "Raphael Luckom"
 }
 
 variable bucket_prefix {

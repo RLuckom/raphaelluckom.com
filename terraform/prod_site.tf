@@ -1,7 +1,9 @@
 module prod_site_plumbing {
   source = "github.com/RLuckom/terraform_modules//aws/serverless_site_plumbing"
+  maintainer = var.maintainer
+  nav_links = var.nav_links
+  site_title = var.prod_site_title
   site_bucket = "raphaelluckom.com"
-  log_level = true
   coordinator_data = module.visibility_data_coordinator.serverless_site_configs["prod"]
   subject_alternative_names = ["www.raphaelluckom.com"]
   lambda_bucket = aws_s3_bucket.lambda_bucket.id

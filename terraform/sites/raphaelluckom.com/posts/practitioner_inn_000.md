@@ -105,7 +105,7 @@ systems we're making stop being purely experimental and become real, useful part
       the hypothesis that technical people like me could "protect" "non-technical" people from needing some amount of 
       practitioner-knowledge in this field. We do this by making choices, on behalf of _everyone in the world_, about how these
       systems should work. When we make enough of those choices as best we can, we end up with systems like facebook and
-      twitter, which embody a deep respect for the principle that system designers should [not ask users to think](https://en.wikipedia.org/wiki/Don%27t_Make_Me_Think).
+      twitter, which embody a deep respect for the principle that system designers should not ask users to think.
       I don't have a problem with that goal per se, but I'd like to see it evaluated honestly on the basis of its results.
       Is it going well? If it's _not_ going well, does it seem like we've at least been moving in the right direction and
       a few tweaks will get us there? If not, we should seriously consider changing course. I say this by way of apology. 
