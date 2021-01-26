@@ -29,6 +29,83 @@ module visibility_data_coordinator {
   }
 }
 
+locals {
+  log_delivery_prefix_permissions = concat(
+    length(module.test_site_plumbing) > 0 ? [
+      {
+        prefix = module.visibility_data_coordinator.serverless_site_configs["test"].cloudfront_log_delivery_prefix
+        permission_type = "move_known_objects_out"
+        arns = [module.test_site_plumbing[0].archive_function.role_arn]
+      },
+    ] : [],
+    length(module.prod_site_plumbing) > 0 ? [
+      {
+        prefix = module.visibility_data_coordinator.serverless_site_configs["prod"].cloudfront_log_delivery_prefix
+        permission_type = "move_known_objects_out"
+        arns = [module.prod_site_plumbing[0].archive_function.role_arn]
+      },
+    ] : []
+  )
+  log_delivery_notifications = concat(
+    length(module.test_site_plumbing) > 0 ? [
+    module.test_site_plumbing[0].archive_function_notification_config,
+    ] : [],
+    length(module.prod_site_plumbing) > 0 ? [
+    module.prod_site_plumbing[0].archive_function_notification_config
+    ] : [],
+  )
+  visibility_prefix_athena_query_permissions = concat(
+    length(module.test_site_plumbing) > 0 ? [
+    {
+      prefix = module.visibility_data_coordinator.serverless_site_configs["test"].cloudfront_result_prefix
+      arns = [
+        module.test_site_plumbing[0].archive_function.role_arn]
+    },
+    ] : [],
+    length(module.prod_site_plumbing) > 0 ? [
+    {
+      prefix = module.visibility_data_coordinator.serverless_site_configs["prod"].cloudfront_result_prefix
+      arns = [
+        module.prod_site_plumbing[0].archive_function.role_arn]
+    },
+    ] : []
+  )
+  visibility_prefix_object_permissions = concat(
+    length(module.test_site_plumbing) > 0 ? [
+      {
+        prefix = module.visibility_data_coordinator.serverless_site_configs["test"].cloudfront_log_storage_prefix
+        permission_type = "put_object"
+        arns = [module.test_site_plumbing[0].archive_function.role_arn]
+      },
+      {
+        prefix = module.visibility_data_coordinator.lambda_log_configs["test"].log_prefix,
+        permission_type = "put_object"
+        arns = module.test_site_plumbing[0].logging_lambda_role_arns
+      },
+    ] : [],
+    length(module.prod_site_plumbing) > 0 ? [
+      {
+        prefix = module.visibility_data_coordinator.serverless_site_configs["prod"].cloudfront_log_storage_prefix
+        permission_type = "put_object"
+        arns = [module.prod_site_plumbing[0].archive_function.role_arn]
+      },
+      {
+        prefix = module.visibility_data_coordinator.lambda_log_configs["prod"].log_prefix,
+        permission_type = "put_object"
+        arns = module.prod_site_plumbing[0].logging_lambda_role_arns
+      },
+    ] : []
+  )
+  visibility_bucket_list_permission_arns = concat(
+    length(module.test_site_plumbing) > 0 ? [
+        module.test_site_plumbing[0].archive_function.role_arn,
+    ] : [],
+    length(module.prod_site_plumbing) > 0 ? [
+        module.prod_site_plumbing[0].archive_function.role_arn
+    ] : [],
+  )
+}
+
 /*
 This is the bucket where cloudfront delivers its logs.
 Cloudfront requires full access (create, read, update, delete) to any bucket where it delivers
@@ -39,22 +116,8 @@ and moves them into the visibility bucket.
 module log_delivery_bucket {
   source = "github.com/RLuckom/terraform_modules//aws/state/object_store/logging_bucket"
   name = module.visibility_data_coordinator.cloudfront_delivery_bucket
-  prefix_object_permissions = [
-    {
-      prefix = module.visibility_data_coordinator.serverless_site_configs["prod"].cloudfront_log_delivery_prefix
-      permission_type = "move_known_objects_out"
-      arns = [module.prod_site_plumbing.archive_function.role_arn]
-    },
-    {
-      prefix = module.visibility_data_coordinator.serverless_site_configs["test"].cloudfront_log_delivery_prefix
-      permission_type = "move_known_objects_out"
-      arns = [module.test_site_plumbing.archive_function.role_arn]
-    },
-  ]
-  lambda_notifications = [
-    module.test_site_plumbing.archive_function_notification_config,
-    module.prod_site_plumbing.archive_function_notification_config
-  ]
+  prefix_object_permissions = local.log_delivery_prefix_permissions
+  lambda_notifications = local.log_delivery_notifications
 }
 
 /*
@@ -67,47 +130,12 @@ module visibility_bucket {
   // coordinator. This protects us from cases where an error in the logging module
   // sets the log prefix incorrectly. By using the prefix from the coordinator, we
   // ensure that writes to any incorrect location will fail.
-  prefix_athena_query_permissions = [
-    {
-      prefix = module.visibility_data_coordinator.serverless_site_configs["prod"].cloudfront_result_prefix
-      arns = [
-        module.prod_site_plumbing.archive_function.role_arn]
-    },
-    {
-      prefix = module.visibility_data_coordinator.serverless_site_configs["test"].cloudfront_result_prefix
-      arns = [
-        module.test_site_plumbing.archive_function.role_arn]
-    },
-  ]
-  prefix_object_permissions = [
-    {
-      prefix = module.visibility_data_coordinator.serverless_site_configs["prod"].cloudfront_log_storage_prefix
-      permission_type = "put_object"
-      arns = [module.prod_site_plumbing.archive_function.role_arn]
-    },
-    {
-      prefix = module.visibility_data_coordinator.lambda_log_configs["prod"].log_prefix,
-      permission_type = "put_object"
-      arns = module.prod_site_plumbing.logging_lambda_role_arns
-    },
-    {
-      prefix = module.visibility_data_coordinator.serverless_site_configs["test"].cloudfront_log_storage_prefix
-      permission_type = "put_object"
-      arns = [module.test_site_plumbing.archive_function.role_arn]
-    },
-    {
-      prefix = module.visibility_data_coordinator.lambda_log_configs["test"].log_prefix,
-      permission_type = "put_object"
-      arns = module.test_site_plumbing.logging_lambda_role_arns
-    },
-  ]
+  prefix_athena_query_permissions = local.visibility_prefix_athena_query_permissions
+  prefix_object_permissions = local.visibility_prefix_object_permissions 
   bucket_permissions = [
     {
       permission_type = "list_bucket"
-      arns = [
-        module.test_site_plumbing.archive_function.role_arn,
-        module.prod_site_plumbing.archive_function.role_arn
-      ]
+      arns = local.visibility_bucket_list_permission_arns
     }
   ]
   lifecycle_rules = module.visibility_data_coordinator.visibility_lifecycle_rules

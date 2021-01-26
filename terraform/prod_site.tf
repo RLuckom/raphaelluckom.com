@@ -1,4 +1,5 @@
 module prod_site_plumbing {
+  count = 1
   source = "github.com/RLuckom/terraform_modules//aws/serverless_site_plumbing"
   maintainer = var.maintainer
   nav_links = var.nav_links
@@ -16,19 +17,47 @@ module prod_site_plumbing {
   }
 }
 
+locals {
+  prod_trails_table_delete_role_names = length(module.prod_site_plumbing) > 0 ? [
+    module.prod_site_plumbing[0].trails_updater_function.role_name
+  ] : []
+  prod_trails_table_write_permission_role_names = length(module.prod_site_plumbing) > 0 ? [
+    module.prod_site_plumbing[0].trails_updater_function.role_name
+  ] : []
+  prod_trails_table_read_permission_role_names = length(module.prod_site_plumbing) > 0 ? [
+    module.prod_site_plumbing[0].trails_resolver_function.role_name,
+    module.prod_site_plumbing[0].trails_updater_function.role_name
+  ] : []
+  prod_website_bucket_lambda_notifications = length(module.prod_site_plumbing) > 0 ? [
+    {
+      lambda_arn = module.prod_site_plumbing[0].render_function.arn
+      lambda_name = module.prod_site_plumbing[0].render_function.name
+      lambda_role_arn = module.prod_site_plumbing[0].render_function.role_arn
+      permission_type = "put_object"
+      events              = ["s3:ObjectCreated:*" ]
+      filter_prefix       = ""
+      filter_suffix       = ".md"
+    },
+    {
+      lambda_arn = module.prod_site_plumbing[0].deletion_cleanup_function.arn
+      lambda_name = module.prod_site_plumbing[0].deletion_cleanup_function.name
+      lambda_role_arn = module.prod_site_plumbing[0].deletion_cleanup_function.role_arn
+      permission_type = "delete_object"
+      events              = ["s3:ObjectRemoved:*" ]
+      filter_prefix       = ""
+      filter_suffix       = ".md"
+    }
+  ] : []
+  prod_glue_table_permission_names = length(module.prod_site_plumbing) > 0  ? module.prod_site_plumbing[0].glue_table_permission_names : {}
+  prod_website_access_principals = length(module.prod_site_plumbing) > 0 ? [module.prod_site_plumbing[0].cloudfront_origin_access_principal] : []
+}
+
 module prod_trails_table {
   source = "github.com/RLuckom/terraform_modules//aws/state/permissioned_dynamo_table"
   table_name = "prod-trails_table"
-  delete_item_permission_role_names = [
-    module.prod_site_plumbing.trails_updater_function.role_name
-  ]
-  write_permission_role_names = [
-    module.prod_site_plumbing.trails_updater_function.role_name
-  ]
-  read_permission_role_names = [
-    module.prod_site_plumbing.trails_resolver_function.role_name,
-    module.prod_site_plumbing.trails_updater_function.role_name
-  ]
+  delete_item_permission_role_names = local.prod_trails_table_delete_role_names
+  write_permission_role_names = local.prod_trails_table_write_permission_role_names
+  read_permission_role_names = local.prod_trails_table_read_permission_role_names
   partition_key = {
     name = "trailName"
     type = "S"
@@ -55,28 +84,8 @@ module prod_website_bucket {
   domain_parts = var.prod_domain_parts
   name = module.visibility_data_coordinator.serverless_site_configs["prod"].domain
   additional_allowed_origins = var.prod_additional_allowed_origins
-  website_access_principals = [module.prod_site_plumbing.cloudfront_origin_access_principal]
-
-  lambda_notifications = [
-    {
-      lambda_arn = module.prod_site_plumbing.render_function.arn
-      lambda_name = module.prod_site_plumbing.render_function.name
-      lambda_role_arn = module.prod_site_plumbing.render_function.role_arn
-      permission_type = "put_object"
-      events              = ["s3:ObjectCreated:*" ]
-      filter_prefix       = ""
-      filter_suffix       = ".md"
-    },
-    {
-      lambda_arn = module.prod_site_plumbing.deletion_cleanup_function.arn
-      lambda_name = module.prod_site_plumbing.deletion_cleanup_function.name
-      lambda_role_arn = module.prod_site_plumbing.deletion_cleanup_function.role_arn
-      permission_type = "delete_object"
-      events              = ["s3:ObjectRemoved:*" ]
-      filter_prefix       = ""
-      filter_suffix       = ".md"
-    }
-  ]
+  website_access_principals = local.prod_website_access_principals
+  lambda_notifications = local.prod_website_bucket_lambda_notifications
 }
 
 module prod_data_warehouse {
@@ -85,5 +94,5 @@ module prod_data_warehouse {
   data_bucket = module.visibility_data_coordinator.visibility_data_bucket
   database_name = module.visibility_data_coordinator.data_warehouse_configs["prod"].glue_database_name
   table_configs = module.visibility_data_coordinator.data_warehouse_configs["prod"].glue_table_configs
-  table_permission_names = module.prod_site_plumbing.glue_table_permission_names
+  table_permission_names = local.prod_glue_table_permission_names
 }
