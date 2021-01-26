@@ -8,7 +8,6 @@ module prod_site_plumbing {
   subject_alternative_names = ["www.raphaelluckom.com"]
   lambda_bucket = aws_s3_bucket.lambda_bucket.id
   trails_table_name  = module.prod_trails_table.table.name
-  site_description_content = file("./sites/raphaelluckom.com/site_description.json")
   lambda_event_configs = local.notify_failure_only
   route53_zone_name = var.route53_zone_name
   layer_arns = {
