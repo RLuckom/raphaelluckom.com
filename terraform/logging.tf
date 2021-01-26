@@ -96,14 +96,6 @@ locals {
       },
     ] : []
   )
-  visibility_bucket_list_permission_arns = concat(
-    length(module.test_site_plumbing) > 0 ? [
-        module.test_site_plumbing[0].archive_function.role_arn,
-    ] : [],
-    length(module.prod_site_plumbing) > 0 ? [
-        module.prod_site_plumbing[0].archive_function.role_arn
-    ] : [],
-  )
 }
 
 /*
@@ -132,12 +124,6 @@ module visibility_bucket {
   // ensure that writes to any incorrect location will fail.
   prefix_athena_query_permissions = local.visibility_prefix_athena_query_permissions
   prefix_object_permissions = local.visibility_prefix_object_permissions 
-  bucket_permissions = [
-    {
-      permission_type = "list_bucket"
-      arns = local.visibility_bucket_list_permission_arns
-    }
-  ]
   lifecycle_rules = module.visibility_data_coordinator.visibility_lifecycle_rules
 }
 
