@@ -20,7 +20,7 @@ This costs money, so I want to be extra clear about what's happening:
 
 1. We're going to reserve a domain name. If you use one of the TLDs I noted above, you'll pay about $12
    to reserve the domain for one year; this will autorenew by default, charging you $12 per year.
-2. We're going to set up a _hosted zone_, which is the actual networking plumbing that lest us
+2. We're going to set up a _hosted zone_, which is the actual networking plumbing that lets us
    point our domain at our website. _This_ costs an additional $0.50 / month.
 3. We're _not_ going to set up a website in this exercise--that's going to come later, because I can't fit
    that whole process into this post. If you'd rather wait to reserve your domain name until I publish
