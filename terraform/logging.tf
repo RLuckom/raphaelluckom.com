@@ -5,23 +5,23 @@ cases where we need to know the logging location to build a function, but need t
 ID to allow it access to the logging location.
 */
 module visibility_data_coordinator {
-  source = "github.com/RLuckom/terraform_modules//aws/coordinators/visibility_data"
+  source = "github.com/RLuckom/terraform_modules//aws/visibility/aurochs"
   scopes = ["test", "prod"]
   scoped_logging_functions = {
-    prod = module.prod_site_plumbing.lambda_logging_prefix_role_map
-    test = module.test_site_plumbing.lambda_logging_prefix_role_map
+    prod = module.prod_site.lambda_logging_prefix_role_map
+    test = module.test_site.lambda_logging_prefix_role_map
   }
   scoped_athena_query_functions = {
-    prod = module.prod_site_plumbing.athena_prefix_athena_query_role_map
-    test = module.test_site_plumbing.athena_prefix_athena_query_role_map
+    prod = module.prod_site.athena_prefix_athena_query_role_map
+    test = module.test_site.athena_prefix_athena_query_role_map
   }
   glue_permission_name_map = {
-    prod = module.prod_site_plumbing.glue_permission_name_map
-    test = module.test_site_plumbing.glue_permission_name_map
+    prod = module.prod_site.glue_permission_name_map
+    test = module.test_site.glue_permission_name_map
   }
   scoped_archive_notifications = {
-    prod = module.prod_site_plumbing.log_delivery_prefix_notification_map
-    test = module.test_site_plumbing.log_delivery_prefix_notification_map
+    prod = module.prod_site.log_delivery_prefix_notification_map
+    test = module.test_site.log_delivery_prefix_notification_map
   }
   cloudfront_delivery_bucket = "${var.bucket_prefix}-cloudfront-delivery"
   visibility_data_bucket = "${var.bucket_prefix}-visibility-data"

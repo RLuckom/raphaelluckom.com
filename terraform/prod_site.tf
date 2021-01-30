@@ -1,5 +1,5 @@
-module prod_site_plumbing {
-  source = "github.com/RLuckom/terraform_modules//aws/serverless_site_plumbing"
+module prod_site {
+  source = "github.com/RLuckom/terraform_modules//aws/serverless_site/tetrapod"
   maintainer = var.maintainer
   nav_links = var.nav_links
   site_title = var.prod_site_title
