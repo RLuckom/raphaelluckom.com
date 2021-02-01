@@ -149,7 +149,7 @@ module "image_archive_lambda" {
     DONUT_DAYS_DEBUG = "true"
   }
   layers = [
-    module.donut_days.layer.arn,
-    module.image_dependencies.layer.arn
+    module.donut_days.layer_config,
+    module.image_dependencies.layer_config
   ]
 }

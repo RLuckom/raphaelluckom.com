@@ -14,7 +14,7 @@ module visibility_data_coordinator {
   cloudfront_delivery_bucket = "${var.bucket_prefix}-cloudfront-delivery"
   visibility_data_bucket = "${var.bucket_prefix}-visibility-data"
   lambda_source_bucket = aws_s3_bucket.lambda_bucket.id
-  donut_days_layer_arn = module.donut_days.layer.arn
+  donut_days_layer = module.donut_days.layer_config
   lambda_event_configs = local.notify_failure_only
   serverless_site_configs = {
     prod = {

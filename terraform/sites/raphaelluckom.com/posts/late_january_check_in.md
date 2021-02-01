@@ -95,7 +95,7 @@ I can't trust the benign and aspirationally-inclusive arc of privileged humanist
 and forgives itself for all its transgressions, as a source of those assertions. I simply shouldn't make assertions.
 
 This project as a whole, and the practitioner journey series in particular, is not primarily about building
-one social media system or learning how to code[^4]. Instead, it's about building _just enough_ of a social media
+one social media system or learning how to code. Instead, it's about building _just enough_ of a social media
 system, and learning _just enough_ about software-writing, to understand and defend one's _own_ choices and
 identity against oppression and abuse. It's about practicing, trying things out, getting used to failure and success,
 planting things and watching them grow.

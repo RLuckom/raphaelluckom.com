@@ -28,7 +28,7 @@ module "slack_event_relay" {
       local.permission_sets.read_slack_credentials
     )
   }
-  layers = [module.donut_days.layer.arn]
+  layers = [module.donut_days.layer_config]
 }
 
 locals {
