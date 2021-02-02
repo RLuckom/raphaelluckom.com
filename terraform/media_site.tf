@@ -1,10 +1,10 @@
-module "media_bucket" {
+module media_bucket {
   source = "github.com/RLuckom/terraform_modules//aws/state/object_store/website_bucket"
   domain_parts = {
     top_level_domain = "com"
     controlled_domain_part = "media.raphaelluckom"
   }
-  name = module.visibility_data_coordinator.serverless_site_configs["media"].domain
+  name = module.visibility_system.serverless_site_configs["media"].domain
   additional_allowed_origins = var.media_domain_settings.allowed_origins
   allow_direct_access = true
   prefix_object_permissions = [
@@ -16,26 +16,31 @@ module "media_bucket" {
   ]
 }
 
-module "media_logging_bucket" {
+module media_logging_bucket {
   source = "github.com/RLuckom/terraform_modules//aws/state/object_store/logging_bucket"
   name = "logs.${var.media_domain_settings.domain_name}"
 }
 
-module "media_hosting_site" {
+module media_hosting_site {
   source = "github.com/RLuckom/terraform_modules//aws/cloudfront_s3_website"
   website_buckets = [{
     origin_id = "media.raphaelluckom"
     regional_domain_name = "media.raphaelluckom.com.s3.amazonaws.com"
   }]
   logging_config = local.media_site_cloudfront_logging_config
-  route53_zone_name = var.route53_zone_name
-  domain_name = var.media_domain_settings.domain_name
+  routing = {
+    route53_zone_name = var.route53_zone_name
+    scope = "media"
+    domain_parts = {
+      controlled_domain_part = var.media_domain_settings.domain_name_prefix
+      top_level_domain = "com"
+    }
+  }
   allowed_origins = var.media_domain_settings.allowed_origins
-  controlled_domain_part = var.media_domain_settings.domain_name_prefix
   subject_alternative_names = var.media_domain_settings.subject_alternative_names
 }
 
-module "media_input_bucket" {
+module media_input_bucket {
   source = "github.com/RLuckom/terraform_modules//aws/state/object_store/bucket"
   name = "rluckom-media-input"
   lifecycle_rules = [{
@@ -50,7 +55,7 @@ module "media_input_bucket" {
   lambda_notifications = local.media_input_trigger_jpeg
 }
 
-module "media_table" {
+module media_table {
   source = "github.com/RLuckom/terraform_modules//aws/state/permissioned_dynamo_table"
   table_name = "media"
   put_item_permission_role_names = [
@@ -58,7 +63,7 @@ module "media_table" {
   ]
 }
 
-module "labeled_media_table" {
+module labeled_media_table {
   source = "github.com/RLuckom/terraform_modules//aws/state/permissioned_dynamo_table"
   table_name = "labeled_media"
   partition_key = {
@@ -74,7 +79,7 @@ module "labeled_media_table" {
   ]
 }
 
-module "stream_input_bucket" {
+module stream_input_bucket {
   source = "github.com/RLuckom/terraform_modules//aws/state/object_store/bucket"
   name = var.stream_input_bucket_name
   lifecycle_rules = [{
@@ -90,7 +95,7 @@ module "stream_input_bucket" {
   lambda_notifications = local.media_input_trigger_jpeg
 }
 
-module "photos_media_output_bucket" {
+module photos_media_output_bucket {
   source = "github.com/RLuckom/terraform_modules//aws/state/object_store/bucket"
   name = local.media_output_bucket_name
   prefix_object_permissions = [
@@ -102,7 +107,7 @@ module "photos_media_output_bucket" {
   ]
 }
 
-module "image_archive_lambda" {
+module image_archive_lambda {
   source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   mem_mb = 512
   source_contents = [

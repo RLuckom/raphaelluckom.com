@@ -7,11 +7,11 @@ module test_site {
   #asset_path = "${path.root}/sites/test.raphaelluckom.com/assets"
   routing = {
     scope = "test"
-    domain_parts = module.visibility_data_coordinator.serverless_site_configs["test"].domain_parts
+    domain_parts = module.visibility_system.serverless_site_configs["test"].domain_parts
     route53_zone_name = var.route53_zone_name
   }
   site_bucket = "test.raphaelluckom.com"
-  coordinator_data = module.visibility_data_coordinator.serverless_site_configs["test"]
+  coordinator_data = module.visibility_system.serverless_site_configs["test"]
   subject_alternative_names = ["www.test.raphaelluckom.com"]
   #lambda_bucket = aws_s3_bucket.lambda_bucket.id
   trails_table_name = "test-trails_table"

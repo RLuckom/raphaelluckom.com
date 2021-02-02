@@ -4,7 +4,7 @@ of shared data infrastructure. This allows us to avoid circular references--
 cases where we need to know the logging location to build a function, but need the function
 ID to allow it access to the logging location.
 */
-module visibility_data_coordinator {
+module visibility_system {
   source = "github.com/RLuckom/terraform_modules//aws/visibility/aurochs"
   scopes = ["test", "prod"]
   scoped_logging_functions = {
@@ -19,18 +19,24 @@ module visibility_data_coordinator {
   serverless_site_configs = {
     prod = {
       scope = "prod"
-      top_level_domain = "com"
-      controlled_domain_part = "raphaelluckom"
+      domain_parts = {
+        top_level_domain = "com"
+        controlled_domain_part = "raphaelluckom"
+      }
     }
     test = {
       scope = "test"
-      top_level_domain = "com"
-      controlled_domain_part = "test.raphaelluckom"
+      domain_parts = {
+        top_level_domain = "com"
+        controlled_domain_part = "test.raphaelluckom"
+      }
     }
     media = {
       scope = "prod"
-      top_level_domain = "com"
-      controlled_domain_part = "media.raphaelluckom"
+      domain_parts = {
+        top_level_domain = "com"
+        controlled_domain_part = "media.raphaelluckom"
+      }
     }
   }
 }

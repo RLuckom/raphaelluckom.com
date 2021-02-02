@@ -4,10 +4,10 @@ module prod_site {
   nav_links = var.nav_links
   site_title = var.prod_site_title
   site_bucket = "raphaelluckom.com"
-  coordinator_data = module.visibility_data_coordinator.serverless_site_configs["prod"]
+  coordinator_data = module.visibility_system.serverless_site_configs["prod"]
   routing = {
     scope = "prod"
-    domain_parts = module.visibility_data_coordinator.serverless_site_configs["prod"].domain_parts
+    domain_parts = module.visibility_system.serverless_site_configs["prod"].domain_parts
     route53_zone_name = var.route53_zone_name
   }
   subject_alternative_names = ["www.raphaelluckom.com"]
