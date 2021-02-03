@@ -1,10 +1,13 @@
 module test_site {
   source = "github.com/RLuckom/terraform_modules//aws/serverless_site/tetrapod"
-  enable = true
   maintainer = var.maintainer
   nav_links = var.nav_links
   site_title = var.test_site_title
   #asset_path = "${path.root}/sites/test.raphaelluckom.com/assets"
+  system_id = {
+    security_scope = "test"
+    subsystem_name = "test"
+  }
   routing = {
     scope = "test"
     domain_parts = module.visibility_system.serverless_site_configs["test"].domain_parts

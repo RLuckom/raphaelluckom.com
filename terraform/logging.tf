@@ -1,15 +1,21 @@
-/*
-The visibility data coordinator creates no infrastructure, but sets the names
-of shared data infrastructure. This allows us to avoid circular references--
-cases where we need to know the logging location to build a function, but need the function
-ID to allow it access to the logging location.
-*/
 module visibility_system {
   source = "github.com/RLuckom/terraform_modules//aws/visibility/aurochs"
-  scopes = ["test", "prod"]
+  supported_systems = [
+    {
+      security_scope = "test"
+      subsystem_names = ["test"]
+    }, {
+      security_scope = "prod"
+      subsystem_names = ["prod", "media"]
+    }
+  ]
   scoped_logging_functions = {
-    prod = module.prod_site.lambda_logging_prefix_role_map
-    test = module.test_site.lambda_logging_prefix_role_map
+    prod = {
+      prod = module.prod_site.lambda_logging_prefix_role_map
+    }
+    test = {
+      test = module.test_site.lambda_logging_prefix_role_map
+    }
   }
   cloudfront_delivery_bucket = "${var.bucket_prefix}-cloudfront-delivery"
   visibility_data_bucket = "${var.bucket_prefix}-visibility-data"
@@ -18,21 +24,30 @@ module visibility_system {
   lambda_event_configs = local.notify_failure_only
   serverless_site_configs = {
     prod = {
-      scope = "prod"
+      system_id = {
+        security_scope = "prod"
+        subsystem_name = "prod"
+      }
       domain_parts = {
         top_level_domain = "com"
         controlled_domain_part = "raphaelluckom"
       }
     }
     test = {
-      scope = "test"
+      system_id = {
+        security_scope = "test"
+        subsystem_name = "test"
+      }
       domain_parts = {
         top_level_domain = "com"
         controlled_domain_part = "test.raphaelluckom"
       }
     }
     media = {
-      scope = "prod"
+      system_id = {
+        security_scope = "prod"
+        subsystem_name = "media"
+      }
       domain_parts = {
         top_level_domain = "com"
         controlled_domain_part = "media.raphaelluckom"
@@ -67,17 +82,5 @@ locals {
     bucket = local.visibility_bucket_name
     prefix = "media.raphaelluckom"
     include_cookies = false
-  }
-  media_site_cloudfront_logging_policy = {
-    prefix = "media"
-    actions = ["s3:PutObject"]
-    principals = [
-      {
-        type = "AWS"
-        identifiers = [
-          module.media_hosting_site.cloudfront_log_delivery_identity.iam_arn
-        ]
-      }
-    ]
   }
 }

@@ -5,8 +5,11 @@ module prod_site {
   site_title = var.prod_site_title
   site_bucket = "raphaelluckom.com"
   coordinator_data = module.visibility_system.serverless_site_configs["prod"]
+  system_id = {
+    security_scope = "prod"
+    subsystem_name = "prod"
+  }
   routing = {
-    scope = "prod"
     domain_parts = module.visibility_system.serverless_site_configs["prod"].domain_parts
     route53_zone_name = var.route53_zone_name
   }
