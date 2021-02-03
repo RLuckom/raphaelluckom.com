@@ -14,7 +14,6 @@ module prod_site {
     route53_zone_name = var.route53_zone_name
   }
   subject_alternative_names = ["www.raphaelluckom.com"]
-  lambda_bucket = aws_s3_bucket.lambda_bucket.id
   trails_table_name = "prod-trails_table"
   lambda_event_configs = local.notify_failure_only
   layers = {
