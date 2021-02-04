@@ -28,9 +28,12 @@ module media_hosting_site {
     regional_domain_name = "media.raphaelluckom.com.s3.amazonaws.com"
   }]
   logging_config = local.media_site_cloudfront_logging_config
+  system_id = {
+    security_scope = "prod"
+    subsystem_name = "media"
+  }
   routing = {
     route53_zone_name = var.route53_zone_name
-    scope = "media"
     domain_parts = {
       controlled_domain_part = var.media_domain_settings.domain_name_prefix
       top_level_domain = "com"

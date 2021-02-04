@@ -272,8 +272,6 @@ Next, run "`terraform apply`". In this step, terraform is going to create the in
 
 ![View of the instance connection page showing a series of output](/img/practitioner_journey/000/ec2_terraform_apply.png)
 
-Enter `yes` to create the infrastructure.
-
 #### Upload an index.html page and look at the website
 
 Now we're going to upload a minimal webpage to the bucket. AWS provides a command-line-interface (CLI) for interacting
