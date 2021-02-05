@@ -31,7 +31,6 @@ exercise.
 
 ### Instructions
 
-#### Start a VM to run terraform
 Just like we did in the first exercise, we're going to start and set up a VM to run terraform. 
 Go to the [instances](https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#Instances:) page and 
 click the Launch Instances button. On the next screen we're going to choose the amazon _machine image_ (AMI) that we
@@ -67,7 +66,7 @@ click the orange "Connect" button under the "Connect To Instance" panel. You sho
 For the next few steps, I'm going to describe the commands you need to run and also provide
 screenshots of what the output looks like. I've tried to make sure that I included the full text of each command.
 When in doubt, use the screenshots to see exactly what I typed. Also note that the console tends to get
-disconnected (The UI will freeze and you'll have to re-login through the "Connect" page on the instance
+disconnected (the UI will freeze and you'll have to re-login through the "Connect" page on the instance)
 if it is idle for more than about 5 minutes. If this happens, log back in and repeat any commands starting with
 "`cd`" to get back to the right directory.
 
@@ -79,17 +78,11 @@ like setting up an instance. But scripts can do just about anything, so you shou
 unless you understand exactly what it does. The script we're going to use is linked above, and it 
 has comments explaining what it does.
 
-The `ls` command lists the contents of the current directory. Type `ls` and press Enter. There will
-not be anything in the current directory.
-
 We're going to download the script using git. Copy and paste the following command and enter it:
 
 ```
 git clone https://github.com/RLuckom/practitioner-journey.git
 ```
-
-Now use `ls` again to see that the download succeeded (your output will not be exactly the same; the number of objects
-at least will be different):
 
 ![View of the instance connection page showing a series of output](/img/practitioner_journey/000/ec2_clone_success.png)
 
@@ -102,17 +95,18 @@ Now we're going to use `cd` to _change directory_ into the directory the script 
  cd practitioner-journey/004/
 ```
 
-Use `ls` to see what's in the directory. You should see a green file called `setup.sh`.  This script requires elevated
-permissions, so we're going to run it as the _super user_. The last step in the script asks you to enter the name of the 
-S3 bucket you made in the first exercise for the terraform state. Type in the bucket name and press Return.
+We're going to run a script called `setup.sh`.  This script requires elevated
+permissions, so we're going to run it as the _super user_ with the following command:
 
 ```
 sudo ./setup.sh
 ```
+The last step in the script asks you to enter the name of the 
+S3 bucket you made in the first exercise for the terraform state. Type in the bucket name and press Return.
 
 If you make a mistake entering the bucket, you can run the script again the same way and enter the right name.
 
-Next, enter the instruction
+Next, enter the command
 
 ```
 cd terraform
@@ -126,7 +120,9 @@ to set up terraform.
 
 Now you're going to set up the infrastructure. The command below shows _every_ option you can specify,
 but the only one that needs to be specified is `-var='domain_name=${your domain}'. For the `site_title`, 
-use underscores (`_`) instead of spaces; they'll be converted automatically.
+use underscores (`_`) instead of spaces; they'll be converted automatically. You will probably want to copy 
+the whole command into a text editor and edit it there, then paste it onto the command line. Avoid wordprocessors
+like Microsoft Word (Is it still called that?) or Google Docs.
 
 ```
 terraform apply -var='domain_name=${your domain}' -var='twitter_handle=${your twitter handle}' -var='linkedin_handle=${your linkedin handle}' -var='instagram_handle=${your instagram handle}' -var='github_handle=${your github handle}' -var='site_title=Test_Website'
