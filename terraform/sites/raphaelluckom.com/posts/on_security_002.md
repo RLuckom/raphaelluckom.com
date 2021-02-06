@@ -101,15 +101,14 @@ they value and what they trust.
       users. The blogging platform in the last exercise is not an end-point; it's a _very basic_ thing that I think a person might
       call "good enough." My evidence for this claim is that I'm a person.
 
-[^2]: _Intended use_ hides a multitude of sins when we talk about security. Publications like NIST 800-53 trust the _owner_ of a
-      system to fairly represent all the system's stakeholders. In practice, this means that if the system owner _wants_ to do something
-      like track all the users all the time, they can define that capability as an intended use. When that kind of capability
-      is defined as an intended use, the priority of the security system is to _protect_ it, such as by making sure the data collection
-      is efficient and stable and protecting the collected data from adversaries. In my personal and professional opinion, this reliance
-      on corporations like Google and Facebook to self-regulate the intended functions of social media systems is _the biggest_ threat
-      that exists in this space. It's precisely why I've chosen the approach of building systems that perform well and cost little
-      when under individual control--so that the definition of "_intended functions_" with respect to these systems is accountable to the system 
-      owners / users as directly as possible. This means that when those intended uses are turned into a set of actual security controls, 
+[^2]: _Intended use_ hides a multitude of sins when we talk about security. Publications like NIST 800-53 trust the security design of a
+      system to fairly represent all the system's stakeholders. In practice, this means that if a system owner _wants_ to do something
+      like track all the users all the time, they can define that capability as an intended use, which then makes it the priority of the
+      security system to _protect_ it, such as by making the data collection efficient and stable and protecting the collected data from 
+      adversaries. In my personal and professional opinion, the freedom that average people give to corporations like Google and Facebook to decide on the 
+      intended functions of social media systems is _the biggest_ threat that exists in this space. It's precisely why I've chosen the 
+      approach of building systems that perform well and cost little when under individual control--so that the definition of 
+      "_intended functions_" with respect to these systems is accountable to individuals as directly as possible. This means that
       the controls have a better chance of protecting the individuals' values, rather than those of rent-seekers.
 
       The next question to consider, if we're being honest with ourselves, is: "If the sum of the system that is now facebook (for instance) 
