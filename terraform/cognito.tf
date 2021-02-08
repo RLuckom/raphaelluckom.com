@@ -23,6 +23,41 @@ locals {
       base_domain = local.cognito_domain
     }
   )
+  cognito_lambda_config = {
+    userPoolArn = aws_cognito_user_pool.user_pool.arn
+    clientId = aws_cognito_user_pool_client.client.id
+    clientSecret = aws_cognito_user_pool_client.client.client_secret
+    oauthScopes = ["phone", "email", "profile", "openid", "aws.cognito.signin.user.admin"]
+    cognitoAuthDomain = local.cognito_domain
+    redirectPathSignIn = "/parseauth"
+    redirectPathSignOut = "/"
+    redirectPathAuthRefresh = "/refreshauth"
+    cookieSettings = {
+      idToken = null
+      accessToken = null
+      refreshToken = null
+      nonce = null
+    }
+    mode = "StaticSiteMode"
+    httpHeaders = {
+      "Content-Security-Policy" = "default-src 'none'; img-src 'self'; script-src 'self' https://code.jquery.com https://stackpath.bootstrapcdn.com; style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com; object-src 'none'; connect-src 'self' https://*.amazonaws.com https://*.amazoncognito.com"
+      "Strict-Transport-Security" = "max-age=31536000; includeSubdomains; preload"
+      "Referrer-Policy" = "same-origin"
+      "X-XSS-Protection" = "1; mode=block"
+      "X-Frame-Options" = "DENY"
+      "X-Content-Type-Options" = "nosniff"
+    }
+    logLevel = "debug"
+    nonceSigningSecret = random_password.nonce_signing_secret.result
+    cookieCompatibility = "elasticsearch"
+    additionalCookies = {}
+    requiredGroup = aws_cognito_user_pool.user_pool.name
+  }
+}
+
+resource random_password nonce_signing_secret {
+  length = 16
+  override_special = "-._~"
 }
 
 resource aws_cognito_user_pool user_pool {
