@@ -1,4 +1,5 @@
 locals {
+  cognito_domain = "auth.test.${local.zone}"
   cognito_system_id = {
     security_scope = "test"
     subsystem_name = "cognito"
@@ -14,6 +15,14 @@ locals {
   ]
   allowed_oauth_flows_user_pool_client = true
   zone = "raphaelluckom.com"
+  login_index_html = templatefile(
+    "./cognito_assets/login_page/index.html",
+    {
+      client_id = aws_cognito_user_pool.user_pool.id
+      aws_region = "us-east-1"
+      base_domain = local.cognito_domain
+    }
+  )
 }
 
 resource aws_cognito_user_pool user_pool {
@@ -54,7 +63,7 @@ resource aws_cognito_user_pool_client client {
 }
 
 resource aws_cognito_user_pool_domain domain {
-  domain          = "auth.test.raphaelluckom.com"
+  domain    = local.cognito_domain
   certificate_arn = aws_acm_certificate.cert.arn
   user_pool_id    = aws_cognito_user_pool.user_pool.id
 }
@@ -73,7 +82,7 @@ resource aws_route53_record cert_validation {
 }
 
 resource aws_route53_record auth_a_record {
-  name    = "auth.test.${local.zone}"
+  name    = local.cognito_domain
   type    = "A"
   zone_id = data.aws_route53_zone.selected.id
   alias {
@@ -85,7 +94,7 @@ resource aws_route53_record auth_a_record {
 }
 
 resource aws_acm_certificate cert {
-  domain_name       = "auth.test.${var.domain_name}"
+  domain_name    = local.cognito_domain
   subject_alternative_names = []
   validation_method = "DNS"
 
