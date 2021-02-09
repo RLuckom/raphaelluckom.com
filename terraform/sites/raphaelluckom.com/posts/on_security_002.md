@@ -117,7 +117,7 @@ they value and what they trust.
       trust anyone who's sure they're right.
 
 [^3]: Here "able" has two separate meanings. First, a cloud provider's customer agreements are dominated by the needs of _big_ customers--
-      the ones who drop hundresds of thousands on their bill in a month. Those customers--like media companies, pharmaceutical companies,
+      the ones who drop hundreds of thousands on their bill in a month. Those customers--like media companies, pharmaceutical companies,
       etc. do _not mess around_ when it comes to their confidentiality needs. When a movie studio uses AWS in their editing pipeline,
       the expectation is that an AWS employee _cannot_ leak the unreleased footage. It would be a _disaster_ for a cloud provider to be seen
       not to prioritize the confidentiality of its customers' data--it could be a business-ending event. This, much more than any person's

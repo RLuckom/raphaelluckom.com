@@ -119,13 +119,19 @@ terraform init
 to set up terraform. 
 
 Now you're going to set up the infrastructure. The command below shows _every_ option you can specify,
-but the only one that needs to be specified is `-var='domain_name=${your domain}'. For the `site_title`, 
+but the only one that needs to be specified is `-var='domain_name=${your domain}'`. For the `site_title`, 
 use underscores (`_`) instead of spaces; they'll be converted automatically. You will probably want to copy 
-the whole command into a text editor and edit it there, then paste it onto the command line. Avoid wordprocessors
-like Microsoft Word (Is it still called that?) or Google Docs.
+the whole command into a text editor and edit it there to replace my values with yours, then paste it onto the 
+command line. The slashes at the end of each line except the last allow you to just paste the whole command onto
+the command line in one go. Avoid word processors like Microsoft Word (Is it still called that?) or Google Docs. 
 
 ```
-terraform apply -var='domain_name=${your domain}' -var='twitter_handle=${your twitter handle}' -var='linkedin_handle=${your linkedin handle}' -var='instagram_handle=${your instagram handle}' -var='github_handle=${your github handle}' -var='site_title=Test_Website'
+terraform apply -var='domain_name=raphaelluckom.com' \
+  -var='twitter_handle=RLuckom' \
+  -var='linkedin_handle=raphaelluckom' \
+  -var='instagram_handle=rluckom' \
+  -var='github_handle=rluckom' \
+  -var='site_title=Test_Website'
 ```
 
 In this step, terraform is going to create the infrastructure. You will see a plan that creates
