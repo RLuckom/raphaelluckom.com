@@ -1,7 +1,7 @@
 ---
 title: "Early February Check-in"
 author: "Raphael Luckom"
-date: 2020-12-08T12:09:44
+date: 2021-02-09T12:09:44
 draft: false
 meta:
   trail:
@@ -13,7 +13,7 @@ interest I could describe the theme system and the rendering system, but if ther
 to packaging the visibility system. I'd like to explore those priorities today.
 
 When do we consider a thing finished? When it _can_ be used for its intended purpose at least one time?
-When it meets some performace goal? When it is accessible to some percentage of potential users? When it turns
+When it meets some performance goal? When it is accessible to some percentage of potential users? When it turns
 a profit? When we run out of time?
 
 When we're working on a design and we hit upon a knot of open-ended questions like that, one pragmatic technique
