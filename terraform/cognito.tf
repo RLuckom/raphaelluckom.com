@@ -1,4 +1,6 @@
 locals {
+  aws_credentials_file = "/.aws/credentials"
+  user_email = "raph.aelluckom@gmail.com"
   cognito_domain = "auth.test.${local.zone}"
   cognito_system_id = {
     security_scope = "test"
@@ -76,6 +78,22 @@ resource aws_cognito_user_pool user_pool {
   }
 
   auto_verified_attributes = ["email"]
+}
+
+resource "aws_cognito_user_group" "user_group" {
+  name         = "home_user_group"
+  user_pool_id = aws_cognito_user_pool.user_pool.id
+}
+
+resource null_resource user {
+
+  provisioner "local-exec" {
+    # Bootstrap script called with private_ip of each node in the clutser
+    command = "aws cognito-idp admin-create-user --user-pool-id ${aws_cognito_user_pool.user_pool.id} --username ${local.user_email} --user-attributes Name=email,Value=${local.user_email} && sleep 5 && aws cognito-idp admin-add-user-to-group --user-pool-id ${aws_cognito_user_pool.user_pool.id} --username ${local.user_email} --group-name ${aws_cognito_user_group.user_group.name}"
+    environment = {
+      AWS_SHARED_CREDENTIALS_FILE = local.aws_credentials_file
+    }
+  }
 }
 
 resource aws_cognito_user_pool_client client {
