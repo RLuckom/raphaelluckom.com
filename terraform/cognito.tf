@@ -25,6 +25,20 @@ locals {
       base_domain = local.cognito_domain
     }
   )
+  protected_site_domain = "test.raphaelluckom.com"
+  cognito_scope = "cognito"
+  http_header_values = {
+    "Content-Security-Policy" = "default-src 'none'; img-src 'self'; script-src 'self' https://code.jquery.com https://stackpath.bootstrapcdn.com; style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com; object-src 'none'; connect-src 'self' https://*.amazonaws.com https://*.amazoncognito.com"
+    "Strict-Transport-Security" = "max-age=31536000; includeSubdomains; preload"
+    "Referrer-Policy" = "same-origin"
+    "X-XSS-Protection" = "1; mode=block"
+    "X-Frame-Options" = "DENY"
+    "X-Content-Type-Options" = "nosniff"
+  }
+  set_headers_config = {
+    httpHeaders = local.http_header_values
+    logLevel = "debug"
+  }
   cognito_lambda_config = {
     userPoolArn = aws_cognito_user_pool.user_pool.arn
     clientId = aws_cognito_user_pool_client.client.id
@@ -41,20 +55,281 @@ locals {
       nonce = null
     }
     mode = "StaticSiteMode"
-    httpHeaders = {
-      "Content-Security-Policy" = "default-src 'none'; img-src 'self'; script-src 'self' https://code.jquery.com https://stackpath.bootstrapcdn.com; style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com; object-src 'none'; connect-src 'self' https://*.amazonaws.com https://*.amazoncognito.com"
-      "Strict-Transport-Security" = "max-age=31536000; includeSubdomains; preload"
-      "Referrer-Policy" = "same-origin"
-      "X-XSS-Protection" = "1; mode=block"
-      "X-Frame-Options" = "DENY"
-      "X-Content-Type-Options" = "nosniff"
-    }
+    httpHeaders = local.http_header_values
     logLevel = "debug"
     nonceSigningSecret = random_password.nonce_signing_secret.result
     cookieCompatibility = "elasticsearch"
     additionalCookies = {}
     requiredGroup = aws_cognito_user_pool.user_pool.name
   }
+  cloudfront_origins = [
+    {
+      domain_name = local.protected_site_domain
+      id = "protected_site"
+      s3_origin_config = {
+        origin_access_identity = aws_cloudfront_origin_access_identity.protected_distribution_oai.cloudfront_access_identity_path
+      }
+    },
+    {
+      domain_name = "example.org"
+      id = "dummy"
+      custom_origin_config = {
+        origin_protocol_policy = "match-viewer"
+      }
+    }
+  ]
+  cloudfront_cache_behaviors = {
+    parse_auth = {
+      pattern = "/parseauth"
+      compress = true
+      forwarded_values = {
+        querystring = true
+      }
+      lambda_function_associations = [{
+        event_type = "viewer-request"
+        lambda_function_association = module.parse_auth.lambda.arn
+      }]
+      target_origin = "dummy"
+      viewer_protocol_policy = "redirect-to-https"
+    }
+    refresh_auth = {
+      pattern = "/refreshauth"
+      compress = true
+      forwarded_values = {
+        querystring = true
+      }
+      lambda_function_associations = [{
+        event_type = "viewer-request"
+        lambda_function_association = module.refresh_auth.lambda.arn
+      }]
+      target_origin = "dummy"
+      viewer_protocol_policy = "redirect-to-https"
+    }
+    sign_out = {
+      pattern = "/signout"
+      compress = true
+      forwarded_values = {
+        querystring = true
+      }
+      lambda_function_associations = [{
+        event_type = "viewer-request"
+        lambda_function_association = module.sign_out.lambda.arn
+      }]
+      target_origin = "dummy"
+      viewer_protocol_policy = "redirect-to-https"
+    }
+    default = {
+      compress = true
+      forwarded_values = {
+        querystring = true
+      }
+      lambda_function_associations = [
+        {
+          event_type = "viewer-request"
+          lambda_function_association = module.check_auth.lambda.arn
+        },
+        {
+          event_type = "origin-response"
+          lambda_function_association = module.http_headers.lambda.arn
+        }
+      ]
+      target_origin = "protected_site"
+      viewer_protocol_policy = "redirect-to-https"
+    }
+  }
+  function_defaults = {
+    mem_mb = 128
+    timeout_secs = 3
+    //TODO: which arn?
+    invoking_principals = [
+      {
+        service = "edgelambda.amazonaws.com"
+        source_arn = null 
+      },
+      {
+        service = "lambda.amazonaws.com"
+        source_arn = null
+      }
+    ]
+    shared_source = [
+      {
+        file_name = "shared/shared.js"
+        file_contents = file("./cognito_assets/functions/shared/shared.js")
+      },
+      {
+        file_name = "shared/validate_jwt.js"
+        file_contents = file("./cognito_assets/functions/shared/validate_jwt.js")
+      },
+      {
+        file_name = "shared/error_page/template.html"
+        file_contents = file("./cognito_assets/functions/shared/error_page/template.html")
+      }
+    ]
+    policy_statements = []
+    layers = [
+      {
+        present = true
+        arn = module.cognito_layer.layer.arn
+      }
+    ]
+  }
+  http_headers = {
+    source_contents = [
+      {
+        file_name = "index.js"
+        file_contents = file("./cognito_assets/functions/http_headers/index.js")
+      },
+      {
+        file_name = "config.js"
+        file_contents = jsonencode(local.set_headers_config)
+      }
+    ]
+    details = {
+      action_name = "http_headers"
+      scope_name = local.cognito_scope
+      policy_statements = local.function_defaults.policy_statements
+    }
+  }
+  check_auth = {
+    source_contents = [
+      {
+        file_name = "index.js"
+        file_contents = file("./cognito_assets/functions/check_auth/index.js")
+      },
+      {
+        file_name = "config.js"
+        file_contents = jsonencode(local.cognito_lambda_config)
+      }
+    ]
+    details = {
+      action_name = "check_auth"
+      scope_name = local.cognito_scope
+      policy_statements = local.function_defaults.policy_statements
+    }
+  }
+  sign_out = {
+    source_contents = [
+      {
+        file_name = "index.js"
+        file_contents = file("./cognito_assets/functions/sign_out/index.js")
+      },
+      {
+        file_name = "config.js"
+        file_contents = jsonencode(local.cognito_lambda_config)
+      }
+    ]
+    details = {
+      action_name = "sign_out"
+      scope_name = local.cognito_scope
+      policy_statements = local.function_defaults.policy_statements
+    }
+  }
+  refresh_auth = {
+    source_contents = [
+      {
+        file_name = "index.js"
+        file_contents = file("./cognito_assets/functions/refresh_auth/index.js")
+      },
+      {
+        file_name = "config.js"
+        file_contents = jsonencode(local.cognito_lambda_config)
+      }
+    ]
+    details = {
+      action_name = "refresh_auth"
+      scope_name = local.cognito_scope
+      policy_statements = local.function_defaults.policy_statements
+    }
+  }
+  parse_auth = {
+    source_contents = [
+      {
+        file_name = "index.js"
+        file_contents = file("./cognito_assets/functions/parse_auth/index.js")
+      },
+      {
+        file_name = "config.js"
+        file_contents = jsonencode(local.cognito_lambda_config)
+      }
+    ]
+    details = {
+      action_name = "parse_auth"
+      scope_name = local.cognito_scope
+      policy_statements = local.function_defaults.policy_statements
+    }
+  }
+}
+
+module "cognito_layer" {
+  source = "github.com/RLuckom/terraform_modules//aws/layers/cognito_utils"
+}
+
+module check_auth {
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  timeout_secs = local.function_defaults.timeout_secs
+  mem_mb = local.function_defaults.mem_mb
+  invoking_principals = local.function_defaults.invoking_principals
+  source_contents = concat(
+    local.function_defaults.shared_source,
+    local.check_auth.source_contents
+  )
+  lambda_details = local.check_auth.details
+  layers = local.function_defaults.layers
+}
+
+module http_headers {
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  timeout_secs = local.function_defaults.timeout_secs
+  mem_mb = local.function_defaults.mem_mb
+  invoking_principals = local.function_defaults.invoking_principals
+  source_contents = concat(
+    local.function_defaults.shared_source,
+    local.http_headers.source_contents
+  )
+  lambda_details = local.http_headers.details
+  layers = local.function_defaults.layers
+}
+
+module sign_out {
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  timeout_secs = local.function_defaults.timeout_secs
+  mem_mb = local.function_defaults.mem_mb
+  invoking_principals = local.function_defaults.invoking_principals
+  source_contents = concat(
+    local.function_defaults.shared_source,
+    local.sign_out.source_contents
+  )
+  lambda_details = local.sign_out.details
+  layers = local.function_defaults.layers
+}
+
+module refresh_auth {
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  timeout_secs = local.function_defaults.timeout_secs
+  mem_mb = local.function_defaults.mem_mb
+  invoking_principals = local.function_defaults.invoking_principals
+  source_contents = concat(
+    local.function_defaults.shared_source,
+    local.refresh_auth.source_contents
+  )
+  lambda_details = local.refresh_auth.details
+  layers = local.function_defaults.layers
+}
+
+module parse_auth {
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  timeout_secs = local.function_defaults.timeout_secs
+  mem_mb = local.function_defaults.mem_mb
+  invoking_principals = local.function_defaults.invoking_principals
+  source_contents = concat(
+    local.function_defaults.shared_source,
+    local.parse_auth.source_contents
+  )
+  lambda_details = local.parse_auth.details
+  layers = local.function_defaults.layers
+}
+
+resource aws_cloudfront_origin_access_identity protected_distribution_oai {
 }
 
 resource random_password nonce_signing_secret {
@@ -76,11 +351,10 @@ resource aws_cognito_user_pool user_pool {
       max_length = 250
     }
   }
-
   auto_verified_attributes = ["email"]
 }
 
-resource "aws_cognito_user_group" "user_group" {
+resource aws_cognito_user_group user_group {
   name         = "home_user_group"
   user_pool_id = aws_cognito_user_pool.user_pool.id
 }
