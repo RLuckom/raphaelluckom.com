@@ -7,10 +7,10 @@ locals {
     subsystem_name = "cognito"
   }
   callback_urls = [
-    "https://test.raphaelluckom.com/index.html"
+    "https://${local.protected_site_domain}/index.html"
   ]
   logout_urls = [
-    "https://test.raphaelluckom.com/index.html"
+    "https://${local.protected_site_domain}/index.html"
   ]
   allowed_oauth_scopes = [
     "aws.cognito.signin.user.admin","openid"
@@ -25,7 +25,7 @@ locals {
       base_domain = local.cognito_domain
     }
   )
-  protected_site_domain = "test.raphaelluckom.com"
+  protected_site_domain = "testcog.raphaelluckom.com"
   cognito_scope = "cognito"
   http_header_values = {
     "Content-Security-Policy" = "default-src 'none'; img-src 'self'; script-src 'self' https://code.jquery.com https://stackpath.bootstrapcdn.com; style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com; object-src 'none'; connect-src 'self' https://*.amazonaws.com https://*.amazoncognito.com"
@@ -62,22 +62,22 @@ locals {
     additionalCookies = {}
     requiredGroup = aws_cognito_user_pool.user_pool.name
   }
-  cloudfront_origins = [
-    {
+  cloudfront_origins = {
+    protected_site = {
       domain_name = local.protected_site_domain
-      id = "protected_site"
+      origin_id = "protected_site"
       s3_origin_config = {
         origin_access_identity = aws_cloudfront_origin_access_identity.protected_distribution_oai.cloudfront_access_identity_path
       }
-    },
-    {
+    }
+    dummy = {
       domain_name = "example.org"
-      id = "dummy"
+      origin_id = "dummy"
       custom_origin_config = {
         origin_protocol_policy = "match-viewer"
       }
     }
-  ]
+  }
   cloudfront_cache_behaviors = {
     parse_auth = {
       pattern = "/parseauth"
@@ -266,6 +266,7 @@ module "cognito_layer" {
 
 module check_auth {
   source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  publish = true
   timeout_secs = local.function_defaults.timeout_secs
   mem_mb = local.function_defaults.mem_mb
   invoking_principals = local.function_defaults.invoking_principals
@@ -279,6 +280,7 @@ module check_auth {
 
 module http_headers {
   source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  publish = true
   timeout_secs = local.function_defaults.timeout_secs
   mem_mb = local.function_defaults.mem_mb
   invoking_principals = local.function_defaults.invoking_principals
@@ -292,6 +294,7 @@ module http_headers {
 
 module sign_out {
   source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  publish = true
   timeout_secs = local.function_defaults.timeout_secs
   mem_mb = local.function_defaults.mem_mb
   invoking_principals = local.function_defaults.invoking_principals
@@ -305,6 +308,7 @@ module sign_out {
 
 module refresh_auth {
   source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  publish = true
   timeout_secs = local.function_defaults.timeout_secs
   mem_mb = local.function_defaults.mem_mb
   invoking_principals = local.function_defaults.invoking_principals
@@ -318,6 +322,7 @@ module refresh_auth {
 
 module parse_auth {
   source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  publish = true
   timeout_secs = local.function_defaults.timeout_secs
   mem_mb = local.function_defaults.mem_mb
   invoking_principals = local.function_defaults.invoking_principals
@@ -433,4 +438,190 @@ resource aws_acm_certificate cert {
 resource aws_acm_certificate_validation cert_validation {
   certificate_arn = aws_acm_certificate.cert.arn
   validation_record_fqdns = [aws_route53_record.cert_validation.fqdn]
+}
+
+resource aws_route53_record cert_validation_private_site {
+  name            = aws_acm_certificate.cert_private_site.domain_validation_options.*.resource_record_name[0]
+  records         = aws_acm_certificate.cert_private_site.domain_validation_options.*.resource_record_value
+  type            = aws_acm_certificate.cert_private_site.domain_validation_options.*.resource_record_type[0]
+  zone_id         = data.aws_route53_zone.selected.zone_id
+  ttl             = 60
+}
+
+resource aws_route53_record auth_a_record_private_site {
+  name    = local.protected_site_domain
+  type    = "A"
+  zone_id = data.aws_route53_zone.selected.id
+  alias {
+    evaluate_target_health = false
+    name                   = aws_cloudfront_distribution.private_site_distribution.domain_name
+    # This zone_id is fixed
+    zone_id = "Z2FDTNDATAQYW2"
+  }
+}
+
+resource aws_acm_certificate cert_private_site {
+  domain_name    = local.protected_site_domain
+  subject_alternative_names = []
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource aws_acm_certificate_validation cert_validation_private_site {
+  certificate_arn = aws_acm_certificate.cert_private_site.arn
+  validation_record_fqdns = [aws_route53_record.cert_validation_private_site.fqdn]
+}
+
+resource aws_cloudfront_distribution private_site_distribution {
+
+  enabled             = true
+  is_ipv6_enabled     = true
+  default_root_object = "index.html"
+  price_class = "PriceClass_100"
+
+  viewer_certificate {
+    acm_certificate_arn = aws_acm_certificate.cert_private_site.arn
+    minimum_protocol_version = "TLSv1"
+    ssl_support_method = "sni-only"
+  }
+
+  origin {
+    domain_name = local.cloudfront_origins.protected_site.domain_name
+    origin_id   = local.cloudfront_origins.protected_site.origin_id
+
+    s3_origin_config {
+      origin_access_identity = local.cloudfront_origins.protected_site.s3_origin_config.origin_access_identity
+    }
+  }
+
+  origin {
+    domain_name = local.cloudfront_origins.dummy.domain_name
+    origin_id   = local.cloudfront_origins.dummy.origin_id
+
+    custom_origin_config {
+      http_port = 80
+      https_port = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols = [ "TLSv1.2" ]
+    }
+  }
+
+
+  /*
+  logging_config {
+    include_cookies = false
+    bucket          = "${var.logging_config.bucket}.s3.amazonaws.com"
+    prefix          = var.logging_config.prefix
+  }
+  */
+
+  ordered_cache_behavior {
+    path_pattern = local.cloudfront_cache_behaviors.sign_out.pattern
+    target_origin_id = local.cloudfront_cache_behaviors.sign_out.target_origin
+    allowed_methods = ["GET", "HEAD", "PUT", "POST", "OPTIONS"]
+    cached_methods = []
+    compress = true
+    default_ttl = 0
+    min_ttl = 0
+    max_ttl = 0
+    forwarded_values {
+      query_string = true
+
+      cookies {
+        forward = "all"
+      }
+    }
+    viewer_protocol_policy = "redirect-to-https"
+    lambda_function_association {
+      event_type   = "viewer-request"
+      lambda_arn   = module.sign_out.lambda.qualified_arn
+      include_body = false // TODO true?
+    }
+  }
+
+  ordered_cache_behavior {
+    path_pattern = local.cloudfront_cache_behaviors.refresh_auth.pattern
+    target_origin_id = local.cloudfront_cache_behaviors.refresh_auth.target_origin
+    allowed_methods = ["GET", "HEAD", "PUT", "POST", "OPTIONS"]
+    cached_methods = []
+    compress = true
+    default_ttl = 0
+    min_ttl = 0
+    max_ttl = 0
+    forwarded_values {
+      query_string = true
+
+      cookies {
+        forward = "all"
+      }
+    }
+    viewer_protocol_policy = "redirect-to-https"
+    lambda_function_association {
+      event_type   = "viewer-request"
+      lambda_arn   = module.refresh_auth.lambda.qualified_arn
+      include_body = false // TODO true?
+    }
+  }
+
+  ordered_cache_behavior {
+    path_pattern = local.cloudfront_cache_behaviors.parse_auth.pattern
+    target_origin_id = local.cloudfront_cache_behaviors.parse_auth.target_origin
+    allowed_methods = ["GET", "HEAD", "PUT", "POST", "OPTIONS"]
+    cached_methods = []
+    compress = true
+    default_ttl = 0
+    min_ttl = 0
+    max_ttl = 0
+    forwarded_values {
+      query_string = true
+
+      cookies {
+        forward = "all"
+      }
+    }
+    viewer_protocol_policy = "redirect-to-https"
+    lambda_function_association {
+      event_type   = "viewer-request"
+      lambda_arn   = module.parse_auth.lambda.qualified_arn
+      include_body = false // TODO true?
+    }
+  }
+
+  default_cache_behavior {
+    allowed_methods = ["GET", "HEAD", "PUT", "POST", "OPTIONS"]
+    cached_methods = []
+    target_origin_id = "protected_site"
+    compress = true
+    default_ttl = 0
+    min_ttl = 0
+    max_ttl = 0
+
+    forwarded_values {
+      query_string = true
+
+      cookies {
+        forward = "none"
+      }
+    }
+    viewer_protocol_policy = "redirect-to-https"
+    lambda_function_association {
+      event_type   = "viewer-request"
+      lambda_arn   = module.check_auth.lambda.qualified_arn
+      include_body = false // TODO true?
+    }
+    lambda_function_association {
+      event_type   = "origin-response"
+      lambda_arn   = module.http_headers.lambda.qualified_arn
+      include_body = false // TODO true?
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
 }
