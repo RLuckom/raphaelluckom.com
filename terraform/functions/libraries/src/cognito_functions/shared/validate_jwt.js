@@ -4,7 +4,7 @@ const jwksClient = require("jwks-rsa")
 const { SigningKey, RsaSigningKey } = jwksClient
 
 // jwks client is cached at this scope so it can be reused across Lambda invocations
-let jwksRsa: jwksClient.JwksClient;
+let jwksRsa
 
 function isRsaSigningKey(key) {
   return (key || {}).rsaPublicKey;
@@ -25,10 +25,10 @@ async function getSigningKey(jwksUri, kid) {
 }
 
 async function validate(
-  jwtToken: string,
-  jwksUri: string,
-  issuer: string,
-  audience: string
+  jwtToken,
+  jwksUri,
+  issuer,
+  audience
 ) {
   const decodedToken = decode(jwtToken, { complete: true })
   if (!decodedToken) {

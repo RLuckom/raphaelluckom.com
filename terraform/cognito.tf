@@ -17,14 +17,6 @@ locals {
   ]
   allowed_oauth_flows_user_pool_client = true
   zone = "raphaelluckom.com"
-  login_index_html = templatefile(
-    "./cognito_assets/login_page/index.html",
-    {
-      client_id = aws_cognito_user_pool.user_pool.id
-      aws_region = "us-east-1"
-      base_domain = local.cognito_domain
-    }
-  )
   protected_site_domain = "testcog.raphaelluckom.com"
   cognito_scope = "cognito"
   http_header_values = {
@@ -154,15 +146,15 @@ locals {
     shared_source = [
       {
         file_name = "shared/shared.js"
-        file_contents = file("./cognito_assets/functions/shared/shared.js")
+        file_contents = file("./functions/libraries/src/cognito_functions//shared/shared.js")
       },
       {
         file_name = "shared/validate_jwt.js"
-        file_contents = file("./cognito_assets/functions/shared/validate_jwt.js")
+        file_contents = file("./functions/libraries/src/cognito_functions//shared/validate_jwt.js")
       },
       {
         file_name = "shared/error_page/template.html"
-        file_contents = file("./cognito_assets/functions/shared/error_page/template.html")
+        file_contents = file("./functions/libraries/src/cognito_functions//shared/error_page/template.html")
       }
     ]
     policy_statements = []
@@ -177,7 +169,7 @@ locals {
     source_contents = [
       {
         file_name = "index.js"
-        file_contents = file("./cognito_assets/functions/http_headers/index.js")
+        file_contents = file("./functions/libraries/src/cognito_functions//http_headers/index.js")
       },
       {
         file_name = "config.js"
@@ -194,7 +186,7 @@ locals {
     source_contents = [
       {
         file_name = "index.js"
-        file_contents = file("./cognito_assets/functions/check_auth/index.js")
+        file_contents = file("./functions/libraries/src/cognito_functions//check_auth/index.js")
       },
       {
         file_name = "config.js"
@@ -211,7 +203,7 @@ locals {
     source_contents = [
       {
         file_name = "index.js"
-        file_contents = file("./cognito_assets/functions/sign_out/index.js")
+        file_contents = file("./functions/libraries/src/cognito_functions//sign_out/index.js")
       },
       {
         file_name = "config.js"
@@ -228,7 +220,7 @@ locals {
     source_contents = [
       {
         file_name = "index.js"
-        file_contents = file("./cognito_assets/functions/refresh_auth/index.js")
+        file_contents = file("./functions/libraries/src/cognito_functions//refresh_auth/index.js")
       },
       {
         file_name = "config.js"
@@ -245,7 +237,7 @@ locals {
     source_contents = [
       {
         file_name = "index.js"
-        file_contents = file("./cognito_assets/functions/parse_auth/index.js")
+        file_contents = file("./functions/libraries/src/cognito_functions//parse_auth/index.js")
       },
       {
         file_name = "config.js"

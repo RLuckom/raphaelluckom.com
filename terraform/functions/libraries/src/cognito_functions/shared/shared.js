@@ -1,6 +1,10 @@
+/*
+layers:
+  - cognito_utils
+tests: ../../../spec/src/cognito_shared.spec.js
+*/
 // based on https://github.com/aws-samples/cloudfront-authorization-at-edge/blob/c99f34185384b47cfb2273730dbcd380de492d12/src/lambda-edge/shared/shared.ts
 
-const { CloudFrontHeaders } = require("aws-lambda")
 const { readFileSync } = require("fs")
 const { createHmac } = require("crypto")
 const { parse } = require("cookie")
@@ -8,8 +12,8 @@ const axios = require("axios")
 const { AxiosRequestConfig, AxiosResponse } = axios
 const { Agent } = require("https")
 const fs = require('fs')
-const html = fs.readFileSync("./error-page/template.html")
-const { validate } = require("./validate-jwt")
+const html = fs.readFileSync(`${__dirname}/error_page/template.html`)
+const { validate } = require("./validate_jwt")
 
 function getDefaultCookieSettings() {
 	// Defaults can be overridden by the user (CloudFormation Stack parameter) but should be solid enough for most purposes
@@ -31,7 +35,7 @@ function getCompleteConfig() {
 
   // Derive the issuer and JWKS uri all JWT's will be signed with from the User Pool's ID and region:
   const userPoolId = config.userPoolArn.split("/")[1];
-  const userPoolRegion = userPoolId.match(/^(\S+?)_\S+$/)![1];
+  const userPoolRegion = userPoolId.match(/^(\S+?)_\S+$/)[1];
   const tokenIssuer = `https://cognito-idp.${userPoolRegion}.amazonaws.com/${userPoolId}`;
   const tokenJwksUri = `${tokenIssuer}/.well-known/jwks.json`;
 
@@ -44,9 +48,9 @@ function getCompleteConfig() {
           ...config.cookieSettings,
         }).map(([k, v]) => [
           k,
-          v || defaultCookieSettings[k as keyof CookieSettings],
+          v || defaultCookieSettings[k],
         ])
-      ) as CookieSettings)
+      ))
     : defaultCookieSettings;
 
   // Defaults for nonce and PKCE
@@ -56,7 +60,7 @@ function getCompleteConfig() {
     pkceLength: 43, // Should be between 43 and 128 - per spec
     nonceLength: 16,
     nonceMaxAge:
-      (cookieSettings?.nonce &&
+      (cookieSettings.nonce &&
         parseInt(parse(cookieSettings.nonce.toLowerCase())["max-age"])) ||
       60 * 60 * 24,
   };
@@ -79,7 +83,7 @@ function extractCookiesFromHeaders(headers) {
   }
   const cookies = headers["cookie"].reduce(
     (reduced, header) => Object.assign(reduced, parse(header.value)),
-    {} as Cookies
+    {}
   );
   return cookies;
 }
@@ -110,7 +114,7 @@ function asCloudFrontHeaders(headers) {
 }
 
 function getAmplifyCookieNames(
-  clientId
+  clientId,
   cookiesOrUserName
 ) {
   const keyPrefix = `CognitoIdentityServiceProvider.${clientId}`;
@@ -140,7 +144,7 @@ function getElasticsearchCookieNames() {
   };
 }
 
-export function extractAndParseCookies(
+function extractAndParseCookies(
   headers,
   clientId,
   cookieCompatibility
@@ -172,9 +176,9 @@ export function extractAndParseCookies(
 const generateCookieHeaders = {
   newTokens: (param) =>
     _generateCookieHeaders({ ...param, event: "newTokens" }),
-  signOut: (param: GenerateCookieHeadersParam) =>
+  signOut: (param) =>
     _generateCookieHeaders({ ...param, event: "signOut" }),
-  refreshFailed: (param: GenerateCookieHeadersParam) =>
+  refreshFailed: (param) =>
     _generateCookieHeaders({ ...param, event: "refreshFailed" }),
 };
 
@@ -307,11 +311,11 @@ function decodeToken(jwt) {
 }
 
 async function httpPostWithRetry(
-  url: string,
-  data: any,
-  config: AxiosRequestConfig,
-  logger: Logger
-): Promise<AxiosResponse<any>> {
+  url,
+  data,
+  config,
+  logger
+) {
   let attempts = 0;
   while (true) {
     ++attempts;
@@ -348,7 +352,7 @@ function createErrorHtml(props) {
   const params = { ...props, region: process.env.AWS_REGION };
   return html.replace(
     /\${([^}]*)}/g,
-    (_, v: keyof typeof params) => params[v] || ""
+    (_, v) => params[v] || ""
   );
 }
 
@@ -390,8 +394,8 @@ function timestampInSeconds() {
 }
 
 async function validateAndCheckIdToken(
-  idToken: string,
-  config: CompleteConfig
+  idToken,
+  config
 ) {
   config.logger.info("Validating JWT ...");
   let idTokenPayload = await validate(
