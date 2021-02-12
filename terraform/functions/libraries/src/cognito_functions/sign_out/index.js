@@ -1,15 +1,20 @@
+/*
+layers:
+  - cognito_utils
+tests: ../../../spec/src/cognito_functions/sign_out/index.spec.js
+*/
 // based on https://raw.githubusercontent.com/aws-samples/cloudfront-authorization-at-edge/c99f34185384b47cfb2273730dbcd380de492d12/src/lambda-edge/sign-out/index.ts
-const { stringify as stringifyQueryString } = require("querystring");
+const stringifyQueryString = require("querystring").stringify
 const {
   getCompleteConfig,
   extractAndParseCookies,
   generateCookieHeaders,
   createErrorHtml,
-} = require("./shared/shared");
+} = require("../shared/shared");
 
 let CONFIG;
 
-export const handler = async (event) => {
+const handler = async (event) => {
   if (!CONFIG) {
     CONFIG = getCompleteConfig();
     CONFIG.logger.debug("Configuration loaded:", CONFIG);

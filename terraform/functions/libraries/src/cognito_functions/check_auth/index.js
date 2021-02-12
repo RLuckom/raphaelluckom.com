@@ -1,5 +1,10 @@
+/*
+layers:
+  - cognito_utils
+tests: ../../../spec/src/cognito_functions/check_auth/index.spec.js
+*/
 // based on https://github.com/aws-samples/cloudfront-authorization-at-edge/blob/c99f34185384b47cfb2273730dbcd380de492d12/src/lambda-edge/check-auth/index.ts
-const { stringify as stringifyQueryString } = require("querystring")
+const stringifyQueryString = require("querystring").stringify
 const { createHash, randomBytes } = require("crypto")
 const {
   getCompleteConfig,
@@ -9,11 +14,11 @@ const {
   sign,
   timestampInSeconds,
   validateAndCheckIdToken,
-} = require("./shared/shared");
+} = require("../shared/shared");
 
 let CONFIG;
 
-export const handler = async (event) => {
+const handler = async (event) => {
   if (!CONFIG) {
     CONFIG = getCompleteConfig();
     CONFIG.logger.debug("Configuration loaded:", CONFIG);
@@ -196,7 +201,7 @@ function randomChoiceFromIndexable(indexable) {
   }
   const chunks = Math.floor(256 / indexable.length);
   const firstBiassedIndex = indexable.length * chunks;
-  let randomNumber: number;
+  let randomNumber
   do {
     randomNumber = randomBytes(1)[0];
   } while (randomNumber >= firstBiassedIndex);

@@ -1,19 +1,23 @@
+/*
+layers:
+  - cognito_utils
+tests: ../../../spec/src/cognito_functions/refresh_auth/index.spec.js
+*/
 // based on https://raw.githubusercontent.com/aws-samples/cloudfront-authorization-at-edge/c99f34185384b47cfb2273730dbcd380de492d12/src/lambda-edge/refresh-auth/index.ts
-const {
-  parse as parseQueryString,
-  stringify as stringifyQueryString,
-} = require("querystring");
+const qs = require("querystring")
+const stringifyQueryString = qs.stringify
+const parseQueryString = qs.parse
 const {
   getCompleteConfig,
   extractAndParseCookies,
   generateCookieHeaders,
   httpPostWithRetry,
   createErrorHtml,
-} = require("./shared/shared");
+} = require("../shared/shared");
 
 let CONFIG
 
-export const handler = async (event) => {
+const handler = async (event) => {
   if (!CONFIG) {
     CONFIG = getCompleteConfig();
     CONFIG.logger.debug("Configuration loaded:", CONFIG);
@@ -47,7 +51,7 @@ export const handler = async (event) => {
       refreshToken
     );
 
-    let headers: { "Content-Type": string; Authorization?: string } = {
+    let headers = {
       "Content-Type": "application/x-www-form-urlencoded",
     };
 
@@ -59,11 +63,11 @@ export const handler = async (event) => {
     }
 
     let tokens = {
-      id_token: idToken!,
-      access_token: accessToken!,
-      refresh_token: refreshToken!,
+      id_token: idToken,
+      access_token: accessToken,
+      refresh_token: refreshToken,
     };
-    let cookieHeadersEventType: keyof typeof generateCookieHeaders;
+    let cookieHeadersEventType
     try {
       const body = stringifyQueryString({
         grant_type: "refresh_token",
