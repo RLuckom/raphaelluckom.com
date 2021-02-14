@@ -1,7 +1,7 @@
 /*
 layers:
   - cognito_utils
-tests: ../../../spec/src/cognito_functions/check_auth/index.spec.js
+tests: ../../spec/src/cognito_functions/check_auth.spec.js
 */
 // based on https://github.com/aws-samples/cloudfront-authorization-at-edge/blob/c99f34185384b47cfb2273730dbcd380de492d12/src/lambda-edge/check-auth/index.ts
 const stringifyQueryString = require("querystring").stringify
@@ -14,7 +14,7 @@ const {
   sign,
   timestampInSeconds,
   validateAndCheckIdToken,
-} = require("../shared/shared");
+} = require("./shared/shared");
 
 let CONFIG;
 

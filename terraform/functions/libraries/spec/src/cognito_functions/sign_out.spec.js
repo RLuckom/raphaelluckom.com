@@ -1,4 +1,4 @@
-const shared = require('../../../../src/cognito_functions/parse_auth/index.js')
+const shared = require('../../../src/cognito_functions/sign_out')
 
 describe('cognito shared functions test', () => {
 

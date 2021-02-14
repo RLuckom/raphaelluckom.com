@@ -1,7 +1,7 @@
 /*
 layers:
   - cognito_utils
-tests: ../../../spec/src/cognito_functions/parse_auth/index.spec.js
+tests: ../../spec/src/cognito_functions/parse_auth.spec.js
 */
 // based on https://raw.githubusercontent.com/aws-samples/cloudfront-authorization-at-edge/c99f34185384b47cfb2273730dbcd380de492d12/src/lambda-edge/parse-auth/index.ts
 const qs = require("querystring")
@@ -18,7 +18,7 @@ const {
   timestampInSeconds,
   validateAndCheckIdToken,
   MissingRequiredGroupError,
-} = require("../shared/shared");
+} = require("./shared/shared");
 
 let CONFIG
 

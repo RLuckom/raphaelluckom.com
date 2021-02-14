@@ -1,11 +1,26 @@
 locals {
-  aws_credentials_file = "/.aws/credentials"
-  user_email = "raph.aelluckom@gmail.com"
-  cognito_domain = "auth.test.${local.zone}"
-  cognito_system_id = {
-    security_scope = "test"
-    subsystem_name = "cognito"
+  variables = {
+    zone = "raphaelluckom.com"
+    user_email = "raph.aelluckom@gmail.com"
+    aws_credentials_file = "/.aws/credentials"
+    cognito_system_id = {
+      security_scope = "test"
+      subsystem_name = "cognito"
+    }
+    protected_domain_parts = {
+      top_level_domain = "com"
+      controlled_domain_part = "testcog.raphaelluckom"
+    }
   }
+}
+
+locals {
+  protected_site_domain = "${local.variables.protected_domain_parts.controlled_domain_part}.${local.variables.protected_domain_parts.top_level_domain}"
+  bucket_domain_parts = {
+    top_level_domain = "com"
+    controlled_domain_part = "testcog.raphaelluckom"
+  }
+  cognito_domain = "auth.${local.protected_site_domain}"
   callback_urls = [
     "https://${local.protected_site_domain}/index.html"
   ]
@@ -16,9 +31,6 @@ locals {
     "aws.cognito.signin.user.admin","openid"
   ]
   allowed_oauth_flows_user_pool_client = true
-  zone = "raphaelluckom.com"
-  protected_site_domain = "testcog.raphaelluckom.com"
-  cognito_scope = "cognito"
   http_header_values = {
     "Content-Security-Policy" = "default-src 'none'; img-src 'self'; script-src 'self' https://code.jquery.com https://stackpath.bootstrapcdn.com; style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com; object-src 'none'; connect-src 'self' https://*.amazonaws.com https://*.amazoncognito.com"
     "Strict-Transport-Security" = "max-age=31536000; includeSubdomains; preload"
@@ -132,44 +144,28 @@ locals {
   function_defaults = {
     mem_mb = 128
     timeout_secs = 3
-    //TODO: which arn?
-    invoking_principals = [
-      {
-        service = "edgelambda.amazonaws.com"
-        source_arn = null 
-      },
-      {
-        service = "lambda.amazonaws.com"
-        source_arn = null
-      }
-    ]
     shared_source = [
       {
         file_name = "shared/shared.js"
-        file_contents = file("./functions/libraries/src/cognito_functions//shared/shared.js")
+        file_contents = file("./functions/libraries/src/cognito_functions/shared/shared.js")
       },
       {
         file_name = "shared/validate_jwt.js"
-        file_contents = file("./functions/libraries/src/cognito_functions//shared/validate_jwt.js")
+        file_contents = file("./functions/libraries/src/cognito_functions/shared/validate_jwt.js")
       },
       {
         file_name = "shared/error_page/template.html"
-        file_contents = file("./functions/libraries/src/cognito_functions//shared/error_page/template.html")
+        file_contents = file("./functions/libraries/src/cognito_functions/shared/error_page/template.html")
       }
     ]
+    role_service_principal_ids = ["edgelambda.amazonaws.com", "lambda.amazonaws.com"]
     policy_statements = []
-    layers = [
-      {
-        present = true
-        arn = module.cognito_layer.layer.arn
-      }
-    ]
   }
   http_headers = {
     source_contents = [
       {
         file_name = "index.js"
-        file_contents = file("./functions/libraries/src/cognito_functions//http_headers/index.js")
+        file_contents = file("./functions/libraries/src/cognito_functions/http_headers.js")
       },
       {
         file_name = "config.js"
@@ -178,7 +174,7 @@ locals {
     ]
     details = {
       action_name = "http_headers"
-      scope_name = local.cognito_scope
+      scope_name = local.variables.cognito_system_id.security_scope
       policy_statements = local.function_defaults.policy_statements
     }
   }
@@ -186,7 +182,7 @@ locals {
     source_contents = [
       {
         file_name = "index.js"
-        file_contents = file("./functions/libraries/src/cognito_functions//check_auth/index.js")
+        file_contents = file("./functions/libraries/src/cognito_functions/check_auth.js")
       },
       {
         file_name = "config.js"
@@ -195,7 +191,7 @@ locals {
     ]
     details = {
       action_name = "check_auth"
-      scope_name = local.cognito_scope
+      scope_name = local.variables.cognito_system_id.security_scope
       policy_statements = local.function_defaults.policy_statements
     }
   }
@@ -203,7 +199,7 @@ locals {
     source_contents = [
       {
         file_name = "index.js"
-        file_contents = file("./functions/libraries/src/cognito_functions//sign_out/index.js")
+        file_contents = file("./functions/libraries/src/cognito_functions/sign_out.js")
       },
       {
         file_name = "config.js"
@@ -212,7 +208,7 @@ locals {
     ]
     details = {
       action_name = "sign_out"
-      scope_name = local.cognito_scope
+      scope_name = local.variables.cognito_system_id.security_scope
       policy_statements = local.function_defaults.policy_statements
     }
   }
@@ -220,7 +216,7 @@ locals {
     source_contents = [
       {
         file_name = "index.js"
-        file_contents = file("./functions/libraries/src/cognito_functions//refresh_auth/index.js")
+        file_contents = file("./functions/libraries/src/cognito_functions/refresh_auth.js")
       },
       {
         file_name = "config.js"
@@ -229,7 +225,7 @@ locals {
     ]
     details = {
       action_name = "refresh_auth"
-      scope_name = local.cognito_scope
+      scope_name = local.variables.cognito_system_id.security_scope
       policy_statements = local.function_defaults.policy_statements
     }
   }
@@ -237,7 +233,7 @@ locals {
     source_contents = [
       {
         file_name = "index.js"
-        file_contents = file("./functions/libraries/src/cognito_functions//parse_auth/index.js")
+        file_contents = file("./functions/libraries/src/cognito_functions/parse_auth.js")
       },
       {
         file_name = "config.js"
@@ -246,84 +242,93 @@ locals {
     ]
     details = {
       action_name = "parse_auth"
-      scope_name = local.cognito_scope
+      scope_name = local.variables.cognito_system_id.security_scope
       policy_statements = local.function_defaults.policy_statements
     }
   }
 }
 
-module "cognito_layer" {
-  source = "github.com/RLuckom/terraform_modules//aws/layers/cognito_utils"
+module cognito_fn_template {
+  source = "github.com/RLuckom/terraform_modules//aws/layers/static/cognito_utils?ref=lambda-env-vars"
+}
+
+module protected_bucket {
+  source = "github.com/RLuckom/terraform_modules//aws/state/object_store/website_bucket"
+  domain_parts = local.variables.protected_domain_parts
+  website_access_principals = [{
+    type = "AWS",
+    identifiers = [aws_cloudfront_origin_access_identity.protected_distribution_oai.iam_arn]
+  }]
 }
 
 module check_auth {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda?ref=lambda-env-vars"
   publish = true
   timeout_secs = local.function_defaults.timeout_secs
   mem_mb = local.function_defaults.mem_mb
-  invoking_principals = local.function_defaults.invoking_principals
+  role_service_principal_ids = local.function_defaults.role_service_principal_ids
   source_contents = concat(
     local.function_defaults.shared_source,
     local.check_auth.source_contents
   )
   lambda_details = local.check_auth.details
-  layers = local.function_defaults.layers
+  local_source_directory = module.cognito_fn_template.directory
 }
 
 module http_headers {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda?ref=lambda-env-vars"
   publish = true
   timeout_secs = local.function_defaults.timeout_secs
   mem_mb = local.function_defaults.mem_mb
-  invoking_principals = local.function_defaults.invoking_principals
+  role_service_principal_ids = local.function_defaults.role_service_principal_ids
   source_contents = concat(
     local.function_defaults.shared_source,
     local.http_headers.source_contents
   )
   lambda_details = local.http_headers.details
-  layers = local.function_defaults.layers
+  local_source_directory = module.cognito_fn_template.directory
 }
 
 module sign_out {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda?ref=lambda-env-vars"
   publish = true
   timeout_secs = local.function_defaults.timeout_secs
   mem_mb = local.function_defaults.mem_mb
-  invoking_principals = local.function_defaults.invoking_principals
+  role_service_principal_ids = local.function_defaults.role_service_principal_ids
   source_contents = concat(
     local.function_defaults.shared_source,
     local.sign_out.source_contents
   )
   lambda_details = local.sign_out.details
-  layers = local.function_defaults.layers
+  local_source_directory = module.cognito_fn_template.directory
 }
 
 module refresh_auth {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda?ref=lambda-env-vars"
   publish = true
   timeout_secs = local.function_defaults.timeout_secs
   mem_mb = local.function_defaults.mem_mb
-  invoking_principals = local.function_defaults.invoking_principals
+  role_service_principal_ids = local.function_defaults.role_service_principal_ids
   source_contents = concat(
     local.function_defaults.shared_source,
     local.refresh_auth.source_contents
   )
   lambda_details = local.refresh_auth.details
-  layers = local.function_defaults.layers
+  local_source_directory = module.cognito_fn_template.directory
 }
 
 module parse_auth {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda?ref=lambda-env-vars"
   publish = true
   timeout_secs = local.function_defaults.timeout_secs
   mem_mb = local.function_defaults.mem_mb
-  invoking_principals = local.function_defaults.invoking_principals
+  role_service_principal_ids = local.function_defaults.role_service_principal_ids
   source_contents = concat(
     local.function_defaults.shared_source,
     local.parse_auth.source_contents
   )
   lambda_details = local.parse_auth.details
-  layers = local.function_defaults.layers
+  local_source_directory = module.cognito_fn_template.directory
 }
 
 resource aws_cloudfront_origin_access_identity protected_distribution_oai {
@@ -335,7 +340,7 @@ resource random_password nonce_signing_secret {
 }
 
 resource aws_cognito_user_pool user_pool {
-  name = "${local.cognito_system_id.security_scope}-${local.cognito_system_id.subsystem_name}-pool"
+  name = "${local.variables.cognito_system_id.security_scope}-${local.variables.cognito_system_id.subsystem_name}-pool"
 
   schema {
     name                     = "email"
@@ -360,15 +365,15 @@ resource null_resource user {
 
   provisioner "local-exec" {
     # Bootstrap script called with private_ip of each node in the clutser
-    command = "aws cognito-idp admin-create-user --user-pool-id ${aws_cognito_user_pool.user_pool.id} --username ${local.user_email} --user-attributes Name=email,Value=${local.user_email} && sleep 5 && aws cognito-idp admin-add-user-to-group --user-pool-id ${aws_cognito_user_pool.user_pool.id} --username ${local.user_email} --group-name ${aws_cognito_user_group.user_group.name}"
+    command = "aws cognito-idp admin-create-user --user-pool-id ${aws_cognito_user_pool.user_pool.id} --username ${local.variables.user_email} --user-attributes Name=email,Value=${local.variables.user_email} && sleep 5 && aws cognito-idp admin-add-user-to-group --user-pool-id ${aws_cognito_user_pool.user_pool.id} --username ${local.variables.user_email} --group-name ${aws_cognito_user_group.user_group.name}"
     environment = {
-      AWS_SHARED_CREDENTIALS_FILE = local.aws_credentials_file
+      AWS_SHARED_CREDENTIALS_FILE = local.variables.aws_credentials_file
     }
   }
 }
 
 resource aws_cognito_user_pool_client client {
-  name = "${local.cognito_system_id.security_scope}-${local.cognito_system_id.subsystem_name}-client"
+  name = "${local.variables.cognito_system_id.security_scope}-${local.variables.cognito_system_id.subsystem_name}-client"
 
   user_pool_id = aws_cognito_user_pool.user_pool.id
 
@@ -390,10 +395,13 @@ resource aws_cognito_user_pool_domain domain {
   domain    = local.cognito_domain
   certificate_arn = aws_acm_certificate.cert.arn
   user_pool_id    = aws_cognito_user_pool.user_pool.id
+  depends_on = [
+    aws_route53_record.auth_a_record_private_site 
+  ]
 }
 
 data aws_route53_zone selected {
-  name         = local.zone
+  name         = local.variables.zone
   private_zone = false
 }
 
@@ -481,7 +489,7 @@ resource aws_cloudfront_distribution private_site_distribution {
   }
 
   origin {
-    domain_name = local.cloudfront_origins.protected_site.domain_name
+    domain_name = module.protected_bucket.bucket.bucket_regional_domain_name
     origin_id   = local.cloudfront_origins.protected_site.origin_id
 
     s3_origin_config {
@@ -513,8 +521,8 @@ resource aws_cloudfront_distribution private_site_distribution {
   ordered_cache_behavior {
     path_pattern = local.cloudfront_cache_behaviors.sign_out.pattern
     target_origin_id = local.cloudfront_cache_behaviors.sign_out.target_origin
-    allowed_methods = ["GET", "HEAD", "PUT", "POST", "OPTIONS"]
-    cached_methods = []
+    allowed_methods = ["HEAD", "DELETE", "POST", "GET", "OPTIONS", "PUT", "PATCH"]
+    cached_methods = ["HEAD", "GET"]
     compress = true
     default_ttl = 0
     min_ttl = 0
@@ -537,8 +545,8 @@ resource aws_cloudfront_distribution private_site_distribution {
   ordered_cache_behavior {
     path_pattern = local.cloudfront_cache_behaviors.refresh_auth.pattern
     target_origin_id = local.cloudfront_cache_behaviors.refresh_auth.target_origin
-    allowed_methods = ["GET", "HEAD", "PUT", "POST", "OPTIONS"]
-    cached_methods = []
+    allowed_methods = ["HEAD", "DELETE", "POST", "GET", "OPTIONS", "PUT", "PATCH"]
+    cached_methods = ["HEAD", "GET"]
     compress = true
     default_ttl = 0
     min_ttl = 0
@@ -561,8 +569,8 @@ resource aws_cloudfront_distribution private_site_distribution {
   ordered_cache_behavior {
     path_pattern = local.cloudfront_cache_behaviors.parse_auth.pattern
     target_origin_id = local.cloudfront_cache_behaviors.parse_auth.target_origin
-    allowed_methods = ["GET", "HEAD", "PUT", "POST", "OPTIONS"]
-    cached_methods = []
+    allowed_methods = ["HEAD", "DELETE", "POST", "GET", "OPTIONS", "PUT", "PATCH"]
+    cached_methods = ["HEAD", "GET"]
     compress = true
     default_ttl = 0
     min_ttl = 0
@@ -583,8 +591,8 @@ resource aws_cloudfront_distribution private_site_distribution {
   }
 
   default_cache_behavior {
-    allowed_methods = ["GET", "HEAD", "PUT", "POST", "OPTIONS"]
-    cached_methods = []
+    allowed_methods = ["HEAD", "DELETE", "POST", "GET", "OPTIONS", "PUT", "PATCH"]
+    cached_methods = ["HEAD", "GET"]
     target_origin_id = "protected_site"
     compress = true
     default_ttl = 0
