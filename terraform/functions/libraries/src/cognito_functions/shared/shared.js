@@ -13,6 +13,7 @@ const { Agent } = require("https")
 const fs = require('fs')
 const html = fs.readFileSync(`${__dirname}/error_page/template.html`)
 const { validate } = require("./validate_jwt")
+const raphlogger = require('raphlogger')
 
 function getDefaultCookieSettings() {
 	// Defaults can be overridden by the user (CloudFormation Stack parameter) but should be solid enough for most purposes
