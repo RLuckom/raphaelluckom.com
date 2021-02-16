@@ -6,21 +6,14 @@ tests: ../../spec/src/cognito_functions/check_auth.spec.js
 // based on https://github.com/aws-samples/cloudfront-authorization-at-edge/blob/c99f34185384b47cfb2273730dbcd380de492d12/src/lambda-edge/check-auth/index.ts
 const stringifyQueryString = require("querystring").stringify
 const { createHash, randomBytes } = require("crypto")
-const {
-  getCompleteConfig,
-  extractAndParseCookies,
-  decodeToken,
-  urlSafe,
-  sign,
-  timestampInSeconds,
-  validateAndCheckIdToken,
-} = require("./shared/shared");
+// let for rewire
+let shared = require("./shared/shared");
 
 let CONFIG;
 
 const handler = async (event) => {
   if (!CONFIG) {
-    CONFIG = getCompleteConfig();
+    CONFIG = shared.getCompleteConfig();
     CONFIG.logger.debug("Configuration loaded:", CONFIG);
   }
   CONFIG.logger.debug("Event:", event);
@@ -30,7 +23,7 @@ const handler = async (event) => {
     request.querystring ? "?" + request.querystring : ""
   }`;
   try {
-    const { idToken, refreshToken, nonce, nonceHmac } = extractAndParseCookies(
+    const { idToken, refreshToken, nonce, nonceHmac } = shared.extractAndParseCookies(
       request.headers,
       CONFIG.clientId,
       CONFIG.cookieCompatibility
@@ -50,7 +43,7 @@ const handler = async (event) => {
     // If the ID token has expired or expires in less than 10 minutes and there is a refreshToken: refresh tokens
     // This is done by redirecting the user to the refresh endpoint
     // After the tokens are refreshed the user is redirected back here (probably without even noticing this double redirect)
-    const { exp } = decodeToken(idToken);
+    const { exp } = shared.decodeToken(idToken);
     CONFIG.logger.debug(
       "ID token exp:",
       exp,
@@ -83,7 +76,7 @@ const handler = async (event) => {
             {
               key: "set-cookie",
               value: `spa-auth-edge-nonce-hmac=${encodeURIComponent(
-                sign(nonce, CONFIG.nonceSigningSecret, CONFIG.nonceLength)
+                shared.sign(nonce, CONFIG.nonceSigningSecret, CONFIG.nonceLength)
               )}; ${CONFIG.cookieSettings.nonce}`,
             },
           ],
@@ -96,7 +89,7 @@ const handler = async (event) => {
 
     // Validate the token and if a group is required make sure the token has it.
     // If not throw an Error or MissingRequiredGroupError
-    await validateAndCheckIdToken(idToken, CONFIG);
+    await shared.validateAndCheckIdToken(idToken, CONFIG);
 
     // Return the request unaltered to allow access to the resource:
     CONFIG.logger.debug("Returning request:\n", request);
@@ -109,7 +102,7 @@ const handler = async (event) => {
     const nonce = generateNonce();
     const state = {
       nonce,
-      nonceHmac: sign(nonce, CONFIG.nonceSigningSecret, CONFIG.nonceLength),
+      nonceHmac: shared.sign(nonce, CONFIG.nonceSigningSecret, CONFIG.nonceLength),
       ...generatePkceVerifier(),
     };
     CONFIG.logger.debug("Using new state\n", state);
@@ -121,7 +114,7 @@ const handler = async (event) => {
       state:
         // Encode the state variable as base64 to avoid a bug in Cognito hosted UI when using multiple identity providers
         // Cognito decodes the URL, causing a malformed link due to the JSON string, and results in an empty 400 response from Cognito.
-        urlSafe.stringify(
+        shared.urlSafe.stringify(
           Buffer.from(
             JSON.stringify({ nonce: state.nonce, requestedUri })
           ).toString("base64")
@@ -178,7 +171,7 @@ function generatePkceVerifier(pkce) {
   }
   const verifier = {
     pkce,
-    pkceHash: urlSafe.stringify(
+    pkceHash: shared.urlSafe.stringify(
       createHash("sha256").update(pkce, "utf8").digest("base64")
     ),
   };
@@ -190,7 +183,7 @@ function generateNonce() {
   const randomString = [...new Array(CONFIG.nonceLength)]
     .map(() => randomChoiceFromIndexable(CONFIG.secretAllowedCharacters))
     .join("");
-  const nonce = `${timestampInSeconds()}T${randomString}`;
+  const nonce = `${shared.timestampInSeconds()}T${randomString}`;
   CONFIG.logger.debug("Generated new nonce:", nonce);
   return nonce;
 }
@@ -207,4 +200,8 @@ function randomChoiceFromIndexable(indexable) {
   } while (randomNumber >= firstBiassedIndex);
   const index = randomNumber % indexable.length;
   return indexable[index];
+}
+
+module.exports = {
+  handler
 }

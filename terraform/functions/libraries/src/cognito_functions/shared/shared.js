@@ -15,6 +15,10 @@ const html = fs.readFileSync(`${__dirname}/error_page/template.html`)
 const { validate } = require("./validate_jwt")
 const raphlogger = require('raphlogger')
 
+function getConfigJson() {
+  return require("./config")
+}
+
 function getDefaultCookieSettings() {
 	// Defaults can be overridden by the user (CloudFormation Stack parameter) but should be solid enough for most purposes
 	return {
@@ -27,9 +31,16 @@ function getDefaultCookieSettings() {
 
 function getCompleteConfig() {
   // TODO interpolate config here
-  const config = getConfig();
+  const config = getConfigJson();
+  config.logger = raphlogger.init(null, {
+    source: config.source,
+    level: config.logLevel,
+    sourceInstance: config.sourceInstance,
+    component: config.component,
+    asyncOutput: false,
+  })
 
-  if (!isCompleteConfig(config)) {
+  if (config["userPoolArn"] === undefined) {
     throw new Error("Incomplete config in configuration.json");
   }
 
@@ -418,4 +429,23 @@ async function validateAndCheckIdToken(
     }
     config.logger.info("JWT has requiredGroup");
   }
+}
+
+module.exports = {
+  timestampInSeconds,
+  validateAndCheckIdToken,
+  createErrorHtml,
+  httpPostWithRetry,
+  decodeToken,
+  expireCookie,
+  extractAndParseCookies,
+  getElasticsearchCookieNames,
+  getAmplifyCookieNames,
+  asCloudFrontHeaders,
+  getDefaultCookieSettings,
+  getCompleteConfig,
+  extractCookiesFromHeaders,
+  withCookieDomain,
+  sign,
+  urlSafe,
 }

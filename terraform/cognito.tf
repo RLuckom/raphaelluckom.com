@@ -44,6 +44,9 @@ locals {
     logLevel = "debug"
   }
   cognito_lambda_config = {
+    source = "test"
+    sourceInstance = "test"
+    component = "test"
     userPoolArn = aws_cognito_user_pool.user_pool.arn
     clientId = aws_cognito_user_pool_client.client.id
     clientSecret = aws_cognito_user_pool_client.client.client_secret
@@ -60,7 +63,7 @@ locals {
     }
     mode = "StaticSiteMode"
     httpHeaders = local.http_header_values
-    logLevel = "debug"
+    logLevel = "DEBUG"
     nonceSigningSecret = random_password.nonce_signing_secret.result
     cookieCompatibility = "elasticsearch"
     additionalCookies = {}
@@ -385,6 +388,7 @@ resource aws_cognito_user_pool_client client {
     "address", "birthdate", "email", "family_name", "gender", "given_name", "locale", "middle_name", "name", "nickname", "phone_number", "picture", "preferred_username", "profile", "updated_at", "website", "zoneinfo"
   ]
   supported_identity_providers = ["COGNITO"]
+  generate_secret = true
   callback_urls = local.callback_urls
   logout_urls = local.logout_urls
   allowed_oauth_scopes = local.allowed_oauth_scopes

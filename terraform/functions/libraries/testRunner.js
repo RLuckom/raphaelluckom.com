@@ -58,7 +58,7 @@ const parsed = parsePost(file)
 console.log(makeNodePath(parsed.frontMatter.layers))
 console.log(0)
 const env = {
-  NODE_PATH: makeNodePath(parsed.frontMatter.layers),
+  NODE_PATH: `${makeNodePath(parsed.frontMatter.layers)}:${__dirname}/spec/support/node_modules/`,
   PATH: process.env.PATH,
 }
 try {
