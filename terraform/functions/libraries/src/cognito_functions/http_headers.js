@@ -4,13 +4,13 @@ layers:
 tests: ../../spec/src/cognito_functions/http_headers.spec.js
 */
 // based on https://github.com/aws-samples/cloudfront-authorization-at-edge/blob/c99f34185384b47cfb2273730dbcd380de492d12/src/lambda-edge/http-headers/index.ts
-const { getConfig } = require("./shared/shared")
+let getConfigJson = require("./shared/shared").getConfigJson
 
 let CONFIG
 
-const handler = async (event) => {
+async function handler (event) {
   if (!CONFIG) {
-    CONFIG = getConfig();
+    CONFIG = getConfigJson();
     CONFIG.logger.debug("Configuration loaded:", CONFIG);
   }
   CONFIG.logger.debug("Event:", event);
@@ -19,3 +19,7 @@ const handler = async (event) => {
   CONFIG.logger.debug("Returning response:\n", response);
   return response;
 };
+
+module.exports = {
+  handler
+}

@@ -14,9 +14,9 @@ let CONFIG;
 const handler = async (event) => {
   if (!CONFIG) {
     CONFIG = shared.getCompleteConfig();
-    CONFIG.logger.debug("Configuration loaded:", CONFIG);
+    CONFIG.logger.debug(`Configuration loaded: ${JSON.stringify(CONFIG)}`);
   }
-  CONFIG.logger.debug("Event:", event);
+  CONFIG.logger.debug(`Event: ${JSON.stringify(event)}`);
   const request = event.Records[0].cf.request;
   const domainName = request.headers["host"][0].value;
   const requestedUri = `${request.uri}${
@@ -28,12 +28,12 @@ const handler = async (event) => {
       CONFIG.clientId,
       CONFIG.cookieCompatibility
     );
-    CONFIG.logger.debug("Extracted cookies:\n", {
+    CONFIG.logger.debug(`Extracted cookies:, ${JSON.stringify({
       idToken,
       refreshToken,
       nonce,
       nonceHmac,
-    });
+    })}`);
 
     // If there's no ID token in your cookies then you are not signed in yet
     if (!idToken) {
@@ -44,11 +44,7 @@ const handler = async (event) => {
     // This is done by redirecting the user to the refresh endpoint
     // After the tokens are refreshed the user is redirected back here (probably without even noticing this double redirect)
     const { exp } = shared.decodeToken(idToken);
-    CONFIG.logger.debug(
-      "ID token exp:",
-      exp,
-      new Date(exp * 1000).toISOString()
-    );
+    CONFIG.logger.debug(`ID token exp: ${exp} or ${new Date(exp * 1000).toISOString()}`);
     if (Date.now() / 1000 > exp - 60 * 10 && refreshToken) {
       CONFIG.logger.info(
         "Will redirect to refresh endpoint for refreshing tokens using refresh token"
@@ -92,7 +88,7 @@ const handler = async (event) => {
     await shared.validateAndCheckIdToken(idToken, CONFIG);
 
     // Return the request unaltered to allow access to the resource:
-    CONFIG.logger.debug("Returning request:\n", request);
+    CONFIG.logger.debug(`Returning request: ${JSON.stringify(request)}`);
     return request;
   } catch (err) {
     CONFIG.logger.info(`Will redirect to Cognito for sign-in because: ${err}`);
@@ -105,7 +101,7 @@ const handler = async (event) => {
       nonceHmac: shared.sign(nonce, CONFIG.nonceSigningSecret, CONFIG.nonceLength),
       ...generatePkceVerifier(),
     };
-    CONFIG.logger.debug("Using new state\n", state);
+    CONFIG.logger.debug(`Using new state ${JSON.stringify(state)}`);
 
     const loginQueryString = stringifyQueryString({
       redirect_uri: `https://${domainName}${CONFIG.redirectPathSignIn}`,
@@ -158,7 +154,7 @@ const handler = async (event) => {
         ...CONFIG.cloudFrontHeaders,
       },
     };
-    CONFIG.logger.debug("Returning response:\n", response);
+    CONFIG.logger.debug(`Returning response: ${JSON.stringify(response)}`);
     return response;
   }
 };
@@ -175,7 +171,7 @@ function generatePkceVerifier(pkce) {
       createHash("sha256").update(pkce, "utf8").digest("base64")
     ),
   };
-  CONFIG.logger.debug("Generated PKCE verifier:\n", verifier);
+  CONFIG.logger.debug(`Generated PKCE verifier: ${JSON.stringify(verifier)}`);
   return verifier;
 }
 
@@ -184,7 +180,7 @@ function generateNonce() {
     .map(() => randomChoiceFromIndexable(CONFIG.secretAllowedCharacters))
     .join("");
   const nonce = `${shared.timestampInSeconds()}T${randomString}`;
-  CONFIG.logger.debug("Generated new nonce:", nonce);
+  CONFIG.logger.debug(`Generated new nonce: ${nonce}`);
   return nonce;
 }
 

@@ -11,12 +11,20 @@ const axios = require("axios")
 const { AxiosRequestConfig, AxiosResponse } = axios
 const { Agent } = require("https")
 const fs = require('fs')
-const html = fs.readFileSync(`${__dirname}/error_page/template.html`)
+const html = fs.readFileSync(`${__dirname}/error_page/template.html`).toString('utf8')
 const { validate } = require("./validate_jwt")
 const raphlogger = require('raphlogger')
 
 function getConfigJson() {
-  return require("./config")
+  return {...require("./config"), ...{
+    logger: raphlogger.init(null, {
+      source: config.source,
+      level: config.logLevel,
+      sourceInstance: config.sourceInstance,
+      component: config.component,
+      asyncOutput: false
+    })
+  }}
 }
 
 function getDefaultCookieSettings() {
@@ -32,14 +40,6 @@ function getDefaultCookieSettings() {
 function getCompleteConfig() {
   // TODO interpolate config here
   const config = getConfigJson();
-  config.logger = raphlogger.init(null, {
-    source: config.source,
-    level: config.logLevel,
-    sourceInstance: config.sourceInstance,
-    component: config.component,
-    asyncOutput: false,
-  })
-
   if (config["userPoolArn"] === undefined) {
     throw new Error("Incomplete config in configuration.json");
   }
@@ -444,6 +444,7 @@ module.exports = {
   asCloudFrontHeaders,
   getDefaultCookieSettings,
   getCompleteConfig,
+  getConfigJson,
   extractCookiesFromHeaders,
   withCookieDomain,
   sign,

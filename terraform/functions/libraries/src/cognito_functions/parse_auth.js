@@ -7,24 +7,13 @@ tests: ../../spec/src/cognito_functions/parse_auth.spec.js
 const qs = require("querystring")
 const stringifyQueryString = qs.stringify
 const parseQueryString = qs.parse
-const {
-  getCompleteConfig,
-  extractAndParseCookies,
-  generateCookieHeaders,
-  httpPostWithRetry,
-  createErrorHtml,
-  urlSafe,
-  sign,
-  timestampInSeconds,
-  validateAndCheckIdToken,
-  MissingRequiredGroupError,
-} = require("./shared/shared");
+let shared = require("./shared/shared");
 
 let CONFIG
 
 const handler = async (event) => {
   if (!CONFIG) {
-    CONFIG = getCompleteConfig();
+    CONFIG = shared.getCompleteConfig();
     CONFIG.logger.debug("Configuration loaded:", CONFIG);
   }
   CONFIG.logger.debug("Event:", event);
@@ -34,7 +23,7 @@ const handler = async (event) => {
   let redirectedFromUri = `https://${domainName}`;
   let idToken
   try {
-    const cookies = extractAndParseCookies(
+    const cookies = shared.extractAndParseCookies(
       request.headers,
       CONFIG.clientId,
       CONFIG.cookieCompatibility
@@ -71,7 +60,7 @@ const handler = async (event) => {
       body,
       requestConfig,
     });
-    const { status, headers, data: tokens } = await httpPostWithRetry(
+    const { status, headers, data: tokens } = await shared.httpPostWithRetry(
       cognitoTokenEndpoint,
       body,
       requestConfig,
@@ -90,7 +79,7 @@ const handler = async (event) => {
 
     // Validate the token and if a group is required make sure the token has it.
     // If not throw an Error or MissingRequiredGroupError
-    await validateAndCheckIdToken(tokens.id_token, CONFIG);
+    await shared.validateAndCheckIdToken(tokens.id_token, CONFIG);
 
     const response = {
       status: "307",
@@ -102,7 +91,7 @@ const handler = async (event) => {
             value: redirectedFromUri,
           },
         ],
-        "set-cookie": generateCookieHeaders.newTokens({
+        "set-cookie": shared.generateCookieHeaders.newTokens({
           tokens,
           domainName,
           ...CONFIG,
@@ -120,7 +109,7 @@ const handler = async (event) => {
       try {
         // Validate the token and if a group is required make sure the token has it.
         // If not throw an Error or MissingRequiredGroupError
-        await validateAndCheckIdToken(idToken, CONFIG);
+        await shared.validateAndCheckIdToken(idToken, CONFIG);
 
         // Return user to where he/she came from
         const response = {
@@ -173,7 +162,7 @@ const handler = async (event) => {
       };
     }
     const response = {
-      body: createErrorHtml(htmlParams),
+      body: shared.createErrorHtml(htmlParams),
       status: "200",
       headers: {
         ...CONFIG.cloudFrontHeaders,
@@ -221,7 +210,7 @@ function validateQueryStringAndCookies(props) {
   let parsedState
   try {
     parsedState = JSON.parse(
-      Buffer.from(urlSafe.parse(state), "base64").toString()
+      Buffer.from(shared.urlSafe.parse(state), "base64").toString()
     );
   } catch {
     throw new Error(
@@ -262,7 +251,7 @@ function validateQueryStringAndCookies(props) {
   const nonceTimestamp = parseInt(
     parsedState.nonce.slice(0, parsedState.nonce.indexOf("T"))
   );
-  if (timestampInSeconds() - nonceTimestamp > CONFIG.nonceMaxAge) {
+  if (shared.timestampInSeconds() - nonceTimestamp > CONFIG.nonceMaxAge) {
     throw new RequiresConfirmationError(
       `Nonce is too old (nonce is from ${new Date(
         nonceTimestamp * 1000
@@ -271,7 +260,7 @@ function validateQueryStringAndCookies(props) {
   }
 
   // Nonce should have the right signature: proving we were the ones generating it (and e.g. not malicious JS on a subdomain)
-  const calculatedHmac = sign(
+  const calculatedHmac = shared.sign(
     parsedState.nonce,
     CONFIG.nonceSigningSecret,
     CONFIG.nonceLength
@@ -286,4 +275,7 @@ function validateQueryStringAndCookies(props) {
 }
 
 class RequiresConfirmationError extends Error {}
+class MissingRequiredGroupError extends Error {}
 
+
+module.exports = { handler }

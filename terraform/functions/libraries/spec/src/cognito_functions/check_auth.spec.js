@@ -1,6 +1,7 @@
 const rewire = require('rewire')
 const shared = rewire('../../../src/cognito_functions/shared/shared')
 const checkAuth = rewire('../../../src/cognito_functions/check_auth.js')
+const raphlogger = require('raphlogger')
 
 let config = {
   "additionalCookies": {},
@@ -67,7 +68,17 @@ const unauthEvent = {
   ]
 }
 
-shared.__set__("getConfigJson", function() { return config })
+shared.__set__("getConfigJson", function() { 
+  return {...config, ...{
+    logger: raphlogger.init(null, {
+      source: config.source,
+      level: config.logLevel,
+      sourceInstance: config.sourceInstance,
+      component: config.component,
+      asyncOutput: false
+    })
+  }}
+})
 
 describe('cognito check_auth functions test', () => {
   let resetShared

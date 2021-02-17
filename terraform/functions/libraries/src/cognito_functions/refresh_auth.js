@@ -7,19 +7,13 @@ tests: ../../spec/src/cognito_functions/refresh_auth.spec.js
 const qs = require("querystring")
 const stringifyQueryString = qs.stringify
 const parseQueryString = qs.parse
-const {
-  getCompleteConfig,
-  extractAndParseCookies,
-  generateCookieHeaders,
-  httpPostWithRetry,
-  createErrorHtml,
-} = require("./shared/shared");
+let shared = require("./shared/shared");
 
 let CONFIG
 
 const handler = async (event) => {
   if (!CONFIG) {
-    CONFIG = getCompleteConfig();
+    CONFIG = shared.getCompleteConfig();
     CONFIG.logger.debug("Configuration loaded:", CONFIG);
   }
   CONFIG.logger.debug("Event:", event);
@@ -37,7 +31,7 @@ const handler = async (event) => {
       accessToken,
       refreshToken,
       nonce: originalNonce,
-    } = extractAndParseCookies(
+    } = shared.extractAndParseCookies(
       request.headers,
       CONFIG.clientId,
       CONFIG.cookieCompatibility
@@ -74,7 +68,7 @@ const handler = async (event) => {
         client_id: CONFIG.clientId,
         refresh_token: refreshToken,
       });
-      const res = await httpPostWithRetry(
+      const res = await shared.httpPostWithRetry(
         `https://${CONFIG.cognitoAuthDomain}/oauth2/token`,
         body,
         { headers },
@@ -98,7 +92,7 @@ const handler = async (event) => {
             value: redirectedFromUri,
           },
         ],
-        "set-cookie": generateCookieHeaders[cookieHeadersEventType]({
+        "set-cookie": shared.generateCookieHeaders[cookieHeadersEventType]({
           tokens,
           domainName,
           ...CONFIG,
@@ -110,7 +104,7 @@ const handler = async (event) => {
     return response;
   } catch (err) {
     const response = {
-      body: createErrorHtml({
+      body: shared.createErrorHtml({
         title: "Refresh issue",
         message: "We can't refresh your sign-in because of a",
         expandText: "technical problem",
@@ -157,3 +151,4 @@ function validateRefreshRequest(
   );
 }
 
+module.exports = { handler }
