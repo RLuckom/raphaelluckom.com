@@ -16,15 +16,15 @@ const { validate } = require("./validate_jwt")
 const raphlogger = require('raphlogger')
 
 function getConfigJson() {
-  return {...require("./config"), ...{
-    logger: raphlogger.init(null, {
-      source: config.source,
-      level: config.logLevel,
-      sourceInstance: config.sourceInstance,
-      component: config.component,
-      asyncOutput: false
-    })
-  }}
+  const config = JSON.parse(fs.readFileSync(`${__dirname}/../config.json`).toString('utf8'))
+  config.logger = raphlogger.init(null, {
+    source: config.source,
+    level: config.logLevel,
+    sourceInstance: config.sourceInstance,
+    component: config.component,
+    asyncOutput: false
+  })
+  return config
 }
 
 function getDefaultCookieSettings() {

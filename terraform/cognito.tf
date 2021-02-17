@@ -78,7 +78,7 @@ locals {
       }
     }
     dummy = {
-      domain_name = "example.org"
+      domain_name = "will-never-be-reached.org"
       origin_id = "dummy"
       custom_origin_config = {
         origin_protocol_policy = "match-viewer"
@@ -171,7 +171,7 @@ locals {
         file_contents = file("./functions/libraries/src/cognito_functions/http_headers.js")
       },
       {
-        file_name = "config.js"
+        file_name = "config.json"
         file_contents = jsonencode(local.set_headers_config)
       }
     ]
@@ -188,7 +188,7 @@ locals {
         file_contents = file("./functions/libraries/src/cognito_functions/check_auth.js")
       },
       {
-        file_name = "config.js"
+        file_name = "config.json"
         file_contents = jsonencode(local.cognito_lambda_config)
       }
     ]
@@ -205,7 +205,7 @@ locals {
         file_contents = file("./functions/libraries/src/cognito_functions/sign_out.js")
       },
       {
-        file_name = "config.js"
+        file_name = "config.json"
         file_contents = jsonencode(local.cognito_lambda_config)
       }
     ]
@@ -222,7 +222,7 @@ locals {
         file_contents = file("./functions/libraries/src/cognito_functions/refresh_auth.js")
       },
       {
-        file_name = "config.js"
+        file_name = "config.json"
         file_contents = jsonencode(local.cognito_lambda_config)
       }
     ]
@@ -239,7 +239,7 @@ locals {
         file_contents = file("./functions/libraries/src/cognito_functions/parse_auth.js")
       },
       {
-        file_name = "config.js"
+        file_name = "config.json"
         file_contents = jsonencode(local.cognito_lambda_config)
       }
     ]
@@ -262,6 +262,20 @@ module protected_bucket {
     type = "AWS",
     identifiers = [aws_cloudfront_origin_access_identity.protected_distribution_oai.iam_arn]
   }]
+}
+
+resource "aws_s3_bucket_object" "index" {
+  bucket = module.protected_bucket.bucket.id
+  key    = "index.html"
+  content_type = "text/html"
+  content = <<EOF
+<html>
+<body>
+<div> hello world </div>
+</body>
+</html>
+EOF
+  depends_on = [module.protected_bucket]
 }
 
 module check_auth {
@@ -486,6 +500,7 @@ resource aws_cloudfront_distribution private_site_distribution {
   default_root_object = "index.html"
   price_class = "PriceClass_100"
 
+  aliases = [local.protected_site_domain]
   viewer_certificate {
     acm_certificate_arn = aws_acm_certificate.cert_private_site.arn
     minimum_protocol_version = "TLSv1"
@@ -514,13 +529,11 @@ resource aws_cloudfront_distribution private_site_distribution {
   }
 
 
-  /*
   logging_config {
-    include_cookies = false
-    bucket          = "${var.logging_config.bucket}.s3.amazonaws.com"
-    prefix          = var.logging_config.prefix
+    include_cookies = true
+    bucket          = "${module.visibility_system.serverless_site_configs["cognito"].cloudfront_log_delivery_bucket}.s3.amazonaws.com"
+    prefix          =  module.visibility_system.serverless_site_configs["cognito"].cloudfront_log_delivery_prefix
   }
-  */
 
   ordered_cache_behavior {
     path_pattern = local.cloudfront_cache_behaviors.sign_out.pattern
