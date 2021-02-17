@@ -22,14 +22,12 @@ locals {
   }
   cognito_domain = "auth.${local.protected_site_domain}"
   callback_urls = [
-    "https://${local.protected_site_domain}/index.html"
+    "https://${local.protected_site_domain}/parseauth"
   ]
   logout_urls = [
-    "https://${local.protected_site_domain}/index.html"
+    "https://${local.protected_site_domain}/"
   ]
-  allowed_oauth_scopes = [
-    "aws.cognito.signin.user.admin","openid"
-  ]
+  allowed_oauth_scopes = ["phone", "email", "profile", "openid", "aws.cognito.signin.user.admin"]
   allowed_oauth_flows_user_pool_client = true
   http_header_values = {
     "Content-Security-Policy" = "default-src 'none'; img-src 'self'; script-src 'self' https://code.jquery.com https://stackpath.bootstrapcdn.com; style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com; object-src 'none'; connect-src 'self' https://*.amazonaws.com https://*.amazoncognito.com"

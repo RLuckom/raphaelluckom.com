@@ -54,3 +54,5 @@ async function validate(
     })
   });
 }
+
+module.exports = { validate }

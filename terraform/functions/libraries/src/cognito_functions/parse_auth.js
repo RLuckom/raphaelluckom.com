@@ -55,11 +55,11 @@ const handler = async (event) => {
       ).toString("base64");
       requestConfig.headers.Authorization = `Basic ${encodedSecret}`;
     }
-    CONFIG.logger.debug("HTTP POST to Cognito token endpoint:\n", {
+    CONFIG.logger.debug(`HTTP POST to Cognito token endpoint: ${JSON.stringify({
       uri: cognitoTokenEndpoint,
       body,
       requestConfig,
-    });
+    })}`);
     const { status, headers, data: tokens } = await shared.httpPostWithRetry(
       cognitoTokenEndpoint,
       body,
