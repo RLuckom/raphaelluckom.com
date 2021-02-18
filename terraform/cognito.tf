@@ -15,6 +15,7 @@ locals {
 }
 
 locals {
+  user_group_name         = "home_user_group"
   protected_site_domain = "${local.variables.protected_domain_parts.controlled_domain_part}.${local.variables.protected_domain_parts.top_level_domain}"
   bucket_domain_parts = {
     top_level_domain = "com"
@@ -39,7 +40,7 @@ locals {
   }
   set_headers_config = {
     httpHeaders = local.http_header_values
-    logLevel = "debug"
+    logLevel = "DEBUG"
   }
   cognito_lambda_config = {
     source = "test"
@@ -65,7 +66,7 @@ locals {
     nonceSigningSecret = random_password.nonce_signing_secret.result
     cookieCompatibility = "elasticsearch"
     additionalCookies = {}
-    requiredGroup = aws_cognito_user_pool.user_pool.name
+    requiredGroup = local.user_group_name
   }
   cloudfront_origins = {
     protected_site = {
@@ -372,7 +373,7 @@ resource aws_cognito_user_pool user_pool {
 }
 
 resource aws_cognito_user_group user_group {
-  name         = "home_user_group"
+  name         = local.user_group_name
   user_pool_id = aws_cognito_user_pool.user_pool.id
 }
 

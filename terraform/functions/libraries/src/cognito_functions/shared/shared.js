@@ -24,6 +24,7 @@ function getConfigJson() {
     component: config.component,
     asyncOutput: false
   })
+  config.cloudFrontHeaders = asCloudFrontHeaders(config.httpHeaders)
   return config
 }
 
@@ -50,19 +51,7 @@ function getCompleteConfig() {
   const tokenIssuer = `https://cognito-idp.${userPoolRegion}.amazonaws.com/${userPoolId}`;
   const tokenJwksUri = `${tokenIssuer}/.well-known/jwks.json`;
 
-  // Derive cookie settings by merging the defaults with the explicitly provided values
-  const defaultCookieSettings = getDefaultCookieSettings();
-  const cookieSettings = config.cookieSettings
-    ? (Object.fromEntries(
-        Object.entries({
-          ...defaultCookieSettings,
-          ...config.cookieSettings,
-        }).map(([k, v]) => [
-          k,
-          v || defaultCookieSettings[k],
-        ])
-      ))
-    : defaultCookieSettings;
+  const cookieSettings = getDefaultCookieSettings();
 
   // Defaults for nonce and PKCE
   const defaults = {
@@ -124,28 +113,6 @@ function asCloudFrontHeaders(headers) {
   );
 }
 
-function getAmplifyCookieNames(
-  clientId,
-  cookiesOrUserName
-) {
-  const keyPrefix = `CognitoIdentityServiceProvider.${clientId}`;
-  const lastUserKey = `${keyPrefix}.LastAuthUser`;
-  let tokenUserName
-  if (typeof cookiesOrUserName === "string") {
-    tokenUserName = cookiesOrUserName;
-  } else {
-    tokenUserName = cookiesOrUserName[lastUserKey];
-  }
-  return {
-    lastUserKey,
-    userDataKey: `${keyPrefix}.${tokenUserName}.userData`,
-    scopeKey: `${keyPrefix}.${tokenUserName}.tokenScopesString`,
-    idTokenKey: `${keyPrefix}.${tokenUserName}.idToken`,
-    accessTokenKey: `${keyPrefix}.${tokenUserName}.accessToken`,
-    refreshTokenKey: `${keyPrefix}.${tokenUserName}.refreshToken`,
-  };
-}
-
 function getElasticsearchCookieNames() {
   return {
     idTokenKey: "ID-TOKEN",
@@ -166,11 +133,7 @@ function extractAndParseCookies(
   }
 
   let cookieNames;
-  if (cookieCompatibility === "amplify") {
-    cookieNames = getAmplifyCookieNames(clientId, cookies);
-  } else {
-    cookieNames = getElasticsearchCookieNames();
-  }
+  cookieNames = getElasticsearchCookieNames();
 
   return {
     tokenUserName: cookies[cookieNames.lastUserKey],
@@ -206,53 +169,8 @@ function _generateCookieHeaders(param) {
   const decodedIdToken = decodeToken(param.tokens.id_token);
   const tokenUserName = decodedIdToken["cognito:username"];
 
-  let cookies
-  let cookieNames
-  if (param.cookieCompatibility === "amplify") {
-    cookieNames = getAmplifyCookieNames(param.clientId, tokenUserName);
-    const userData = JSON.stringify({
-      UserAttributes: [
-        {
-          Name: "sub",
-          Value: decodedIdToken["sub"],
-        },
-        {
-          Name: "email",
-          Value: decodedIdToken["email"],
-        },
-      ],
-      Username: tokenUserName,
-    });
-
-    // Construct object with the cookies
-    cookies = {
-      [cookieNames.lastUserKey]: `${tokenUserName}; ${withCookieDomain(
-        param.domainName,
-        param.cookieSettings.idToken
-      )}`,
-      [cookieNames.scopeKey]: `${param.oauthScopes.join(
-        " "
-      )}; ${withCookieDomain(
-        param.domainName,
-        param.cookieSettings.accessToken
-      )}`,
-      [cookieNames.userDataKey]: `${encodeURIComponent(
-        userData
-      )}; ${withCookieDomain(param.domainName, param.cookieSettings.idToken)}`,
-      "amplify-signin-with-hostedUI": `true; ${withCookieDomain(
-        param.domainName,
-        param.cookieSettings.accessToken
-      )}`,
-    };
-  } else {
-    cookieNames = getElasticsearchCookieNames();
-    cookies = {
-      [cookieNames.cognitoEnabledKey]: `True; ${withCookieDomain(
-        param.domainName,
-        param.cookieSettings.cognitoEnabled
-      )}`,
-    };
-  }
+  let cookieNames = getElasticsearchCookieNames();
+  let cookies = {};
   Object.assign(cookies, {
     [cookieNames.idTokenKey]: `${param.tokens.id_token}; ${withCookieDomain(
       param.domainName,
@@ -290,7 +208,10 @@ function _generateCookieHeaders(param) {
     "spa-auth-edge-nonce-hmac",
     "spa-auth-edge-pkce",
   ].forEach((key) => {
-    cookies[key] = expireCookie(cookies[key]);
+    //TODO added this, explain or remove
+    if (cookies[key]) {
+      cookies[key] = expireCookie(cookies[key]);
+    }
   });
 
   // Return cookie object in format of CloudFront headers
@@ -440,12 +361,12 @@ module.exports = {
   expireCookie,
   extractAndParseCookies,
   getElasticsearchCookieNames,
-  getAmplifyCookieNames,
   asCloudFrontHeaders,
   getDefaultCookieSettings,
   getCompleteConfig,
   getConfigJson,
   extractCookiesFromHeaders,
+  generateCookieHeaders,
   withCookieDomain,
   sign,
   urlSafe,
