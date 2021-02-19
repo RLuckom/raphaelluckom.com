@@ -80,7 +80,7 @@ I love this description because it's such a familiar tangle of contextual values
 pursuit that I find fulfilling does include some drudgery, and that the drudgery is positively useful. Sometimes it's a learning experience;
 sometimes it's an opportunity for mindfulness or meditation; sometimes it's an important element of my relationship with a respected teacher or
 a community of practice; the way that I honor a person or discipline by giving of myself. I think that's what Savage means when he talks about
-"understand[ing] the rules of the genre that you're participating in"--demonstrating, by word or deed, that you are listening
+"understand[ing] the rules of the genre that you're participating in"--demonstrating that you are listening
 and giving honor, not just speaking and requesting that others honor you. These are principles that I believe to be fundamental tenets
 of respectful relationships between humans. But at the end of the quote, something really interesting happens. The conversation moves 
 from these generalities to the specific example of "somebody who's 24; who's just out of college." _This_, I think it's
@@ -115,7 +115,7 @@ not be _asked_ for the same level of deference or effort? Isn't it, one way or a
 spend their time in the way that makes them feel most fulfilled, _free from_ the requirement that they should be economically productive? 
 Is that still the endgame that we intend, or have I misunderstood? I don't mean to say that we should already be in that world. What I mean 
 is that, when the apparatuses of capitalism and democracy decide to work on something, they go about it in a fairly visible way. If the
-goal--not the _explanatory rationale_ behind power, but its actual _operational goal_, was to produce a world that is more just and then
+goal--not the _explanatory rationale_ behind power, but its actual _operational goal_--was to produce a world that is more just and then
 materially easier and more secure for everyone, _that should be unmissably obvious by now_. We would see, for instance, official communications[^2]
 normalizing _working less_. We would see official communications normalizing _accepting help from others_ rather than equating unpleasant work with
 moral goodness. We would _not_ see communications normalizing the idea that one's options are an occasionally-enjoyable job earned with sweat and blood
@@ -131,8 +131,8 @@ by unearned privilege--it's just _me_, able to give up a year of my career to so
 this expression of myself and my highest potential is, in the public mind, either a luxury of the privileged or a positive indication that the 
 "meritocracy" is _working_--it makes me feel frustrated and delegitimized. I am  expressing myself forcefully about this because I see that
 distiction between _luxury_ and _human right_ as the deciding factor that makes the difference between whether I'm a person engaged _with_
-the rest of humanity in a common cause or just another aristocrat running around on his estate with a butterfly net, wondering why the grubby
-people in the slums don't just pull themselves up by their bootstraps. I _really don't want to be the second one,_ but I can't convince
+the rest of humanity in a common cause or just another aristocrat running around on his estate with a butterfly net, wondering why the
+people in the workhouses don't just pull themselves up by their bootstraps. I _really don't want to be the second one,_ but I can't convince
 myself that I'm not. I have had pretty good access to the apparatuses of power--that is one of the things that privilege means--and nowhere
 have I found a guild system or community of practice to support the work that I'm doing now, despite my knowledge that I've put in the effort
 and paid my dues to get to this point. If that's _my_ experience as a mediocre-but-privileged person trying to pursue personal fulfillment,
