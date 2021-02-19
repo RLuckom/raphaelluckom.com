@@ -5,7 +5,13 @@ const { execSync } = require('child_process')
 const { terraform_modules_repo } = require('./testSettings.json')
 const path = require('path')
 
+if (!process.argv[2]) {
+  console.log("no module selected")
+  process.exit(0)
+}
+
 const fileName = `${__dirname}/${process.argv[2]}`
+console.log(fileName)
 const fileDir = path.dirname(fileName)
 
 const file = fs.readFileSync(fileName, 'utf8')
@@ -52,7 +58,7 @@ const parsed = parsePost(file)
 console.log(makeNodePath(parsed.frontMatter.layers))
 console.log(0)
 const env = {
-  NODE_PATH: makeNodePath(parsed.frontMatter.layers),
+  NODE_PATH: `${makeNodePath(parsed.frontMatter.layers)}:${__dirname}/spec/support/node_modules/`,
   PATH: process.env.PATH,
 }
 try {

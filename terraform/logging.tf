@@ -43,6 +43,16 @@ module visibility_system {
         controlled_domain_part = "test.raphaelluckom"
       }
     }
+    cognito = {
+      system_id = {
+        security_scope = "test"
+        subsystem_name = "cognito"
+      }
+      domain_parts = {
+        top_level_domain = "com"
+        controlled_domain_part = "testcog.raphaelluckom"
+      }
+    }
     media = {
       system_id = {
         security_scope = "prod"
