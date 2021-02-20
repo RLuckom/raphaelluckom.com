@@ -19,14 +19,10 @@ const handler = async (event) => {
   CONFIG.logger.debug(`Event: ${JSON.stringify(event)}`);
   const request = event.Records[0].cf.request;
   const domainName = request.headers["host"][0].value;
-  const requestedUri = `${request.uri}${
-    request.querystring ? "?" + request.querystring : ""
-  }`;
+  const requestedUri = `${request.uri}${request.querystring ? "?" + request.querystring : ""}`;
   try {
     const { idToken, refreshToken, nonce, nonceHmac } = shared.extractAndParseCookies(
       request.headers,
-      CONFIG.clientId,
-      CONFIG.cookieCompatibility
     );
     CONFIG.logger.debug(`Extracted cookies:, ${JSON.stringify({
       idToken,
@@ -45,7 +41,7 @@ const handler = async (event) => {
     // After the tokens are refreshed the user is redirected back here (probably without even noticing this double redirect)
     const { exp } = shared.decodeToken(idToken);
     CONFIG.logger.debug(`ID token exp: ${exp} or ${new Date(exp * 1000).toISOString()}`);
-    if (Date.now() / 1000 > exp - 60 * 10 && refreshToken) {
+    if (Date.now() / 1000 > (exp - 60 * 10) && refreshToken) {
       CONFIG.logger.info(
         "Will redirect to refresh endpoint for refreshing tokens using refresh token"
       );

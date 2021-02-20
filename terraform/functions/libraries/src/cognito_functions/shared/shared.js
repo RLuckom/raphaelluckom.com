@@ -124,8 +124,6 @@ function getElasticsearchCookieNames() {
 
 function extractAndParseCookies(
   headers,
-  clientId,
-  cookieCompatibility
 ) {
   const cookies = extractCookiesFromHeaders(headers);
   if (!cookies) {

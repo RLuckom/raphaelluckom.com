@@ -64,7 +64,6 @@ locals {
     httpHeaders = local.http_header_values
     logLevel = "DEBUG"
     nonceSigningSecret = random_password.nonce_signing_secret.result
-    cookieCompatibility = "elasticsearch"
     additionalCookies = {}
     requiredGroup = local.user_group_name
   }

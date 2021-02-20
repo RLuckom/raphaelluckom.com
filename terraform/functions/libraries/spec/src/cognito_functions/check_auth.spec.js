@@ -8,7 +8,6 @@ let config = {
   "clientId": "hhhhhhhhhhhhhhhhhhhhhhhhhh",
   "clientSecret": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "cognitoAuthDomain": "auth.testcog.raphaelluckom.com",
-  "cookieCompatibility": "elasticsearch",
   "cookieSettings": {
     "accessToken": null,
     "idToken": null,
@@ -80,6 +79,9 @@ shared.__set__("getConfigJson", function() {
   }}
 })
 
+// If the thing the fn returns looks like a response, it's sent back to the browser
+// as a response. If it still looks like a request, it's forwarded to the origin
+
 describe('cognito check_auth functions test', () => {
   let resetShared
 
@@ -90,6 +92,19 @@ describe('cognito check_auth functions test', () => {
   afterEach(() => {
     resetShared()
   })
+  /* Things used by the handler
+   * * Config (complete)
+   * * cookie headers 
+   *     id token (regexed b64 of jsom obj)
+   *     id token expiration ("exp" of decoded id token json)
+   *     id token payload cognito:groups
+   * * nonce signing secret, nonce length 
+   * * config clientId
+   * * config issuer
+   * * JWKS uri (mock this to return jwks)
+   * * JWKS
+   * * expected group from config
+   */
 
   it('test1', (done) => {
     checkAuth.handler(unauthEvent).then((response) => {
