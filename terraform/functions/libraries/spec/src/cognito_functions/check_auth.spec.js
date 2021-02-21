@@ -79,6 +79,29 @@ shared.__set__("getConfigJson", function() {
   }}
 })
 
+const jwksurl = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_8G8888888/.well-known/jwks.json"
+
+const jwks = {
+  "keys": [
+    {
+      "alg": "RS256",
+      "e": "AQAB",
+      "kid": "O2IO8VrDQ32VJbzatlWZ+PqkfrQZgVWArrRxJi8jg/w=",
+      "kty": "RSA",
+      "n": "xliVmZZepCy5mXsmxpLNOu2TD45Hp1BB0wzQYNdri8Y3zpPg2XiSyeDRWWFsC5nXs3jVL6-cqkAWTOcuwMNDwfm3fIYTARHG3rxwNh3Hlszg8hEsu-rOvoijaNAPzDVCqwOn2Oy32gY-LWJ2-Xpondb4RcLkbhKkKbQ211VAjIY5r18YJPKK-Nq_Ulmf3NH92fPz0XAqGm2NZJH2PVU-shACvd5Tmf3lzeF-p4xnpfzHD8Qpkl7FLfpmhUiHk7rdwj_n41q5d6QxLzzceTm6MzVgrE0y-ji39w0TFe_SHDtQgyIKtHKEGeYP9SGaSi0hE1wKDPnWGps0AruEr03_vw",
+      "use": "sig"
+    },
+    {
+      "alg": "RS256",
+      "e": "AQAB",
+      "kid": "0BdFUkDDpigmG4zXhAayYlB1t5DVQF6IsZgDEwW//T8=",
+      "kty": "RSA",
+      "n": "2S4LRTn-blXjtbuvR-FNPTz0HG73w9vzbbdH7e6UUyGsP-Q5qknzhaMkJ-J1hbFqNDiJyGvWCBXoojh-_N3Xb7HK1ROWsymqkmTg9bbRUD8XKrxjHqqo8faW8tYCsANPa6QlKB29u6z_8u_OUsq0ru91l25PD3uRR6iZZJOPc9NLKrdzux2uCgNeSJZukh9daVwgHriRzNT29Gdw5eQRr48QTZH3ZxqnlnSaD2IttztBoMVnA7WFe0DST5zG_J_ZOpMCB_uXFmU7BCjjg1Xy0_5BDWmy0g7H2dHE_A-Ebp-2ECLzH1ZqIPMO4lvtZRe06M4jCNQOvujGGzBZ-uAeDQ",
+      "use": "sig"
+    }
+  ]
+}
+
 // If the thing the fn returns looks like a response, it's sent back to the browser
 // as a response. If it still looks like a request, it's forwarded to the origin
 
@@ -95,10 +118,10 @@ describe('cognito check_auth functions test', () => {
   /* Things used by the handler
    * * Config (complete)
    * * cookie headers 
-   *     id token (regexed b64 of jsom obj)
-   *     id token expiration ("exp" of decoded id token json)
+   *     id token (regexed b64 of jwt)
+   *     id token expiration ("exp" of decoded jwt)
    *     id token payload cognito:groups
-   * * nonce signing secret, nonce length 
+   * * nonce signing secret, nonce length
    * * config clientId
    * * config issuer
    * * JWKS uri (mock this to return jwks)
