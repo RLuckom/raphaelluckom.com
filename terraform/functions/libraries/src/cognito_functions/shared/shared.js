@@ -8,11 +8,10 @@ const { readFileSync } = require("fs")
 const { createHmac } = require("crypto")
 const { parse } = require("cookie")
 const axios = require("axios")
-const { AxiosRequestConfig, AxiosResponse } = axios
 const { Agent } = require("https")
 const fs = require('fs')
 const html = fs.readFileSync(`${__dirname}/error_page/template.html`).toString('utf8')
-const { validate } = require("./validate_jwt")
+let validateJwt = require("./validate_jwt")
 const raphlogger = require('raphlogger')
 
 function getConfigJson() {
@@ -328,7 +327,7 @@ async function validateAndCheckIdToken(
   config
 ) {
   config.logger.info("Validating JWT ...");
-  let idTokenPayload = await validate(
+  let idTokenPayload = await validateJwt.validate(
     idToken,
     config.tokenJwksUri,
     config.tokenIssuer,

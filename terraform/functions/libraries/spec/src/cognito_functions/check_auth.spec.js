@@ -1,8 +1,26 @@
 const rewire = require('rewire')
 const shared = rewire('../../../src/cognito_functions/shared/shared')
+const validateJwt = rewire('../../../src/cognito_functions/shared/validate_jwt')
+const jwksClient = require("jwks-rsa")
 const checkAuth = rewire('../../../src/cognito_functions/check_auth.js')
 const raphlogger = require('raphlogger')
 const { default: parseJwk } = require('jose/jwk/parse')
+const fs = require('fs')
+
+async function getKeySets() {
+  const privKeySet = await JSON.parse(fs.readFileSync(`${__dirname}/testPrivKeySet.json`)).keys.reduce(async (acc, k) => {
+    acc[k.kid] = await parseJwk(k)
+    return acc
+  }, {})
+  const pubKeySet = await JSON.parse(fs.readFileSync(`${__dirname}/testPubKeySet.json`)).keys.reduce(async (acc, k) => {
+    acc[k.kid] = await parseJwk(k)
+    return acc
+  }, {})
+  return {
+    pubKeySet,
+    privKeySet
+  }
+}
 
 let config = {
   "additionalCookies": {},
@@ -68,6 +86,15 @@ const unauthEvent = {
   ]
 }
 
+validateJwt.__set__("jwksClient", function(args) {
+  return jwksClient({...args, ...{
+    getKeysInterceptor: (cb) => {
+      cb(null, pubKeySet.keys)
+    }
+  }})
+})
+
+shared.__set__("validateJwt", validateJwt)
 shared.__set__("getConfigJson", function() { 
   return {...config, ...{
     logger: raphlogger.init(null, {
@@ -80,34 +107,28 @@ shared.__set__("getConfigJson", function() {
   }}
 })
 
-const jwksurl = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_8G8888888/.well-known/jwks.json"
-
-const jwks = {
-  "keys": [
-    {
-      "alg": "RS256",
-      "e": "AQAB",
-      "kid": "O2IO8VrDQ32VJbzatlWZ+PqkfrQZgVWArrRxJi8jg/w=",
-      "kty": "RSA",
-      "n": "xliVmZZepCy5mXsmxpLNOu2TD45Hp1BB0wzQYNdri8Y3zpPg2XiSyeDRWWFsC5nXs3jVL6-cqkAWTOcuwMNDwfm3fIYTARHG3rxwNh3Hlszg8hEsu-rOvoijaNAPzDVCqwOn2Oy32gY-LWJ2-Xpondb4RcLkbhKkKbQ211VAjIY5r18YJPKK-Nq_Ulmf3NH92fPz0XAqGm2NZJH2PVU-shACvd5Tmf3lzeF-p4xnpfzHD8Qpkl7FLfpmhUiHk7rdwj_n41q5d6QxLzzceTm6MzVgrE0y-ji39w0TFe_SHDtQgyIKtHKEGeYP9SGaSi0hE1wKDPnWGps0AruEr03_vw",
-      "use": "sig"
-    },
-    {
-      "alg": "RS256",
-      "e": "AQAB",
-      "kid": "0BdFUkDDpigmG4zXhAayYlB1t5DVQF6IsZgDEwW//T8=",
-      "kty": "RSA",
-      "n": "2S4LRTn-blXjtbuvR-FNPTz0HG73w9vzbbdH7e6UUyGsP-Q5qknzhaMkJ-J1hbFqNDiJyGvWCBXoojh-_N3Xb7HK1ROWsymqkmTg9bbRUD8XKrxjHqqo8faW8tYCsANPa6QlKB29u6z_8u_OUsq0ru91l25PD3uRR6iZZJOPc9NLKrdzux2uCgNeSJZukh9daVwgHriRzNT29Gdw5eQRr48QTZH3ZxqnlnSaD2IttztBoMVnA7WFe0DST5zG_J_ZOpMCB_uXFmU7BCjjg1Xy0_5BDWmy0g7H2dHE_A-Ebp-2ECLzH1ZqIPMO4lvtZRe06M4jCNQOvujGGzBZ-uAeDQ",
-      "use": "sig"
+shared.__set__("axios", function() { 
+  return {
+    create: function() {
+      return {
+      }
     }
-  ]
-}
+  }
+})
+
+const jwksurl = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_8G8888888/.well-known/jwks.json"
 
 // If the thing the fn returns looks like a response, it's sent back to the browser
 // as a response. If it still looks like a request, it's forwarded to the origin
 
 describe('cognito check_auth functions test', () => {
-  let resetShared
+  let resetShared, pubKeySet, privKeySet
+
+  beforeAll(async () => {
+    const keySets = await getKeySets()
+    pubKeySet = keySets.pubKeySet
+    privKeySet = keySets.privKeySet
+  })
 
   beforeEach(() => {
     resetShared = checkAuth.__set__("shared", shared)

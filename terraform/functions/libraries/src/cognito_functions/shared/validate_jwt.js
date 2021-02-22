@@ -1,6 +1,6 @@
 // Based on https://github.com/aws-samples/cloudfront-authorization-at-edge/blob/c99f34185384b47cfb2273730dbcd380de492d12/src/lambda-edge/shared/validate-jwt.ts
 const { decode, verify } = require("jsonwebtoken")
-const jwksClient = require("jwks-rsa")
+let jwksClient = require("jwks-rsa")
 const { SigningKey, RsaSigningKey } = jwksClient
 
 // jwks client is cached at this scope so it can be reused across Lambda invocations
