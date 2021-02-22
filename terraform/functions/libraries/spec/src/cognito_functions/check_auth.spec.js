@@ -2,6 +2,7 @@ const rewire = require('rewire')
 const shared = rewire('../../../src/cognito_functions/shared/shared')
 const checkAuth = rewire('../../../src/cognito_functions/check_auth.js')
 const raphlogger = require('raphlogger')
+const { default: parseJwk } = require('jose/jwk/parse')
 
 let config = {
   "additionalCookies": {},
