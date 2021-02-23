@@ -46,6 +46,8 @@ locals {
     source = "test"
     sourceInstance = "test"
     component = "test"
+    tokenIssuer = "https://${aws_cognito_user_pool.user_pool.endpoint}"
+    tokenJwksUri = "https://${aws_cognito_user_pool.user_pool.endpoint}/.well-known/jwks.json"
     userPoolArn = aws_cognito_user_pool.user_pool.arn
     clientId = aws_cognito_user_pool_client.client.id
     clientSecret = aws_cognito_user_pool_client.client.client_secret

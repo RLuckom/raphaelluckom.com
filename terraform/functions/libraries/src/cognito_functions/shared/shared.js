@@ -47,8 +47,6 @@ function getCompleteConfig() {
   // Derive the issuer and JWKS uri all JWT's will be signed with from the User Pool's ID and region:
   const userPoolId = config.userPoolArn.split("/")[1];
   const userPoolRegion = userPoolId.match(/^(\S+?)_\S+$/)[1];
-  const tokenIssuer = `https://cognito-idp.${userPoolRegion}.amazonaws.com/${userPoolId}`;
-  const tokenJwksUri = `${tokenIssuer}/.well-known/jwks.json`;
 
   const cookieSettings = getDefaultCookieSettings();
 
@@ -68,8 +66,6 @@ function getCompleteConfig() {
     ...defaults,
     ...config,
     cookieSettings,
-    tokenIssuer,
-    tokenJwksUri,
   };
 }
 

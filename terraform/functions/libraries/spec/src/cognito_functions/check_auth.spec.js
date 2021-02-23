@@ -1,18 +1,19 @@
 const rewire = require('rewire')
 const shared = rewire('../../../src/cognito_functions/shared/shared')
-const validateJwt = rewire('../../../src/cognito_functions/shared/validate_jwt')
 const jwksClient = require("jwks-rsa")
 const checkAuth = rewire('../../../src/cognito_functions/check_auth.js')
 const raphlogger = require('raphlogger')
 const { default: parseJwk } = require('jose/jwk/parse')
 const fs = require('fs')
+const http = require('http');
 
+const pubKeySetJson = fs.readFileSync(`${__dirname}/testPubKeySet.json`).toString()
 async function getKeySets() {
   const privKeySet = await JSON.parse(fs.readFileSync(`${__dirname}/testPrivKeySet.json`)).keys.reduce(async (acc, k) => {
     acc[k.kid] = await parseJwk(k)
     return acc
   }, {})
-  const pubKeySet = await JSON.parse(fs.readFileSync(`${__dirname}/testPubKeySet.json`)).keys.reduce(async (acc, k) => {
+  const pubKeySet = await JSON.parse(pubKeySetJson).keys.reduce(async (acc, k) => {
     acc[k.kid] = await parseJwk(k)
     return acc
   }, {})
@@ -24,6 +25,8 @@ async function getKeySets() {
 
 let config = {
   "additionalCookies": {},
+  "tokenJwksUrl": "http://localhost:8000/.well-known/jwks.json",
+  "tokenIssuer": "http://localhost:8000/.well-known/jwks.json",
   "clientId": "hhhhhhhhhhhhhhhhhhhhhhhhhh",
   "clientSecret": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "cognitoAuthDomain": "auth.testcog.raphaelluckom.com",
@@ -86,15 +89,6 @@ const unauthEvent = {
   ]
 }
 
-validateJwt.__set__("jwksClient", function(args) {
-  return jwksClient({...args, ...{
-    getKeysInterceptor: (cb) => {
-      cb(null, pubKeySet.keys)
-    }
-  }})
-})
-
-shared.__set__("validateJwt", validateJwt)
 shared.__set__("getConfigJson", function() { 
   return {...config, ...{
     logger: raphlogger.init(null, {
@@ -116,18 +110,52 @@ shared.__set__("axios", function() {
   }
 })
 
-const jwksurl = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_8G8888888/.well-known/jwks.json"
+const jwksUrl = "http://localhost:8000/.well-known/jwks.json"
 
 // If the thing the fn returns looks like a response, it's sent back to the browser
 // as a response. If it still looks like a request, it's forwarded to the origin
 
+let resetShared, pubKeySet, privKeySet
 describe('cognito check_auth functions test', () => {
-  let resetShared, pubKeySet, privKeySet
 
-  beforeAll(async () => {
+  beforeAll(async (done) => {
     const keySets = await getKeySets()
     pubKeySet = keySets.pubKeySet
     privKeySet = keySets.privKeySet
+    await new Promise((resolve, reject) => {
+      const server = http.createServer((req, res) => {
+        if (req.method === "GET" && req.url === `/.well-known/jwks.json`) {
+          res.end(JSON.stringify(pubKeySetJson, null, 2), 'utf8');
+        }
+      });
+      server.on('clientError', (err, socket) => {
+        socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
+      });
+      server.listen(8000, (e, r) => {
+        if (e) {
+          reject(e)
+        }
+        resolve(r)
+      });
+    })
+    await new Promise((resolve, reject) => {
+      http.get(jwksUrl, (res) => {
+        console.log('\n\n\n')
+        res.setEncoding('utf8');
+        let rawData = '';
+        res.on('data', (chunk) => { rawData += chunk; });
+        res.on('end', () => {
+          try {
+            const parsedData = JSON.parse(rawData);
+            console.log(parsedData);
+          } catch (e) {
+            console.error(e.message);
+          }
+          resolve()
+          done()
+        });
+      })
+    })
   })
 
   beforeEach(() => {
