@@ -13,7 +13,7 @@ function isRsaSigningKey(key) {
 async function getSigningKey(jwksUri, kid) {
   // Retrieves the public key that corresponds to the private key with which the token was signed
   if (!jwksRsa) {
-    jwksRsa = jwksClient({ cache: true, rateLimit: true, jwksUri });
+    jwksRsa = jwksClient({ cache: true, rateLimit: true, jwksUri});
   }
   return new Promise((resolve, reject) => {
     jwksRsa.getSigningKey(kid, (err, jwk) => {

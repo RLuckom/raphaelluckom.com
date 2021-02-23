@@ -5,7 +5,6 @@ tests: ../../spec/src/cognito_functions/check_auth.spec.js
 */
 // based on https://github.com/aws-samples/cloudfront-authorization-at-edge/blob/c99f34185384b47cfb2273730dbcd380de492d12/src/lambda-edge/check-auth/index.ts
 const stringifyQueryString = require("querystring").stringify
-const { createHash, randomBytes } = require("crypto")
 // let for rewire
 let shared = require("./shared/shared");
 
@@ -45,7 +44,7 @@ const handler = async (event) => {
       CONFIG.logger.info(
         "Will redirect to refresh endpoint for refreshing tokens using refresh token"
       );
-      const nonce = generateNonce();
+      const nonce = shared.generateNonce(CONFIG);
       const response = {
         status: "307",
         statusDescription: "Temporary Redirect",
@@ -91,11 +90,11 @@ const handler = async (event) => {
 
     // Generate new state which involves a signed nonce
     // This way we can check later whether the sign-in redirect was done by us (it should, to prevent CSRF attacks)
-    const nonce = generateNonce();
+    const nonce = shared.generateNonce(CONFIG);
     const state = {
       nonce,
       nonceHmac: shared.sign(nonce, CONFIG.nonceSigningSecret, CONFIG.nonceLength),
-      ...generatePkceVerifier(),
+      ...shared.generatePkceVerifier(CONFIG),
     };
     CONFIG.logger.debug(`Using new state ${JSON.stringify(state)}`);
 
@@ -154,45 +153,6 @@ const handler = async (event) => {
     return response;
   }
 };
-
-function generatePkceVerifier(pkce) {
-  if (!pkce) {
-    pkce = [...new Array(CONFIG.pkceLength)]
-      .map(() => randomChoiceFromIndexable(CONFIG.secretAllowedCharacters))
-      .join("");
-  }
-  const verifier = {
-    pkce,
-    pkceHash: shared.urlSafe.stringify(
-      createHash("sha256").update(pkce, "utf8").digest("base64")
-    ),
-  };
-  CONFIG.logger.debug(`Generated PKCE verifier: ${JSON.stringify(verifier)}`);
-  return verifier;
-}
-
-function generateNonce() {
-  const randomString = [...new Array(CONFIG.nonceLength)]
-    .map(() => randomChoiceFromIndexable(CONFIG.secretAllowedCharacters))
-    .join("");
-  const nonce = `${shared.timestampInSeconds()}T${randomString}`;
-  CONFIG.logger.debug(`Generated new nonce: ${nonce}`);
-  return nonce;
-}
-
-function randomChoiceFromIndexable(indexable) {
-  if (indexable.length > 256) {
-    throw new Error(`indexable is too large: ${indexable.length}`);
-  }
-  const chunks = Math.floor(256 / indexable.length);
-  const firstBiassedIndex = indexable.length * chunks;
-  let randomNumber
-  do {
-    randomNumber = randomBytes(1)[0];
-  } while (randomNumber >= firstBiassedIndex);
-  const index = randomNumber % indexable.length;
-  return indexable[index];
-}
 
 module.exports = {
   handler

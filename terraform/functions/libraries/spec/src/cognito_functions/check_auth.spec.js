@@ -4,29 +4,39 @@ const jwksClient = require("jwks-rsa")
 const checkAuth = rewire('../../../src/cognito_functions/check_auth.js')
 const raphlogger = require('raphlogger')
 const { default: parseJwk } = require('jose/jwk/parse')
+const { default: SignJWT } = require('jose/jwt/sign')
 const fs = require('fs')
 const http = require('http');
 
 const pubKeySetJson = fs.readFileSync(`${__dirname}/testPubKeySet.json`).toString()
+const privKeySetJson = fs.readFileSync(`${__dirname}/testPrivKeySet.json`).toString()
 async function getKeySets() {
-  const privKeySet = await JSON.parse(fs.readFileSync(`${__dirname}/testPrivKeySet.json`)).keys.reduce(async (acc, k) => {
-    acc[k.kid] = await parseJwk(k)
-    return acc
-  }, {})
-  const pubKeySet = await JSON.parse(pubKeySetJson).keys.reduce(async (acc, k) => {
-    acc[k.kid] = await parseJwk(k)
-    return acc
-  }, {})
+  const privKeySet = {}
+  const privKeys = JSON.parse(privKeySetJson).keys
+  for (let n=0; n < privKeys.length; n++) {
+    const key = privKeys[n]
+    privKeySet[key.kid] = await parseJwk(key)
+  }
+  const pubKeySet = {}
+  const pubKeys = JSON.parse(pubKeySetJson).keys
+  for (let n=0; n < pubKeys.length; n++) {
+    const key = pubKeys[n]
+    pubKeySet[key.kid] = await parseJwk(key)
+  }
   return {
     pubKeySet,
     privKeySet
   }
 }
 
+function buildCookieString(cookieObject) {
+  return Object.entries(cookieObject).map(([k, v]) => `${k}=${v}`).join("; ")
+}
+
 let config = {
   "additionalCookies": {},
-  "tokenJwksUrl": "http://localhost:8000/.well-known/jwks.json",
-  "tokenIssuer": "http://localhost:8000/.well-known/jwks.json",
+  "tokenJwksUri": "http://localhost:8000/.well-known/jwks.json",
+  "tokenIssuer": "http://localhost:8000",
   "clientId": "hhhhhhhhhhhhhhhhhhhhhhhhhh",
   "clientSecret": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "cognitoAuthDomain": "auth.testcog.raphaelluckom.com",
@@ -64,31 +74,6 @@ let config = {
   "component": "test",
 }
 
-const unauthEvent = {
-  "Records": [
-    {
-      "cf": {
-        "config": {
-          "distributionId": "EXAMPLE"
-        },
-        "request": {
-          "uri": "/test",
-          "method": "GET",
-          "querystring": "foo=bar",
-          "headers": {
-            "host": [
-              {
-                "key": "Host",
-                "value": "d123.cf.net"
-              }
-            ]
-          }
-        }
-      }
-    }
-  ]
-}
-
 shared.__set__("getConfigJson", function() { 
   return {...config, ...{
     logger: raphlogger.init(null, {
@@ -101,16 +86,40 @@ shared.__set__("getConfigJson", function() {
   }}
 })
 
-shared.__set__("axios", function() { 
-  return {
-    create: function() {
-      return {
-      }
-    }
-  }
-})
+async function generateSignedToken(config, privKey, kid, claims) {
+  return await new SignJWT(claims)
+  .setProtectedHeader({ alg: 'RS256', kid })
+  .setIssuedAt()
+  .setIssuer(config.tokenIssuer)
+  .setAudience(config.clientId)
+  .setExpirationTime('2h')
+  .sign(privKey)
+}
 
-const jwksUrl = "http://localhost:8000/.well-known/jwks.json"
+async function generateIdToken(config, privKey) {
+  return await generateSignedToken(config, privKey, "id", {'id': true, 'cognito:groups': [config.requiredGroup]})
+}
+
+async function generateAccessToken(config, privKey) {
+  return await generateSignedToken(config, privKey, 'access', {'access': true})
+}
+
+async function generateRefreshToken(config, privKey) {
+  return await generateSignedToken(config, privKey, 'access', {'refresh': true})
+}
+
+async function generateValidSecurityCookieValues(idPrivKey, accessPrivKey, pkce="") {
+  const config = shared.getCompleteConfig()
+  const nonce = shared.generateNonce(config)
+  return {
+    "ID-TOKEN": await generateIdToken(config, idPrivKey),
+    "ACCESS-TOKEN": await generateAccessToken(config, accessPrivKey),
+    "REFRESH-TOKEN": await generateRefreshToken(config, accessPrivKey),
+    "spa-auth-edge-nonce": encodeURIComponent(nonce),
+    "spa-auth-edge-nonce-hmac": encodeURIComponent(shared.sign(nonce, config.nonceSigningSecret, config.nonceLength)),
+    "spa-auth-edge-pkce": encodeURIComponent(pkce)
+  }
+}
 
 // If the thing the fn returns looks like a response, it's sent back to the browser
 // as a response. If it still looks like a request, it's forwarded to the origin
@@ -125,7 +134,9 @@ describe('cognito check_auth functions test', () => {
     await new Promise((resolve, reject) => {
       const server = http.createServer((req, res) => {
         if (req.method === "GET" && req.url === `/.well-known/jwks.json`) {
-          res.end(JSON.stringify(pubKeySetJson, null, 2), 'utf8');
+          console.log('delivered pubkeys')
+          res.setHeader('content-type', 'application/json')
+          res.end(pubKeySetJson, 'utf8');
         }
       });
       server.on('clientError', (err, socket) => {
@@ -139,7 +150,7 @@ describe('cognito check_auth functions test', () => {
       });
     })
     await new Promise((resolve, reject) => {
-      http.get(jwksUrl, (res) => {
+      http.get(config.tokenJwksUri, (res) => {
         console.log('\n\n\n')
         res.setEncoding('utf8');
         let rawData = '';
@@ -180,7 +191,71 @@ describe('cognito check_auth functions test', () => {
    */
 
   it('test1', (done) => {
+
+    const unauthEvent = {
+      "Records": [
+        {
+          "cf": {
+            "config": {
+              "distributionId": "EXAMPLE"
+            },
+            "request": {
+              "uri": "/test",
+              "method": "GET",
+              "querystring": "foo=bar",
+              "headers": {
+                "host": [
+                  {
+                    "key": "Host",
+                    "value": "d123.cf.net"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
     checkAuth.handler(unauthEvent).then((response) => {
+      console.log(JSON.stringify(response, null, 2))
+      done()
+    })
+  })
+
+  it('test2', async (done) => {
+    console.log(privKeySet)
+
+    const authEvent = {
+      "Records": [
+        {
+          "cf": {
+            "config": {
+              "distributionId": "EXAMPLE"
+            },
+            "request": {
+              "uri": "/test",
+              "method": "GET",
+              "querystring": "foo=bar",
+              "headers": {
+                "host": [
+                  {
+                    "key": "Host",
+                    "value": "d123.cf.net"
+                  }
+                ],
+                "cookie": [
+                  {
+                    key: "Cookie",
+                    value: buildCookieString(await generateValidSecurityCookieValues(privKeySet.id, privKeySet.access))
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+    checkAuth.handler(authEvent).then((response) => {
       console.log(JSON.stringify(response, null, 2))
       done()
     })

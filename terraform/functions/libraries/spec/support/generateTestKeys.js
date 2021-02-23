@@ -2,8 +2,8 @@ const { default: generateKeyPair } = require('jose/util/generate_key_pair')
 const { default: fromKeyLike } = require('jose/jwk/from_key_like')
 const fs = require('fs')
 
-const set1Kid = "set1"
-const set2Kid = "set2"
+const set1Kid = "id"
+const set2Kid = "access"
 
 Promise.all([generateKeyPair('RS256'), generateKeyPair('RS256')]).then(
   ([set1, set2]) => {

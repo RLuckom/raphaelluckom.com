@@ -5,7 +5,7 @@ tests: ../../../spec/src/cognito_functions/shared/shared.spec.js
 */
 // based on https://github.com/aws-samples/cloudfront-authorization-at-edge/blob/c99f34185384b47cfb2273730dbcd380de492d12/src/lambda-edge/shared/shared.ts
 const { readFileSync } = require("fs")
-const { createHmac } = require("crypto")
+const { createHmac, createHash, randomBytes } = require("crypto")
 const { parse } = require("cookie")
 const axios = require("axios")
 const { Agent } = require("https")
@@ -129,11 +129,9 @@ function extractAndParseCookies(
   cookieNames = getElasticsearchCookieNames();
 
   return {
-    tokenUserName: cookies[cookieNames.lastUserKey],
     idToken: cookies[cookieNames.idTokenKey],
     accessToken: cookies[cookieNames.accessTokenKey],
     refreshToken: cookies[cookieNames.refreshTokenKey],
-    scopes: cookies[cookieNames.scopeKey],
     nonce: cookies["spa-auth-edge-nonce"],
     nonceHmac: cookies["spa-auth-edge-nonce-hmac"],
     pkce: cookies["spa-auth-edge-pkce"],
@@ -345,8 +343,50 @@ async function validateAndCheckIdToken(
   }
 }
 
+function generatePkceVerifier(config, pkce) {
+  if (!pkce) {
+    pkce = [...new Array(config.pkceLength)]
+      .map(() => randomChoiceFromIndexable(config.secretAllowedCharacters))
+      .join("");
+  }
+  const verifier = {
+    pkce,
+    pkceHash: urlSafe.stringify(
+      createHash("sha256").update(pkce, "utf8").digest("base64")
+    ),
+  };
+  config.logger.debug(`Generated PKCE verifier: ${JSON.stringify(verifier)}`);
+  return verifier;
+}
+
+function generateNonce(config) {
+  const randomString = [...new Array(config.nonceLength)]
+    .map(() => randomChoiceFromIndexable(config.secretAllowedCharacters))
+    .join("");
+  const nonce = `${timestampInSeconds()}T${randomString}`;
+  config.logger.debug(`Generated new nonce: ${nonce}`);
+  return nonce;
+}
+
+function randomChoiceFromIndexable(indexable) {
+  if (indexable.length > 256) {
+    throw new Error(`indexable is too large: ${indexable.length}`);
+  }
+  const chunks = Math.floor(256 / indexable.length);
+  const firstBiassedIndex = indexable.length * chunks;
+  let randomNumber
+  do {
+    randomNumber = randomBytes(1)[0];
+  } while (randomNumber >= firstBiassedIndex);
+  const index = randomNumber % indexable.length;
+  return indexable[index];
+}
+
 module.exports = {
   timestampInSeconds,
+  generatePkceVerifier,
+  generateNonce,
+  randomChoiceFromIndexable,
   validateAndCheckIdToken,
   createErrorHtml,
   httpPostWithRetry,
