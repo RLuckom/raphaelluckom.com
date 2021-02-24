@@ -34,7 +34,7 @@ to recognize that there are many different ways to achieve both categories of go
 be a manual process, a piece of code, or something else. For the rest of this post, we'll be looking
 at tests implemented in code, but there are times when it's appropriate to rely on other kinds[^1].
 
-So let's look at an example of a test inplemented in code. The following snippet shows a function and its test:
+So let's look at an example of a test implemented in code. The following snippet shows a function and its test:
 
 ```javascript
 // This is a javascript function that adds one to its argument.
@@ -90,7 +90,7 @@ else wanted to see an example of using it, they could look at this test.
 
 __Code Structure And Test Structure Affect Each Other__: It's easiest to write tests when the code is organized into sections with
 natural boundaries. If we know that we're going to be writing tests, we can deliberately structure the code in a way that makes
-the tests easier to write. On the other hand, if we the sections of code that we test are too small, our tests may miss bugs that
+the tests easier to write. On the other hand, if the sections of code that we test are too small, our tests may miss bugs that
 only become apparent when the pieces are combined. Our testing priorities will tend to draw us toward certain code structures and vice-versa.
 
 Testing, like security, can be an intimidating part of practicing software writing. Both areas require a foundation of _values_ to orient
