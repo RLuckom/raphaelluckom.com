@@ -329,18 +329,18 @@ async function validateAndCheckIdToken(
   );
   config.logger.info("JWT is valid");
 
-  // Check that the ID token has the required group.
-  if (config.requiredGroup) {
-    let cognitoGroups = idTokenPayload["cognito:groups"];
-    if (!cognitoGroups) {
-      throw new Error("Token does not have any groups");
-    }
-
-    if (!cognitoGroups.includes(config.requiredGroup)) {
-      throw new Error("Token does not have required group");
-    }
-    config.logger.info("JWT has requiredGroup");
+  let cognitoGroups = idTokenPayload["cognito:groups"];
+  if (!cognitoGroups) {
+    throw new Error("Token does not have any groups");
   }
+  if (!config.requiredGroup) {
+    throw new Error("Config does not specify required group");
+  }
+
+  if (!cognitoGroups.includes(config.requiredGroup)) {
+    throw new Error("Token does not have required group");
+  }
+  config.logger.info("JWT has requiredGroup");
 }
 
 function generatePkceVerifier(config, pkce) {
