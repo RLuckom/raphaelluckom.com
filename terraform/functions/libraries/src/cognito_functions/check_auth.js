@@ -38,6 +38,7 @@ const handler = async (event) => {
     // If the ID token has expired or expires in less than 10 minutes and there is a refreshToken: refresh tokens
     // This is done by redirecting the user to the refresh endpoint
     // After the tokens are refreshed the user is redirected back here (probably without even noticing this double redirect)
+    console.log(shared.decodeToken(idToken))
     const { exp } = shared.decodeToken(idToken);
     CONFIG.logger.debug(`ID token exp: ${exp} or ${new Date(exp * 1000).toISOString()}`);
     if (Date.now() / 1000 > (exp - 60 * 10) && refreshToken) {

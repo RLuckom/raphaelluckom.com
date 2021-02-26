@@ -3,6 +3,7 @@ const _ = require('lodash')
 const { createHmac, createHash } = require("crypto")
 const raphlogger = require('raphlogger')
 const shared = rewire('../../../src/cognito_functions/shared/shared')
+const validateJwt = rewire('../../../src/cognito_functions/shared/validate_jwt')
 const setCookieParser = require('set-cookie-parser')
 const fs = require('fs')
 const http = require('http');
@@ -34,14 +35,18 @@ async function getKeySets() {
 
 async function startTestOauthServer() {
   const { pubKeySet, privKeySet, pubKeySetJson, privKeySetJson } = await getKeySets()
-  await new Promise((resolve, reject) => {
-    const server = http.createServer((req, res) => {
+  let server
+  await new Promise(function(resolve, reject) {
+    server = http.createServer((req, res) => {
       if (req.method === "GET" && req.url === `/.well-known/jwks.json`) {
         console.log('delivered pubkeys')
         res.setHeader('content-type', 'application/json')
         res.end(pubKeySetJson, 'utf8');
       }
     });
+    server.on('close', (err, socket) => {
+      console.log('closed')
+    })
     server.on('clientError', (err, socket) => {
       socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
     });
@@ -54,7 +59,6 @@ async function startTestOauthServer() {
   })
   await new Promise((resolve, reject) => {
     http.get(defaultConfig.tokenJwksUri, (res) => {
-      console.log('\n\n\n')
       res.setEncoding('utf8');
       let rawData = '';
       res.on('data', (chunk) => { rawData += chunk; });
@@ -68,42 +72,51 @@ async function startTestOauthServer() {
       });
     })
   })
-  return { pubKeySet, privKeySet, pubKeySetJson, privKeySetJson }
+  async function closeServer(cb) {
+    server.close(cb)
+  }
+  return { closeServer, pubKeySet, privKeySet, pubKeySetJson, privKeySetJson }
 }
 
 function buildCookieString(cookieObject) {
   return Object.entries(cookieObject).map(([k, v]) => `${k}=${v}`).join("; ")
 }
 
-async function generateSignedToken(config, privKey, kid, claims) {
+async function generateSignedToken(config, privKey, kid, claims, tokenIssuer, clientId, expiration, issuedAt) {
   return await new SignJWT(claims)
   .setProtectedHeader({ alg: 'RS256', kid })
-  .setIssuedAt()
-  .setIssuer(config.tokenIssuer)
-  .setAudience(config.clientId)
-  .setExpirationTime('2h')
+  .setIssuedAt(issuedAt)
+  .setIssuer(tokenIssuer || config.tokenIssuer)
+  .setAudience(clientId || config.clientId)
+  .setExpirationTime(expiration || '2h')
   .sign(privKey)
 }
 
-async function generateIdToken(config, privKey) {
-  return await generateSignedToken(config, privKey, "id", {'id': true, 'cognito:groups': [config.requiredGroup]})
+async function generateIdToken(config, privKey, kid, claims, tokenIssuer, clientId, expiration, issuedAt, groups) {
+  groups = groups || [config.requiredGroup]
+  if (!claims) {
+    claims = {'id': true }
+    if (groups !== 'nogroup') {
+      claims["cognito:groups"] = groups
+    }
+  }
+  return await generateSignedToken(config, privKey, kid || "id", claims, tokenIssuer, clientId, expiration, issuedAt)
 }
 
-async function generateAccessToken(config, privKey) {
-  return await generateSignedToken(config, privKey, 'access', {'access': true})
+async function generateAccessToken(config, privKey, kid, claims, tokenIssuer, clientId, expiration, issuedAt) {
+  return await generateSignedToken(config, privKey, kid || 'access', {'access': true}, tokenIssuer, clientId, expiration, issuedAt)
 }
 
-async function generateRefreshToken(config, privKey) {
-  return await generateSignedToken(config, privKey, 'access', {'refresh': true})
+async function generateRefreshToken(config, privKey, kid, claims, tokenIssuer, clientId, expiration, issuedAt) {
+  return await generateSignedToken(config, privKey, kid || 'access', {'refresh': true}, tokenIssuer, clientId, expiration, issuedAt)
 }
 
-async function generateValidSecurityCookieValues(idPrivKey, accessPrivKey, pkce="") {
+async function generateValidSecurityCookieValues(idPrivKey, accessPrivKey, tokenIssuer, clientId, expiration, issuedAt, kid, groups) {
   const config = shared.getCompleteConfig()
-  const nonce = shared.generateNonce(config)
   return {
-    "ID-TOKEN": await generateIdToken(config, idPrivKey),
-    "ACCESS-TOKEN": await generateAccessToken(config, accessPrivKey),
-    "REFRESH-TOKEN": await generateRefreshToken(config, accessPrivKey),
+    "ID-TOKEN": await generateIdToken(config, idPrivKey, kid, null, tokenIssuer, clientId, expiration, issuedAt, groups),
+    "ACCESS-TOKEN": await generateAccessToken(config, accessPrivKey, kid, null, tokenIssuer, clientId, expiration, issuedAt),
+    "REFRESH-TOKEN": await generateRefreshToken(config, accessPrivKey, kid, null, tokenIssuer, clientId, expiration, issuedAt),
   }
 }
 
@@ -148,6 +161,8 @@ let defaultConfig = {
   "component": "test",
 }
 
+shared.__set__('validateJwt', validateJwt)
+
 shared.__set__("getConfigJson", function() { 
   return {...defaultConfig, ...{
     logger: raphlogger.init(null, {
@@ -159,6 +174,10 @@ shared.__set__("getConfigJson", function() {
     })
   }}
 })
+
+function clearJwkCache() {
+  validateJwt.__set__('jwksRsa', null)
+}
 
 const intendedResourceHostname = "intended-resource-url.net"
 
@@ -188,7 +207,43 @@ function getUnauthEvent() {
   }
 }
 
-async function getAuthedEvent() {
+async function getUnparseableAuthEvent() {
+  return {
+    "Records": [
+      {
+        "cf": {
+          "config": {
+            "distributionId": "EXAMPLE"
+          },
+          "request": {
+            "uri": "/test",
+            "method": "GET",
+            "headers": {
+              "host": [
+                {
+                  "key": "Host",
+                  "value": intendedResourceHostname
+                }
+              ],
+              "cookie": [
+                {
+                  key: "Cookie",
+                  value: buildCookieString({
+                    "ID-TOKEN": "helloiamacookie",
+                    "ACCESS-TOKEN": "andimheretosay",
+                    "REFRESH-TOKEN": "cookiesarecoolkthxbye"
+                  })
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}
+
+async function getAuthedEvent(tokenIssuer, clientId, expiration, issuedAt, kid, groups) {
   const { privKeySet } = await getKeySets()
   return {
     "Records": [
@@ -210,7 +265,7 @@ async function getAuthedEvent() {
               "cookie": [
                 {
                   key: "Cookie",
-                  value: buildCookieString(await generateValidSecurityCookieValues(privKeySet.id, privKeySet.access))
+                  value: buildCookieString(await generateValidSecurityCookieValues(privKeySet.id, privKeySet.access, tokenIssuer, clientId, expiration, issuedAt, kid, groups))
                 }
               ]
             }
@@ -304,4 +359,4 @@ function validateValidAuthPassthrough(response) {
   console.log(JSON.stringify(response, null, 2))
 }
 
-module.exports = { getAuthedEvent, getUnauthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough}
+module.exports = { clearJwkCache, getAuthedEvent, getUnauthEvent, getUnparseableAuthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough}
