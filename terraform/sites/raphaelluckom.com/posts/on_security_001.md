@@ -17,7 +17,7 @@ designer has three responsibilities:
 2. To identify a set of likely _threats_ to that value.
 3. To implement efficient _controls_ that guard against the threats, ideally by raising the cost of an attack higher than the likely reward.
 
-These points are intentionally _abstract_--they do not coorespond to specific security choices like allowed password lengths.
+These points are intentionally _abstract_--they do not correspond to specific security choices like allowed password lengths.
 Instead, they are meant to expose the specific beliefs and values that each specific security mechanism is meant to support.
 By going on the record about  _what_ we think we are protecting with our security choices, we make it easier to evaluate
 questions and suggestions in an accountable and verifiable way[^1]. In this post, I'm going to address the first point--identifying values-- 

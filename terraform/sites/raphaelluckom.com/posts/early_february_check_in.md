@@ -51,10 +51,7 @@ multiple attributes, culminating in values, beliefs, and strategies that a perso
 that this is true of everyone; not just those of us who don't match societal defaults. We are none of us "normal,"
 instead, normality and privilege are two views of the same thing.
 
-These pronouncements are fun to make, obviously, but how do they relate to the question of where I should focus next?
-Besides, if I'm building up to a conclusion that I can only build things that work for _me_, then what has been the point
-of any of this? Here's what I'm thinking:
-
+So how do these observations relate to the question of where I should focus next?
 The blog design I published is rudimentary, but its structure is sound[^3]. As part of a personal social media system,
 the _capability_ that the blog system represents is the capability to publicly publish things online. That's not enough
 to make a full-fledged social media system. If I improve the blog system I have, I could end up with a good
@@ -85,11 +82,11 @@ compete with the psychological experience of using corporate social media.
 So that's what I'm feeling right now, and why I expressed my priorities the way I did. If anyone is interested in the mechanics
 of the blog system--that is, if you're ready to grab it and use it but you want me to explain how it works so that _you_ can modify
 it to your liking--then I'll be happy to go into detail; having people besides me engaged in this project is one of my highest
-priorities. For myself and this project as a whole, the priority is to get the cooresponding private site experience on the board,
+priorities. For myself and this project as a whole, the priority is to get the corresponding private site experience on the board,
 so that the overall evolution of the system balances the public and private perspectives.
 
 [^1]: "Serverless" is a tech buzzword that means that an application doesn't require its operator
-      to directly manage whole computers in the cloud. Instead, of renting whole computers, serverless
+      to directly manage whole computers in the cloud. Instead of renting whole computers, serverless
       applications use services like [cloud functions](https://raphaelluckom.com/posts/cloud_functions.html)
       for their compute needs, object stores like S3 for their storage needs, and pay-as-you-go databases
       like DynamoDB. These systems are intended to be easier to administer and scale than equivalent services

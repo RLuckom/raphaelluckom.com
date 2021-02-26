@@ -92,7 +92,7 @@ It's going to take me another week or two before I'm comfortable releasing an ex
 system. In the meantime, I might try to release a couple of interim exercises, possibly around [re-using certificates instead of recreating them](https://raphaelluckom.com/posts/aws_limits.html)
 or setting up a bucket for handwriting HTML and Javascript to pair with a free online class (I mean that I'm sure I can find a class that
 would pair with that kind of test site; I'm not going to develop one). As usual, feel free to get in touch if you have
-questions of comments.
+questions or comments.
 
 [^1]: There's no obvious word for "the set of terraform configuration files you deploy at one time." I often call
       it a "stack", especially when I'm referring to both the terraform code _and_ the infrastructure created by it.
