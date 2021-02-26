@@ -229,20 +229,42 @@ function secureCookieValue(c) {
   return c.value
 }
 
+
 function validateRedirectToLogin(req, response) {
-  expect(response.status).toBe('307')
   const config = shared.getCompleteConfig()
+  
+  // Make sure the response is a redirect
+  expect(response.status).toBe('307')
+
+  // ensure there's one location header and it points at the auth domain
   expect(_.get(response, 'headers.location').length).toEqual(1)
   const locationHeader = new URL(response.headers.location[0].value)
+  expect(locationHeader.origin).toEqual(`https://${config.cognitoAuthDomain}`)
+  // Get the querystring arguments forwarded to the auth domain
   const queryParams = locationHeader.searchParams
-  console.log(locationHeader.searchParams)
-  expect(queryParams.get('redirect_uri')).toEqual(`https://${intendedResourceHostname}${defaultConfig.redirectPathSignIn}`)
+  // make sure we're telling cognito to send the browser and authz code
+  // back to the /parseauth endpoint, which completes the login
+  expect(queryParams.get('redirect_uri')).toEqual(`https://${intendedResourceHostname}${config.redirectPathSignIn}`)
+
+  // Make sure we're asking for an authorization code back
   expect(queryParams.get('response_type')).toEqual('code')
-  expect(queryParams.get('scope')).toEqual(defaultConfig.oauthScopes.join(' '))
+
+  // The pkce challenge value we will be sending is the sha256 of the
+  // proof-key we generated (and which we'll be sending back to the
+  // browser for storage in a cookie)
   expect(queryParams.get('code_challenge_method')).toEqual('S256')
+
+  // ensure we're asking for the scopes present in the config
+  expect(queryParams.get('scope')).toEqual(defaultConfig.oauthScopes.join(' '))
+  
+  // ensure we're using the client ID from the config
   expect(queryParams.get('client_id')).toEqual(defaultConfig.clientId)
-  const challenge = queryParams.get('code_challenge')
+
+  // Now we validate the cookies and their relationship to the state
+  // & challenge
   const setCookies = setCookieParser.parse(_.map(response.headers['set-cookie'], 'value'))
+
+  // we should be setting three cookies; next we check the value of each
   expect(setCookies.length).toEqual(3)
   const cookies = _.reduce(setCookies, (acc, v) => {
     // as we get the value for each set-cookie header, verify that good security is set
@@ -250,10 +272,23 @@ function validateRedirectToLogin(req, response) {
     return acc
   }, {})
   // Expect that the pkce challenge is the hash of the pkce set in the browser by the set-cookie header
+  const challenge = queryParams.get('code_challenge')
+  // the round-trip stringify / parse is because the round-trip strips trailing '=' characters
   expect(shared.urlSafe.parse(shared.urlSafe.stringify(createHash("sha256").update(cookies['spa-auth-edge-pkce'], "utf8").digest("base64")))).toBe(shared.urlSafe.parse(challenge))
+
+  // Next we decode the 'state' parameter, which consists of 
+  // the nonce we generated and the original URL requested by the browser
   const parsedState = JSON.parse(Buffer.from(shared.urlSafe.parse(queryParams.get('state')), 'base64').toString('utf8'))
+
+  // Check that the final redirect URI matches the initial request
   expect(parsedState.requestedUri).toBe(req.Records[0].cf.request.uri)
+
+  // Make sure the nonce in the state is the same as the one we 
+  // are going to store in the browser
   expect(parsedState.nonce).toBe(cookies["spa-auth-edge-nonce"])
+
+  // And finally, check that the hmac we're setting in the browser is
+  // correctly the digest of the nonce using the signing secret
   expect(
     shared.urlSafe.parse(shared.urlSafe.stringify(
       createHmac("sha256", defaultConfig.nonceSigningSecret)
