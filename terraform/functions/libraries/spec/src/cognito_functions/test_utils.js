@@ -9,6 +9,7 @@ const fs = require('fs')
 const http = require('http');
 const { default: parseJwk } = require('jose/jwk/parse')
 const { default: SignJWT } = require('jose/jwt/sign')
+const { default: generateKeyPair } = require('jose/util/generate_key_pair')
 
 async function getKeySets() {
   const pubKeySetJson = fs.readFileSync(`${__dirname}/testPubKeySet.json`).toString()
@@ -117,6 +118,16 @@ async function generateValidSecurityCookieValues(idPrivKey, accessPrivKey, token
     "ID-TOKEN": await generateIdToken(config, idPrivKey, kid, null, tokenIssuer, clientId, expiration, issuedAt, groups),
     "ACCESS-TOKEN": await generateAccessToken(config, accessPrivKey, kid, null, tokenIssuer, clientId, expiration, issuedAt),
     "REFRESH-TOKEN": await generateRefreshToken(config, accessPrivKey, kid, null, tokenIssuer, clientId, expiration, issuedAt),
+  }
+}
+
+async function generateCounterfeitSecurityCookieValues(idPrivKey, accessPrivKey, tokenIssuer, clientId, expiration, issuedAt, kid, groups) {
+  const config = shared.getCompleteConfig()
+  const key = await generateKeyPair('RS256')
+  return {
+    "ID-TOKEN": await generateIdToken(config, key.privateKey, kid, null, tokenIssuer, clientId, expiration, issuedAt, groups),
+    "ACCESS-TOKEN": await generateAccessToken(config, key.privateKey, kid, null, tokenIssuer, clientId, expiration, issuedAt),
+    "REFRESH-TOKEN": await generateRefreshToken(config, key.privateKey, kid, null, tokenIssuer, clientId, expiration, issuedAt),
   }
 }
 
@@ -276,6 +287,39 @@ async function getAuthedEvent(tokenIssuer, clientId, expiration, issuedAt, kid, 
   }
 }
 
+async function getCounterfeitAuthedEvent(tokenIssuer, clientId, expiration, issuedAt, kid, groups) {
+  const { privKeySet } = await getKeySets()
+  return {
+    "Records": [
+      {
+        "cf": {
+          "config": {
+            "distributionId": "EXAMPLE"
+          },
+          "request": {
+            "uri": "/test",
+            "method": "GET",
+            "headers": {
+              "host": [
+                {
+                  "key": "Host",
+                  "value": intendedResourceHostname
+                }
+              ],
+              "cookie": [
+                {
+                  key: "Cookie",
+                  value: buildCookieString(await generateCounterfeitSecurityCookieValues(privKeySet.id, privKeySet.access, tokenIssuer, clientId, expiration, issuedAt, kid, groups))
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}
+
 function secureCookieValue(c) {
   expect(c.path).toBe('/')
   expect(c.secure).toBe(true)
@@ -355,8 +399,54 @@ function validateRedirectToLogin(req, response) {
   )
 }
 
-function validateValidAuthPassthrough(response) {
-  console.log(JSON.stringify(response, null, 2))
+function validateRedirectToRefresh(req, response) {
+  const config = shared.getCompleteConfig()
+  
+  // Make sure the response is a redirect
+  expect(response.status).toBe('307')
+
+  // ensure there's one location header and it points at the refresh endpoint on the current domain
+  expect(_.get(response, 'headers.location').length).toEqual(1)
+  const locationHeader = new URL(response.headers.location[0].value)
+  expect(`${locationHeader.origin}${locationHeader.pathname}`).toEqual(`https://${intendedResourceHostname}${config.redirectPathAuthRefresh}`)
+  // Get the querystring arguments forwarded to the refresh endpoint
+  const queryParams = locationHeader.searchParams
+  // make sure we're telling the refres endpoint where
+  // to send the browser after refresh completes
+  expect(queryParams.get('requestedUri')).toBe(req.Records[0].cf.request.uri)
+
+  // Now we validate the cookies and their relationship to the nonce in the params
+  const setCookies = setCookieParser.parse(_.map(response.headers['set-cookie'], 'value'))
+
+  // we should be setting three cookies; next we check the value of each
+  expect(setCookies.length).toEqual(2)
+  const cookies = _.reduce(setCookies, (acc, v) => {
+    // as we get the value for each set-cookie header, verify that good security is set
+    acc[v.name] = secureCookieValue(v)
+    return acc
+  }, {})
+  // Expect that the pkce challenge is the hash of the pkce set in the browser by the set-cookie header
+  const nonce = queryParams.get('nonce')
+
+  // Make sure the nonce in the state is the same as the one we 
+  // are going to store in the browser
+  expect(nonce).toBe(cookies["spa-auth-edge-nonce"])
+
+  // And finally, check that the hmac we're setting in the browser is
+  // correctly the digest of the nonce using the signing secret
+  expect(
+    shared.urlSafe.parse(shared.urlSafe.stringify(
+      createHmac("sha256", defaultConfig.nonceSigningSecret)
+      .update(nonce)
+      .digest("base64")
+      .slice(0, config.nonceLength)))
+  ).toBe(
+  shared.urlSafe.parse(cookies['spa-auth-edge-nonce-hmac'])
+  )
 }
 
-module.exports = { clearJwkCache, getAuthedEvent, getUnauthEvent, getUnparseableAuthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough}
+function validateValidAuthPassthrough(req, response) {
+  expect(_.isEqual(response, req.Records[0].cf.request)).toBe(true)
+}
+
+module.exports = { clearJwkCache, getCounterfeitAuthedEvent, getAuthedEvent, getUnauthEvent, getUnparseableAuthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, generateCounterfeitSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh }

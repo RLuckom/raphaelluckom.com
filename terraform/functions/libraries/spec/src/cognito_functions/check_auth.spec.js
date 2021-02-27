@@ -1,6 +1,6 @@
 const rewire = require('rewire')
 const checkAuth = rewire('../../../src/cognito_functions/check_auth.js')
-const { clearJwkCache, getUnauthEvent, getAuthedEvent, getUnparseableAuthEvent, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough } = require('./test_utils')
+const { getCounterfeitAuthedEvent, clearJwkCache, getUnauthEvent, getAuthedEvent, getUnparseableAuthEvent, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh } = require('./test_utils')
 
 // If the thing the fn returns looks like a response, it's sent back to the browser
 // as a response. If it still looks like a request, it's forwarded to the origin
@@ -83,6 +83,14 @@ describe('when check_auth gets a request', () => {
       })
     })
 
+    it('redirects to cognito if the token is correct in all attributes but not signed by the real key with the kid', async (done) => {
+      const req = await getCounterfeitAuthedEvent()
+      checkAuth.handler(req).then((response) => {
+        validateRedirectToLogin(req, response)
+        done()
+      })
+    })
+
     it('redirects to cognito if the issuer is wrong', async (done) => {
       const req = await getAuthedEvent("foobarbaz")
       checkAuth.handler(req).then((response) => {
@@ -128,7 +136,23 @@ describe('when check_auth gets a request', () => {
     it('passes the request through to the backend', async (done) => {
       const req = await getAuthedEvent()
       checkAuth.handler(req).then((response) => {
-        validateValidAuthPassthrough(response)
+        validateValidAuthPassthrough(req, response)
+        done()
+      })
+    })
+  })
+  describe("and it IS accompanied by a valid token with an old expiration", () => {
+    it('redirects to refresh if the token is already expired', async (done) => {
+      const req = await getAuthedEvent(null, null,Math.floor(Date.now() / 1000 - 60 * 60 * 4), Math.floor(Date.now() / 1000 - 60 * 60 * 3))
+      checkAuth.handler(req).then((response) => {
+        validateRedirectToRefresh(req, response)
+        done()
+      })
+    })
+    it('redirects to refresh if the token is within 10 minutes of being expired', async (done) => {
+      const req = await getAuthedEvent(null, null,Math.floor(Date.now() / 1000 - 60 * 20), Math.floor(Date.now() / 1000 + 60 * 3))
+      checkAuth.handler(req).then((response) => {
+        validateRedirectToRefresh(req, response)
         done()
       })
     })
