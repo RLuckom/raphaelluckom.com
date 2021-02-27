@@ -287,6 +287,41 @@ async function getAuthedEvent(tokenIssuer, clientId, expiration, issuedAt, kid, 
   }
 }
 
+async function getAuthedEventWithNoRefresh(tokenIssuer, clientId, expiration, issuedAt, kid, groups) {
+  const { privKeySet } = await getKeySets()
+  const cookies = await generateValidSecurityCookieValues(privKeySet.id, privKeySet.access, tokenIssuer, clientId, expiration, issuedAt, kid, groups)
+  delete cookies["REFRESH-TOKEN"]
+  return {
+    "Records": [
+      {
+        "cf": {
+          "config": {
+            "distributionId": "EXAMPLE"
+          },
+          "request": {
+            "uri": "/test",
+            "method": "GET",
+            "headers": {
+              "host": [
+                {
+                  "key": "Host",
+                  "value": intendedResourceHostname
+                }
+              ],
+              "cookie": [
+                {
+                  key: "Cookie",
+                  value: buildCookieString(cookies)
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}
+
 async function getCounterfeitAuthedEvent(tokenIssuer, clientId, expiration, issuedAt, kid, groups) {
   const { privKeySet } = await getKeySets()
   return {
@@ -449,4 +484,4 @@ function validateValidAuthPassthrough(req, response) {
   expect(_.isEqual(response, req.Records[0].cf.request)).toBe(true)
 }
 
-module.exports = { clearJwkCache, getCounterfeitAuthedEvent, getAuthedEvent, getUnauthEvent, getUnparseableAuthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, generateCounterfeitSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh }
+module.exports = { getAuthedEventWithNoRefresh, clearJwkCache, getCounterfeitAuthedEvent, getAuthedEvent, getUnauthEvent, getUnparseableAuthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, generateCounterfeitSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh }
