@@ -11,7 +11,6 @@ if (!process.argv[2]) {
 }
 
 const fileName = `${__dirname}/${process.argv[2]}`
-console.log(fileName)
 const fileDir = path.dirname(fileName)
 
 const file = fs.readFileSync(fileName, 'utf8')
@@ -55,8 +54,6 @@ function makeNodePath(layers) {
 
 const jasminePath = 'spec/support/node_modules/jasmine/bin/jasmine.js'
 const parsed = parsePost(file)
-console.log(makeNodePath(parsed.frontMatter.layers))
-console.log(0)
 const env = {
   NODE_PATH: `${makeNodePath(parsed.frontMatter.layers)}:${__dirname}/spec/support/node_modules/`,
   PATH: process.env.PATH,

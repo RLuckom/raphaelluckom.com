@@ -30,7 +30,6 @@ describe('when check_auth gets a request', () => {
   let resetShared, closeServer
 
   beforeAll(async (done) => {
-    console.log('starting server')
     const testServer = await startTestOauthServer()
     closeServer = testServer.closeServer
     done()
@@ -38,8 +37,6 @@ describe('when check_auth gets a request', () => {
 
   afterAll((done) => {
     closeServer((e, r) => {
-      console.log(e)
-      console.log(r)
       done()
     })
   })

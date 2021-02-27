@@ -40,14 +40,10 @@ async function startTestOauthServer() {
   await new Promise(function(resolve, reject) {
     server = http.createServer((req, res) => {
       if (req.method === "GET" && req.url === `/.well-known/jwks.json`) {
-        console.log('delivered pubkeys')
         res.setHeader('content-type', 'application/json')
         res.end(pubKeySetJson, 'utf8');
       }
     });
-    server.on('close', (err, socket) => {
-      console.log('closed')
-    })
     server.on('clientError', (err, socket) => {
       socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
     });
