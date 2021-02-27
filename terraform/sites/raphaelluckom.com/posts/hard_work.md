@@ -6,6 +6,7 @@ draft: false
 meta:
   trail:
     - check-in
+    - labor
 ---
 There's a short story by Raymond Carver called _What We Talk About When We Talk About Love_. The characters
 are two couples, sitting around a kitchen table at one of their homes in Albuquerque. They're drinking gin,
