@@ -378,6 +378,16 @@ function secureCookieValue(c) {
   return c.value
 }
 
+function signoutCookieValue(c) {
+  expect(c.path).toBe('/')
+  expect(c.secure).toBe(true)
+  expect(c.httpOnly).toBe(true)
+  expect(c.sameSite).toBe('Strict')
+  expect(c.maxAge).toBeUndefined()
+  expect(c.expires.toUTCString()).toBe(new Date(0).toUTCString())
+  expect(c.value).toBe("")
+  return c.value
+}
 
 function validateRedirectToLogin(req, response) {
   const config = shared.getCompleteConfig()
@@ -450,6 +460,51 @@ function validateRedirectToLogin(req, response) {
   )
 }
 
+function validateRedirectToLogout(req, response) {
+  const config = shared.getCompleteConfig()
+  validateCloudfrontHeaders(config.httpHeaders, response)
+  
+  // Make sure the response is a redirect
+  expect(response.status).toBe('307')
+
+  // ensure there's one location header and it points at the auth domain
+  expect(_.get(response, 'headers.location').length).toEqual(1)
+  const locationHeader = new URL(response.headers.location[0].value)
+  expect(`${locationHeader.origin}${locationHeader.pathname}`).toEqual(`https://${config.cognitoAuthDomain}/logout`)
+  // Get the querystring arguments forwarded to the auth domain
+  const queryParams = locationHeader.searchParams
+  // make sure we're telling cognito to send the browser and authz code
+  // back to the /parseauth endpoint, which completes the login
+  expect(queryParams.get('logout_uri')).toEqual(`https://${intendedResourceHostname}${config.redirectPathSignOut}`)
+
+  // ensure we're using the client ID from the config
+  expect(queryParams.get('client_id')).toEqual(defaultConfig.clientId)
+
+  // Now we validate the cookies and their relationship to the state
+  // & challenge
+  const setCookies = setCookieParser.parse(_.map(response.headers['set-cookie'], 'value'))
+
+  // we should be setting three cookies; next we check the value of each
+  expect(setCookies.length).toEqual(3)
+  const cookies = _.reduce(setCookies, (acc, v) => {
+    // as we get the value for each set-cookie header, verify that good security is set
+    acc[v.name] = signoutCookieValue(v)
+    return acc
+  }, {})
+}
+
+function validateHtmlErrorPage(req, response, statusCode="200") {
+  const config = shared.getCompleteConfig()
+  validateCloudfrontHeaders(config.httpHeaders, response)
+  
+  // Make sure the response is a 200 with a string body
+  expect(response.status).toBe(statusCode)
+  expect(_.isString(response.body)).toBe(true)
+
+  expect(response.headers['set-cookie']).toBeUndefined()
+  expect(response.headers['content-type'][0].value).toBe("text/html; charset=UTF-8")
+}
+
 function validateRedirectToRefresh(req, response) {
   const config = shared.getCompleteConfig()
   validateCloudfrontHeaders(config.httpHeaders, response)
@@ -505,4 +560,4 @@ function getDefaultConfig() {
   return _.cloneDeep(defaultConfig)
 }
 
-module.exports = { getDefaultConfig, useCustomConfig, clearCustomConfig, getAuthedEventWithNoRefresh, clearJwkCache, getCounterfeitAuthedEvent, getAuthedEvent, getUnauthEvent, getUnparseableAuthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, generateCounterfeitSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh }
+module.exports = { validateHtmlErrorPage, validateRedirectToLogout, getDefaultConfig, useCustomConfig, clearCustomConfig, getAuthedEventWithNoRefresh, clearJwkCache, getCounterfeitAuthedEvent, getAuthedEvent, getUnauthEvent, getUnparseableAuthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, generateCounterfeitSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh }
