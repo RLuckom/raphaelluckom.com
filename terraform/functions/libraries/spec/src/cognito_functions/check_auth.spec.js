@@ -1,15 +1,21 @@
 const rewire = require('rewire')
 const checkAuth = rewire('../../../src/cognito_functions/check_auth.js')
-const { getAuthedEventWithNoRefresh, getCounterfeitAuthedEvent, clearJwkCache, getUnauthEvent, getAuthedEvent, getUnparseableAuthEvent, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh } = require('./test_utils')
+const { getDefaultConfig, useCustomConfig, clearCustomConfig, getAuthedEventWithNoRefresh, getCounterfeitAuthedEvent, clearJwkCache, getUnauthEvent, getAuthedEvent, getUnparseableAuthEvent, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh } = require('./test_utils')
 
 // If the thing the fn returns looks like a response, it's sent back to the browser
 // as a response. If it still looks like a request, it's forwarded to the origin
+
+function clearConfig() {
+  clearCustomConfig()
+  checkAuth.__set__('CONFIG', null)
+}
 
 describe('when check_auth gets a request but the oauth keyserver is unreachable', () => {
   let resetShared
 
   beforeEach(() => {
     clearJwkCache()
+    clearConfig()
     resetShared = checkAuth.__set__("shared", shared)
   })
 
@@ -43,6 +49,7 @@ describe('when check_auth gets a request', () => {
 
   beforeEach(() => {
     clearJwkCache()
+    clearConfig()
     resetShared = checkAuth.__set__("shared", shared)
   })
 
@@ -120,6 +127,17 @@ describe('when check_auth gets a request', () => {
       })
     })
 
+    it('redirects to cognito if the token is fine but the config doesnt specify a required group', async (done) => {
+      const customConfig = getDefaultConfig()
+      delete customConfig.requiredGroup
+      useCustomConfig(customConfig)
+      const req = await getAuthedEvent()
+      checkAuth.handler(req).then((response) => {
+        validateRedirectToLogin(req, response)
+        done()
+      })
+    })
+
     it('redirects to cognito if the token doesnt have the required group', async (done) => {
       const req = await getAuthedEvent(null, null, null, null, null, "nogroups")
       checkAuth.handler(req).then((response) => {
@@ -171,6 +189,5 @@ describe('when check_auth gets a request', () => {
         done()
       })
     })
-
   })
 })

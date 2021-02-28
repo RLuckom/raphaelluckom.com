@@ -170,8 +170,10 @@ let defaultConfig = {
 
 shared.__set__('validateJwt', validateJwt)
 
+let customConfig
+
 shared.__set__("getConfigJson", function() { 
-  return {...defaultConfig, ...{
+  const config = {...(customConfig || defaultConfig), ...{
     logger: raphlogger.init(null, {
       source: defaultConfig.source,
       level: defaultConfig.logLevel,
@@ -180,7 +182,24 @@ shared.__set__("getConfigJson", function() {
       asyncOutput: false
     })
   }}
+  config.cloudFrontHeaders = shared.asCloudFrontHeaders(config.httpHeaders)
+  return config
 })
+
+function validateCloudfrontHeaders(configHttpHeaders, response) {
+  const cfHeaders = shared.asCloudFrontHeaders(configHttpHeaders)
+  _.each(cfHeaders, (v, k) => {
+    expect(_.isEqual(_.get(response.headers, k), v)).toBe(true)
+  })
+}
+
+function clearCustomConfig() {
+  customConfig = null
+}
+
+function useCustomConfig(config) {
+  customConfig = config
+}
 
 function clearJwkCache() {
   validateJwt.__set__('jwksRsa', null)
@@ -362,6 +381,7 @@ function secureCookieValue(c) {
 
 function validateRedirectToLogin(req, response) {
   const config = shared.getCompleteConfig()
+  validateCloudfrontHeaders(config.httpHeaders, response)
   
   // Make sure the response is a redirect
   expect(response.status).toBe('307')
@@ -432,6 +452,7 @@ function validateRedirectToLogin(req, response) {
 
 function validateRedirectToRefresh(req, response) {
   const config = shared.getCompleteConfig()
+  validateCloudfrontHeaders(config.httpHeaders, response)
   
   // Make sure the response is a redirect
   expect(response.status).toBe('307')
@@ -480,4 +501,8 @@ function validateValidAuthPassthrough(req, response) {
   expect(_.isEqual(response, req.Records[0].cf.request)).toBe(true)
 }
 
-module.exports = { getAuthedEventWithNoRefresh, clearJwkCache, getCounterfeitAuthedEvent, getAuthedEvent, getUnauthEvent, getUnparseableAuthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, generateCounterfeitSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh }
+function getDefaultConfig() {
+  return _.cloneDeep(defaultConfig)
+}
+
+module.exports = { getDefaultConfig, useCustomConfig, clearCustomConfig, getAuthedEventWithNoRefresh, clearJwkCache, getCounterfeitAuthedEvent, getAuthedEvent, getUnauthEvent, getUnparseableAuthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, generateCounterfeitSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh }
