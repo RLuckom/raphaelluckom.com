@@ -5,6 +5,7 @@ const raphlogger = require('raphlogger')
 const shared = rewire('../../../src/cognito_functions/shared/shared')
 const validateJwt = rewire('../../../src/cognito_functions/shared/validate_jwt')
 const setCookieParser = require('set-cookie-parser')
+const stringifyQueryString = require("querystring").stringify
 const fs = require('fs')
 const http = require('http');
 const { default: parseJwk } = require('jose/jwk/parse')
@@ -64,6 +65,59 @@ async function getParseAuthDependencies() {
   }
 }
 
+async function validParseAuthRequest() {
+  const { nonce, nonceHmac, pkce, pkceHash, requestedUri, state, code, idToken} = await getParseAuthDependencies()
+  const cookies = {
+    "spa-auth-edge-nonce": nonce,
+    "spa-auth-edge-nonce-hmac": nonceHmac,
+    "spa-auth-edge-pkce": pkce,
+  }
+  return {
+    "Records": [
+      {
+        "cf": {
+          "config": {
+            "distributionId": "EXAMPLE"
+          },
+          "request": {
+            "uri": "/parseauth",
+            "querystring": stringifyQueryString({
+              code, state
+            }),
+            "method": "GET",
+            "headers": {
+              "host": [
+                {
+                  "key": "Host",
+                  "value": intendedResourceHostname
+                }
+              ],
+              "cookie": [
+                {
+                  key: "Cookie",
+                  value: buildCookieString(cookies)
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}
+
+function defaultTokenResponse(req, res, privKeySet) {
+  generateValidSecurityCookieValues(privKeySet.id, privKeySet.access).then((tokenCookieValues) => {
+    res.setHeader('content-type', 'application/json')
+    const tokens = {
+      id_token: tokenCookieValues["ID-TOKEN"],
+      access_token: tokenCookieValues["ACCESS-TOKEN"],
+      refresh_token: tokenCookieValues["REFRESH-TOKEN"],
+    }
+    res.end(JSON.stringify(tokens), 'utf8');
+  })
+}
+
 async function startTestOauthServer() {
   const { pubKeySet, privKeySet, pubKeySetJson, privKeySetJson } = await getKeySets()
   let server
@@ -72,6 +126,12 @@ async function startTestOauthServer() {
       if (req.method === "GET" && req.url === `/.well-known/jwks.json`) {
         res.setHeader('content-type', 'application/json')
         res.end(pubKeySetJson, 'utf8');
+      }
+      if (req.method === "POST" && req.url === `/oauth2/token`) {
+        defaultTokenResponse(req, res, privKeySet)
+      } else {
+        console.log(req.method)
+        console.log(req.url)
       }
     });
     server.on('clientError', (err, socket) => {
@@ -163,7 +223,7 @@ let defaultConfig = {
   "tokenIssuer": "http://localhost:8000",
   "clientId": "hhhhhhhhhhhhhhhhhhhhhhhhhh",
   "clientSecret": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-  "cognitoAuthDomain": "auth.testcog.raphaelluckom.com",
+  "cognitoAuthDomain": "http://localhost:8000",
   "cookieSettings": {
     "accessToken": null,
     "idToken": null,
@@ -589,4 +649,4 @@ function getDefaultConfig() {
   return _.cloneDeep(defaultConfig)
 }
 
-module.exports = { getParseAuthDependencies, validateHtmlErrorPage, validateRedirectToLogout, getDefaultConfig, useCustomConfig, clearCustomConfig, getAuthedEventWithNoRefresh, clearJwkCache, getCounterfeitAuthedEvent, getAuthedEvent, getUnauthEvent, getUnparseableAuthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, generateCounterfeitSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh }
+module.exports = { validParseAuthRequest, getParseAuthDependencies, validateHtmlErrorPage, validateRedirectToLogout, getDefaultConfig, useCustomConfig, clearCustomConfig, getAuthedEventWithNoRefresh, clearJwkCache, getCounterfeitAuthedEvent, getAuthedEvent, getUnauthEvent, getUnparseableAuthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, generateCounterfeitSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh }

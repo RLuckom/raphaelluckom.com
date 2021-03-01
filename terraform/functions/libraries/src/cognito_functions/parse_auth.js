@@ -19,14 +19,12 @@ const handler = async (event) => {
   CONFIG.logger.debug("Event:", event);
   const request = event.Records[0].cf.request;
   const domainName = request.headers["host"][0].value;
-  const cognitoTokenEndpoint = `https://${CONFIG.cognitoAuthDomain}/oauth2/token`;
+  const cognitoTokenEndpoint = `${CONFIG.cognitoAuthDomain}/oauth2/token`;
   let redirectedFromUri = `https://${domainName}`;
   let idToken
   try {
     const cookies = shared.extractAndParseCookies(
       request.headers,
-      CONFIG.clientId,
-      CONFIG.cookieCompatibility
     );
     ({ idToken } = cookies);
     const { code, pkce, requestedUri } = validateQueryStringAndCookies({

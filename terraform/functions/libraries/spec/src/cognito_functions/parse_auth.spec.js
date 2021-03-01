@@ -1,6 +1,6 @@
 const rewire = require('rewire')
 const parseAuth = rewire('../../../src/cognito_functions/parse_auth.js')
-const { getParseAuthDependencies, getDefaultConfig, useCustomConfig, clearCustomConfig, getAuthedEventWithNoRefresh, getCounterfeitAuthedEvent, clearJwkCache, getUnauthEvent, getAuthedEvent, getUnparseableAuthEvent, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh } = require('./test_utils')
+const { validParseAuthRequest, getParseAuthDependencies, getDefaultConfig, useCustomConfig, clearCustomConfig, getAuthedEventWithNoRefresh, getCounterfeitAuthedEvent, clearJwkCache, getUnauthEvent, getAuthedEvent, getUnparseableAuthEvent, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh } = require('./test_utils')
 
 function clearConfig() {
   clearCustomConfig()
@@ -9,6 +9,18 @@ function clearConfig() {
 
 describe('cognito parse_auth functions test', () => {
   let resetShared
+
+  beforeAll(async (done) => {
+    const testServer = await startTestOauthServer()
+    closeServer = testServer.closeServer
+    done()
+  })
+
+  afterAll((done) => {
+    closeServer((e, r) => {
+      done()
+    })
+  })
 
   beforeEach(() => {
     clearJwkCache()
@@ -20,9 +32,17 @@ describe('cognito parse_auth functions test', () => {
     resetShared()
   })
 
-  it('test1', async (done) => {
+  it('unauth', async (done) => {
     const deps = await getParseAuthDependencies()
     const req = await getAuthedEvent()
+    parseAuth.handler(req).then((response) => {
+      console.log(JSON.stringify(response, null, 2))
+      done()
+    })
+  })
+
+  it('auth', async (done) => {
+    const req = await validParseAuthRequest()
     parseAuth.handler(req).then((response) => {
       console.log(JSON.stringify(response, null, 2))
       done()

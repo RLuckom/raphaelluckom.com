@@ -52,7 +52,7 @@ locals {
     clientId = aws_cognito_user_pool_client.client.id
     clientSecret = aws_cognito_user_pool_client.client.client_secret
     oauthScopes = ["phone", "email", "profile", "openid", "aws.cognito.signin.user.admin"]
-    cognitoAuthDomain = local.cognito_domain
+    cognitoAuthDomain = "https://${local.cognito_domain}"
     redirectPathSignIn = "/parseauth"
     redirectPathSignOut = "/"
     redirectPathAuthRefresh = "/refreshauth"
@@ -370,6 +370,7 @@ resource aws_cognito_user_pool user_pool {
       max_length = 250
     }
   }
+  allow_admin_create_user_only = true
   auto_verified_attributes = ["email"]
 }
 
