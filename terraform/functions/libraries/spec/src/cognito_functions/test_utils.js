@@ -34,6 +34,36 @@ async function getKeySets() {
   }
 }
 
+async function getParseAuthDependencies() {
+  const config = shared.getCompleteConfig()
+  const { privKeySet } = await getKeySets()
+  const idToken =  await generateIdToken(config, privKeySet.id, 'id')
+  const nonce = shared.generateNonce(config)
+  const nonceHmac = shared.urlSafe.stringify(
+    createHmac("sha256", config.nonceSigningSecret)
+    .update(nonce)
+    .digest("base64")
+    .slice(0, config.nonceLength)
+  )
+  const { pkce, pkceHash } = shared.generatePkceVerifier(config)
+  const requestedUri = `https://${intendedResourceHostname}/intended/path`
+    const state = Buffer.from(JSON.stringify({
+    requestedUri,
+    nonce
+  }), 'utf8').toString('base64')
+  const code = 'aaaaaaaaaaaaaaaaaaaaaaaaa'
+  return {
+    nonce,
+    nonceHmac,
+    pkce,
+    pkceHash,
+    requestedUri,
+    state,
+    code,
+    idToken
+  }
+}
+
 async function startTestOauthServer() {
   const { pubKeySet, privKeySet, pubKeySetJson, privKeySetJson } = await getKeySets()
   let server
@@ -532,11 +562,10 @@ function validateRedirectToRefresh(req, response) {
     acc[v.name] = secureCookieValue(v)
     return acc
   }, {})
-  // Expect that the pkce challenge is the hash of the pkce set in the browser by the set-cookie header
-  const nonce = queryParams.get('nonce')
 
   // Make sure the nonce in the state is the same as the one we 
   // are going to store in the browser
+  const nonce = queryParams.get('nonce')
   expect(nonce).toBe(cookies["spa-auth-edge-nonce"])
 
   // And finally, check that the hmac we're setting in the browser is
@@ -560,4 +589,4 @@ function getDefaultConfig() {
   return _.cloneDeep(defaultConfig)
 }
 
-module.exports = { validateHtmlErrorPage, validateRedirectToLogout, getDefaultConfig, useCustomConfig, clearCustomConfig, getAuthedEventWithNoRefresh, clearJwkCache, getCounterfeitAuthedEvent, getAuthedEvent, getUnauthEvent, getUnparseableAuthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, generateCounterfeitSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh }
+module.exports = { getParseAuthDependencies, validateHtmlErrorPage, validateRedirectToLogout, getDefaultConfig, useCustomConfig, clearCustomConfig, getAuthedEventWithNoRefresh, clearJwkCache, getCounterfeitAuthedEvent, getAuthedEvent, getUnauthEvent, getUnparseableAuthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, generateCounterfeitSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh }
