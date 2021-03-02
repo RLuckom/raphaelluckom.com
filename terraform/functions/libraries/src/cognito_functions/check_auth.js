@@ -123,7 +123,7 @@ const handler = async (event) => {
         location: [
           {
             key: "location",
-            value: `https://${CONFIG.cognitoAuthDomain}/oauth2/authorize?${loginQueryString}`,
+            value: `${CONFIG.cognitoAuthDomain}/oauth2/authorize?${loginQueryString}`,
           },
         ],
         "set-cookie": [

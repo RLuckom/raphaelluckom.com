@@ -53,13 +53,14 @@ function makeNodePath(layers) {
 }
 
 const jasminePath = 'spec/support/node_modules/jasmine/bin/jasmine.js'
+const nycPath = 'spec/support/node_modules/nyc/bin/nyc.js'
 const parsed = parsePost(file)
 const env = {
   NODE_PATH: `${makeNodePath(parsed.frontMatter.layers)}:${__dirname}/spec/support/node_modules/`,
   PATH: process.env.PATH,
 }
 try {
-  const result = execSync(`${__dirname}/${jasminePath} ${fileDir}/${parsed.frontMatter.tests}`, {env})
+  const result = execSync(`${__dirname}/${nycPath} ${__dirname}/${jasminePath} ${fileDir}/${parsed.frontMatter.tests}`, {env})
   console.log(result.toString('utf8'))
 } catch(e) {
   console.log(e)

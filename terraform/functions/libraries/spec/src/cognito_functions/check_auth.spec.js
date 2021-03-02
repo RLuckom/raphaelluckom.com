@@ -46,16 +46,6 @@ describe('when check_auth gets a request', () => {
       done()
     })
   })
-
-  beforeEach(() => {
-    clearJwkCache()
-    clearConfig()
-    resetShared = checkAuth.__set__("shared", shared)
-  })
-
-  afterEach(() => {
-    resetShared()
-  })
   /* Things used by the handler
    * * Config (complete)
    * * cookie headers 
@@ -71,6 +61,16 @@ describe('when check_auth gets a request', () => {
    */
 
   describe("and it IS NOT accompanied by a valid token", () => {
+
+    beforeEach(() => {
+      clearJwkCache()
+      clearConfig()
+      resetShared = checkAuth.__set__("shared", shared)
+    })
+
+    afterEach(() => {
+      resetShared()
+    })
     it('redirects to cognito if no token is present', (done) => {
       const req = getUnauthEvent()
       checkAuth.handler(req).then((response) => {
@@ -148,6 +148,16 @@ describe('when check_auth gets a request', () => {
   })
 
   describe("and it IS accompanied by a valid token", () => {
+
+    beforeEach(() => {
+      clearJwkCache()
+      clearConfig()
+      resetShared = checkAuth.__set__("shared", shared)
+    })
+
+    afterEach(() => {
+      resetShared()
+    })
     it('passes the request through to the backend', async (done) => {
       const req = await getAuthedEvent()
       checkAuth.handler(req).then((response) => {
@@ -157,6 +167,15 @@ describe('when check_auth gets a request', () => {
     })
   })
   describe("and it IS accompanied by a valid token with an old expiration", () => {
+
+    beforeEach(() => {
+      clearJwkCache()
+      resetShared = checkAuth.__set__("shared", shared)
+    })
+
+    afterEach(() => {
+      resetShared()
+    })
 
     it('redirects to refresh if the token is already expired and there IS a refresh token', async (done) => {
       const req = await getAuthedEvent(null, null,Math.floor(Date.now() / 1000 - 60 * 60 * 4), Math.floor(Date.now() / 1000 - 60 * 60 * 3))

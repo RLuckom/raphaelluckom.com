@@ -276,13 +276,6 @@ shared.__set__("getConfigJson", function() {
   return config
 })
 
-function validateCloudfrontHeaders(configHttpHeaders, response) {
-  const cfHeaders = shared.asCloudFrontHeaders(configHttpHeaders)
-  _.each(cfHeaders, (v, k) => {
-    expect(_.isEqual(_.get(response.headers, k), v)).toBe(true)
-  })
-}
-
 function clearCustomConfig() {
   customConfig = null
 }
@@ -334,6 +327,7 @@ async function getUnparseableAuthEvent() {
           "request": {
             "uri": "/test",
             "method": "GET",
+            "querystring": 'foo=bar',
             "headers": {
               "host": [
                 {
@@ -479,6 +473,13 @@ function signoutCookieValue(c) {
   return c.value
 }
 
+function validateCloudfrontHeaders(configHttpHeaders, response) {
+  const cfHeaders = shared.asCloudFrontHeaders(configHttpHeaders)
+  _.each(cfHeaders, (v, k) => {
+    expect(_.isEqual(_.get(response.headers, k), v)).toBe(true)
+  })
+}
+
 function validateRedirectToLogin(req, response) {
   const config = shared.getCompleteConfig()
   validateCloudfrontHeaders(config.httpHeaders, response)
@@ -489,7 +490,7 @@ function validateRedirectToLogin(req, response) {
   // ensure there's one location header and it points at the auth domain
   expect(_.get(response, 'headers.location').length).toEqual(1)
   const locationHeader = new URL(response.headers.location[0].value)
-  expect(locationHeader.origin).toEqual(`https://${config.cognitoAuthDomain}`)
+  expect(locationHeader.origin).toEqual(config.cognitoAuthDomain)
   // Get the querystring arguments forwarded to the auth domain
   const queryParams = locationHeader.searchParams
   // make sure we're telling cognito to send the browser and authz code
@@ -531,7 +532,7 @@ function validateRedirectToLogin(req, response) {
   const parsedState = JSON.parse(Buffer.from(shared.urlSafe.parse(queryParams.get('state')), 'base64').toString('utf8'))
 
   // Check that the final redirect URI matches the initial request
-  expect(parsedState.requestedUri).toBe(req.Records[0].cf.request.uri)
+  expect(parsedState.requestedUri).toBe(`${req.Records[0].cf.request.uri}${req.Records[0].cf.request.querystring ? `?${req.Records[0].cf.request.querystring}` : ""}`)
 
   // Make sure the nonce in the state is the same as the one we 
   // are going to store in the browser
