@@ -5,7 +5,9 @@ const raphlogger = require('raphlogger')
 const shared = rewire('../../../src/cognito_functions/shared/shared')
 const validateJwt = rewire('../../../src/cognito_functions/shared/validate_jwt')
 const setCookieParser = require('set-cookie-parser')
-const stringifyQueryString = require("querystring").stringify
+const qs = require("querystring")
+const stringifyQueryString = qs.stringify
+const parseQueryString = qs.parse
 const fs = require('fs')
 const http = require('http');
 const { default: parseJwk } = require('jose/jwk/parse')
@@ -35,6 +37,119 @@ async function getKeySets() {
   }
 }
 
+function verifyValidTokenRequest(req, body) {
+  const config = shared.getCompleteConfig()
+  expect(req.headers["content-type"]).toBe("application/x-www-form-urlencoded")
+  expect(req.headers["authorization"]).toBe(`Basic aGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGg6YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYQ==`)
+  const query = parseQueryString(body)
+  expect(query.grant_type).toBe('authorization_code')
+  // redirect_uri doesn't really matter to us; since we're getting the token in the response
+  // we won't be following it
+  expect(query.redirect_uri).toBe('https://intended-resource-url.net/parseauth')
+  expect(query.client_id).toBe(config.clientId)
+  expect(query.code).toBe(TOKEN_AUTH_CODE)
+  expect(query.code_verifier).toBe(_.get(currentDependencies, 'pkce'))
+}
+
+function defaultTokenResponse(req, res, body, privKeySet, receiver) {
+  verifyValidTokenRequest(req, body)
+  return generateValidSecurityCookieValues(privKeySet.id, privKeySet.access).then((tokenCookieValues) => {
+    res.setHeader('content-type', 'application/json')
+    const tokens = {
+      id_token: tokenCookieValues["ID-TOKEN"],
+      access_token: tokenCookieValues["ACCESS-TOKEN"],
+      refresh_token: tokenCookieValues["REFRESH-TOKEN"],
+    }
+    res.end(JSON.stringify(tokens), 'utf8');
+    if (receiver) {
+      receiver(tokenCookieValues)
+    }
+  })
+}
+
+const TOKEN_HANDLERS = {
+  default: defaultTokenResponse,
+}
+
+let currentTokenHandler = null
+let currentTokenReceiver = null
+let currentDependencies = null
+
+function setTokenHandler(handler, callback) {
+  currentTokenReceiver = callback
+  currentTokenHandler = handler
+}
+
+function clearTokenHandler() {
+  currentTokenHandler = TOKEN_HANDLERS.default
+  currentTokenReceiver = null
+}
+
+function setParseAuthDependencies(deps) {
+  currentDependencies = deps
+}
+
+function clearParseAuthDependencies() {
+  currentDependencies = null
+}
+
+async function startTestOauthServer() {
+  const { pubKeySet, privKeySet, pubKeySetJson, privKeySetJson } = await getKeySets()
+  let server
+  await new Promise(function(resolve, reject) {
+    server = http.createServer((req, res) => {
+      const chunks = []
+      let body
+      req.on('data', (chunk) => {
+        chunks.push(chunk)
+      })
+      req.on('end', () => {
+        body = Buffer.concat(chunks).toString()
+        if (req.method === "GET" && req.url === `/.well-known/jwks.json`) {
+          res.setHeader('content-type', 'application/json')
+          res.end(pubKeySetJson, 'utf8');
+        }
+        if (req.method === "POST" && req.url === `/oauth2/token`) {
+          currentTokenHandler(req, res, body, privKeySet, currentTokenReceiver)
+        } else {
+          console.log(req.method)
+          console.log(req.url)
+        }
+      })
+    });
+    server.on('clientError', (err, socket) => {
+      socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
+    });
+    server.listen(8000, (e, r) => {
+      if (e) {
+        reject(e)
+      }
+      resolve(r)
+    });
+  })
+  await new Promise((resolve, reject) => {
+    http.get(defaultConfig.tokenJwksUri, (res) => {
+      res.setEncoding('utf8');
+      let rawData = '';
+      res.on('data', (chunk) => { rawData += chunk; });
+      res.on('end', () => {
+        try {
+          resolve()
+        } catch (e) {
+          console.error(e.message);
+          reject()
+        }
+      });
+    })
+  })
+  async function closeServer(cb) {
+    server.close(cb)
+  }
+  return { closeServer, pubKeySet, privKeySet, pubKeySetJson, privKeySetJson }
+}
+
+const TOKEN_AUTH_CODE = 'aaaaaaaaaaaaaaaaaaaaaaaaa'
+
 async function getParseAuthDependencies() {
   const config = shared.getCompleteConfig()
   const { privKeySet } = await getKeySets()
@@ -52,7 +167,7 @@ async function getParseAuthDependencies() {
     requestedUri,
     nonce
   }), 'utf8').toString('base64')
-  const code = 'aaaaaaaaaaaaaaaaaaaaaaaaa'
+  const code = TOKEN_AUTH_CODE
   return {
     nonce,
     nonceHmac,
@@ -66,13 +181,14 @@ async function getParseAuthDependencies() {
 }
 
 async function validParseAuthRequest() {
-  const { nonce, nonceHmac, pkce, pkceHash, requestedUri, state, code, idToken} = await getParseAuthDependencies()
+  const dependencies = await getParseAuthDependencies()
+  const { nonce, nonceHmac, pkce, pkceHash, requestedUri, state, code, idToken} = dependencies
   const cookies = {
     "spa-auth-edge-nonce": nonce,
     "spa-auth-edge-nonce-hmac": nonceHmac,
     "spa-auth-edge-pkce": pkce,
   }
-  return {
+  const event = {
     "Records": [
       {
         "cf": {
@@ -104,65 +220,7 @@ async function validParseAuthRequest() {
       }
     ]
   }
-}
-
-function defaultTokenResponse(req, res, privKeySet) {
-  generateValidSecurityCookieValues(privKeySet.id, privKeySet.access).then((tokenCookieValues) => {
-    res.setHeader('content-type', 'application/json')
-    const tokens = {
-      id_token: tokenCookieValues["ID-TOKEN"],
-      access_token: tokenCookieValues["ACCESS-TOKEN"],
-      refresh_token: tokenCookieValues["REFRESH-TOKEN"],
-    }
-    res.end(JSON.stringify(tokens), 'utf8');
-  })
-}
-
-async function startTestOauthServer() {
-  const { pubKeySet, privKeySet, pubKeySetJson, privKeySetJson } = await getKeySets()
-  let server
-  await new Promise(function(resolve, reject) {
-    server = http.createServer((req, res) => {
-      if (req.method === "GET" && req.url === `/.well-known/jwks.json`) {
-        res.setHeader('content-type', 'application/json')
-        res.end(pubKeySetJson, 'utf8');
-      }
-      if (req.method === "POST" && req.url === `/oauth2/token`) {
-        defaultTokenResponse(req, res, privKeySet)
-      } else {
-        console.log(req.method)
-        console.log(req.url)
-      }
-    });
-    server.on('clientError', (err, socket) => {
-      socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
-    });
-    server.listen(8000, (e, r) => {
-      if (e) {
-        reject(e)
-      }
-      resolve(r)
-    });
-  })
-  await new Promise((resolve, reject) => {
-    http.get(defaultConfig.tokenJwksUri, (res) => {
-      res.setEncoding('utf8');
-      let rawData = '';
-      res.on('data', (chunk) => { rawData += chunk; });
-      res.on('end', () => {
-        try {
-          resolve()
-        } catch (e) {
-          console.error(e.message);
-          reject()
-        }
-      });
-    })
-  })
-  async function closeServer(cb) {
-    server.close(cb)
-  }
-  return { closeServer, pubKeySet, privKeySet, pubKeySetJson, privKeySetJson }
+  return {event, dependencies}
 }
 
 function buildCookieString(cookieObject) {
@@ -650,4 +708,4 @@ function getDefaultConfig() {
   return _.cloneDeep(defaultConfig)
 }
 
-module.exports = { validParseAuthRequest, getParseAuthDependencies, validateHtmlErrorPage, validateRedirectToLogout, getDefaultConfig, useCustomConfig, clearCustomConfig, getAuthedEventWithNoRefresh, clearJwkCache, getCounterfeitAuthedEvent, getAuthedEvent, getUnauthEvent, getUnparseableAuthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, generateCounterfeitSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh }
+module.exports = { setParseAuthDependencies, clearParseAuthDependencies, TOKEN_HANDLERS, setTokenHandler, clearTokenHandler, validParseAuthRequest, getParseAuthDependencies, validateHtmlErrorPage, validateRedirectToLogout, getDefaultConfig, useCustomConfig, clearCustomConfig, getAuthedEventWithNoRefresh, clearJwkCache, getCounterfeitAuthedEvent, getAuthedEvent, getUnauthEvent, getUnparseableAuthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, generateCounterfeitSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh }
