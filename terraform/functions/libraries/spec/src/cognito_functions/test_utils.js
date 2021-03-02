@@ -52,7 +52,6 @@ function verifyValidTokenRequest(req, body) {
 }
 
 function defaultTokenResponse(req, res, body, privKeySet, receiver) {
-  verifyValidTokenRequest(req, body)
   return generateValidSecurityCookieValues(privKeySet.id, privKeySet.access).then((tokenCookieValues) => {
     res.setHeader('content-type', 'application/json')
     const tokens = {
@@ -71,8 +70,13 @@ const TOKEN_HANDLERS = {
   default: defaultTokenResponse,
 }
 
+const TOKEN_REQUEST_VALIDATORS = {
+  default: verifyValidTokenRequest
+}
+
 let currentTokenHandler = null
 let currentTokenReceiver = null
+let currentTokenRequestValidator = null
 let currentDependencies = null
 
 function setTokenHandler(handler, callback) {
@@ -81,8 +85,16 @@ function setTokenHandler(handler, callback) {
 }
 
 function clearTokenHandler() {
-  currentTokenHandler = TOKEN_HANDLERS.default
+  currentTokenHandler = null
   currentTokenReceiver = null
+}
+
+function setTokenRequestValidator(validator) {
+  currentTokenRequestValidator = validator
+}
+
+function clearTokenRequestValidator(validator) {
+  currentTokenRequestValidator = null
 }
 
 function setParseAuthDependencies(deps) {
@@ -110,6 +122,7 @@ async function startTestOauthServer() {
           res.end(pubKeySetJson, 'utf8');
         }
         if (req.method === "POST" && req.url === `/oauth2/token`) {
+          currentTokenRequestValidator(req, body)
           currentTokenHandler(req, res, body, privKeySet, currentTokenReceiver)
         } else {
           console.log(req.method)
@@ -162,7 +175,7 @@ async function getParseAuthDependencies() {
     .slice(0, config.nonceLength)
   )
   const { pkce, pkceHash } = shared.generatePkceVerifier(config)
-  const requestedUri = `https://${intendedResourceHostname}/intended/path`
+  const requestedUri = `/intended/path`
     const state = Buffer.from(JSON.stringify({
     requestedUri,
     nonce
@@ -609,6 +622,30 @@ function validateRedirectToLogin(req, response) {
   )
 }
 
+function validateRedirectToRequested(req, response, tokens, dependencies) {
+  const config = shared.getCompleteConfig()
+  validateCloudfrontHeaders(config.httpHeaders, response)
+  
+  // Make sure the response is a redirect
+  expect(response.status).toBe('307')
+
+  // ensure there's one location header and it points at the auth domain
+  expect(_.get(response, 'headers.location').length).toEqual(1)
+  expect(response.headers.location[0].value).toEqual(`https://${intendedResourceHostname}${dependencies.requestedUri}`)
+
+  // we should be setting three cookies; next we check the value of each
+  if (tokens) {
+    const setCookies = setCookieParser.parse(_.map(response.headers['set-cookie'], 'value'))
+    expect(setCookies.length).toEqual(3)
+    const cookies = _.reduce(setCookies, (acc, v) => {
+      // as we get the value for each set-cookie header, verify that good security is set
+      acc[v.name] = secureCookieValue(v)
+      return acc
+    }, {})
+    expect(_.isEqual(cookies, tokens)).toBe(true)
+  }
+}
+
 function validateRedirectToLogout(req, response) {
   const config = shared.getCompleteConfig()
   validateCloudfrontHeaders(config.httpHeaders, response)
@@ -708,4 +745,4 @@ function getDefaultConfig() {
   return _.cloneDeep(defaultConfig)
 }
 
-module.exports = { setParseAuthDependencies, clearParseAuthDependencies, TOKEN_HANDLERS, setTokenHandler, clearTokenHandler, validParseAuthRequest, getParseAuthDependencies, validateHtmlErrorPage, validateRedirectToLogout, getDefaultConfig, useCustomConfig, clearCustomConfig, getAuthedEventWithNoRefresh, clearJwkCache, getCounterfeitAuthedEvent, getAuthedEvent, getUnauthEvent, getUnparseableAuthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, generateCounterfeitSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh }
+module.exports = { TOKEN_REQUEST_VALIDATORS, setTokenRequestValidator, clearTokenRequestValidator, validateRedirectToRequested, setParseAuthDependencies, clearParseAuthDependencies, TOKEN_HANDLERS, setTokenHandler, clearTokenHandler, validParseAuthRequest, getParseAuthDependencies, validateHtmlErrorPage, validateRedirectToLogout, getDefaultConfig, useCustomConfig, clearCustomConfig, getAuthedEventWithNoRefresh, clearJwkCache, getCounterfeitAuthedEvent, getAuthedEvent, getUnauthEvent, getUnparseableAuthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, generateCounterfeitSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh }

@@ -1,6 +1,6 @@
 const rewire = require('rewire')
 const parseAuth = rewire('../../../src/cognito_functions/parse_auth.js')
-const { setParseAuthDependencies, clearParseAuthDependencies, TOKEN_HANDLERS, setTokenHandler, clearTokenHandler, validParseAuthRequest, getParseAuthDependencies, getDefaultConfig, useCustomConfig, clearCustomConfig, getAuthedEventWithNoRefresh, getCounterfeitAuthedEvent, clearJwkCache, getUnauthEvent, getAuthedEvent, getUnparseableAuthEvent, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh } = require('./test_utils')
+const { setTokenRequestValidator, clearTokenRequestValidator, TOKEN_REQUEST_VALIDATORS, validateRedirectToRequested, setParseAuthDependencies, clearParseAuthDependencies, TOKEN_HANDLERS, setTokenHandler, clearTokenHandler, validParseAuthRequest, getParseAuthDependencies, getDefaultConfig, useCustomConfig, clearCustomConfig, getAuthedEventWithNoRefresh, getCounterfeitAuthedEvent, clearJwkCache, getUnauthEvent, getAuthedEvent, getUnparseableAuthEvent, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh } = require('./test_utils')
 
 function clearConfig() {
   clearCustomConfig()
@@ -31,6 +31,7 @@ describe('cognito parse_auth functions test', () => {
     clearConfig()
     clearTokenHandler()
     clearParseAuthDependencies()
+    clearTokenRequestValidator()
     tokens = null
     resetShared = parseAuth.__set__("shared", shared)
   })
@@ -39,21 +40,21 @@ describe('cognito parse_auth functions test', () => {
     resetShared()
   })
 
-  it('unauth', async (done) => {
+  it('redirects a regular authed event back to the intended domain without getting tokens', async (done) => {
     const req = await getAuthedEvent()
     parseAuth.handler(req).then((response) => {
-      console.log(JSON.stringify(response, null, 2))
+      validateRedirectToRequested(req, response, null, {requestedUri: ''})
       done()
     })
   })
 
-  it('auth', async (done) => {
+  it('successfully gets tokens, sets them in cookies, and redirects back to the intended uri', async (done) => {
     setTokenHandler(TOKEN_HANDLERS.default, receiveTokens)
+    setTokenRequestValidator(TOKEN_REQUEST_VALIDATORS.default)
     const {event, dependencies } = await validParseAuthRequest()
     setParseAuthDependencies(dependencies)
     parseAuth.handler(event).then((response) => {
-      console.log(JSON.stringify(tokens, null, 2))
-      console.log(JSON.stringify(response, null, 2))
+      validateRedirectToRequested(event, response, tokens, dependencies)
       done()
     })
   })
