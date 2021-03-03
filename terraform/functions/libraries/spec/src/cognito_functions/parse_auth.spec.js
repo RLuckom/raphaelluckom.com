@@ -28,7 +28,6 @@ describe('cognito parse_auth functions test', () => {
 
   beforeEach(() => {
     clearJwkCache()
-    clearConfig()
     clearTokenHandler()
     clearParseAuthDependencies()
     clearTokenRequestValidator()
@@ -64,7 +63,6 @@ describe('cognito parse_auth functions test', () => {
     dependencies.state = "not parseable base64"
     const { event } = await parseAuthRequest(dependencies)
     parseAuth.handler(event).then((response) => {
-      console.log(JSON.stringify(response, null, 2))
       validateHtmlErrorPage(event, response)
       done()
     })
@@ -75,7 +73,6 @@ describe('cognito parse_auth functions test', () => {
     dependencies.state = Buffer.from('{"requestUri": "https://example.com"}').toString('base64')
     const { event } = await parseAuthRequest(dependencies)
     parseAuth.handler(event).then((response) => {
-      console.log(JSON.stringify(response, null, 2))
       validateHtmlErrorPage(event, response)
       done()
     })
@@ -86,7 +83,6 @@ describe('cognito parse_auth functions test', () => {
     dependencies.cookies["spa-auth-edge-nonce"] = dependencies.cookies["spa-auth-edge-nonce"] + 'a'
     const { event } = await parseAuthRequest(dependencies)
     parseAuth.handler(event).then((response) => {
-      console.log(JSON.stringify(response, null, 2))
       validateHtmlErrorPage(event, response)
       done()
     })
@@ -97,7 +93,6 @@ describe('cognito parse_auth functions test', () => {
     delete dependencies.state
     const { event } = await parseAuthRequest(dependencies)
     parseAuth.handler(event).then((response) => {
-      console.log(JSON.stringify(response, null, 2))
       validateHtmlErrorPage(event, response)
       done()
     })
@@ -108,7 +103,6 @@ describe('cognito parse_auth functions test', () => {
     delete dependencies.cookies["spa-auth-edge-nonce"]
     const { event } = await parseAuthRequest(dependencies)
     parseAuth.handler(event).then((response) => {
-      console.log(JSON.stringify(response, null, 2))
       validateHtmlErrorPage(event, response)
       done()
     })
@@ -122,7 +116,32 @@ describe('cognito parse_auth functions test', () => {
     const { event } = await parseAuthRequest(dependencies)
     setParseAuthDependencies(dependencies)
     parseAuth.handler(event).then((response) => {
-      console.log(JSON.stringify(response, null, 2))
+      validateHtmlErrorPage(event, response)
+      done()
+    })
+  })
+})
+
+describe('cognito parse_auth functions test', () => {
+  let resetShared, tokens
+
+  beforeEach(() => {
+    clearJwkCache()
+    clearConfig()
+    clearTokenHandler()
+    clearParseAuthDependencies()
+    clearTokenRequestValidator()
+    tokens = null
+    resetShared = parseAuth.__set__("shared", shared)
+  })
+
+  afterEach(() => {
+    resetShared()
+  })
+
+  it('returns an error when the server is unreachable', async (done) => {
+    const { event } = await parseAuthRequest()
+    parseAuth.handler(event).then((response) => {
       validateHtmlErrorPage(event, response)
       done()
     })
