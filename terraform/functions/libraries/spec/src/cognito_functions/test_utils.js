@@ -181,6 +181,11 @@ async function getParseAuthDependencies() {
     nonce
   }), 'utf8').toString('base64')
   const code = TOKEN_AUTH_CODE
+  const cookies = {
+    "spa-auth-edge-nonce": nonce,
+    "spa-auth-edge-nonce-hmac": nonceHmac,
+    "spa-auth-edge-pkce": pkce,
+  }
   return {
     nonce,
     nonceHmac,
@@ -189,18 +194,14 @@ async function getParseAuthDependencies() {
     requestedUri,
     state,
     code,
-    idToken
+    idToken,
+    cookies
   }
 }
 
-async function validParseAuthRequest() {
-  const dependencies = await getParseAuthDependencies()
-  const { nonce, nonceHmac, pkce, pkceHash, requestedUri, state, code, idToken} = dependencies
-  const cookies = {
-    "spa-auth-edge-nonce": nonce,
-    "spa-auth-edge-nonce-hmac": nonceHmac,
-    "spa-auth-edge-pkce": pkce,
-  }
+async function parseAuthRequest(dependencies) {
+  dependencies = dependencies || await getParseAuthDependencies()
+  const { cookies, nonce, nonceHmac, pkce, pkceHash, requestedUri, state, code, idToken} = dependencies
   const event = {
     "Records": [
       {
@@ -745,4 +746,4 @@ function getDefaultConfig() {
   return _.cloneDeep(defaultConfig)
 }
 
-module.exports = { TOKEN_REQUEST_VALIDATORS, setTokenRequestValidator, clearTokenRequestValidator, validateRedirectToRequested, setParseAuthDependencies, clearParseAuthDependencies, TOKEN_HANDLERS, setTokenHandler, clearTokenHandler, validParseAuthRequest, getParseAuthDependencies, validateHtmlErrorPage, validateRedirectToLogout, getDefaultConfig, useCustomConfig, clearCustomConfig, getAuthedEventWithNoRefresh, clearJwkCache, getCounterfeitAuthedEvent, getAuthedEvent, getUnauthEvent, getUnparseableAuthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, generateCounterfeitSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh }
+module.exports = { TOKEN_REQUEST_VALIDATORS, setTokenRequestValidator, clearTokenRequestValidator, validateRedirectToRequested, setParseAuthDependencies, clearParseAuthDependencies, TOKEN_HANDLERS, setTokenHandler, clearTokenHandler, parseAuthRequest, getParseAuthDependencies, validateHtmlErrorPage, validateRedirectToLogout, getDefaultConfig, useCustomConfig, clearCustomConfig, getAuthedEventWithNoRefresh, clearJwkCache, getCounterfeitAuthedEvent, getAuthedEvent, getUnauthEvent, getUnparseableAuthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, generateCounterfeitSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh }
