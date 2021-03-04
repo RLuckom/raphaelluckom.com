@@ -108,6 +108,16 @@ describe('cognito parse_auth functions test', () => {
     })
   })
 
+  it('returns an error when the nonce hmac is wrong', async (done) => {
+    const dependencies = await getParseAuthDependencies()
+    dependencies.cookies["spa-auth-edge-nonce-hmac"] += '.'
+    const { event } = await parseAuthRequest(dependencies)
+    parseAuth.handler(event).then((response) => {
+      validateHtmlErrorPage(event, response)
+      done()
+    })
+  })
+
   it('returns an error when the pkce cookie isnt present', async (done) => {
     setTokenHandler(TOKEN_HANDLERS.default, receiveTokens)
     setTokenRequestValidator(TOKEN_REQUEST_VALIDATORS.default)
@@ -117,6 +127,62 @@ describe('cognito parse_auth functions test', () => {
     setParseAuthDependencies(dependencies)
     parseAuth.handler(event).then((response) => {
       validateHtmlErrorPage(event, response)
+      done()
+    })
+  })
+
+  it('returns an error when everything is valid but the token endpoint returns a counterfeit token', async (done) => {
+    setTokenHandler(TOKEN_HANDLERS.counterfeit, receiveTokens)
+    setTokenRequestValidator(TOKEN_REQUEST_VALIDATORS.default)
+    const dependencies = await getParseAuthDependencies()
+    const { event } = await parseAuthRequest(dependencies)
+    setParseAuthDependencies(dependencies)
+    parseAuth.handler(event).then((response) => {
+      validateHtmlErrorPage(event, response)
+      done()
+    })
+  })
+
+  it('returns an error when the auth code includes an error', async (done) => {
+    setTokenHandler(TOKEN_HANDLERS.default, receiveTokens)
+    setTokenRequestValidator(TOKEN_REQUEST_VALIDATORS.default)
+    const dependencies = await getParseAuthDependencies(null, 'bad stuff', 'rill bad')
+    const { event } = await parseAuthRequest(dependencies)
+    setParseAuthDependencies(dependencies)
+    parseAuth.handler(event).then((response) => {
+      validateHtmlErrorPage(event, response)
+      done()
+    })
+  })
+
+  it('returns an error when everything is valid but the token does not have the group', async (done) => {
+    setTokenHandler(TOKEN_HANDLERS.groupless, receiveTokens)
+    setTokenRequestValidator(TOKEN_REQUEST_VALIDATORS.default)
+    const dependencies = await getParseAuthDependencies()
+    const { event } = await parseAuthRequest(dependencies)
+    setParseAuthDependencies(dependencies)
+    parseAuth.handler(event).then((response) => {
+      validateHtmlErrorPage(event, response)
+      done()
+    })
+  })
+
+  it('returns an error when the nonce is too old', async (done) => {
+    setTokenHandler(TOKEN_HANDLERS.default, receiveTokens)
+    setTokenRequestValidator(TOKEN_REQUEST_VALIDATORS.default)
+    const dependencies = await getParseAuthDependencies(null, null, null, (Date.now() / 1000) - 60 * 60 * 25)
+    const { event } = await parseAuthRequest(dependencies)
+    setParseAuthDependencies(dependencies)
+    parseAuth.handler(event).then((response) => {
+      validateHtmlErrorPage(event, response)
+      done()
+    })
+  })
+
+  it('returns an error when the user has counterfeit tokens', async (done) => {
+    const req = await getCounterfeitAuthedEvent()
+    parseAuth.handler(req).then((response) => {
+      validateHtmlErrorPage(req, response)
       done()
     })
   })

@@ -13,6 +13,7 @@ const fs = require('fs')
 const html = fs.readFileSync(`${__dirname}/error_page/template.html`).toString('utf8')
 let validateJwt = require("./validate_jwt")
 const raphlogger = require('raphlogger')
+class MissingRequiredGroupError extends Error {}
 
 function getConfigJson() {
   const config = JSON.parse(fs.readFileSync(`${__dirname}/../config.json`).toString('utf8'))
@@ -331,14 +332,14 @@ async function validateAndCheckIdToken(
 
   let cognitoGroups = idTokenPayload["cognito:groups"];
   if (!cognitoGroups) {
-    throw new Error("Token does not have any groups");
+    throw new MissingRequiredGroupError("Token does not have any groups");
   }
   if (!config.requiredGroup) {
-    throw new Error("Config does not specify required group");
+    throw new MissingRequiredGroupError("Config does not specify required group");
   }
 
   if (!cognitoGroups.includes(config.requiredGroup)) {
-    throw new Error("Token does not have required group");
+    throw new MissingRequiredGroupError("Token does not have required group");
   }
   config.logger.info("JWT has requiredGroup");
 }
@@ -382,7 +383,9 @@ function randomChoiceFromIndexable(indexable) {
   return indexable[index];
 }
 
+
 module.exports = {
+  MissingRequiredGroupError,
   timestampInSeconds,
   generatePkceVerifier,
   generateNonce,

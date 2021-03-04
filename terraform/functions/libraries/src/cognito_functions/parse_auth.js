@@ -47,12 +47,10 @@ const handler = async (event) => {
         "Content-Type": "application/x-www-form-urlencoded",
       },
     };
-    if (CONFIG.clientSecret) {
-      const encodedSecret = Buffer.from(
-        `${CONFIG.clientId}:${CONFIG.clientSecret}`
-      ).toString("base64");
-      requestConfig.headers.Authorization = `Basic ${encodedSecret}`;
-    }
+    const encodedSecret = Buffer.from(
+      `${CONFIG.clientId}:${CONFIG.clientSecret}`
+    ).toString("base64");
+    requestConfig.headers.Authorization = `Basic ${encodedSecret}`;
     CONFIG.logger.debug(`HTTP POST to Cognito token endpoint: ${JSON.stringify({
       uri: cognitoTokenEndpoint,
       body,
@@ -100,7 +98,7 @@ const handler = async (event) => {
     CONFIG.logger.debug("Returning response:\n", response);
     return response;
   } catch (err) {
-    CONFIG.logger.error(err.stack || err);
+    CONFIG.logger.error(err);
     if (idToken) {
       // There is an ID token - maybe the user signed in already (e.g. in another browser tab)
       CONFIG.logger.debug("ID token found, will check if it is valid");
@@ -139,7 +137,7 @@ const handler = async (event) => {
         linkUri: redirectedFromUri,
         linkText: "Confirm",
       };
-    } else if (err instanceof MissingRequiredGroupError) {
+    } else if (err instanceof shared.MissingRequiredGroupError) {
       htmlParams = {
         title: "Not Authorized",
         message:
@@ -269,11 +267,9 @@ function validateQueryStringAndCookies(props) {
     );
   }
 
-  return { code, pkce, requestedUri: parsedState.requestedUri || "" };
+  return { code, pkce, requestedUri: parsedState.requestedUri };
 }
 
 class RequiresConfirmationError extends Error {}
-class MissingRequiredGroupError extends Error {}
-
 
 module.exports = { handler }

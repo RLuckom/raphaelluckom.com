@@ -66,8 +66,40 @@ function defaultTokenResponse(req, res, body, privKeySet, receiver) {
   })
 }
 
+function counterfeitTokenResponse(req, res, body, privKeySet, receiver) {
+  return generateCounterfeitSecurityCookieValues(privKeySet.id, privKeySet.access).then((tokenCookieValues) => {
+    res.setHeader('content-type', 'application/json')
+    const tokens = {
+      id_token: tokenCookieValues["ID-TOKEN"],
+      access_token: tokenCookieValues["ACCESS-TOKEN"],
+      refresh_token: tokenCookieValues["REFRESH-TOKEN"],
+    }
+    res.end(JSON.stringify(tokens), 'utf8');
+    if (receiver) {
+      receiver(tokenCookieValues)
+    }
+  })
+}
+
+function grouplessTokenResponse(req, res, body, privKeySet, receiver) {
+  return generateValidSecurityCookieValues(privKeySet.id, privKeySet.access, null, null, null, null, null, []).then((tokenCookieValues) => {
+    res.setHeader('content-type', 'application/json')
+    const tokens = {
+      id_token: tokenCookieValues["ID-TOKEN"],
+      access_token: tokenCookieValues["ACCESS-TOKEN"],
+      refresh_token: tokenCookieValues["REFRESH-TOKEN"],
+    }
+    res.end(JSON.stringify(tokens), 'utf8');
+    if (receiver) {
+      receiver(tokenCookieValues)
+    }
+  })
+}
+
 const TOKEN_HANDLERS = {
   default: defaultTokenResponse,
+  counterfeit: counterfeitTokenResponse,
+  groupless: grouplessTokenResponse,
 }
 
 const TOKEN_REQUEST_VALIDATORS = {
@@ -163,11 +195,21 @@ async function startTestOauthServer() {
 
 const TOKEN_AUTH_CODE = 'aaaaaaaaaaaaaaaaaaaaaaaaa'
 
-async function getParseAuthDependencies() {
+function generateNonce(config, time) {
+  const randomString = [...new Array(config.nonceLength)]
+    .map(() => shared.randomChoiceFromIndexable(config.secretAllowedCharacters))
+    .join("");
+  const nonce = `${time ? time : shared.timestampInSeconds()}T${randomString}`;
+  config.logger.debug(`Generated new nonce: ${nonce}`);
+  return nonce;
+}
+
+async function getParseAuthDependencies(groups, error, error_description, time) {
   const config = shared.getCompleteConfig()
   const { privKeySet } = await getKeySets()
-  const idToken =  await generateIdToken(config, privKeySet.id, 'id')
-  const nonce = shared.generateNonce(config)
+  const idToken =  await generateIdToken(config, privKeySet.id, 'id', null, null, null, null, null, groups)
+  const nonce = generateNonce(config, time)
+
   const nonceHmac = shared.urlSafe.stringify(
     createHmac("sha256", config.nonceSigningSecret)
     .update(nonce)
@@ -186,6 +228,9 @@ async function getParseAuthDependencies() {
     "spa-auth-edge-nonce-hmac": nonceHmac,
     "spa-auth-edge-pkce": pkce,
   }
+  if (groups) {
+    cookies["ID-TOKEN"] = idToken
+  }
   return {
     nonce,
     nonceHmac,
@@ -195,13 +240,15 @@ async function getParseAuthDependencies() {
     state,
     code,
     idToken,
-    cookies
+    cookies,
+    error,
+    error_description,
   }
 }
 
 async function parseAuthRequest(dependencies) {
   dependencies = dependencies || await getParseAuthDependencies()
-  const { cookies, nonce, nonceHmac, pkce, pkceHash, requestedUri, state, code, idToken} = dependencies
+  const { error, error_description, cookies, nonce, nonceHmac, pkce, pkceHash, requestedUri, state, code, idToken} = dependencies
   const event = {
     "Records": [
       {
@@ -212,7 +259,7 @@ async function parseAuthRequest(dependencies) {
           "request": {
             "uri": "/parseauth",
             "querystring": stringifyQueryString({
-              code, state
+              code, state, error, error_description
             }),
             "method": "GET",
             "headers": {
