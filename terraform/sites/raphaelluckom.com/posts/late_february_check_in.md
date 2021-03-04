@@ -39,10 +39,9 @@ they ask you to give them your stuff, even if the stuff in question, like food o
 of life (and even if it is plausibly surplus; that is, you can't demonstrate that you immediately _need_ it or else something bad will happen).
 
 For the past couple of weeks, I've been immersed in the _mechanics_ of security[^4], an area which is counterintuitively permissive about
-giving things away for free. Among the things software practitioners learn to take for granted is the fact that software technology and computing
+giving things away. Among the things software practitioners learn to take for granted is the fact that software technology and computing
 knowledge are almost entirely unprotected by any economic gatekeeper besides the ability to get your hands on a computer and the time to study.
-Most advanced software, almost any way you want to measure it, is given away for free. If you want to encrypt a connection between two computers
-in a way that can't conceivably be broken, [you can get the software to do so for free](https://en.wikipedia.org/wiki/Transport_Layer_Security). It's built
+If you want to encrypt a connection between two computers in a way that can't conceivably be broken, [you can get the software to do so](https://en.wikipedia.org/wiki/Transport_Layer_Security). It's built
 into your browser, and the browser company isn't required to pay for it. Viewed as a whole, software is one of the most impressive artifacts
 that humans have ever produced, and the "good stuff," as it were--the building blocks that are to software what blueprints, drywall, and plumbing
 fixtures are to home construction--are free and in infinite supply. When I consider that, it truly stuns me; please, for my sake, let it be stunning
