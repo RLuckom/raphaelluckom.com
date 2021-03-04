@@ -70,7 +70,7 @@ about my code:
 
 The other benefit of this type of testing is that it's fairly easy to explain to non-practitioners. That might seem like a strange priority
 to include in a conversation about testing--surely this is more of a practitioner topic? But it is an often-stated goal of my project that
-this system should be [_legible_](https://raphaelluckom.com/posts/toward_legible_computing.html) That means that I want the system to be available 
+this system should be [_legible_](https://raphaelluckom.com/posts/toward_legible_computing.html). That means that I want the system to be available 
 for inspection, and to offer up coherent and useful details, at the most granular level practical. In a way, the tests I write participate in the 
 same attempt at accountability that I am making in this blog: the tests describe how I am translating the things I write here into the code
 that I am writing.
@@ -93,7 +93,7 @@ that I am writing.
       document increases the status of the authors, but also increases their risk--whoever sticks their neck out to
       define security for the organization will reap the benefits of grateful attention as long as nothing bad
       happens, but becomes a natural scapegoat when something does. This can lead to a kind of arms race, where those
-      responsible for the official security standards notice behavioral adaptation [PDF](https://aaafoundation.org/wp-content/uploads/2017/12/BehavioralAdaptationADAS.pdf) 
+      responsible for the official security standards notice behavioral adaptation [[PDF](https://aaafoundation.org/wp-content/uploads/2017/12/BehavioralAdaptationADAS.pdf)]
       in the rest of the organization--people come to see the security standards as comprehensive checklists rather than
       elements of a larger holistic design process. To hedge against this concentration of risk, the security team
       finds itself delivering two contradictory messages: that security is _everyone's responsibility_, part of a holistic
@@ -124,10 +124,10 @@ that I am writing.
       "control who can see certain web pages") it's usually a good idea to look for an existing protocol that does it (in this case, OAuth2).
       When you rely on a published protocol, you get the benefit of the time and design review that went into it. When you invent your own
       protocol, you run the risk of overlooking something that your adversaries won't. There's a saying in security protocol design: "anyone
-      can design a security system that _they personally_ can't think of a wayu to break." Humility is a healthy impulse here.
+      can design a security system that _they personally_ can't think of a way to break." Humility is a healthy impulse here.
 
       Notice that this is an example where we _do_ want to follow the advice of security-focused practitioners. In footnote 1, I described how
-      we should not reflexivly accept the _priorities and values_ that arise from corporate software production environments. Here, we are not
+      we should not reflexively accept the _priorities and values_ that arise from corporate software production environments. Here, we are not
       talking about priorities or values; we are talking about a narrow and well-defined situation (controlling access) where what _we_ want
       as an outcome (we, as system operators, control what we share and with who) is identical to what _they_ would want in the same situation.
       This is the type of nuanced distinction that sits at the heart of my project; while I don't share the aims of capitalism or corporate software
