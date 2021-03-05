@@ -704,7 +704,7 @@ function validateRedirectToLogout(req, response) {
   // ensure there's one location header and it points at the auth domain
   expect(_.get(response, 'headers.location').length).toEqual(1)
   const locationHeader = new URL(response.headers.location[0].value)
-  expect(`${locationHeader.origin}${locationHeader.pathname}`).toEqual(`https://${config.cognitoAuthDomain}/logout`)
+  expect(`${locationHeader.origin}${locationHeader.pathname}`).toEqual(`${config.cognitoAuthDomain}/logout`)
   // Get the querystring arguments forwarded to the auth domain
   const queryParams = locationHeader.searchParams
   // make sure we're telling cognito to send the browser and authz code

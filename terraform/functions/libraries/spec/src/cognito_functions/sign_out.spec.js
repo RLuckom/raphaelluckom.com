@@ -12,7 +12,6 @@ describe('when sign_out gets a request', () => {
 
   beforeEach(() => {
     clearJwkCache()
-    clearConfig()
     resetShared = signOut.__set__("shared", shared)
   })
 

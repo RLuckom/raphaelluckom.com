@@ -63,7 +63,7 @@ const handler = async (event) => {
       location: [
         {
           key: "location",
-          value: `https://${
+          value: `${
             CONFIG.cognitoAuthDomain
           }/logout?${stringifyQueryString(qs)}`,
         },
