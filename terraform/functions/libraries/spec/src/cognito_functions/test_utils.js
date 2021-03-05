@@ -51,6 +51,18 @@ function verifyValidTokenRequest(req, body) {
   expect(query.code_verifier).toBe(_.get(currentDependencies, 'pkce'))
 }
 
+function verifyValidTokenRefreshRequest(req, body) {
+  const config = shared.getCompleteConfig()
+  expect(req.headers["content-type"]).toBe("application/x-www-form-urlencoded")
+  expect(req.headers["authorization"]).toBe(`Basic aGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGg6YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYQ==`)
+  const query = parseQueryString(body)
+  expect(query.grant_type).toBe('refresh_token')
+  // redirect_uri doesn't really matter to us; since we're getting the token in the response
+  // we won't be following it
+  expect(query.client_id).toBe(config.clientId)
+  expect(_.isString(query.refresh_token)).toBe(true)
+}
+
 function defaultTokenResponse(req, res, body, privKeySet, receiver) {
   return generateValidSecurityCookieValues(privKeySet.id, privKeySet.access).then((tokenCookieValues) => {
     res.setHeader('content-type', 'application/json')
@@ -64,6 +76,11 @@ function defaultTokenResponse(req, res, body, privKeySet, receiver) {
       receiver(tokenCookieValues)
     }
   })
+}
+
+function errorTokenResponse(req, res, body, privKeySet, receiver) {
+  res.statusCode = 404
+  res.end('whoops')
 }
 
 function counterfeitTokenResponse(req, res, body, privKeySet, receiver) {
@@ -100,10 +117,12 @@ const TOKEN_HANDLERS = {
   default: defaultTokenResponse,
   counterfeit: counterfeitTokenResponse,
   groupless: grouplessTokenResponse,
+  error: errorTokenResponse,
 }
 
 const TOKEN_REQUEST_VALIDATORS = {
-  default: verifyValidTokenRequest
+  default: verifyValidTokenRequest,
+  refresh: verifyValidTokenRefreshRequest,
 }
 
 let currentTokenHandler = null
@@ -246,6 +265,52 @@ async function getParseAuthDependencies(groups, error, error_description, time) 
   }
 }
 
+async function getAuthDependencies(groups, error, error_description, time) {
+  const config = shared.getCompleteConfig()
+  const { privKeySet } = await getKeySets()
+  const idToken =  await generateIdToken(config, privKeySet.id, 'id', null, null, null, null, null, groups)
+  const accessToken = await generateAccessToken(config, privKeySet.access)
+  const refreshToken = await generateRefreshToken(config, privKeySet.access)
+  const nonce = generateNonce(config, time)
+
+  const nonceHmac = shared.urlSafe.stringify(
+    createHmac("sha256", config.nonceSigningSecret)
+    .update(nonce)
+    .digest("base64")
+    .slice(0, config.nonceLength)
+  )
+  const { pkce, pkceHash } = shared.generatePkceVerifier(config)
+  const requestedUri = `/intended/path`
+    const state = Buffer.from(JSON.stringify({
+    requestedUri,
+    nonce
+  }), 'utf8').toString('base64')
+  const code = TOKEN_AUTH_CODE
+  const cookies = {
+    "spa-auth-edge-nonce": nonce,
+    "spa-auth-edge-nonce-hmac": nonceHmac,
+    "spa-auth-edge-pkce": pkce,
+    "ID-TOKEN": idToken,
+    "ACCESS-TOKEN": accessToken,
+    "REFRESH-TOKEN": refreshToken,
+  }
+  return {
+    nonce,
+    nonceHmac,
+    pkce,
+    pkceHash,
+    requestedUri,
+    state,
+    code,
+    idToken,
+    refreshToken,
+    accessToken,
+    cookies,
+    error,
+    error_description,
+  }
+}
+
 async function parseAuthRequest(dependencies) {
   dependencies = dependencies || await getParseAuthDependencies()
   const { error, error_description, cookies, nonce, nonceHmac, pkce, pkceHash, requestedUri, state, code, idToken} = dependencies
@@ -260,6 +325,44 @@ async function parseAuthRequest(dependencies) {
             "uri": "/parseauth",
             "querystring": stringifyQueryString({
               code, state, error, error_description
+            }),
+            "method": "GET",
+            "headers": {
+              "host": [
+                {
+                  "key": "Host",
+                  "value": intendedResourceHostname
+                }
+              ],
+              "cookie": [
+                {
+                  key: "Cookie",
+                  value: buildCookieString(cookies)
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+  return {event, dependencies}
+}
+
+async function refreshAuthRequest(dependencies) {
+  dependencies = dependencies || await getAuthDependencies()
+  const { error, error_description, cookies, nonce, nonceHmac, pkce, pkceHash, requestedUri, state, code, idToken} = dependencies
+  const event = {
+    "Records": [
+      {
+        "cf": {
+          "config": {
+            "distributionId": "EXAMPLE"
+          },
+          "request": {
+            "uri": "/parseauth",
+            "querystring": stringifyQueryString({
+              requestedUri, nonce
             }),
             "method": "GET",
             "headers": {
@@ -694,6 +797,32 @@ function validateRedirectToRequested(req, response, tokens, dependencies) {
   }
 }
 
+function validateRedirectToRequestedWithExpiredRefresh(req, response, tokens, dependencies) {
+  const config = shared.getCompleteConfig()
+  validateCloudfrontHeaders(config.httpHeaders, response)
+  
+  // Make sure the response is a redirect
+  expect(response.status).toBe('307')
+
+  // ensure there's one location header and it points at the auth domain
+  expect(_.get(response, 'headers.location').length).toEqual(1)
+  expect(response.headers.location[0].value).toEqual(`https://${intendedResourceHostname}${dependencies.requestedUri}`)
+
+  // we should be setting three cookies; next we check the value of each
+  if (tokens) {
+    const setCookies = setCookieParser.parse(_.map(response.headers['set-cookie'], 'value'))
+    expect(setCookies.length).toEqual(3)
+    const cookies = _.reduce(setCookies, (acc, v) => {
+      // as we get the value for each set-cookie header, verify that good security is set
+      acc[v.name] = secureCookieValue(v)
+      if (v.name === "refreshToken") {
+        signoutCookieValue(v)
+      }
+      return acc
+    }, {})
+  }
+}
+
 function validateRedirectToLogout(req, response) {
   const config = shared.getCompleteConfig()
   validateCloudfrontHeaders(config.httpHeaders, response)
@@ -793,4 +922,4 @@ function getDefaultConfig() {
   return _.cloneDeep(defaultConfig)
 }
 
-module.exports = { TOKEN_REQUEST_VALIDATORS, setTokenRequestValidator, clearTokenRequestValidator, validateRedirectToRequested, setParseAuthDependencies, clearParseAuthDependencies, TOKEN_HANDLERS, setTokenHandler, clearTokenHandler, parseAuthRequest, getParseAuthDependencies, validateHtmlErrorPage, validateRedirectToLogout, getDefaultConfig, useCustomConfig, clearCustomConfig, getAuthedEventWithNoRefresh, clearJwkCache, getCounterfeitAuthedEvent, getAuthedEvent, getUnauthEvent, getUnparseableAuthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, generateCounterfeitSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh }
+module.exports = {refreshAuthRequest, getAuthDependencies, TOKEN_REQUEST_VALIDATORS, setTokenRequestValidator, clearTokenRequestValidator, validateRedirectToRequested, setParseAuthDependencies, clearParseAuthDependencies, TOKEN_HANDLERS, setTokenHandler, clearTokenHandler, parseAuthRequest, getParseAuthDependencies, validateHtmlErrorPage, validateRedirectToLogout, getDefaultConfig, useCustomConfig, clearCustomConfig, getAuthedEventWithNoRefresh, clearJwkCache, getCounterfeitAuthedEvent, getAuthedEvent, getUnauthEvent, getUnparseableAuthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, generateCounterfeitSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh }

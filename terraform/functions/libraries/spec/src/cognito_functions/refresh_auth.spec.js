@@ -1,86 +1,8 @@
 const rewire = require('rewire')
-const shared = rewire('../../../src/cognito_functions/shared/shared')
 const refreshAuth = rewire('../../../src/cognito_functions/refresh_auth.js')
-const raphlogger = require('raphlogger')
+const { refreshAuthRequest, getAuthDependencies, validateHtmlErrorPage, setTokenRequestValidator, clearTokenRequestValidator, TOKEN_REQUEST_VALIDATORS, validateRedirectToRequested, setParseAuthDependencies, clearParseAuthDependencies, TOKEN_HANDLERS, setTokenHandler, clearTokenHandler, parseAuthRequest, getParseAuthDependencies, getDefaultConfig, useCustomConfig, clearCustomConfig, getAuthedEventWithNoRefresh, getCounterfeitAuthedEvent, clearJwkCache, getUnauthEvent, getAuthedEvent, getUnparseableAuthEvent, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh } = require('./test_utils')
 
-let config = {
-  "additionalCookies": {},
-  "clientId": "hhhhhhhhhhhhhhhhhhhhhhhhhh",
-  "clientSecret": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-  "cognitoAuthDomain": "auth.testcog.raphaelluckom.com",
-  "cookieCompatibility": "elasticsearch",
-  "cookieSettings": {
-    "accessToken": null,
-    "idToken": null,
-    "nonce": null,
-    "refreshToken": null
-  },
-  "httpHeaders": {
-    "Content-Security-Policy": "default-src 'none'; img-src 'self'; script-src 'self' https://code.jquery.com https://stackpath.bootstrapcdn.com; style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com; object-src 'none'; connect-src 'self' https://*.amazonaws.com https://*.amazoncognito.com",
-    "Referrer-Policy": "same-origin",
-    "Strict-Transport-Security": "max-age=31536000; includeSubdomains; preload",
-    "X-Content-Type-Options": "nosniff",
-    "X-Frame-Options": "DENY",
-    "X-XSS-Protection": "1; mode=block"
-  },
-  "logLevel": "DEBUG",
-  "mode": "StaticSiteMode",
-  "nonceSigningSecret": "5DGnV0QPUniayRkx",
-  "oauthScopes": [
-    "phone",
-    "email",
-    "profile",
-    "openid",
-    "aws.cognito.signin.user.admin"
-  ],
-  "redirectPathAuthRefresh": "/parseauth",
-  "redirectPathSignIn": "/refreshauth",
-  "redirectPathSignOut": "/",
-  "requiredGroup": "test-cognito-pool",
-  "userPoolArn":"arn:aws:cognito-idp:us-east-1:123456789012:userpool/us-east-1_8G8888888",
-  "source": "test",
-  "sourceInstance": "test",
-  "component": "test",
-}
-
-const unauthEvent = {
-  "Records": [
-    {
-      "cf": {
-        "config": {
-          "distributionId": "EXAMPLE"
-        },
-        "request": {
-          "uri": "/test",
-          "method": "GET",
-          "querystring": "foo=bar",
-          "headers": {
-            "host": [
-              {
-                "key": "Host",
-                "value": "d123.cf.net"
-              }
-            ]
-          }
-        }
-      }
-    }
-  ]
-}
-
-shared.__set__("getConfigJson", function() { 
-  return {...config, ...{
-    logger: raphlogger.init(null, {
-      source: config.source,
-      level: config.logLevel,
-      sourceInstance: config.sourceInstance,
-      component: config.component,
-      asyncOutput: false
-    })
-  }}
-})
-
-describe('cognito refresh_auth functions test', () => {
+describe('cognito refresh_auth functions test when the oauth server is down', () => {
   let resetShared
 
   beforeEach(() => {
@@ -91,9 +13,107 @@ describe('cognito refresh_auth functions test', () => {
     resetShared()
   })
 
-  it('test1', (done) => {
-    refreshAuth.handler(unauthEvent).then((response) => {
-      console.log(JSON.stringify(response, null, 2))
+  it('responds with an error to an unauthed request', (done) => {
+    const req = getUnauthEvent()
+    refreshAuth.handler(req).then((response) => {
+      validateHtmlErrorPage(req, response)
+      done()
+    })
+  })
+
+  it('responds with an error to an authed-but-not-refresh request', async (done) => {
+    const req = await getAuthedEvent()
+    refreshAuth.handler(req).then((response) => {
+      validateHtmlErrorPage(req, response)
+      done()
+    })
+  })
+
+  it('returns an error when the nonces dont match', async (done) => {
+    const dependencies = await getAuthDependencies()
+    dependencies.cookies["spa-auth-edge-nonce"] += 'oops'
+    const { event } = await refreshAuthRequest(dependencies)
+    refreshAuth.handler(event).then((response) => {
+      validateHtmlErrorPage(event, response)
+      done()
+    })
+  })
+
+})
+
+describe('cognito refresh_auth functions test when the oauth server is up', () => {
+  let resetShared, tokens
+
+  function receiveTokens(t) {
+    tokens = t
+  }
+
+  beforeAll(async (done) => {
+    const testServer = await startTestOauthServer()
+    closeServer = testServer.closeServer
+    done()
+  })
+
+  afterAll((done) => {
+    closeServer((e, r) => {
+      done()
+    })
+  })
+
+  beforeEach(() => {
+    resetShared = refreshAuth.__set__("shared", shared)
+  })
+
+  afterEach(() => {
+    resetShared()
+  })
+
+  it('responds with an error to an unauthed request', (done) => {
+    const req = getUnauthEvent()
+    refreshAuth.handler(req).then((response) => {
+      validateHtmlErrorPage(req, response)
+      done()
+    })
+  })
+
+  it('responds with an error to an authed-but-not-refresh request', async (done) => {
+    const req = await getAuthedEvent()
+    refreshAuth.handler(req).then((response) => {
+      validateHtmlErrorPage(req, response)
+      done()
+    })
+  })
+
+  it('redirects to requested when the token is refreshed', async (done) => {
+    const dependencies = await getAuthDependencies()
+    setTokenHandler(TOKEN_HANDLERS.default, receiveTokens)
+    setTokenRequestValidator(TOKEN_REQUEST_VALIDATORS.refresh)
+    const { event } = await refreshAuthRequest(dependencies)
+    refreshAuth.handler(event).then((response) => {
+      validateRedirectToRequested(event, response, tokens, dependencies)
+      done()
+    })
+  })
+
+  it('returns an error when the request is missing one of the tokens', async (done) => {
+    const dependencies = await getAuthDependencies()
+    delete dependencies.cookies['ACCESS-TOKEN']
+    setTokenHandler(TOKEN_HANDLERS.default, receiveTokens)
+    setTokenRequestValidator(TOKEN_REQUEST_VALIDATORS.refresh)
+    const { event } = await refreshAuthRequest(dependencies)
+    refreshAuth.handler(event).then((response) => {
+      validateHtmlErrorPage(event, response)
+      done()
+    })
+  })
+
+  it('redirects to requested w/ expired refresh token when the token endpoint responds with an error', async (done) => {
+    const dependencies = await getAuthDependencies()
+    setTokenHandler(TOKEN_HANDLERS.error, receiveTokens)
+    setTokenRequestValidator(TOKEN_REQUEST_VALIDATORS.refresh)
+    const { event } = await refreshAuthRequest(dependencies)
+    refreshAuth.handler(event).then((response) => {
+      validateRedirectToRequested(event, response, tokens, dependencies)
       done()
     })
   })

@@ -200,7 +200,6 @@ function _generateCookieHeaders(param) {
     "spa-auth-edge-nonce-hmac",
     "spa-auth-edge-pkce",
   ].forEach((key) => {
-    //TODO added this, explain or remove
     if (cookies[key]) {
       cookies[key] = expireCookie(cookies[key]);
     }

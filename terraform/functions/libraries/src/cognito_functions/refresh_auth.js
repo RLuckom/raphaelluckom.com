@@ -49,12 +49,10 @@ const handler = async (event) => {
       "Content-Type": "application/x-www-form-urlencoded",
     };
 
-    if (CONFIG.clientSecret !== "") {
-      const encodedSecret = Buffer.from(
-        `${CONFIG.clientId}:${CONFIG.clientSecret}`
-      ).toString("base64");
-      headers["Authorization"] = `Basic ${encodedSecret}`;
-    }
+    const encodedSecret = Buffer.from(
+      `${CONFIG.clientId}:${CONFIG.clientSecret}`
+    ).toString("base64");
+    headers["Authorization"] = `Basic ${encodedSecret}`;
 
     let tokens = {
       id_token: idToken,
@@ -69,7 +67,7 @@ const handler = async (event) => {
         refresh_token: refreshToken,
       });
       const res = await shared.httpPostWithRetry(
-        `https://${CONFIG.cognitoAuthDomain}/oauth2/token`,
+        `${CONFIG.cognitoAuthDomain}/oauth2/token`,
         body,
         { headers },
         CONFIG.logger
