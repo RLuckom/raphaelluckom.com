@@ -484,7 +484,7 @@ shared.__set__('validateJwt', validateJwt)
 
 let customConfig
 
-shared.__set__("getConfigJson", function() { 
+function getConfigJson() {
   const config = {...(customConfig || defaultConfig), ...{
     logger: raphlogger.init(null, {
       source: defaultConfig.source,
@@ -496,7 +496,9 @@ shared.__set__("getConfigJson", function() {
   }}
   config.cloudFrontHeaders = shared.asCloudFrontHeaders(config.httpHeaders)
   return config
-})
+}
+
+shared.__set__("getConfigJson", getConfigJson)
 
 function clearCustomConfig() {
   customConfig = null
@@ -977,4 +979,4 @@ function getDefaultConfig() {
   return _.cloneDeep(defaultConfig)
 }
 
-module.exports = {refreshAuthRequest, getAuthDependencies, TOKEN_REQUEST_VALIDATORS, setTokenRequestValidator, clearTokenRequestValidator, validateRedirectToRequested, setParseAuthDependencies, clearParseAuthDependencies, TOKEN_HANDLERS, setTokenHandler, clearTokenHandler, parseAuthRequest, getParseAuthDependencies, validateHtmlErrorPage, validateRedirectToLogout, getDefaultConfig, useCustomConfig, clearCustomConfig, getAuthedEventWithNoRefresh, clearJwkCache, getCounterfeitAuthedEvent, getAuthedEvent, getUnauthEvent, getUnparseableAuthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, generateCounterfeitSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh }
+module.exports = { getConfigJson, validateCloudfrontHeaders, refreshAuthRequest, getAuthDependencies, TOKEN_REQUEST_VALIDATORS, setTokenRequestValidator, clearTokenRequestValidator, validateRedirectToRequested, setParseAuthDependencies, clearParseAuthDependencies, TOKEN_HANDLERS, setTokenHandler, clearTokenHandler, parseAuthRequest, getParseAuthDependencies, validateHtmlErrorPage, validateRedirectToLogout, getDefaultConfig, useCustomConfig, clearCustomConfig, getAuthedEventWithNoRefresh, clearJwkCache, getCounterfeitAuthedEvent, getAuthedEvent, getUnauthEvent, getUnparseableAuthEvent, getKeySets, buildCookieString, generateSignedToken, generateIdToken, generateAccessToken, generateRefreshToken, generateValidSecurityCookieValues, generateCounterfeitSecurityCookieValues, defaultConfig, shared, startTestOauthServer, validateRedirectToLogin, validateValidAuthPassthrough, validateRedirectToRefresh }
