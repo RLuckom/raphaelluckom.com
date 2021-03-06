@@ -30,7 +30,7 @@ describe('when sign_out gets a request', () => {
   it('returns a redirect to cognito logout and expires cookies if the request is authorized', async (done) => {
     const req = await getAuthedEvent()
     signOut.handler(req).then((response) => {
-      validateRedirectToLogout(req, response)
+      validateRedirectToLogout(req, response, { expectExpiredTokens: true, expectExpiredNonce: true})
       done()
     })
   })

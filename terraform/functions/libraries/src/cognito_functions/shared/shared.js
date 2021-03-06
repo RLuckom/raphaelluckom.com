@@ -11,7 +11,7 @@ const axios = require("axios")
 const { Agent } = require("https")
 const fs = require('fs')
 const html = fs.readFileSync(`${__dirname}/error_page/template.html`).toString('utf8')
-let validateJwt = require("./validate_jwt")
+const validateJwt = require("./validate_jwt")
 const raphlogger = require('raphlogger')
 class MissingRequiredGroupError extends Error {}
 
@@ -41,9 +41,6 @@ function getDefaultCookieSettings() {
 function getCompleteConfig() {
   // TODO interpolate config here
   const config = getConfigJson();
-  if (config["userPoolArn"] === undefined) {
-    throw new Error("Incomplete config in configuration.json");
-  }
 
   // Derive the issuer and JWKS uri all JWT's will be signed with from the User Pool's ID and region:
   const userPoolId = config.userPoolArn.split("/")[1];
@@ -200,9 +197,7 @@ function _generateCookieHeaders(param) {
     "spa-auth-edge-nonce-hmac",
     "spa-auth-edge-pkce",
   ].forEach((key) => {
-    if (cookies[key]) {
-      cookies[key] = expireCookie(cookies[key]);
-    }
+    cookies[key] = expireCookie();
   });
 
   // Return cookie object in format of CloudFront headers
@@ -212,7 +207,7 @@ function _generateCookieHeaders(param) {
   }).map(([k, v]) => ({ key: "set-cookie", value: `${k}=${v}` }));
 }
 
-function expireCookie(cookie) {
+function expireCookie(cookie='') {
   const cookieParts = cookie
     .split(";")
     .map((part) => part.trim())

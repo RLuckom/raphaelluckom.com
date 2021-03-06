@@ -26,7 +26,7 @@ describe('when check_auth gets a request but the oauth keyserver is unreachable'
   it('redirects to login even if the token happens to be valid (because it cant tell)', async (done) => {
     const req = await getAuthedEvent()
     checkAuth.handler(req).then((response) => {
-      validateRedirectToLogin(req, response)
+      validateRedirectToLogin(req, response, {expectNonce: true})
       done()
     })
   })
@@ -74,7 +74,7 @@ describe('when check_auth gets a request', () => {
     it('redirects to cognito if no token is present', (done) => {
       const req = getUnauthEvent()
       checkAuth.handler(req).then((response) => {
-        validateRedirectToLogin(req, response)
+        validateRedirectToLogin(req, response, {expectNonce: true})
         done()
       })
     })
@@ -82,7 +82,7 @@ describe('when check_auth gets a request', () => {
     it('redirects to cognito if the token is unparseable', async (done) => {
       const req = await getUnparseableAuthEvent()
       checkAuth.handler(req).then((response) => {
-        validateRedirectToLogin(req, response)
+        validateRedirectToLogin(req, response, {expectNonce: true})
         done()
       })
     })
@@ -90,7 +90,7 @@ describe('when check_auth gets a request', () => {
     it('redirects to cognito if the token is correct in all attributes but not signed by the real key with the kid', async (done) => {
       const req = await getCounterfeitAuthedEvent()
       checkAuth.handler(req).then((response) => {
-        validateRedirectToLogin(req, response)
+        validateRedirectToLogin(req, response, {expectNonce: true})
         done()
       })
     })
@@ -98,7 +98,7 @@ describe('when check_auth gets a request', () => {
     it('redirects to cognito if the issuer is wrong', async (done) => {
       const req = await getAuthedEvent("foobarbaz")
       checkAuth.handler(req).then((response) => {
-        validateRedirectToLogin(req, response)
+        validateRedirectToLogin(req, response, {expectNonce: true})
         done()
       })
     })
@@ -106,7 +106,7 @@ describe('when check_auth gets a request', () => {
     it('redirects to cognito if the clientId is wrong', async (done) => {
       const req = await getAuthedEvent(null, "foobarbaz")
       checkAuth.handler(req).then((response) => {
-        validateRedirectToLogin(req, response)
+        validateRedirectToLogin(req, response, {expectNonce: true})
         done()
       })
     })
@@ -114,7 +114,7 @@ describe('when check_auth gets a request', () => {
     it('redirects to cognito if the kid doesnt match a kid presented by the server', async (done) => {
       const req = await getAuthedEvent(null, null, null, null, 'wokka')
       checkAuth.handler(req).then((response) => {
-        validateRedirectToLogin(req, response)
+        validateRedirectToLogin(req, response, {expectNonce: true})
         done()
       })
     })
@@ -122,7 +122,7 @@ describe('when check_auth gets a request', () => {
     it('redirects to cognito if the token doesnt have the required group', async (done) => {
       const req = await getAuthedEvent(null, null, null, null, null, [])
       checkAuth.handler(req).then((response) => {
-        validateRedirectToLogin(req, response)
+        validateRedirectToLogin(req, response, {expectNonce: true})
         done()
       })
     })
@@ -133,7 +133,7 @@ describe('when check_auth gets a request', () => {
       useCustomConfig(customConfig)
       const req = await getAuthedEvent()
       checkAuth.handler(req).then((response) => {
-        validateRedirectToLogin(req, response)
+        validateRedirectToLogin(req, response, {expectNonce: true})
         done()
       })
     })
@@ -141,7 +141,7 @@ describe('when check_auth gets a request', () => {
     it('redirects to cognito if the token doesnt have the required group', async (done) => {
       const req = await getAuthedEvent(null, null, null, null, null, "nogroups")
       checkAuth.handler(req).then((response) => {
-        validateRedirectToLogin(req, response)
+        validateRedirectToLogin(req, response, {expectNonce: true})
         done()
       })
     })
@@ -196,7 +196,7 @@ describe('when check_auth gets a request', () => {
     it('redirects to login if the token is already expired and there IS NOT a refresh token', async (done) => {
       const req = await getAuthedEventWithNoRefresh(null, null,Math.floor(Date.now() / 1000 - 60 * 60 * 4), Math.floor(Date.now() / 1000 - 60 * 60 * 3))
       checkAuth.handler(req).then((response) => {
-        validateRedirectToLogin(req, response)
+        validateRedirectToLogin(req, response, {expectNonce: true})
         done()
       })
     })
@@ -204,7 +204,7 @@ describe('when check_auth gets a request', () => {
     it('redirects to login if the token is within 10 minutes of being expired and there IS NOT a refresh token', async (done) => {
       const req = await getAuthedEventWithNoRefresh(null, null,Math.floor(Date.now() / 1000 - 60 * 20), Math.floor(Date.now() / 1000 + 60 * 3))
       checkAuth.handler(req).then((response) => {
-        validateRedirectToLogin(req, response)
+        validateRedirectToLogin(req, response, {expectNonce: true})
         done()
       })
     })

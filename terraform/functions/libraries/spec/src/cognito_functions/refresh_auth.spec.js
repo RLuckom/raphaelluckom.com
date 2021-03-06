@@ -90,7 +90,7 @@ describe('cognito refresh_auth functions test when the oauth server is up', () =
     setTokenRequestValidator(TOKEN_REQUEST_VALIDATORS.refresh)
     const { event } = await refreshAuthRequest(dependencies)
     refreshAuth.handler(event).then((response) => {
-      validateRedirectToRequested(event, response, tokens, dependencies)
+      validateRedirectToRequested(event, response, tokens, dependencies, {expectTokens: true, expectExpiredNonce: true})
       done()
     })
   })
@@ -113,9 +113,8 @@ describe('cognito refresh_auth functions test when the oauth server is up', () =
     setTokenRequestValidator(TOKEN_REQUEST_VALIDATORS.refresh)
     const { event } = await refreshAuthRequest(dependencies)
     refreshAuth.handler(event).then((response) => {
-      validateRedirectToRequested(event, response, tokens, dependencies)
+      validateRedirectToRequested(event, response, null, dependencies, {expectTokens: true, expectExpiredNonce: true, expiredRefresh: true})
       done()
     })
   })
-
 })

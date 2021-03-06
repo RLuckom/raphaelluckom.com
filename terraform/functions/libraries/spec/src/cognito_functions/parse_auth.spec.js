@@ -42,7 +42,7 @@ describe('cognito parse_auth functions test', () => {
   it('redirects a regular authed event back to the intended domain without getting tokens', async (done) => {
     const req = await getAuthedEvent()
     parseAuth.handler(req).then((response) => {
-      validateRedirectToRequested(req, response, null, {requestedUri: ''})
+      validateRedirectToRequested(req, response, null, {requestedUri: ''}, {})
       done()
     })
   })
@@ -53,7 +53,7 @@ describe('cognito parse_auth functions test', () => {
     const {event, dependencies } = await parseAuthRequest()
     setParseAuthDependencies(dependencies)
     parseAuth.handler(event).then((response) => {
-      validateRedirectToRequested(event, response, tokens, dependencies)
+      validateRedirectToRequested(event, response, null, dependencies, {expectTokens: true, expectExpiredNonce: true})
       done()
     })
   })

@@ -685,10 +685,6 @@ function secureCookieValue(c) {
 }
 
 function signoutCookieValue(c) {
-  expect(c.path).toBe('/')
-  expect(c.secure).toBe(true)
-  expect(c.httpOnly).toBe(true)
-  expect(c.sameSite).toBe('Strict')
   expect(c.maxAge).toBeUndefined()
   expect(c.expires.toUTCString()).toBe(new Date(0).toUTCString())
   expect(c.value).toBe("")
@@ -702,7 +698,87 @@ function validateCloudfrontHeaders(configHttpHeaders, response) {
   })
 }
 
-function validateRedirectToLogin(req, response) {
+function validateSetCookies(response, {expectTokens, expectNonce, expectExpiredNonce, expectExpiredTokens, expiredRefresh}) {
+  let expectations = 0
+  // Now we validate the cookies and their relationship to the state
+  // & challenge
+  const setCookies = setCookieParser.parse(_.map(response.headers['set-cookie'], 'value'))
+  let cookies = {}
+  console.log(setCookies)
+
+  if (expectTokens) {
+    expectations += 3
+    // we should be setting three token cookies; next we check the value of each
+    const tokenCookies = _.filter([
+      _.find(setCookies, (c) => c.name === 'ACCESS-TOKEN'),
+      _.find(setCookies, (c) => c.name === 'ID-TOKEN'),
+      _.find(setCookies, (c) => c.name === 'REFRESH-TOKEN'),
+    ])
+    expect(tokenCookies.length).toEqual(3)
+    const tokenCookieMap = _.reduce(tokenCookies, (acc, v) => {
+      // as we get the value for each set-cookie header, verify that good security is set
+      if (expiredRefresh && v.name === "REFRESH-TOKEN") {
+        acc[v.name] = signoutCookieValue(v)
+      } else {
+        acc[v.name] = secureCookieValue(v)
+      }
+      return acc
+    }, {})
+    cookies = {...cookies, ...tokenCookieMap}
+  }
+
+  if (expectExpiredTokens) {
+    expectations += 3
+    // we should be setting three token cookies; next we check the value of each
+    const tokenCookies = _.filter([
+      _.find(setCookies, (c) => c.name === 'ACCESS-TOKEN'),
+      _.find(setCookies, (c) => c.name === 'ID-TOKEN'),
+      _.find(setCookies, (c) => c.name === 'REFRESH-TOKEN'),
+    ])
+    expect(tokenCookies.length).toEqual(3)
+    const tokenCookieMap = _.reduce(tokenCookies, (acc, v) => {
+      // as we get the value for each set-cookie header, verify that good security is set
+      acc[v.name] = signoutCookieValue(v)
+      return acc
+    }, {})
+    cookies = {...cookies, ...tokenCookieMap}
+  }
+  // we should be expiring three nonce cookies; next we check the value of each
+  if (expectNonce) {
+    expectations += 3
+    const nonceCookies = _.filter([
+      _.find(setCookies, (c) => c.name === 'spa-auth-edge-nonce'),
+      _.find(setCookies, (c) => c.name === 'spa-auth-edge-nonce-hmac'),
+      _.find(setCookies, (c) => c.name === 'spa-auth-edge-pkce'),
+    ])
+    expect(nonceCookies.length).toEqual(3)
+    const nonceCookieMap = _.reduce(nonceCookies, (acc, v) => {
+      // as we get the value for each set-cookie header, verify that good security is set
+      acc[v.name] = secureCookieValue(v)
+      return acc
+    }, {})
+    cookies = {...cookies, ...nonceCookieMap}
+  }
+  if (expectExpiredNonce) {
+    expectations += 3
+    const nonceCookies = _.filter([
+      _.find(setCookies, (c) => c.name === 'spa-auth-edge-nonce'),
+      _.find(setCookies, (c) => c.name === 'spa-auth-edge-nonce-hmac'),
+      _.find(setCookies, (c) => c.name === 'spa-auth-edge-pkce'),
+    ])
+    expect(nonceCookies.length).toEqual(3)
+    const nonceCookieMap = _.reduce(nonceCookies, (acc, v) => {
+      // as we get the value for each set-cookie header, verify that good security is set
+      acc[v.name] = signoutCookieValue(v)
+      return acc
+    }, {})
+    cookies = {...cookies, ...nonceCookieMap}
+  }
+  expect(expectations).toBe(setCookies.length)
+  return cookies
+}
+
+function validateRedirectToLogin(req, response, cookieExpectations) {
   const config = shared.getCompleteConfig()
   validateCloudfrontHeaders(config.httpHeaders, response)
   
@@ -735,16 +811,7 @@ function validateRedirectToLogin(req, response) {
 
   // Now we validate the cookies and their relationship to the state
   // & challenge
-  const setCookies = setCookieParser.parse(_.map(response.headers['set-cookie'], 'value'))
-
-  // we should be setting three cookies; next we check the value of each
-  expect(setCookies.length).toEqual(3)
-  const cookies = _.reduce(setCookies, (acc, v) => {
-    // as we get the value for each set-cookie header, verify that good security is set
-    acc[v.name] = secureCookieValue(v)
-    return acc
-  }, {})
-  // Expect that the pkce challenge is the hash of the pkce set in the browser by the set-cookie header
+  const cookies = validateSetCookies(response, cookieExpectations)
   const challenge = queryParams.get('code_challenge')
   // the round-trip stringify / parse is because the round-trip strips trailing '=' characters
   expect(shared.urlSafe.parse(shared.urlSafe.stringify(createHash("sha256").update(cookies['spa-auth-edge-pkce'], "utf8").digest("base64")))).toBe(shared.urlSafe.parse(challenge))
@@ -773,7 +840,7 @@ function validateRedirectToLogin(req, response) {
   )
 }
 
-function validateRedirectToRequested(req, response, tokens, dependencies) {
+function validateRedirectToRequested(req, response, tokens, dependencies, cookieExpectations) {
   const config = shared.getCompleteConfig()
   validateCloudfrontHeaders(config.httpHeaders, response)
   
@@ -785,15 +852,11 @@ function validateRedirectToRequested(req, response, tokens, dependencies) {
   expect(response.headers.location[0].value).toEqual(`https://${intendedResourceHostname}${dependencies.requestedUri}`)
 
   // we should be setting three cookies; next we check the value of each
+  const cookies = validateSetCookies(response, cookieExpectations)
   if (tokens) {
-    const setCookies = setCookieParser.parse(_.map(response.headers['set-cookie'], 'value'))
-    expect(setCookies.length).toEqual(3)
-    const cookies = _.reduce(setCookies, (acc, v) => {
-      // as we get the value for each set-cookie header, verify that good security is set
-      acc[v.name] = secureCookieValue(v)
-      return acc
-    }, {})
-    expect(_.isEqual(cookies, tokens)).toBe(true)
+    expect(cookies["ID-TOKEN"]).toBe(tokens["ID-TOKEN"])
+    expect(cookies["ACCESS-TOKEN"]).toBe(tokens["ACCESS-TOKEN"])
+    expect(cookies["REFRESH-TOKEN"]).toBe(tokens["REFRESH-TOKEN"])
   }
 }
 
@@ -823,7 +886,7 @@ function validateRedirectToRequestedWithExpiredRefresh(req, response, tokens, de
   }
 }
 
-function validateRedirectToLogout(req, response) {
+function validateRedirectToLogout(req, response, cookieExpectations) {
   const config = shared.getCompleteConfig()
   validateCloudfrontHeaders(config.httpHeaders, response)
   
@@ -845,15 +908,7 @@ function validateRedirectToLogout(req, response) {
 
   // Now we validate the cookies and their relationship to the state
   // & challenge
-  const setCookies = setCookieParser.parse(_.map(response.headers['set-cookie'], 'value'))
-
-  // we should be setting three cookies; next we check the value of each
-  expect(setCookies.length).toEqual(3)
-  const cookies = _.reduce(setCookies, (acc, v) => {
-    // as we get the value for each set-cookie header, verify that good security is set
-    acc[v.name] = signoutCookieValue(v)
-    return acc
-  }, {})
+  validateSetCookies(response, cookieExpectations)
 }
 
 function validateHtmlErrorPage(req, response, statusCode="200") {
