@@ -138,8 +138,8 @@ describe('when check_auth gets a request', () => {
       })
     })
 
-    it('redirects to cognito if the token doesnt have the required group', async (done) => {
-      const req = await getAuthedEvent(null, null, null, null, null, "nogroups")
+    it('redirects to cognito if the token doesnt have any groups', async (done) => {
+      const req = await getAuthedEvent(null, null, null, null, null, "nogroup")
       checkAuth.handler(req).then((response) => {
         validateRedirectToLogin(req, response, {expectNonce: true})
         done()

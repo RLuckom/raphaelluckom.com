@@ -81,15 +81,6 @@ function extractCookiesFromHeaders(headers) {
   return cookies;
 }
 
-function withCookieDomain( distributionDomainName, cookieSettings) {
-  // Add the domain to the cookiesetting
-  if (cookieSettings.toLowerCase().indexOf("domain") === -1) {
-    // Add leading dot for compatibility with Amplify (or js-cookie really)
-    return `${cookieSettings}; Domain=.${distributionDomainName}`;
-  }
-  return cookieSettings;
-}
-
 function asCloudFrontHeaders(headers) {
   // Turn a regular key-value object into the explicit format expected by CloudFront
   return Object.entries(headers).reduce(
@@ -161,19 +152,13 @@ function _generateCookieHeaders(param) {
   let cookieNames = getElasticsearchCookieNames();
   let cookies = {};
   Object.assign(cookies, {
-    [cookieNames.idTokenKey]: `${param.tokens.id_token}; ${withCookieDomain(
-      param.domainName,
-      param.cookieSettings.idToken
-    )}`,
+    [cookieNames.idTokenKey]: `${param.tokens.id_token}; ${param.cookieSettings.idToken}`,
     [cookieNames.accessTokenKey]: `${
       param.tokens.access_token
-    }; ${withCookieDomain(param.domainName, param.cookieSettings.accessToken)}`,
+    }; ${param.cookieSettings.accessToken}`,
     [cookieNames.refreshTokenKey]: `${
       param.tokens.refresh_token
-    }; ${withCookieDomain(
-      param.domainName,
-      param.cookieSettings.refreshToken
-    )}`,
+    }; ${param.cookieSettings.refreshToken}`,
   });
 
   if (param.event === "signOut") {
@@ -397,7 +382,6 @@ module.exports = {
   getConfigJson,
   extractCookiesFromHeaders,
   generateCookieHeaders,
-  withCookieDomain,
   sign,
   urlSafe,
 }
