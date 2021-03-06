@@ -39,6 +39,16 @@ describe('cognito refresh_auth functions test when the oauth server is down', ()
     })
   })
 
+  it('returns an error when the nonce doesnt match the hmac', async (done) => {
+    const dependencies = await getAuthDependencies()
+    dependencies.cookies["spa-auth-edge-nonce-hmac"] += 'oops'
+    const { event } = await refreshAuthRequest(dependencies)
+    refreshAuth.handler(event).then((response) => {
+      validateHtmlErrorPage(event, response)
+      done()
+    })
+  })
+
 })
 
 describe('cognito refresh_auth functions test when the oauth server is up', () => {

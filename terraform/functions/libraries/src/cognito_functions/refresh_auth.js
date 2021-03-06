@@ -30,6 +30,7 @@ const handler = async (event) => {
       idToken,
       accessToken,
       refreshToken,
+      nonceHmac,
       nonce: originalNonce,
     } = shared.extractAndParseCookies(
       request.headers,
@@ -42,7 +43,9 @@ const handler = async (event) => {
       originalNonce,
       idToken,
       accessToken,
-      refreshToken
+      refreshToken,
+      nonceHmac,
+      CONFIG,
     );
 
     let headers = {
@@ -131,7 +134,9 @@ function validateRefreshRequest(
   originalNonce,
   idToken,
   accessToken,
-  refreshToken
+  refreshToken,
+  nonceHmac,
+  config,
 ) {
   if (!originalNonce) {
     throw new Error(
@@ -139,7 +144,9 @@ function validateRefreshRequest(
     );
   } else if (currentNonce !== originalNonce) {
     throw new Error("Nonce mismatch");
-  }
+  } else if (shared.sign(currentNonce, CONFIG.nonceSigningSecret, CONFIG.nonceLength) !== nonceHmac) {
+    throw new Error("Nonce hmac not verifiable");
+  } 
   Object.entries({ idToken, accessToken, refreshToken }).forEach(
     ([tokenType, token]) => {
       if (!token) {
