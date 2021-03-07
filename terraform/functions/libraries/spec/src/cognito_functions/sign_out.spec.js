@@ -2,11 +2,6 @@ const rewire = require('rewire')
 const signOut = rewire('../../../src/cognito_functions/sign_out.js')
 const { validateHtmlErrorPage, clearJwkCache, clearCustomConfig, getUnauthEvent, getAuthedEvent, getUnparseableAuthEvent, shared, validateRedirectToLogout } = require('./test_utils')
 
-function clearConfig() {
-  clearCustomConfig()
-  signOut.__set__('CONFIG', null)
-}
-
 describe('when sign_out gets a request', () => {
   let resetShared
 
