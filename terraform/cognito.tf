@@ -1,5 +1,18 @@
 locals {
   variables = {
+    http_header_values = {
+      "Content-Security-Policy" = "default-src 'none'; img-src 'self'; script-src 'self' https://code.jquery.com https://stackpath.bootstrapcdn.com; style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com; object-src 'none'; connect-src 'self' https://*.amazonaws.com https://*.amazoncognito.com"
+      "Strict-Transport-Security" = "max-age=31536000; includeSubdomains; preload"
+      "Referrer-Policy" = "same-origin"
+      "X-XSS-Protection" = "1; mode=block"
+      "X-Frame-Options" = "DENY"
+      "X-Content-Type-Options" = "nosniff"
+    }
+    source = "test"
+    source_instance = "test"
+    component = "test"
+    log_level = "ERROR"
+    user_group_name         = "home_user_group"
     zone = "raphaelluckom.com"
     user_email = "raph.aelluckom@gmail.com"
     aws_credentials_file = "/.aws/credentials"
@@ -15,12 +28,8 @@ locals {
 }
 
 locals {
-  user_group_name         = "home_user_group"
   protected_site_domain = "${local.variables.protected_domain_parts.controlled_domain_part}.${local.variables.protected_domain_parts.top_level_domain}"
-  bucket_domain_parts = {
-    top_level_domain = "com"
-    controlled_domain_part = "testcog.raphaelluckom"
-  }
+  bucket_domain_parts = local.variables.protected_domain_parts
   cognito_domain = "auth.${local.protected_site_domain}"
   callback_urls = [
     "https://${local.protected_site_domain}/parseauth"
@@ -30,22 +39,14 @@ locals {
   ]
   allowed_oauth_scopes = ["phone", "email", "profile", "openid", "aws.cognito.signin.user.admin"]
   allowed_oauth_flows_user_pool_client = true
-  http_header_values = {
-    "Content-Security-Policy" = "default-src 'none'; img-src 'self'; script-src 'self' https://code.jquery.com https://stackpath.bootstrapcdn.com; style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com; object-src 'none'; connect-src 'self' https://*.amazonaws.com https://*.amazoncognito.com"
-    "Strict-Transport-Security" = "max-age=31536000; includeSubdomains; preload"
-    "Referrer-Policy" = "same-origin"
-    "X-XSS-Protection" = "1; mode=block"
-    "X-Frame-Options" = "DENY"
-    "X-Content-Type-Options" = "nosniff"
-  }
   set_headers_config = {
-    httpHeaders = local.http_header_values
-    logLevel = "DEBUG"
+    httpHeaders = local.variables.http_header_values
+    logLevel = local.variables.log_level
   }
   cognito_lambda_config = {
-    source = "test"
-    sourceInstance = "test"
-    component = "test"
+    source = local.variables.source
+    sourceInstance = local.variables.source_instance
+    component = local.variables.component
     tokenIssuer = "https://${aws_cognito_user_pool.user_pool.endpoint}"
     tokenJwksUri = "https://${aws_cognito_user_pool.user_pool.endpoint}/.well-known/jwks.json"
     userPoolArn = aws_cognito_user_pool.user_pool.arn
@@ -62,12 +63,11 @@ locals {
       refreshToken = null
       nonce = null
     }
-    mode = "StaticSiteMode"
-    httpHeaders = local.http_header_values
-    logLevel = "DEBUG"
+    httpHeaders = local.variables.http_header_values
+    logLevel = local.variables.log_level
     nonceSigningSecret = random_password.nonce_signing_secret.result
     additionalCookies = {}
-    requiredGroup = local.user_group_name
+    requiredGroup = local.variables.user_group_name
   }
   cloudfront_origins = {
     protected_site = {
@@ -252,7 +252,7 @@ locals {
 }
 
 module cognito_fn_template {
-  source = "github.com/RLuckom/terraform_modules//aws/layers/static/cognito_utils?ref=lambda-env-vars"
+  source = "github.com/RLuckom/terraform_modules//aws/layers/static/cognito_utils"
 }
 
 module protected_bucket {
@@ -370,12 +370,14 @@ resource aws_cognito_user_pool user_pool {
       max_length = 250
     }
   }
-  allow_admin_create_user_only = true
+  admin_create_user_config {
+    allow_admin_create_user_only = true
+  }
   auto_verified_attributes = ["email"]
 }
 
 resource aws_cognito_user_group user_group {
-  name         = local.user_group_name
+  name         = local.variables.user_group_name
   user_pool_id = aws_cognito_user_pool.user_pool.id
 }
 
@@ -556,7 +558,7 @@ resource aws_cloudfront_distribution private_site_distribution {
     lambda_function_association {
       event_type   = "viewer-request"
       lambda_arn   = module.sign_out.lambda.qualified_arn
-      include_body = false // TODO true?
+      include_body = false
     }
   }
 
@@ -580,7 +582,7 @@ resource aws_cloudfront_distribution private_site_distribution {
     lambda_function_association {
       event_type   = "viewer-request"
       lambda_arn   = module.refresh_auth.lambda.qualified_arn
-      include_body = false // TODO true?
+      include_body = false
     }
   }
 
@@ -604,7 +606,7 @@ resource aws_cloudfront_distribution private_site_distribution {
     lambda_function_association {
       event_type   = "viewer-request"
       lambda_arn   = module.parse_auth.lambda.qualified_arn
-      include_body = false // TODO true?
+      include_body = false
     }
   }
 
@@ -628,12 +630,12 @@ resource aws_cloudfront_distribution private_site_distribution {
     lambda_function_association {
       event_type   = "viewer-request"
       lambda_arn   = module.check_auth.lambda.qualified_arn
-      include_body = false // TODO true?
+      include_body = false
     }
     lambda_function_association {
       event_type   = "origin-response"
       lambda_arn   = module.http_headers.lambda.qualified_arn
-      include_body = false // TODO true?
+      include_body = false
     }
   }
 
