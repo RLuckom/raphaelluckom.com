@@ -5,36 +5,25 @@ locals {
     component = "test"
     log_level = "ERROR"
     user_group_name         = "home_user_group"
-    zone = "raphaelluckom.com"
     user_email = "raph.aelluckom@gmail.com"
     aws_credentials_file = "/.aws/credentials"
     cognito_system_id = {
       security_scope = "test"
       subsystem_name = "cognito"
     }
-    protected_domain_parts = {
-      top_level_domain = "com"
-      controlled_domain_part = "testcog.raphaelluckom"
+    protected_domain_routing = {
+      domain_parts = {
+        top_level_domain = "com"
+        controlled_domain_part = "testcog.raphaelluckom"
+      }
+      route53_zone_name = "raphaelluckom.com"
     }
   }
 }
 
-module cognito_fn_template {
-  source = "github.com/RLuckom/terraform_modules//aws/layers/static/cognito_utils?ref=cognito-functions"
-  token_issuer = "https://${aws_cognito_user_pool.user_pool.endpoint}"
-  client_id = aws_cognito_user_pool_client.client.id
-  client_secret = aws_cognito_user_pool_client.client.client_secret
-  nonce_signing_secret = random_password.nonce_signing_secret.result
-  auth_domain = "https://${local.cognito_domain}"
-  user_group_name = local.variables.user_group_name
-  log_source = local.variables.source
-  log_source_instance = local.variables.source_instance
-  component = local.variables.component
-}
-
 locals {
-  protected_site_domain = "${local.variables.protected_domain_parts.controlled_domain_part}.${local.variables.protected_domain_parts.top_level_domain}"
-  bucket_domain_parts = local.variables.protected_domain_parts
+  protected_site_domain = "${local.variables.protected_domain_routing.domain_parts.controlled_domain_part}.${local.variables.protected_domain_routing.domain_parts.top_level_domain}"
+  bucket_domain_parts = local.variables.protected_domain_routing.domain_parts
   cognito_domain = "auth.${local.protected_site_domain}"
   callback_urls = [
     "https://${local.protected_site_domain}/parseauth"
@@ -123,11 +112,16 @@ locals {
 
 module protected_bucket {
   source = "github.com/RLuckom/terraform_modules//aws/state/object_store/website_bucket"
-  domain_parts = local.variables.protected_domain_parts
+  domain_parts = local.variables.protected_domain_routing.domain_parts
   website_access_principals = [{
     type = "AWS",
     identifiers = [aws_cloudfront_origin_access_identity.protected_distribution_oai.iam_arn]
   }]
+}
+
+data aws_route53_zone selected {
+  name         = local.variables.protected_domain_routing.route53_zone_name
+  private_zone = false
 }
 
 resource "aws_s3_bucket_object" "index" {
@@ -142,6 +136,28 @@ resource "aws_s3_bucket_object" "index" {
 </html>
 EOF
   depends_on = [module.protected_bucket]
+}
+
+module cognito_fn_template {
+  source = "github.com/RLuckom/terraform_modules//protocols/boundary_oauth"
+  token_issuer = "https://${module.cognito_user_management.user_pool.endpoint}"
+  client_id = module.cognito_user_management.user_pool_client.id
+  client_secret = module.cognito_user_management.user_pool_client.client_secret
+  nonce_signing_secret = random_password.nonce_signing_secret.result
+  auth_domain = "https://${local.cognito_domain}"
+  user_group_name = local.variables.user_group_name
+  log_source = local.variables.source
+  log_source_instance = local.variables.source_instance
+  component = local.variables.component
+}
+
+module cognito_user_management {
+  source = "github.com/RLuckom/terraform_modules//aws/state/user_mgmt/stele"
+  system_id = local.variables.cognito_system_id
+  protected_domain_routing = local.variables.protected_domain_routing
+  aws_credentials_file = local.variables.aws_credentials_file
+  user_group_name = local.variables.user_group_name
+  user_email = local.variables.user_email
 }
 
 module check_auth {
@@ -225,111 +241,6 @@ resource aws_cloudfront_origin_access_identity protected_distribution_oai {
 resource random_password nonce_signing_secret {
   length = 16
   override_special = "-._~"
-}
-
-resource aws_cognito_user_pool user_pool {
-  name = "${local.variables.cognito_system_id.security_scope}-${local.variables.cognito_system_id.subsystem_name}-pool"
-
-  schema {
-    name                     = "email"
-    attribute_data_type      = "String"
-    developer_only_attribute = false
-    mutable                  = false 
-    required                 = true 
-    string_attribute_constraints {
-      min_length = 3
-      max_length = 250
-    }
-  }
-  admin_create_user_config {
-    allow_admin_create_user_only = true
-  }
-  auto_verified_attributes = ["email"]
-}
-
-resource aws_cognito_user_group user_group {
-  name         = local.variables.user_group_name
-  user_pool_id = aws_cognito_user_pool.user_pool.id
-}
-
-resource null_resource user {
-
-  provisioner "local-exec" {
-    # Bootstrap script called with private_ip of each node in the clutser
-    command = "aws cognito-idp admin-create-user --user-pool-id ${aws_cognito_user_pool.user_pool.id} --username ${local.variables.user_email} --user-attributes Name=email,Value=${local.variables.user_email} && sleep 5 && aws cognito-idp admin-add-user-to-group --user-pool-id ${aws_cognito_user_pool.user_pool.id} --username ${local.variables.user_email} --group-name ${aws_cognito_user_group.user_group.name}"
-    environment = {
-      AWS_SHARED_CREDENTIALS_FILE = local.variables.aws_credentials_file
-    }
-  }
-}
-
-resource aws_cognito_user_pool_client client {
-  name = "${local.variables.cognito_system_id.security_scope}-${local.variables.cognito_system_id.subsystem_name}-client"
-
-  user_pool_id = aws_cognito_user_pool.user_pool.id
-
-  allowed_oauth_flows = ["implicit", "code"]
-  read_attributes = [
-     "address", "birthdate", "email", "email_verified", "family_name", "gender", "given_name", "locale", "middle_name", "name", "nickname", "phone_number", "phone_number_verified", "picture", "preferred_username", "profile", "updated_at", "website", "zoneinfo"
-  ]
-  write_attributes = [
-    "address", "birthdate", "email", "family_name", "gender", "given_name", "locale", "middle_name", "name", "nickname", "phone_number", "picture", "preferred_username", "profile", "updated_at", "website", "zoneinfo"
-  ]
-  supported_identity_providers = ["COGNITO"]
-  generate_secret = true
-  callback_urls = local.callback_urls
-  logout_urls = local.logout_urls
-  allowed_oauth_scopes = local.allowed_oauth_scopes
-  allowed_oauth_flows_user_pool_client = local.allowed_oauth_flows_user_pool_client
-}
-
-resource aws_cognito_user_pool_domain domain {
-  domain    = local.cognito_domain
-  certificate_arn = aws_acm_certificate.cert.arn
-  user_pool_id    = aws_cognito_user_pool.user_pool.id
-  depends_on = [
-    aws_route53_record.auth_a_record_private_site 
-  ]
-}
-
-data aws_route53_zone selected {
-  name         = local.variables.zone
-  private_zone = false
-}
-
-resource aws_route53_record cert_validation {
-  name            = aws_acm_certificate.cert.domain_validation_options.*.resource_record_name[0]
-  records         = aws_acm_certificate.cert.domain_validation_options.*.resource_record_value
-  type            = aws_acm_certificate.cert.domain_validation_options.*.resource_record_type[0]
-  zone_id         = data.aws_route53_zone.selected.zone_id
-  ttl             = 60
-}
-
-resource aws_route53_record auth_a_record {
-  name    = local.cognito_domain
-  type    = "A"
-  zone_id = data.aws_route53_zone.selected.id
-  alias {
-    evaluate_target_health = false
-    name                   = aws_cognito_user_pool_domain.domain.cloudfront_distribution_arn
-    # This zone_id is fixed
-    zone_id = "Z2FDTNDATAQYW2"
-  }
-}
-
-resource aws_acm_certificate cert {
-  domain_name    = local.cognito_domain
-  subject_alternative_names = []
-  validation_method = "DNS"
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource aws_acm_certificate_validation cert_validation {
-  certificate_arn = aws_acm_certificate.cert.arn
-  validation_record_fqdns = [aws_route53_record.cert_validation.fqdn]
 }
 
 resource aws_route53_record cert_validation_private_site {
