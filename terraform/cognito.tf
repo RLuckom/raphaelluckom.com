@@ -58,7 +58,7 @@ locals {
       }
       lambda_function_associations = [{
         event_type = "viewer-request"
-        lambda_function_association = module.parse_auth.lambda.arn
+        lambda_function_association = module.access_control_functions.parse_auth.lambda.arn
       }]
       target_origin = "dummy"
       viewer_protocol_policy = "redirect-to-https"
@@ -71,7 +71,7 @@ locals {
       }
       lambda_function_associations = [{
         event_type = "viewer-request"
-        lambda_function_association = module.refresh_auth.lambda.arn
+        lambda_function_association = module.access_control_functions.refresh_auth.lambda.arn
       }]
       target_origin = "dummy"
       viewer_protocol_policy = "redirect-to-https"
@@ -84,7 +84,7 @@ locals {
       }
       lambda_function_associations = [{
         event_type = "viewer-request"
-        lambda_function_association = module.sign_out.lambda.arn
+        lambda_function_association = module.access_control_functions.sign_out.lambda.arn
       }]
       target_origin = "dummy"
       viewer_protocol_policy = "redirect-to-https"
@@ -97,11 +97,11 @@ locals {
       lambda_function_associations = [
         {
           event_type = "viewer-request"
-          lambda_function_association = module.check_auth.lambda.arn
+          lambda_function_association = module.access_control_functions.check_auth.lambda.arn
         },
         {
           event_type = "origin-response"
-          lambda_function_association = module.http_headers.lambda.arn
+          lambda_function_association = module.access_control_functions.http_headers.lambda.arn
         }
       ]
       target_origin = "protected_site"
@@ -138,21 +138,8 @@ EOF
   depends_on = [module.protected_bucket]
 }
 
-module cognito_fn_template {
-  source = "github.com/RLuckom/terraform_modules//protocols/boundary_oauth"
-  token_issuer = "https://${module.cognito_user_management.user_pool.endpoint}"
-  client_id = module.cognito_user_management.user_pool_client.id
-  client_secret = module.cognito_user_management.user_pool_client.client_secret
-  nonce_signing_secret = random_password.nonce_signing_secret.result
-  auth_domain = "https://${local.cognito_domain}"
-  user_group_name = local.variables.user_group_name
-  log_source = local.variables.source
-  log_source_instance = local.variables.source_instance
-  component = local.variables.component
-}
-
 module cognito_user_management {
-  source = "github.com/RLuckom/terraform_modules//aws/state/user_mgmt/stele"
+  source = "github.com/RLuckom/terraform_modules//aws/state/user_mgmt/stele?ref=stele"
   system_id = local.variables.cognito_system_id
   protected_domain_routing = local.variables.protected_domain_routing
   aws_credentials_file = local.variables.aws_credentials_file
@@ -160,79 +147,18 @@ module cognito_user_management {
   user_email = local.variables.user_email
 }
 
-module check_auth {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
-  publish = true
-  timeout_secs = module.cognito_fn_template.function_configs.function_defaults.timeout_secs
-  mem_mb = module.cognito_fn_template.function_configs.function_defaults.mem_mb
-  role_service_principal_ids = module.cognito_fn_template.function_configs.function_defaults.role_service_principal_ids
-  source_contents = module.cognito_fn_template.function_configs.check_auth.source_contents
-  lambda_details = {
-    action_name = module.cognito_fn_template.function_configs.check_auth.details.action_name
-    scope_name = local.variables.cognito_system_id.security_scope
-    policy_statements = []
-  }
-  local_source_directory = module.cognito_fn_template.directory
-}
-
-module http_headers {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
-  publish = true
-  timeout_secs = module.cognito_fn_template.function_configs.function_defaults.timeout_secs
-  mem_mb = module.cognito_fn_template.function_configs.function_defaults.mem_mb
-  role_service_principal_ids = module.cognito_fn_template.function_configs.function_defaults.role_service_principal_ids
-  source_contents = module.cognito_fn_template.function_configs.http_headers.source_contents
-  lambda_details = {
-    action_name = module.cognito_fn_template.function_configs.http_headers.details.action_name
-    scope_name = local.variables.cognito_system_id.security_scope
-    policy_statements = []
-  }
-  local_source_directory = module.cognito_fn_template.directory
-}
-
-module sign_out {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
-  publish = true
-  timeout_secs = module.cognito_fn_template.function_configs.function_defaults.timeout_secs
-  mem_mb = module.cognito_fn_template.function_configs.function_defaults.mem_mb
-  role_service_principal_ids = module.cognito_fn_template.function_configs.function_defaults.role_service_principal_ids
-  source_contents = module.cognito_fn_template.function_configs.sign_out.source_contents
-  lambda_details = {
-    action_name = module.cognito_fn_template.function_configs.sign_out.details.action_name
-    scope_name = local.variables.cognito_system_id.security_scope
-    policy_statements = []
-  }
-  local_source_directory = module.cognito_fn_template.directory
-}
-
-module refresh_auth {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
-  publish = true
-  timeout_secs = module.cognito_fn_template.function_configs.function_defaults.timeout_secs
-  mem_mb = module.cognito_fn_template.function_configs.function_defaults.mem_mb
-  role_service_principal_ids = module.cognito_fn_template.function_configs.function_defaults.role_service_principal_ids
-  source_contents = module.cognito_fn_template.function_configs.refresh_auth.source_contents
-  lambda_details = {
-    action_name = module.cognito_fn_template.function_configs.refresh_auth.details.action_name
-    scope_name = local.variables.cognito_system_id.security_scope
-    policy_statements = []
-  }
-  local_source_directory = module.cognito_fn_template.directory
-}
-
-module parse_auth {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
-  publish = true
-  timeout_secs = module.cognito_fn_template.function_configs.function_defaults.timeout_secs
-  mem_mb = module.cognito_fn_template.function_configs.function_defaults.mem_mb
-  role_service_principal_ids = module.cognito_fn_template.function_configs.function_defaults.role_service_principal_ids
-  source_contents = module.cognito_fn_template.function_configs.parse_auth.source_contents
-  lambda_details = {
-    action_name = module.cognito_fn_template.function_configs.parse_auth.details.action_name
-    scope_name = local.variables.cognito_system_id.security_scope
-    policy_statements = []
-  }
-  local_source_directory = module.cognito_fn_template.directory
+module access_control_functions {
+  source = "github.com/RLuckom/terraform_modules//aws/access_control/gattice?ref=access-control"
+  token_issuer = "https://${module.cognito_user_management.user_pool.endpoint}"
+  client_id = module.cognito_user_management.user_pool_client.id
+  security_scope = local.variables.cognito_system_id.security_scope
+  client_secret = module.cognito_user_management.user_pool_client.client_secret
+  nonce_signing_secret = random_password.nonce_signing_secret.result
+  auth_domain = "https://${local.cognito_domain}"
+  user_group_name = local.variables.user_group_name
+  log_source = local.variables.source
+  log_source_instance = local.variables.source_instance
+  component = local.variables.component
 }
 
 resource aws_cloudfront_origin_access_identity protected_distribution_oai {
@@ -339,7 +265,7 @@ resource aws_cloudfront_distribution private_site_distribution {
     viewer_protocol_policy = "redirect-to-https"
     lambda_function_association {
       event_type   = "viewer-request"
-      lambda_arn   = module.sign_out.lambda.qualified_arn
+      lambda_arn   = module.access_control_functions.sign_out.lambda.qualified_arn
       include_body = false
     }
   }
@@ -363,7 +289,7 @@ resource aws_cloudfront_distribution private_site_distribution {
     viewer_protocol_policy = "redirect-to-https"
     lambda_function_association {
       event_type   = "viewer-request"
-      lambda_arn   = module.refresh_auth.lambda.qualified_arn
+      lambda_arn   = module.access_control_functions.refresh_auth.lambda.qualified_arn
       include_body = false
     }
   }
@@ -387,7 +313,7 @@ resource aws_cloudfront_distribution private_site_distribution {
     viewer_protocol_policy = "redirect-to-https"
     lambda_function_association {
       event_type   = "viewer-request"
-      lambda_arn   = module.parse_auth.lambda.qualified_arn
+      lambda_arn   = module.access_control_functions.parse_auth.lambda.qualified_arn
       include_body = false
     }
   }
@@ -411,12 +337,12 @@ resource aws_cloudfront_distribution private_site_distribution {
     viewer_protocol_policy = "redirect-to-https"
     lambda_function_association {
       event_type   = "viewer-request"
-      lambda_arn   = module.check_auth.lambda.qualified_arn
+      lambda_arn   = module.access_control_functions.check_auth.lambda.qualified_arn
       include_body = false
     }
     lambda_function_association {
       event_type   = "origin-response"
-      lambda_arn   = module.http_headers.lambda.qualified_arn
+      lambda_arn   = module.access_control_functions.http_headers.lambda.qualified_arn
       include_body = false
     }
   }
