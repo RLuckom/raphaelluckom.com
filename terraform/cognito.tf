@@ -1,13 +1,5 @@
 locals {
   variables = {
-    http_header_values = {
-      "Content-Security-Policy" = "default-src 'none'; img-src 'self'; script-src 'self' https://code.jquery.com https://stackpath.bootstrapcdn.com; style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com; object-src 'none'; connect-src 'self' https://*.amazonaws.com https://*.amazoncognito.com"
-      "Strict-Transport-Security" = "max-age=31536000; includeSubdomains; preload"
-      "Referrer-Policy" = "same-origin"
-      "X-XSS-Protection" = "1; mode=block"
-      "X-Frame-Options" = "DENY"
-      "X-Content-Type-Options" = "nosniff"
-    }
     source = "test"
     source_instance = "test"
     component = "test"
@@ -27,6 +19,19 @@ locals {
   }
 }
 
+module cognito_fn_template {
+  source = "github.com/RLuckom/terraform_modules//aws/layers/static/cognito_utils?ref=cognito-functions"
+  token_issuer = "https://${aws_cognito_user_pool.user_pool.endpoint}"
+  client_id = aws_cognito_user_pool_client.client.id
+  client_secret = aws_cognito_user_pool_client.client.client_secret
+  nonce_signing_secret = random_password.nonce_signing_secret.result
+  auth_domain = "https://${local.cognito_domain}"
+  user_group_name = local.variables.user_group_name
+  log_source = local.variables.source
+  log_source_instance = local.variables.source_instance
+  component = local.variables.component
+}
+
 locals {
   protected_site_domain = "${local.variables.protected_domain_parts.controlled_domain_part}.${local.variables.protected_domain_parts.top_level_domain}"
   bucket_domain_parts = local.variables.protected_domain_parts
@@ -39,36 +44,6 @@ locals {
   ]
   allowed_oauth_scopes = ["phone", "email", "profile", "openid", "aws.cognito.signin.user.admin"]
   allowed_oauth_flows_user_pool_client = true
-  set_headers_config = {
-    httpHeaders = local.variables.http_header_values
-    logLevel = local.variables.log_level
-  }
-  cognito_lambda_config = {
-    source = local.variables.source
-    sourceInstance = local.variables.source_instance
-    component = local.variables.component
-    tokenIssuer = "https://${aws_cognito_user_pool.user_pool.endpoint}"
-    tokenJwksUri = "https://${aws_cognito_user_pool.user_pool.endpoint}/.well-known/jwks.json"
-    userPoolArn = aws_cognito_user_pool.user_pool.arn
-    clientId = aws_cognito_user_pool_client.client.id
-    clientSecret = aws_cognito_user_pool_client.client.client_secret
-    oauthScopes = ["phone", "email", "profile", "openid", "aws.cognito.signin.user.admin"]
-    cognitoAuthDomain = "https://${local.cognito_domain}"
-    redirectPathSignIn = "/parseauth"
-    redirectPathSignOut = "/"
-    redirectPathAuthRefresh = "/refreshauth"
-    cookieSettings = {
-      idToken = null
-      accessToken = null
-      refreshToken = null
-      nonce = null
-    }
-    httpHeaders = local.variables.http_header_values
-    logLevel = local.variables.log_level
-    nonceSigningSecret = random_password.nonce_signing_secret.result
-    additionalCookies = {}
-    requiredGroup = local.variables.user_group_name
-  }
   cloudfront_origins = {
     protected_site = {
       domain_name = local.protected_site_domain
@@ -144,115 +119,6 @@ locals {
       viewer_protocol_policy = "redirect-to-https"
     }
   }
-  function_defaults = {
-    mem_mb = 128
-    timeout_secs = 3
-    shared_source = [
-      {
-        file_name = "shared/shared.js"
-        file_contents = file("./functions/libraries/src/cognito_functions/shared/shared.js")
-      },
-      {
-        file_name = "shared/validate_jwt.js"
-        file_contents = file("./functions/libraries/src/cognito_functions/shared/validate_jwt.js")
-      },
-      {
-        file_name = "shared/error_page/template.html"
-        file_contents = file("./functions/libraries/src/cognito_functions/shared/error_page/template.html")
-      }
-    ]
-    role_service_principal_ids = ["edgelambda.amazonaws.com", "lambda.amazonaws.com"]
-    policy_statements = []
-  }
-  http_headers = {
-    source_contents = [
-      {
-        file_name = "index.js"
-        file_contents = file("./functions/libraries/src/cognito_functions/http_headers.js")
-      },
-      {
-        file_name = "config.json"
-        file_contents = jsonencode(local.set_headers_config)
-      }
-    ]
-    details = {
-      action_name = "http_headers"
-      scope_name = local.variables.cognito_system_id.security_scope
-      policy_statements = local.function_defaults.policy_statements
-    }
-  }
-  check_auth = {
-    source_contents = [
-      {
-        file_name = "index.js"
-        file_contents = file("./functions/libraries/src/cognito_functions/check_auth.js")
-      },
-      {
-        file_name = "config.json"
-        file_contents = jsonencode(local.cognito_lambda_config)
-      }
-    ]
-    details = {
-      action_name = "check_auth"
-      scope_name = local.variables.cognito_system_id.security_scope
-      policy_statements = local.function_defaults.policy_statements
-    }
-  }
-  sign_out = {
-    source_contents = [
-      {
-        file_name = "index.js"
-        file_contents = file("./functions/libraries/src/cognito_functions/sign_out.js")
-      },
-      {
-        file_name = "config.json"
-        file_contents = jsonencode(local.cognito_lambda_config)
-      }
-    ]
-    details = {
-      action_name = "sign_out"
-      scope_name = local.variables.cognito_system_id.security_scope
-      policy_statements = local.function_defaults.policy_statements
-    }
-  }
-  refresh_auth = {
-    source_contents = [
-      {
-        file_name = "index.js"
-        file_contents = file("./functions/libraries/src/cognito_functions/refresh_auth.js")
-      },
-      {
-        file_name = "config.json"
-        file_contents = jsonencode(local.cognito_lambda_config)
-      }
-    ]
-    details = {
-      action_name = "refresh_auth"
-      scope_name = local.variables.cognito_system_id.security_scope
-      policy_statements = local.function_defaults.policy_statements
-    }
-  }
-  parse_auth = {
-    source_contents = [
-      {
-        file_name = "index.js"
-        file_contents = file("./functions/libraries/src/cognito_functions/parse_auth.js")
-      },
-      {
-        file_name = "config.json"
-        file_contents = jsonencode(local.cognito_lambda_config)
-      }
-    ]
-    details = {
-      action_name = "parse_auth"
-      scope_name = local.variables.cognito_system_id.security_scope
-      policy_statements = local.function_defaults.policy_statements
-    }
-  }
-}
-
-module cognito_fn_template {
-  source = "github.com/RLuckom/terraform_modules//aws/layers/static/cognito_utils"
 }
 
 module protected_bucket {
@@ -279,72 +145,77 @@ EOF
 }
 
 module check_auth {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda?ref=lambda-env-vars"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   publish = true
-  timeout_secs = local.function_defaults.timeout_secs
-  mem_mb = local.function_defaults.mem_mb
-  role_service_principal_ids = local.function_defaults.role_service_principal_ids
-  source_contents = concat(
-    local.function_defaults.shared_source,
-    local.check_auth.source_contents
-  )
-  lambda_details = local.check_auth.details
+  timeout_secs = module.cognito_fn_template.function_configs.function_defaults.timeout_secs
+  mem_mb = module.cognito_fn_template.function_configs.function_defaults.mem_mb
+  role_service_principal_ids = module.cognito_fn_template.function_configs.function_defaults.role_service_principal_ids
+  source_contents = module.cognito_fn_template.function_configs.check_auth.source_contents
+  lambda_details = {
+    action_name = module.cognito_fn_template.function_configs.check_auth.details.action_name
+    scope_name = local.variables.cognito_system_id.security_scope
+    policy_statements = []
+  }
   local_source_directory = module.cognito_fn_template.directory
 }
 
 module http_headers {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda?ref=lambda-env-vars"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   publish = true
-  timeout_secs = local.function_defaults.timeout_secs
-  mem_mb = local.function_defaults.mem_mb
-  role_service_principal_ids = local.function_defaults.role_service_principal_ids
-  source_contents = concat(
-    local.function_defaults.shared_source,
-    local.http_headers.source_contents
-  )
-  lambda_details = local.http_headers.details
+  timeout_secs = module.cognito_fn_template.function_configs.function_defaults.timeout_secs
+  mem_mb = module.cognito_fn_template.function_configs.function_defaults.mem_mb
+  role_service_principal_ids = module.cognito_fn_template.function_configs.function_defaults.role_service_principal_ids
+  source_contents = module.cognito_fn_template.function_configs.http_headers.source_contents
+  lambda_details = {
+    action_name = module.cognito_fn_template.function_configs.http_headers.details.action_name
+    scope_name = local.variables.cognito_system_id.security_scope
+    policy_statements = []
+  }
   local_source_directory = module.cognito_fn_template.directory
 }
 
 module sign_out {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda?ref=lambda-env-vars"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   publish = true
-  timeout_secs = local.function_defaults.timeout_secs
-  mem_mb = local.function_defaults.mem_mb
-  role_service_principal_ids = local.function_defaults.role_service_principal_ids
-  source_contents = concat(
-    local.function_defaults.shared_source,
-    local.sign_out.source_contents
-  )
-  lambda_details = local.sign_out.details
+  timeout_secs = module.cognito_fn_template.function_configs.function_defaults.timeout_secs
+  mem_mb = module.cognito_fn_template.function_configs.function_defaults.mem_mb
+  role_service_principal_ids = module.cognito_fn_template.function_configs.function_defaults.role_service_principal_ids
+  source_contents = module.cognito_fn_template.function_configs.sign_out.source_contents
+  lambda_details = {
+    action_name = module.cognito_fn_template.function_configs.sign_out.details.action_name
+    scope_name = local.variables.cognito_system_id.security_scope
+    policy_statements = []
+  }
   local_source_directory = module.cognito_fn_template.directory
 }
 
 module refresh_auth {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda?ref=lambda-env-vars"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   publish = true
-  timeout_secs = local.function_defaults.timeout_secs
-  mem_mb = local.function_defaults.mem_mb
-  role_service_principal_ids = local.function_defaults.role_service_principal_ids
-  source_contents = concat(
-    local.function_defaults.shared_source,
-    local.refresh_auth.source_contents
-  )
-  lambda_details = local.refresh_auth.details
+  timeout_secs = module.cognito_fn_template.function_configs.function_defaults.timeout_secs
+  mem_mb = module.cognito_fn_template.function_configs.function_defaults.mem_mb
+  role_service_principal_ids = module.cognito_fn_template.function_configs.function_defaults.role_service_principal_ids
+  source_contents = module.cognito_fn_template.function_configs.refresh_auth.source_contents
+  lambda_details = {
+    action_name = module.cognito_fn_template.function_configs.refresh_auth.details.action_name
+    scope_name = local.variables.cognito_system_id.security_scope
+    policy_statements = []
+  }
   local_source_directory = module.cognito_fn_template.directory
 }
 
 module parse_auth {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda?ref=lambda-env-vars"
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   publish = true
-  timeout_secs = local.function_defaults.timeout_secs
-  mem_mb = local.function_defaults.mem_mb
-  role_service_principal_ids = local.function_defaults.role_service_principal_ids
-  source_contents = concat(
-    local.function_defaults.shared_source,
-    local.parse_auth.source_contents
-  )
-  lambda_details = local.parse_auth.details
+  timeout_secs = module.cognito_fn_template.function_configs.function_defaults.timeout_secs
+  mem_mb = module.cognito_fn_template.function_configs.function_defaults.mem_mb
+  role_service_principal_ids = module.cognito_fn_template.function_configs.function_defaults.role_service_principal_ids
+  source_contents = module.cognito_fn_template.function_configs.parse_auth.source_contents
+  lambda_details = {
+    action_name = module.cognito_fn_template.function_configs.parse_auth.details.action_name
+    scope_name = local.variables.cognito_system_id.security_scope
+    policy_statements = []
+  }
   local_source_directory = module.cognito_fn_template.directory
 }
 
