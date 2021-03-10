@@ -23,7 +23,8 @@ locals {
 }
 
 module cognito_user_management {
-  source = "github.com/RLuckom/terraform_modules//aws/state/user_mgmt/stele?ref=stele"
+  source = "github.com/RLuckom/terraform_modules//aws/state/user_mgmt/stele"
+  additional_protected_domains = ["test.raphaelluckom.com"]
   system_id = local.variables.cognito_system_id
   protected_domain_routing = local.variables.protected_domain_routing
   aws_credentials_file = local.variables.aws_credentials_file
@@ -37,7 +38,7 @@ resource random_password nonce_signing_secret {
 }
 
 module access_control_functions {
-  source = "github.com/RLuckom/terraform_modules//aws/access_control/gattice?ref=access-control"
+  source = "github.com/RLuckom/terraform_modules//aws/access_control/gattice"
   token_issuer = "https://${module.cognito_user_management.user_pool.endpoint}"
   client_id = module.cognito_user_management.user_pool_client.id
   security_scope = local.variables.cognito_system_id.security_scope
