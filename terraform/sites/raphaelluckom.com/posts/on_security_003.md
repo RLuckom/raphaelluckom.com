@@ -8,16 +8,15 @@ meta:
     - practitioner-journey
     - security
 ---
-Today I want to talk about something I'm going to call _optimistic-collaborative (OC) security_[^1], which I define as any time when an entity
-does something intended to make an interaction more secure, _assuming that some other entity also behaves in an expected way_. For example,
+Today I want to talk about something I'm going to call _optimistic-collaborative (OC) security_[^1], which I define as any security control
+that's designed to work  _assuming that someone else does what they're supposed to_. For example,
 let's contrast two hypothetical hotel security controls. An _optimistic collaborative_ control would be for the hotel to put a mechanical lock,
-with a regular metal key, on the door(s) to each room. In this model, the hotel is providing one piece of a security control (a lockable door and
+with a regular metal key, on the door to each room. In this model, the hotel is providing one piece of a security control (a lockable door and
 its key) with the expectation that the guest will use that security control in their self-interest. In the second hypothetical security control,
-the hotel issues each guest a key card that is required to open an electronic door lock on the door(s) of the room. The electronic lock engages
+the hotel issues each guest a key card that is required to open an electronic door lock on the door of the room. The electronic lock engages
 every time the door is closed. This second control doesn't include the optimistic assumption that the guest will remember to lock the door;
-the hotel, as a single entity, both _installs the lock_ and _assumes responsibility for its use_. I may describe this as "pessimistic security"
-to emphasize contrast in this post, but we usually think of that kind of pessimism as the default, so it's just called "security." Web application
-security relies heavily on OC controls. To see how, let's look at how website access control systems work[^2].
+the hotel, as a single entity, both _installs the lock_ and _assumes responsibility for its use_. This is not always possible, and web application security 
+in particular relies heavily on optimistic-collaborative controls. To see how, let's look at how website access control systems work[^2].
 
 We can think of web servers and web browsers as programs that communicate by spitting tiny text files at each other[^3]. Every message consists
 of a _start line_, an optional set of _headers_, a _blank line_ (to signal the end of the header section) and an optional _body_ containing additional
@@ -44,20 +43,18 @@ Hello world
 </html>
 ```
 
-This response message is the answer to the previous request. Because this is a response, the first line is describing the _result_ of the request
+Because this is a response, the first line is describing the _result_ of the request
 using a status code (`200`) and a message (`OK`). The next line is a _header_ stating that the content-type of the response--the format of the response
 body--is text, and that the text is an HTML document. After the blank line, the _body_ of the response consists of the document itself.
 
 This communication pattern is similar to the pneumatic tube system in a bank's drive-through teller window. The browser sticks the request in the canister,
 puts it in the cubby, closes the door, and--_shunk_--it shows up at the teller's desk. The teller opens it up, reads the message, writes out a reply,
-and sends it back to the person waiting in the car. For the purposes of thos discussion, we're going to leave out the details of what happens in between.
-Specifically, we're not going to worry about _how_ the request gets sent to its destination or what prevents people from snooping on it in transit[^5].
+and sends it back to the person waiting in the car. For the purposes of this discussion, we're going to leave out the details of what happens in between.
+Specifically, we're not going to worry about _how_ the request gets directed to its destination or what prevents people from snooping on it in transit[^5].
 
-So now let's imagine that instead of getting a public HTML document, you want to request an access-controlled resource, like your facebook profile. For
-the purpose of this conversation, we'll pretend that your password is `secretpassword123`, and that facebook's security system requires that you send
-that password on every request (in practice it's more complicated than that, but there really is a password-like thing called a "token" that your browser sends
-along with each request. We're going to use the password itself to make the examples more readable). Let's look a few different ways that the password
-could be included in web requests.
+So now let's imagine that instead of getting a public HTML document, you want to request an access-controlled document. For
+the purpose of this conversation, we'll pretend that your password is `secretpassword123`, and that the security system requires that you send
+that password on every request[^6]. Let's look a few different ways that the password could be included in web requests.
 
 We could add the password to the path on the first line:
  
@@ -104,8 +101,8 @@ to be you. That would be bad. And let's imagine that for some reason, the manufa
 They invent a special system on the outside of the car. When you pull up to the bank drive through, a little robotic arm unfolds from the outside of the car door,
 gets the pneumatic cylinder, extracts the withdrawal slip, and feeds it into the car. You write down everything _except_ your password, then give it back to the
 robot arm. The robot arm takes the slip _and_ the cylinder into an enclosed compartment, then _it_ writes your password in a predetermined location on the slip,
-puts it in the cylinder, and sends it back through the tube to the bank teller. As long as the bank teller knows that they should look for your password _in the place
-where this new system is going to put it_, the new system is more secure than writting down your password while being spied on by your passenger. This is 
+puts it in the cylinder, and sends it back through the tube to the bank teller. As long as the arm writes the password in the place where the teller expects it, 
+the new system is more secure than writting down your password while being spied on by your passenger. This is 
 optimistic-collaborative security. You, and the bank, and the carmaker, all recognize the same problem and decide to tackle it to the best of your ability, but
 none of you can solve it on your own. The carmaker supplies the password-writing device; the bank agrees to standardize the password-location so that the
 password-writing device can be used, and you use that device when you go through the drive-through. If someone doesn't have the new security device, they 
@@ -121,12 +118,12 @@ Accept: text/html
 Cookie: password=secretpassword123
 ```
 
-This request presents the password in a `Cookie` header. "Cookies" are pieces of information that your browser adds to requests right before they are sent,
+This request presents the password in a `Cookie` header. "Cookies" are pieces of information that your browser writes down in request headers right before they are sent,
 just like the robot arm in the example wrote down the password right before putting the withdrawal slip in the tube. So in a "real world" sense, this is likely
-the most secure way to attach the secret to the message[^6].
+the most secure way to attach the secret to the message[^7].
 
 Notice that this distinction relies on optimistic assumptions of collaboration between unrelated entities--at least the website author and the browser maker
-(also the user, if you include their choice to use a mainstream browser). What makes this collaboration possible is the existence of _web standards_ that describe
+(also the user, if you include their choice to use a mainstream browser). What makes this collaboration possible is the existence of _standards_ that describe
 both "how browsers are supposed to store cookies" and "how website authors are supposed to set and use cookies." This specific standard is [RFC 6265](https://tools.ietf.org/html/rfc6265),
 a document titled "HTTP State Management Mechanism." And the title is important; it shows how central OC security is in the internet. It's not called
 "Cookies: How Browsers Store Them And How Websites Can Use Them." It's describing an extension of HTTP that could be used by any kind of server and
@@ -136,7 +133,7 @@ a website author, describes a way to make people who use your website more secur
 When I was starting out writing software, this would have floored me. Not the design itself, exactly, but what it implies about security in a network.
 What it shows you is that the highest levels of internet security, the actual mechanisms that banks use to protect sessions, etc., include _trust_
 as a fundamental component. The bank makes its website according to a certain standard, and trusts the user's browser to also implement the same standard.
-There's no guarantee of any of that--you won't find a warranty for Chrome, Safari, Firefox, or any other browser no matter how hard you look, nor will
+There's no guarantee of any of that--you won't find a warranty for Chrome, Safari, Firefox, or any other browser, no matter how hard you look, nor will
 you find a warranty for the use of any website I can think of--but nevertheless, the trust is central to the process and, more amazingly, _it works_. Those
 systems mostly don't go wrong. I would never have guessed that when I started out. I basically thought that the entire internet was a battle royale of everyone
 for themselves, where you always needed to defend yourself against every conceivable threat and Trust No One was the law of the land. But that's an actively
@@ -176,5 +173,7 @@ quite well.
 [^5]: These things are called [routing](https://en.wikipedia.org/wiki/IP_routing) and [Transport-Layer Security (TLS)](https://en.wikipedia.org/wiki/Transport_Layer_Security)
       respectively. They're important but they don't really affect what I want to talk about here.
 
-[^6]: (_well actually_) Assuming that the server sets the cookie as `httpOnly` and that javascript on the page doesn't need access to it. The link in
+[^6]: (_well actually_) In practice it's more complicated than that, but there usually is a password-like thing called a "token" that your browser sends along with each request. We're going to use the password itself to make the examples more readable 
+
+[^7]: (_well actually_) Assuming that the server sets the cookie as `httpOnly` and that javascript on the page doesn't need access to it. The link in
       footnote 1 is a detailed discussion of these points.
