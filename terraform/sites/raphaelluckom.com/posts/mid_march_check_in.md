@@ -60,7 +60,7 @@ In no particular order:
 
 1. __[Microformats](https://microformats.org/wiki/microformats2), 
    [Micropub](https://www.w3.org/TR/micropub/), 
-   and [Webmentions](https://www.w3.org/TR/webmention/)__: Microformats are a way of adding smantic labels to otherwise-standard HTML,
+   and [Webmentions](https://www.w3.org/TR/webmention/)__: Microformats are a way of adding semantic labels to otherwise-standard HTML,
    basically describing structured ways to construct and read types of information, like "a personal profile" or "a comment on a blog post"
    within the existing structure of a web page. Micropub is a protocol for sending and receiving messages of those types, and webmention
    is a related protocol for notifying systems when someone publishes those types of messages. These standards have evolved primarily out
