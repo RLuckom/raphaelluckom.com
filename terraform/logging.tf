@@ -13,9 +13,7 @@ module visibility_system {
     prod = {
       prod = module.prod_site.lambda_logging_prefix_role_map
     }
-    test = {
-      test = module.test_site.lambda_logging_prefix_role_map
-    }
+    test = {}
   }
   cloudfront_delivery_bucket = "${var.bucket_prefix}-cloudfront-delivery"
   visibility_data_bucket = "${var.bucket_prefix}-visibility-data"
