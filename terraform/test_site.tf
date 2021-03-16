@@ -186,11 +186,20 @@ module get_access_creds {
   layers = [module.aws_sdk.layer_config]
 }
 
+    #issuer   = each.value.issuer #"https://${aws_cognito_user_pool.example.endpoint}"
 module test_site {
   source = "github.com/RLuckom/terraform_modules//aws/serverless_site/capstan"
   system_id = {
     security_scope = "test"
     subsystem_name = "test"
+  }
+  lambda_authorizers = {
+    "default" = {
+    name = "default"
+    audience = [module.cognito_user_management.user_pool_client.id]
+    issuer = "https://${module.cognito_user_management.user_pool.endpoint}"
+    identity_sources = ["$request.header.Authorization"]
+    }
   }
   lambda_origins = [{
     # This is going to be the origin_id in cloudfront. Should be a string
@@ -198,7 +207,7 @@ module test_site {
     id = "get_access_tokens"
     # This should only be set to true if the access_control_function_qualified_arns
     # above are set AND you want the function access-controlled
-    access_controlled = true
+    authorizer = "default"
     # unitary path denoting the function's endpoint, e.g.
     # "/meta/relations/trails"
     path = "/api/actions/access/credentials"
@@ -248,6 +257,7 @@ module test_site {
     check_auth   = module.access_control_functions.check_auth.lambda.qualified_arn
     sign_out   = module.access_control_functions.sign_out.lambda.qualified_arn
     http_headers   = module.access_control_functions.http_headers.lambda.qualified_arn
+    move_cookie_to_auth_header   = module.access_control_functions.move_cookie_to_auth_header.lambda.qualified_arn
   }]
   site_bucket = "test.raphaelluckom.com"
   coordinator_data = module.visibility_system.serverless_site_configs["test"]
