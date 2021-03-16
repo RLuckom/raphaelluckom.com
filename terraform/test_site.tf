@@ -121,7 +121,70 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
   }
 }
 
+locals {
+  get_access_creds_function = <<EOF
+const AWS = require('aws-sdk')
+const { parse } = require("cookie")
 
+function handler(event, context, callback) {
+  console.log(event)
+  console.log(callback)
+  const cognitoidentity = new AWS.CognitoIdentity({region: 'us-east-1'});
+  const idToken = parse(event.headers['Cookie'])['ID-TOKEN']
+  const params = {
+    IdentityPoolId: '${aws_cognito_identity_pool.id_pool.id}',
+    Logins: {
+      '${module.cognito_user_management.user_pool.endpoint}': idToken,
+    }
+  }
+  cognitoidentity.getId(params, function(err, data) {
+    if (err) {
+      return callback(err)
+    }
+    cognitoidentity.getCredentialsForIdentity({
+      IdentityId: data.IdentityId,
+      Logins: params.Logins 
+    }, (e, d) => {
+      if (e) {
+        return callback(err)
+      }
+      const response = {
+        statusCode: "200",
+        cookies: [],
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(d)
+      };
+      return callback(null, response)
+    })
+  });
+}
+
+module.exports = {
+  handler
+}
+EOF
+}
+
+module get_access_creds {
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  timeout_secs = 2
+  mem_mb = 128
+  source_contents = [
+    {
+      file_name = "index.js"
+      file_contents = local.get_access_creds_function
+    },
+  ]
+  lambda_details = {
+    action_name = "get_access_creds"
+    scope_name = "test"
+    bucket = aws_s3_bucket.lambda_bucket.id
+    policy_statements = []
+  }
+  layers = [module.aws_sdk.layer_config]
+}
 
 module test_site {
   source = "github.com/RLuckom/terraform_modules//aws/serverless_site/capstan"
@@ -129,6 +192,52 @@ module test_site {
     security_scope = "test"
     subsystem_name = "test"
   }
+  lambda_origins = [{
+    # This is going to be the origin_id in cloudfront. Should be a string
+    # that suggests the function's purpose
+    id = "get_access_tokens"
+    # This should only be set to true if the access_control_function_qualified_arns
+    # above are set AND you want the function access-controlled
+    access_controlled = true
+    # unitary path denoting the function's endpoint, e.g.
+    # "/meta/relations/trails"
+    path = "/api/actions/access/credentials"
+    # cloudfront routing pattern e.g.
+    # "/meta/relations/trails*"
+    site_path = "/api/actions/access/credentials"
+    # apigateway path expression e.g.
+    # "/meta/relations/trails/{trail+}"
+    apigateway_path = "/api/actions/access/credentials"
+    # Usually all lambdas in a dist should share one gateway, so the gway
+    # name stems should be the same across all lambda endpoints.
+    # But if you wanted multiple apigateways within a single dist., you
+    # could set multiple name stems and the lambdas would get allocated
+    # to different gateways
+    gateway_name_stem = "test_site"
+    allowed_methods = ["GET", "HEAD"]
+    cached_methods = ["GET", "HEAD"]
+    compress = true
+    ttls = {
+      min = 0
+      default = 0
+      max = 0
+    }
+    forwarded_values = {
+      # usually true
+      query_string = true
+      # usually empty list
+      query_string_cache_keys = []
+      # probably best left to empty list; that way headers used for
+      # auth can't be leaked by insecure functions. If there's
+      # a reason to want certain headers, go ahead.
+      headers = []
+      cookie_names = ["ID-TOKEN"]
+    }
+    lambda = {
+      arn = module.get_access_creds.lambda.arn
+      name = module.get_access_creds.lambda.function_name
+    }
+  }]
   routing = {
     domain_parts = module.visibility_system.serverless_site_configs["test"].domain_parts
     route53_zone_name = var.route53_zone_name

@@ -66,9 +66,14 @@ locals {
   ]
 }
 
+module "aws_sdk" {
+  source = "github.com/RLuckom/terraform_modules//aws/layers/aws_sdk"
+}
+
 module "donut_days" {
   source = "github.com/RLuckom/terraform_modules//aws/layers/donut_days"
 }
+
 
 module "image_dependencies" {
   source = "github.com/RLuckom/terraform_modules//aws/layers/image_dependencies"
