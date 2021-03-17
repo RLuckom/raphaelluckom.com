@@ -31,6 +31,21 @@ module cognito_user_management {
   user_email = local.variables.user_email
 }
 
+module cognito_identity_management {
+  source = "github.com/RLuckom/terraform_modules//aws/access_control/hinge"
+  system_id = local.variables.cognito_system_id
+  client_id               = module.cognito_user_management.user_pool_client.id
+  provider_endpoint           = module.cognito_user_management.user_pool.endpoint
+  authenticated_policy_statements = [{
+    actions = [
+      "s3:ListAllMyBuckets",
+    ]
+    resources = [
+      "arn:aws:s3:::*",
+    ]
+  }]
+}
+
 resource random_password nonce_signing_secret {
   length = 16
   override_special = "-._~"
@@ -50,89 +65,16 @@ module access_control_functions {
   component = local.variables.component
 }
 
-resource "aws_iam_role" "authenticated" {
-  name = "cognito_authenticated"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Federated": "cognito-identity.amazonaws.com"
-      },
-      "Action": "sts:AssumeRoleWithWebIdentity",
-      "Condition": {
-        "StringEquals": {
-          "cognito-identity.amazonaws.com:aud": "${aws_cognito_identity_pool.id_pool.id}"
-        },
-        "ForAnyValue:StringLike": {
-          "cognito-identity.amazonaws.com:amr": "authenticated"
-        }
-      }
-    }
-  ]
-}
-EOF
-}
-
-data "aws_iam_policy_document" "allow_list_buckets" {
-  statement {
-    sid = "1"
-
-    actions = [
-      "s3:ListAllMyBuckets",
-    ]
-
-    resources = [
-      "arn:aws:s3:::*",
-    ]
-  }
-}
-
-resource "aws_iam_policy" "test_cog_id_pol" {
-  name   = "example_policy"
-  path   = "/"
-  policy = data.aws_iam_policy_document.allow_list_buckets.json
-}
-
-resource "aws_iam_role_policy_attachment" "test-attach" {
-  role       = aws_iam_role.authenticated.name
-  policy_arn = aws_iam_policy.test_cog_id_pol.arn
-}
-
-resource "aws_cognito_identity_pool" "id_pool" {
-  identity_pool_name               = "identity pool"
-  allow_unauthenticated_identities = false
-
-  cognito_identity_providers {
-    client_id               = module.cognito_user_management.user_pool_client.id
-    provider_name           = module.cognito_user_management.user_pool.endpoint
-    server_side_token_check = true
-  }
-}
-
-resource "aws_cognito_identity_pool_roles_attachment" "main" {
-  identity_pool_id = aws_cognito_identity_pool.id_pool.id
-
-  roles = {
-    "authenticated" = aws_iam_role.authenticated.arn
-  }
-}
-
 locals {
   get_access_creds_function = <<EOF
 const AWS = require('aws-sdk')
 const { parse } = require("cookie")
 
 function handler(event, context, callback) {
-  console.log(event)
-  console.log(callback)
   const cognitoidentity = new AWS.CognitoIdentity({region: 'us-east-1'});
   const idToken = parse(event.headers['Cookie'])['ID-TOKEN']
   const params = {
-    IdentityPoolId: '${aws_cognito_identity_pool.id_pool.id}',
+    IdentityPoolId: '${module.cognito_identity_management.identity_pool.id}',
     Logins: {
       '${module.cognito_user_management.user_pool.endpoint}': idToken,
     }
