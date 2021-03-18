@@ -1,5 +1,6 @@
 locals {
   variables = {
+    site_bucket = "test.raphaelluckom.com"
     source = "test"
     source_instance = "test"
     component = "test"
@@ -63,6 +64,14 @@ module access_control_functions {
   log_source = local.variables.source
   log_source_instance = local.variables.source_instance
   component = local.variables.component
+  http_header_values = {
+    "Content-Security-Policy" = "default-src 'self'; script-src 'self' https://sdk.amazonaws.com/js/aws-sdk-2.865.0.min.js;"
+    "Strict-Transport-Security" = "max-age=31536000; includeSubdomains; preload"
+    "Referrer-Policy" = "same-origin"
+    "X-XSS-Protection" = "1; mode=block"
+    "X-Frame-Options" = "DENY"
+    "X-Content-Type-Options" = "nosniff"
+  }
 }
 
 locals {
@@ -128,7 +137,6 @@ module get_access_creds {
   layers = [module.aws_sdk.layer_config]
 }
 
-    #issuer   = each.value.issuer #"https://${aws_cognito_user_pool.example.endpoint}"
 module test_site {
   source = "github.com/RLuckom/terraform_modules//aws/serverless_site/capstan"
   system_id = {
@@ -201,7 +209,18 @@ module test_site {
     http_headers   = module.access_control_functions.http_headers.lambda.qualified_arn
     move_cookie_to_auth_header   = module.access_control_functions.move_cookie_to_auth_header.lambda.qualified_arn
   }]
-  site_bucket = "test.raphaelluckom.com"
+  site_bucket = local.variables.site_bucket
   coordinator_data = module.visibility_system.serverless_site_configs["test"]
   subject_alternative_names = ["www.test.raphaelluckom.com"]
+}
+
+module site_assets {
+  source = "github.com/RLuckom/terraform_modules//aws/coordinators/asset_directory"
+  asset_directory_root = "${path.root}/sites/private"
+}
+
+module site_static_assets {
+  source = "github.com/RLuckom/terraform_modules//aws/s3_directory"
+  bucket_name = local.variables.site_bucket
+  file_configs = module.site_assets.file_configs
 }
