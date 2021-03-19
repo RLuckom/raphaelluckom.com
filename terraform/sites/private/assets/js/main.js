@@ -251,6 +251,19 @@ function constructImagePost(item) {
   }
 }
 
-fetch(`https://${window.location.hostname}/api/actions/access/credentials`)
-.then(response => response.json())
-.then(data => console.log(data));
+const credentialsUrl = `https://${window.location.hostname}/api/actions/access/credentials`
+const credentialsAccessSchema = {
+  name: 'site AWS credentials',
+  value: {path: 'body'},
+  dataSource: 'GENERIC_API',
+  host: window.location.hostname,
+  path: 'api/actions/access/credentials'
+}
+
+const dependencies = {
+  credentials: {
+    accessSchema: credentialsAccessSchema
+  }
+}
+
+exploranda.Gopher(dependencies).report()
