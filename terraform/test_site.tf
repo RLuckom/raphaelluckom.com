@@ -65,7 +65,7 @@ module access_control_functions {
   log_source_instance = local.variables.source_instance
   component = local.variables.component
   http_header_values = {
-    "Content-Security-Policy" = "default-src 'self'; script-src 'self' https://sdk.amazonaws.com/js/aws-sdk-2.865.0.min.js;"
+    "Content-Security-Policy" = "default-src 'self'; connect-src 'self' https://athena.us-east-1.amazonaws.com;"
     "Strict-Transport-Security" = "max-age=31536000; includeSubdomains; preload"
     "Referrer-Policy" = "same-origin"
     "X-XSS-Protection" = "1; mode=block"
