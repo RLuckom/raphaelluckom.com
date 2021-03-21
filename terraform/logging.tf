@@ -15,16 +15,13 @@ module visibility_system {
     }
     test = {}
   }
-  scoped_athena_query_roles = {
-    prod = {
-      "security_scope=prod/subsystem=prod/source=cloudfront/domain=raphaelluckom.com/"  = [module.cognito_identity_management.authenticated_role.arn]
-    }
-  }
   glue_permission_name_map = {
     prod = {
       raphaelluckom_com = {
         add_partition_permission_names = []
+        add_partition_permission_arns = []
         query_permission_names = [module.cognito_identity_management.authenticated_role.name]
+        query_permission_arns = [module.cognito_identity_management.authenticated_role.arn]
       }
     }
   }
