@@ -140,7 +140,12 @@ minutes to finish, and when it's complete you should see something like the foll
 
 ![View of the instance connection page showing a series of output](/img/practitioner_journey/004/apply_complete.png)
 
-When this finishes, you should be able to go to the domain you reserved and see something like the following:
+When this finishes, you should be able to go to the domain you reserved and see something like the following (_It may take up
+to 20 minutes or so after terraform finishes before your site resolves in a browser. This is because of the way the internet
+"phone book" works--it takes time for the relevant systems to learn that new urls are available. One thing you can do to speed
+up the process somewhat is to wait a little while before going to your site for the first time. These systems can be pretty lazy--if
+they check once and don't find anything, they "remember" that there's nothing there and don't actually check again until some amount
+of time has passed. This is called caching, and it is the cause of and solution to many problems._):
 
 ![View of the home page](/img/practitioner_journey/004/front_page.png)
 
