@@ -72,14 +72,14 @@ did hurt them, you have an opportunity to reflect and grow. Rather than an impos
 to change with every season, you need only focus on _listening to what people are telling you_ about the way that you interact with them.
 If you are a person who thinks of yourself as "good" or "considerate" or any of those words, then the evidence for or against that claim
 is not your adherence to any objective set of rules about what to say or not-say; it's the way others feel when you interact with them.
-That's an ongoing thing, way beyond any single interaction or faux pas, and the more time you spend with someone the more it will be apparent,
-regardless of the words you use[^2]. 
+That's an ongoing thing, way beyond any single interaction or faux pas, and the more time you spend with someone the more your behavior will
+reveal what's in your heart, regardless of the words you use[^2]. 
 
 Social system design plays a huge role in this dynamic. Look at a system like Twitter, which feels like an echoey stadium full of people
 shouting at each other. Where is the opportunity for connection there, for starting _somewhere_, wrong or right, and slowly building a relationship
-in a humane way, acknowledging fallibility and error but upholding respect and care? Twitter's social position is _the_ thing that makes it that way:
-_because_ Twitter is like speed-dating everyone in a football stadium _while_ playing football with them _and_ not being able to see your own or anyone else's
-uniform, the behaviors that succeed in gaining attention there do not include thoughtfulness and respect. If the design was different, different
+in a humane way, acknowledging fallibility and error but upholding respect and care? Twitter's social position is what makes it that way.
+Because Twitter is designed to be like speed-dating everyone in a football stadium _while_ playing football with them _and_ not being able to see your own or anyone else's
+uniform, the behaviors that succeed in gaining positive attention there do not include thoughtfulness and respect. If the design was different, different
 behaviors would succeed in gaining positive attention. And it's not very useful to apportion blame separately for each facet of the awfulness that
 arises from such a situation; to say that _this_ toxic person _is_ the problem, or _that_ software-writer _created_ the situation, or _the other_ executive
 _is responsible_ for the condition. While those things are true of any individual case, the problem, and solution, are systemic, not personal. When you
