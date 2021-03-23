@@ -370,4 +370,4 @@ const dependencies = {
   },
 }
 
-exploranda.Gopher(dependencies).report()
+//exploranda.Gopher(dependencies).report()

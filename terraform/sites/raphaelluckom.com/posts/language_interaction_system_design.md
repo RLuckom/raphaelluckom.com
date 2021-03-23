@@ -38,12 +38,12 @@ Throughout the conversation, one of the themes is the tension between what I wou
 _assertion of lived experience_. In an encounter between a disabled person and a non-disabled person[^1], there is a simple
 _fact of difference_. When you perceive yourself to be on the "strong side" of that--being the non-disabled person interacting
 with a disabled person--if you've been socialized in the Western humanist tradition which asserts that all people are fundamentally
-equal--it's natural to experience that fact of difference as cognitive dissonance and to be made uncomfortable by it. That's
+equal[^2]--it's natural to experience that fact of difference as cognitive dissonance and to be made uncomfortable by it. That's
 no bad thing--in fact, it's one of the signs of a working moral compass that one feels discomfort when one enounters unfairness
 in the world. In some cases the unfairness is human-created and has a human solution--what Ms. Couture describes as "just
 [equity issues]," like making sure subway stations have elevators. But there is also another sentiment in what she says: "I can't
 extract it from what I am...it's not an accessory." That is, the "strong side discomfort" in an interaction--the feeling that you're
-interacting with someone who has been unjustly deprived of something that you possess--tries to resolve itself through a kind of
+interacting with someone who has been unfairly deprived of something that you possess--tries to resolve itself through a kind of
 panicked reflexive redistribution--to quickly reach for a "you're so brave" or an "I don't think of you as disabled" that intends
 to symbolically rebalance the interaction and alleviate the observer's feeling of discomfort. But because this rebalancing is _only_
 symbolic, and offers no meaningful help to the person perceived to be on the "weak side" of the interaction, it is often described as
@@ -52,14 +52,14 @@ _erasing_--it is a tactic that uses an initial acknowledgement of an imbalance a
 This is the point where thoughtful people start to despair, or worse, get annoyed. Because there's no right answer, and yet the interaction
 has to proceed. It seems--especially for people who _don't_ usually find themselves on the "weak side" of these types of interactions--_unfair_
 that one should be forced to commit to a move when there are no good moves available. It's unfair that you should have to experience the
-discomfort of being implicated in the injustice of the world; that, just because you're the one who _happens_ to be in a particular interaction,
-you become the representative of an oppressive majority, despite knowing that oppression is not in your heart specifically. But that's also
+discomfort of being implicated in the unfairness of the world; that, just because you're the one who _happens_ to be in a particular interaction,
+you become the representative of that unfairness, despite knowing that unfairness is not in your heart. But that's also
 when you have the opportunity to shoulder some of the other person's emotional burden, if you're able. Not by _fixing_, and certainly not by rattling through
 a resume of good works--but by simply experiencing that discomfort internally without trying to avoid it or externalize it or negate it--by
 recognizing the unfairness that you feel in the interaction and letting it _stay_ an unfairness that _you_ experience, that _you_ bear.
 To accept that burden _is_ to validate the other person; to acknowledge, without trying to "fix," the fact of difference.
 
-If you can get past that point--the point where you're able to experience the discomfort of being implicated in injustice without
+If you can get past that point--the point where you're able to experience the discomfort of being implicated in unfairness without
 externalizing it, negating it, or rejecting it--you will find that it is a great source of intuition about how to behave. In the
 quote above, we saw that Ms. Couture prefers identity-first language for some specific reasons. I do as well. I think there are
 _also_ people with similar life experiences who prefer person-first language, for equally specific and well-thought-out reasons.
@@ -73,7 +73,7 @@ to change with every season, you need only focus on _listening to what people ar
 If you are a person who thinks of yourself as "good" or "considerate" or any of those words, then the evidence for or against that claim
 is not your adherence to any objective set of rules about what to say or not-say; it's the way others feel when you interact with them.
 That's an ongoing thing, way beyond any single interaction or faux pas, and the more time you spend with someone the more your behavior will
-reveal what's in your heart, regardless of the words you use[^2]. 
+reveal what's in your heart, regardless of the words you use[^3]. 
 
 Social system design plays a huge role in this dynamic. Look at a system like Twitter, which feels like an echoey stadium full of people
 shouting at each other. Where is the opportunity for connection there, for starting _somewhere_, wrong or right, and slowly building a relationship
@@ -96,5 +96,8 @@ to hear them.
 
 [^1]: and many other encounters with different sorts of imbalances.
 
-[^2]: Words are part of it, obviously. If you say the wrong thing you may have made a mistake; if you _deliberately_ or recklessly say the
-wrong thing, then you are probably communicating clearly.
+[^2]: That is, what I'm saying relates to the particular Western humanist tradition with which I'm familiar and maybe not to other
+      humanist traditions.
+
+[^3]: Words are part of it, obviously. If you say the wrong thing you may have made a mistake; if you _deliberately_ or recklessly say the
+      wrong thing, then you are probably communicating clearly.
