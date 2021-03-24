@@ -13,6 +13,7 @@
     "exploranda-core": "^0.5.2",
     "lodash": "^4.17.21",
     "prosemirror-example-setup": "^1.1.2",
+    "prosemirror-markdown": "^1.5.1",
     "prosemirror-model": "^1.13.3",
     "prosemirror-schema-basic": "^1.1.2",
     "prosemirror-state": "^1.3.4",
