@@ -6,12 +6,13 @@ module visibility_system {
       subsystem_names = ["test"]
     }, {
       security_scope = "prod"
-      subsystem_names = ["prod", "media"]
+      subsystem_names = ["prod", "media", "human"]
     }
   ]
   scoped_logging_functions = {
     prod = {
       prod = module.prod_site.lambda_logging_prefix_role_map
+      human = module.human_attention_bucket.lambda_logging_prefix_role_map
     }
     test = {}
   }

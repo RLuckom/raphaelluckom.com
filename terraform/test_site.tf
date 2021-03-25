@@ -23,6 +23,35 @@ locals {
   cognito_domain = "auth.${local.protected_site_domain}"
 }
 
+module human_attention_bucket {
+  source = "github.com/RLuckom/terraform_modules//aws/state/object_store/bucket"
+  name = "test-human-attention"
+  replication_lambda_event_configs = local.notify_failure_only
+  security_scope = "prod"
+  replication_function_logging_config = {
+    bucket = module.visibility_system.lambda_log_configs["prod"]["human"].log_bucket
+    prefix = module.visibility_system.lambda_log_configs["prod"]["human"].log_prefix
+  }
+  replication_configuration = {
+    role_arn = ""
+    donut_days_layer = module.donut_days.layer_config
+    rules = [{
+      priority = 1
+      filter = {
+        prefix = "foo/"
+        suffix = ""
+        tags = {}
+      }
+      enabled = true
+      destination = {
+        bucket = "test-human-attention"
+        prefix = "bar/"
+        manual = true
+      }
+    }]
+  }
+}
+
 module cognito_user_management {
   source = "github.com/RLuckom/terraform_modules//aws/state/user_mgmt/stele"
   system_id = local.variables.cognito_system_id
