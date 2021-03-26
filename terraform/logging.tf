@@ -52,6 +52,16 @@ module visibility_system {
         controlled_domain_part = "test.raphaelluckom"
       }
     }
+    test_admin = {
+      system_id = {
+        security_scope = "test"
+        subsystem_name = "admin"
+      }
+      domain_parts = {
+        top_level_domain = "com"
+        controlled_domain_part = "admin.raphaelluckom"
+      }
+    }
     cognito = {
       system_id = {
         security_scope = "test"

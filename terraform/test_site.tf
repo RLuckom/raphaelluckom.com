@@ -1,26 +1,20 @@
 locals {
   variables = {
-    site_bucket = "test.raphaelluckom.com"
-    source = "test"
-    source_instance = "test"
-    component = "test"
     user_group_name         = "home_user_group"
     user_email = "raph.aelluckom@gmail.com"
-    aws_credentials_file = "/.aws/credentials"
     cognito_system_id = {
       security_scope = "test"
       subsystem_name = "cognito"
     }
-    protected_domain_routing = {
-      domain_parts = {
-        top_level_domain = "com"
-        controlled_domain_part = "test.raphaelluckom"
-      }
+    admin_domain_routing = {
+      domain_parts = module.visibility_system.serverless_site_configs["test_admin"].domain_parts
+      route53_zone_name = "raphaelluckom.com"
+    }
+    test_domain_routing = {
+      domain_parts = module.visibility_system.serverless_site_configs["test"].domain_parts
       route53_zone_name = "raphaelluckom.com"
     }
   }
-  protected_site_domain = "${local.variables.protected_domain_routing.domain_parts.controlled_domain_part}.${local.variables.protected_domain_routing.domain_parts.top_level_domain}"
-  cognito_domain = "auth.${local.protected_site_domain}"
 }
 
 module human_attention_bucket {
@@ -44,7 +38,7 @@ module human_attention_bucket {
       }
       enabled = true
       destination = {
-        bucket = "test-human-attention"
+        bucket = ""
         prefix = "bar/"
         manual = true
       }
@@ -55,8 +49,7 @@ module human_attention_bucket {
 module cognito_user_management {
   source = "github.com/RLuckom/terraform_modules//aws/state/user_mgmt/stele"
   system_id = local.variables.cognito_system_id
-  protected_domain_routing = local.variables.protected_domain_routing
-  aws_credentials_file = local.variables.aws_credentials_file
+  protected_domain_routing = local.variables.admin_domain_routing
   user_group_name = local.variables.user_group_name
   user_email = local.variables.user_email
 }
@@ -80,11 +73,8 @@ module access_control_functions {
   security_scope = local.variables.cognito_system_id.security_scope
   client_secret = module.cognito_user_management.user_pool_client.client_secret
   nonce_signing_secret = random_password.nonce_signing_secret.result
-  auth_domain = "https://${local.cognito_domain}"
+  protected_domain_routing = local.variables.admin_domain_routing
   user_group_name = local.variables.user_group_name
-  log_source = local.variables.source
-  log_source_instance = local.variables.source_instance
-  component = local.variables.component
   http_header_values = {
     "Content-Security-Policy" = "default-src 'self'; connect-src 'self' https://athena.us-east-1.amazonaws.com;"
     "Strict-Transport-Security" = "max-age=31536000; includeSubdomains; preload"
@@ -105,7 +95,7 @@ module get_access_creds {
   aws_sdk_layer = module.aws_sdk.layer_config
 }
 
-module test_site {
+module admin_site {
   source = "github.com/RLuckom/terraform_modules//aws/serverless_site/capstan"
   system_id = {
     security_scope = "test"
@@ -114,12 +104,8 @@ module test_site {
   asset_path = "${path.root}/sites/private"
   lambda_authorizers = module.get_access_creds.lambda_authorizer_config
   lambda_origins = module.get_access_creds.lambda_origins
-  routing = {
-    domain_parts = module.visibility_system.serverless_site_configs["test"].domain_parts
-    route53_zone_name = var.route53_zone_name
-  }
+  routing = local.variables.admin_domain_routing
   access_control_function_qualified_arns = [module.access_control_functions.access_control_function_qualified_arns]
-  site_bucket = local.variables.site_bucket
-  coordinator_data = module.visibility_system.serverless_site_configs["test"]
-  subject_alternative_names = ["www.test.raphaelluckom.com"]
+  coordinator_data = module.visibility_system.serverless_site_configs["test_admin"]
+  subject_alternative_names = ["www.admin.raphaelluckom.com"]
 }
