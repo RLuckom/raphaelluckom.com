@@ -3,7 +3,6 @@ module prod_site {
   maintainer = var.maintainer
   nav_links = var.nav_links
   site_title = var.prod_site_title
-  site_bucket = "raphaelluckom.com"
   coordinator_data = module.visibility_system.serverless_site_configs["prod"]
   system_id = {
     security_scope = "prod"

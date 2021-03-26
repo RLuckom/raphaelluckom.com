@@ -50,6 +50,7 @@ module cognito_user_management {
   source = "github.com/RLuckom/terraform_modules//aws/state/user_mgmt/stele"
   system_id = local.variables.cognito_system_id
   protected_domain_routing = local.variables.admin_domain_routing
+  additional_protected_domains = ["test.raphaelluckom.com", "www.test.raphaelluckom.com"]
   user_group_name = local.variables.user_group_name
   user_email = local.variables.user_email
 }
@@ -108,4 +109,27 @@ module admin_site {
   access_control_function_qualified_arns = [module.access_control_functions.access_control_function_qualified_arns]
   coordinator_data = module.visibility_system.serverless_site_configs["test_admin"]
   subject_alternative_names = ["www.admin.raphaelluckom.com"]
+}
+
+module test_site {
+  source = "github.com/RLuckom/terraform_modules//aws/serverless_site/tetrapod"
+  maintainer = var.maintainer
+  nav_links = var.nav_links
+  site_title = var.prod_site_title
+  coordinator_data = module.visibility_system.serverless_site_configs["test"]
+  access_control_function_qualified_arns = [module.access_control_functions.access_control_function_qualified_arns]
+  system_id = {
+    security_scope = "test"
+    subsystem_name = "site"
+  }
+  routing = {
+    domain_parts = module.visibility_system.serverless_site_configs["test"].domain_parts
+    route53_zone_name = var.route53_zone_name
+  }
+  subject_alternative_names = ["www.test.raphaelluckom.com"]
+  lambda_event_configs = local.notify_failure_only
+  layers = {
+    donut_days = module.donut_days.layer_config
+    markdown_tools = module.markdown_tools.layer_config
+  }
 }
