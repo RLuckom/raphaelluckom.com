@@ -22,10 +22,7 @@ module human_attention_bucket {
   name = "test-human-attention"
   replication_lambda_event_configs = local.notify_failure_only
   security_scope = "prod"
-  replication_function_logging_config = {
-    bucket = module.visibility_system.lambda_log_configs["prod"]["human"].log_bucket
-    prefix = module.visibility_system.lambda_log_configs["prod"]["human"].log_prefix
-  }
+  replication_function_logging_config = module.visibility_system.lambda_log_configs["prod"]["human"].config
   replication_configuration = {
     role_arn = ""
     donut_days_layer = module.donut_days.layer_config
@@ -131,4 +128,16 @@ module test_site {
     donut_days = module.donut_days.layer_config
     markdown_tools = module.markdown_tools.layer_config
   }
+}
+
+module upload_img {
+  source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
+  timeout_secs = 10
+  mem_mb = 128
+  logging_config = module.visibility_system.lambda_log_configs["prod"]["human"].config
+  config_contents = "module.exports = {}"
+  lambda_event_configs = local.notify_failure_only
+  action_name = "upload_img"
+  scope_name = module.visibility_system.lambda_log_configs["prod"]["human"].security_scope
+  donut_days_layer = module.donut_days.layer_config
 }

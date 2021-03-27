@@ -11,8 +11,8 @@ module visibility_system {
   ]
   scoped_logging_functions = {
     prod = {
-      prod = module.prod_site.lambda_logging_prefix_role_map
-      human = module.human_attention_bucket.lambda_logging_prefix_role_map
+      prod = module.prod_site.lambda_logging_roles
+      human = module.human_attention_bucket.lambda_logging_roles
     }
     test = {}
   }
