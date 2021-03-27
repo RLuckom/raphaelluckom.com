@@ -106,15 +106,14 @@ module image_archive_lambda {
       file_name = "config.js"
       file_contents = templatefile("./functions/configs/imagePipelineConfig.js",
       {
-      photo_input_bucket = module.media_input_bucket.bucket.id
-      media_storage_bucket = module.photos_media_output_bucket.bucket.id
-      media_storage_prefix = "images"
-      media_dynamo_table = module.media_table.table.name
-      labeled_media_dynamo_table = module.labeled_media_table.table.name
-      media_hosting_bucket = module.media_bucket.bucket.id
-      post_input_bucket_name = ""
-      slack_credentials_parameterstore_key = var.slack_credentials_parameterstore_key
-
+        photo_input_bucket = module.media_input_bucket.bucket.id
+        media_storage_bucket = module.photos_media_output_bucket.bucket.id
+        media_storage_prefix = "images"
+        media_dynamo_table = module.media_table.table.name
+        labeled_media_dynamo_table = module.labeled_media_table.table.name
+        media_hosting_bucket = module.media_bucket.bucket.id
+        post_input_bucket_name = ""
+        slack_credentials_parameterstore_key = var.slack_credentials_parameterstore_key
       })
     },
   ]
