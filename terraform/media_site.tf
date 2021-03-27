@@ -5,7 +5,7 @@ module media_bucket {
     controlled_domain_part = "media.raphaelluckom"
   }
   name = module.visibility_system.serverless_site_configs["media"].domain
-  additional_allowed_origins = var.media_domain_settings.allowed_origins
+  additional_allowed_origins = ["http://localhost*", "https://raphaelluckom.com", "https://www.raphaelluckom.com"]
   allow_direct_access = true
   prefix_object_permissions = [
     {
@@ -14,11 +14,6 @@ module media_bucket {
       arns = [module.image_archive_lambda.role.arn]
     },
   ]
-}
-
-module media_logging_bucket {
-  source = "github.com/RLuckom/terraform_modules//aws/state/object_store/logging_bucket"
-  name = "logs.${var.media_domain_settings.domain_name}"
 }
 
 module media_hosting_site {
@@ -34,13 +29,10 @@ module media_hosting_site {
   }
   routing = {
     route53_zone_name = var.route53_zone_name
-    domain_parts = {
-      controlled_domain_part = var.media_domain_settings.domain_name_prefix
-      top_level_domain = "com"
-    }
+    domain_parts = module.visibility_system.serverless_site_configs["media"].domain_parts
   }
-  allowed_origins = var.media_domain_settings.allowed_origins
-  subject_alternative_names = var.media_domain_settings.subject_alternative_names
+  allowed_origins = ["http://localhost*", "https://raphaelluckom.com", "https://www.raphaelluckom.com"]
+  subject_alternative_names = ["www.media.raphaelluckom.com"]
 }
 
 module media_input_bucket {
@@ -82,22 +74,6 @@ module labeled_media_table {
   ]
 }
 
-module stream_input_bucket {
-  source = "github.com/RLuckom/terraform_modules//aws/state/object_store/bucket"
-  name = var.stream_input_bucket_name
-  lifecycle_rules = [{
-    id = "expire-processed"
-    prefix = ""
-    tags = {
-      processed = "true"
-      posted = "true"
-    }
-    enabled = true
-    expiration_days = 3
-  }]
-  lambda_notifications = local.media_input_trigger_jpeg
-}
-
 module photos_media_output_bucket {
   source = "github.com/RLuckom/terraform_modules//aws/state/object_store/bucket"
   name = local.media_output_bucket_name
@@ -136,7 +112,7 @@ module image_archive_lambda {
       media_dynamo_table = module.media_table.table.name
       labeled_media_dynamo_table = module.labeled_media_table.table.name
       media_hosting_bucket = module.media_bucket.bucket.id
-      post_input_bucket_name = module.stream_input_bucket.bucket.id 
+      post_input_bucket_name = ""
       slack_credentials_parameterstore_key = var.slack_credentials_parameterstore_key
 
       })

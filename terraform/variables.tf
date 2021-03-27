@@ -40,34 +40,9 @@ variable "route53_zone_name" {
   default = "raphaelluckom.com."
 }
 
-variable "media_domain_settings" {
-  type = object({
-    domain_name = string
-    domain_name_prefix = string
-    allowed_origins = list(string)
-    subject_alternative_names = list(string)
-  })
-  default = {
-    domain_name = "media.raphaelluckom.com"
-    domain_name_prefix = "media.raphaelluckom"
-    allowed_origins = ["http://localhost*", "https://raphaelluckom.com", "https://www.raphaelluckom.com"]
-    subject_alternative_names = ["www.media.raphaelluckom.com"]
-  }
-}
-
-variable "athena_region" {
-  type = string
-  default = "us-east-1"
-}
-
 variable "lambda_bucket_name" {
   type = string
   default = "rluckom.lambda"
-}
-
-variable "stream_input_bucket_name" {
-  type = string
-  default = "rluckom-stream-input"
 }
 
 data "aws_caller_identity" "current" {}
