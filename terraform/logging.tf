@@ -62,16 +62,6 @@ module visibility_system {
         controlled_domain_part = "admin.raphaelluckom"
       }
     }
-    cognito = {
-      system_id = {
-        security_scope = "test"
-        subsystem_name = "cognito"
-      }
-      domain_parts = {
-        top_level_domain = "com"
-        controlled_domain_part = "testcog.raphaelluckom"
-      }
-    }
     media = {
       system_id = {
         security_scope = "prod"
@@ -86,7 +76,6 @@ module visibility_system {
 }
 
 locals {
-  athena_bucket_name = var.athena_bucket_name
   cloudfront_delivery_bucket_name = "${var.bucket_prefix}-visibility-data"
   visibility_bucket_name = "${var.bucket_prefix}-visibility-data"
   media_output_bucket_name = "rluckom.photos.partition"

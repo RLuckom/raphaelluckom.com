@@ -117,7 +117,6 @@ module test_site {
   nav_links = var.nav_links
   site_title = var.prod_site_title
   coordinator_data = module.visibility_system.serverless_site_configs["test"]
-  access_control_function_qualified_arns = [module.access_control_functions.access_control_function_qualified_arns]
   system_id = {
     security_scope = "test"
     subsystem_name = "site"
