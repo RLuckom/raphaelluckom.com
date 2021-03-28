@@ -3679,6 +3679,7 @@ try {
 function display(error, dependencies) {
   if (error) {
     console.log(`error: ${error}`);
+    console.log(error.stack)
   } else {
     console.log(JSON.stringify(dependencies, null, 2));
   }
@@ -4671,7 +4672,13 @@ function needleStyleFetch(method, requestUrl, data, options, callback) {
   }).catch((err) => callback(err))
 }
 
-function detectErrors(e, {body, statusCode, headers}, params) {
+function detectErrors(e, res, params) {
+  if (e) {
+    console.log(e)
+  }
+  const body = _.get(res, 'body')
+  const headers = _.get(res, 'headers')
+  const statusCode = _.get(res, 'statusCode')
   const statusCodeFailure = (200 > statusCode) || (300 <= statusCode);
   if (statusCodeFailure) {
     if (window.EXPLORANDA_DEBUG) {

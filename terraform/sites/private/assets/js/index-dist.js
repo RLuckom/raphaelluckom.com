@@ -87,33 +87,108 @@ function startImageUpload(view, file) {
   tr.setMeta(placeholderPlugin, {add: {id, pos: tr.selection.from}})
   view.dispatch(tr)
 
-  uploadFile(file).then(url => {
-    let pos = findPlaceholder(view.state, id)
-    // If the content around the placeholder has been deleted, drop
-    // the image
-    if (pos == null) return
-    // Otherwise, insert it at the placeholder's position, and remove
-    // the placeholder
-    view.dispatch(view.state.tr
-                  .replaceWith(pos, pos, schema.nodes.image.create({src: url}))
-                  .setMeta(placeholderPlugin, {remove: {id}}))
-  }, () => {
-    // On failure, just clean up the placeholder
-    view.dispatch(tr.setMeta(placeholderPlugin, {remove: {id}}))
+  file.arrayBuffer().then((buffer) => {
+    uploadFile(buffer, (e, url) => {
+      if (e) {
+        return view.dispatch(tr.setMeta(placeholderPlugin, {remove: {id}}))
+      }
+      let pos = findPlaceholder(view.state, id)
+      // If the content around the placeholder has been deleted, drop
+      // the image
+      if (pos == null) return
+        // Otherwise, insert it at the placeholder's position, and remove
+        // the placeholder
+        view.dispatch(view.state.tr
+                      .replaceWith(pos, pos, schema.nodes.image.create({src: url}))
+                      .setMeta(placeholderPlugin, {remove: {id}}))
+    })
   })
 }
 
-// This is just a dummy that loads the file and creates a data URL.
-// You could swap it out with a function that does an actual upload
-// and returns a regular URL for the uploaded file.
-function uploadFile(file) {
-  let reader = new FileReader
-  return new Promise((accept, fail) => {
-    reader.onload = () => accept(reader.result)
-    reader.onerror = () => fail(reader.error)
-    // Some extra delay to make the asynchronicity visible
-    setTimeout(() => reader.readAsDataURL(file), 1500)
-  })
+const ATTN_BKT = "test-human-attention"
+const ATTN_PATH = "uploads/test-site/img/"
+const PRIV_LOAD_PATH = "staged-images/"
+
+//TODO: how to pick name for img
+function getName() {
+  return "name"
+}
+const credentialsAccessSchema = {
+  name: 'site AWS credentials',
+  value: {path: 'body'},
+  dataSource: 'GENERIC_API',
+  host: window.location.hostname,
+  path: 'api/actions/access/credentials'
+}
+
+const apiConfigSelector = {
+  source: 'credentials',
+  formatter: ({credentials}) => {
+    console.log(credentials)
+    return {
+      region: 'us-east-1',
+      accessKeyId: credentials[0].Credentials.AccessKeyId,
+      secretAccessKey: credentials[0].Credentials.SecretKey,
+      sessionToken: credentials[0].Credentials.SessionToken
+    }
+  }
+}
+
+function uploadFile(buffer, callback) {
+  const rawName = getName()
+  const putPath = ATTN_PATH + rawName
+  const getUrl = "https://admin.raphaelluckom.com/" + PRIV_LOAD_PATH + rawName 
+  const dependencies = {
+    credentials: {
+      accessSchema: credentialsAccessSchema
+    },
+    putImg: {
+      accessSchema: exploranda.dataSources.AWS.s3.putObject,
+      params: {
+        apiConfig: apiConfigSelector,
+        Body: {value: buffer },
+        Bucket: {value: ATTN_BKT },
+        Key: { value: putPath },
+      }
+    },
+    pollImage: {
+      accessSchema: {
+        name: 'GET url',
+        dataSource: 'GENERIC_API',
+        value: {path:  _.identity},
+      },
+      params: {
+        apiConfig: {value: {
+          url: getUrl,
+          method: 'HEAD'
+        }},
+      },
+      behaviors: {
+        retryParams: {
+          errorFilter: (err) => {
+            console.log(err)
+            console.log("filter")
+            return err === 404
+          },
+          times: 10,
+          interval: (n) => n * 1000
+        },
+        detectErrors: (err, res) => {
+          console.log(err)
+          if (err) {
+            return 404
+          }
+        }
+      }
+    }
+  }
+  exploranda.Gopher(dependencies).report(
+    (e, r) => {
+      console.log(e)
+      console.log(r)
+      callback(e, getUrl)
+    }
+  )
 }
 
 document.addEventListener('DOMContentLoaded', initWysiwyEditors)

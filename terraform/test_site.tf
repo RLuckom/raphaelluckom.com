@@ -23,23 +23,40 @@ module human_attention_bucket {
   replication_lambda_event_configs = local.notify_failure_only
   security_scope = "prod"
   replication_function_logging_config = module.visibility_system.lambda_log_configs["prod"]["human"].config
+  //TODO: check cors
+  cors_rules = [{
+    allowed_headers = ["authorization", "content-type", "x-amz-content-sha256", "x-amz-date", "x-amz-security-token", "x-amz-user-agent"]
+    allowed_methods = ["PUT"]
+    allowed_origins = ["https://admin.raphaelluckom.com"]
+    expose_headers = ["ETag"]
+    max_age_seconds = 3000
+  }]
+  prefix_object_permissions = [
+    {
+      permission_type = "put_object"
+      prefix = "uploads/test-site/img/"
+      arns = [module.cognito_identity_management.authenticated_role.arn]
+    }
+  ]
   replication_configuration = {
     role_arn = ""
     donut_days_layer = module.donut_days.layer_config
-    rules = [{
-      priority = 1
-      filter = {
-        prefix = "foo/"
-        suffix = ""
-        tags = {}
-      }
-      enabled = true
-      destination = {
-        bucket = ""
-        prefix = "bar/"
-        manual = true
-      }
-    }]
+    rules = [
+      {
+        priority = 1
+        filter = {
+          prefix = "uploads/test-site/img/"
+          suffix = ""
+          tags = {}
+        }
+        enabled = true
+        destination = {
+          bucket = module.admin_site.website_bucket_name
+          prefix = "staged-images/"
+          manual = true
+        }
+      },
+    ]
   }
 }
 
@@ -74,7 +91,7 @@ module access_control_functions {
   protected_domain_routing = local.variables.admin_domain_routing
   user_group_name = local.variables.user_group_name
   http_header_values = {
-    "Content-Security-Policy" = "default-src 'self'; connect-src 'self' https://athena.us-east-1.amazonaws.com; img-src 'self' data:;"
+    "Content-Security-Policy" = "default-src 'self'; connect-src 'self' https://athena.us-east-1.amazonaws.com https://test-human-attention.s3.amazonaws.com; img-src 'self' data:;"
     "Strict-Transport-Security" = "max-age=31536000; includeSubdomains; preload"
     "Referrer-Policy" = "same-origin"
     "X-XSS-Protection" = "1; mode=block"
@@ -103,6 +120,13 @@ module admin_site {
   lambda_authorizers = module.get_access_creds.lambda_authorizer_config
   lambda_origins = module.get_access_creds.lambda_origins
   routing = local.variables.admin_domain_routing
+  website_bucket_prefix_object_permissions = [
+    {
+      permission_type = "put_object"
+      prefix = "staged-images/"
+      arns = [module.human_attention_bucket.replication_lambda.role_arn]
+    }
+  ]
   access_control_function_qualified_arns = [module.access_control_functions.access_control_function_qualified_arns]
   coordinator_data = module.visibility_system.serverless_site_configs["test_admin"]
   subject_alternative_names = ["www.admin.raphaelluckom.com"]
