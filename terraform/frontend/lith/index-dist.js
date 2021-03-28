@@ -1,6 +1,6 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-const {EditorState} = require("prosemirror-state")
-const {EditorView} = require("prosemirror-view")
+const {EditorState, Plugin} = require("prosemirror-state")
+const {EditorView, Decoration, DecorationSet} = require("prosemirror-view")
 const {exampleSetup} = require("prosemirror-example-setup")
 
 const {
@@ -8,6 +8,8 @@ const {
   defaultMarkdownSerializer,
   schema,
 } = require('prosemirror-markdown')
+
+let view
 
 // https://gist.github.com/mbrehin/05c0d41a7e50eef7f95711e237502c85
 // script to replace <textarea> elements in forms with prosemirror editors 
@@ -27,11 +29,11 @@ function initWysiwyEditors() {
     }
 
     // Load editor view
-    const view = new EditorView(container, {
+    view = new EditorView(container, {
       // Set initial state
       state: EditorState.create({
         doc: defaultMarkdownParser.parse(area.value),
-        plugins: exampleSetup({ schema }),
+        plugins: exampleSetup({ schema }).concat(placeholderPlugin),
       }),
       dispatchTransaction(tr) {
         const { state } = view.state.applyTransaction(tr)
@@ -45,7 +47,81 @@ function initWysiwyEditors() {
   }
 }
 
+let placeholderPlugin = new Plugin({
+  state: {
+    init() { return DecorationSet.empty },
+    apply(tr, set) {
+      // Adjust decoration positions to changes made by the transaction
+      set = set.map(tr.mapping, tr.doc)
+      // See if the transaction adds or removes any placeholders
+      let action = tr.getMeta(this)
+      if (action && action.add) {
+        let widget = document.createElement("placeholder")
+        let deco = Decoration.widget(action.add.pos, widget, {id: action.add.id})
+        set = set.add(tr.doc, [deco])
+      } else if (action && action.remove) {
+        set = set.remove(set.find(null, null,
+                                  spec => spec.id == action.remove.id))
+      }
+      return set
+    }
+  },
+  props: {
+    decorations(state) { return this.getState(state) }
+  }
+})
+
+function findPlaceholder(state, id) {
+  let decos = placeholderPlugin.getState(state)
+  let found = decos.find(null, null, spec => spec.id == id)
+  return found.length ? found[0].from : null
+}
+
+function startImageUpload(view, file) {
+  // A fresh object to act as the ID for this upload
+  let id = {}
+
+  // Replace the selection with a placeholder
+  let tr = view.state.tr
+  if (!tr.selection.empty) tr.deleteSelection()
+  tr.setMeta(placeholderPlugin, {add: {id, pos: tr.selection.from}})
+  view.dispatch(tr)
+
+  uploadFile(file).then(url => {
+    let pos = findPlaceholder(view.state, id)
+    // If the content around the placeholder has been deleted, drop
+    // the image
+    if (pos == null) return
+    // Otherwise, insert it at the placeholder's position, and remove
+    // the placeholder
+    view.dispatch(view.state.tr
+                  .replaceWith(pos, pos, schema.nodes.image.create({src: url}))
+                  .setMeta(placeholderPlugin, {remove: {id}}))
+  }, () => {
+    // On failure, just clean up the placeholder
+    view.dispatch(tr.setMeta(placeholderPlugin, {remove: {id}}))
+  })
+}
+
+// This is just a dummy that loads the file and creates a data URL.
+// You could swap it out with a function that does an actual upload
+// and returns a regular URL for the uploaded file.
+function uploadFile(file) {
+  let reader = new FileReader
+  return new Promise((accept, fail) => {
+    reader.onload = () => accept(reader.result)
+    reader.onerror = () => fail(reader.error)
+    // Some extra delay to make the asynchronicity visible
+    setTimeout(() => reader.readAsDataURL(file), 1500)
+  })
+}
+
 document.addEventListener('DOMContentLoaded', initWysiwyEditors)
+document.querySelector("#image-upload").addEventListener("change", e => {
+  if (view.state.selection.$from.parent.inlineContent && e.target.files.length)
+    startImageUpload(view, e.target.files[0])
+  view.focus()
+})
 
 },{"prosemirror-example-setup":66,"prosemirror-markdown":71,"prosemirror-state":75,"prosemirror-view":77}],2:[function(require,module,exports){
 'use strict';

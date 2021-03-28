@@ -74,7 +74,7 @@ module access_control_functions {
   protected_domain_routing = local.variables.admin_domain_routing
   user_group_name = local.variables.user_group_name
   http_header_values = {
-    "Content-Security-Policy" = "default-src 'self'; connect-src 'self' https://athena.us-east-1.amazonaws.com;"
+    "Content-Security-Policy" = "default-src 'self'; connect-src 'self' https://athena.us-east-1.amazonaws.com; img-src 'self' data:;"
     "Strict-Transport-Security" = "max-age=31536000; includeSubdomains; preload"
     "Referrer-Policy" = "same-origin"
     "X-XSS-Protection" = "1; mode=block"
@@ -135,7 +135,100 @@ module upload_img {
   timeout_secs = 10
   mem_mb = 128
   logging_config = module.visibility_system.lambda_log_configs["prod"]["human"].config
-  config_contents = "module.exports = {}"
+  config_contents = <<EOF
+module.exports = {
+  stages: {
+    intro: {
+      index: 0,
+      transformers: {
+        mediaId: {
+          or: [
+            {ref: 'event.mediaId'},
+            {helper: "uuid"},
+          ]
+        },
+        widths: { value: [100, 300, 500, 750, 1000, 2500] },
+        bucket: {
+          or: [
+            {ref: 'event.bucket'},
+            {ref: 'event.Records[0].s3.bucket.name'},
+          ]
+        },
+        imageKey: {
+          or: [
+            {ref: 'event.imageKey'},
+            {ref: 'event.Records[0].s3.object.key'},
+          ]
+        },
+      },
+      dependencies: {
+        getImage: {
+          action: 'getImageAutoRotated',
+          params: {
+            inputBucket: { ref: 'stage.bucket' },
+            inputKey: { ref: 'stage.imageKey' },
+          }
+        },
+        archiveImage: {
+          action: 'archiveImage',
+          params: {
+            imageMetaDependencyName: { 
+              helper: 'qualifiedDependencyName',
+              params: {
+                configStepName: { value: 'getImage' },
+                dependencyName: { value: 'image' },
+              },
+            },
+            autoRotatedImageDependencyName: { 
+              helper: 'qualifiedDependencyName',
+              params: {
+                configStepName: { value: 'getImage' },
+                dependencyName: { value: 'autoRotatedImage' },
+              },
+            },
+            mediaStorageBucket: { value: '$ {media_storage_bucket}' },
+            mediaStoragePrefix: { value: '$ {media_storage_prefix}' },
+            mediaDynamoTable: { value: '$ {media_dynamo_table}' },
+            labeledMediaTable: { value: '$ {labeled_media_dynamo_table}' },
+            mediaType: { value: 'IMAGE' },
+            bucket: { ref: 'stage.bucket' },
+            key: { ref: 'stage.imageKey' },
+            mediaId: { ref: 'stage.mediaId' },
+          }
+        },
+        publishImageWebSizes: {
+          action: 'publishImageWebSizes',
+          condition: {
+            or: [
+              {
+                helper: 'isInList',
+                params: {
+                  list: {value: ['$ {post_input_bucket_name}']},
+                  item: { ref: 'stage.bucket' }
+                }
+              },
+              {ref: 'stage.publish'}
+            ]
+          },
+          params: {
+            autoRotatedImageDependencyName: { 
+              helper: 'qualifiedDependencyName',
+              params: {
+                configStepName: { value: 'getImage' },
+                dependencyName: { value: 'autoRotatedImage' },
+              },
+            },
+            publicHostingBucket: { value: '$ {media_hosting_bucket}' },
+            publicHostingPrefix: { value: '$ {media_storage_prefix}' },
+            mediaId: { ref: 'stage.mediaId' },
+            widths: { ref: 'stage.widths' },
+          }
+        },
+      }
+    }
+  }
+}
+EOF
   lambda_event_configs = local.notify_failure_only
   action_name = "upload_img"
   scope_name = module.visibility_system.lambda_log_configs["prod"]["human"].security_scope
