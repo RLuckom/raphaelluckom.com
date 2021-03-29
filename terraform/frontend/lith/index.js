@@ -1,6 +1,6 @@
 const {EditorState, Plugin} = require("prosemirror-state")
 const {EditorView, Decoration, DecorationSet} = require("prosemirror-view")
-const {exampleSetup} = require("prosemirror-example-setup")
+const {exampleSetup} = require("./prosemirror-setup/index")
 
 const {
   defaultMarkdownParser,
@@ -39,6 +39,7 @@ function initWysiwyEditors() {
         view.updateState(state)
         // Update textarea only if content has changed
         if (tr.docChanged) {
+          console.log(defaultMarkdownSerializer.serialize(tr.doc))
           area.value = defaultMarkdownSerializer.serialize(tr.doc)
         }
       },
