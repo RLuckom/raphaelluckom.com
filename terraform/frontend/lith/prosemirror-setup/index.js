@@ -6,7 +6,7 @@ const {dropCursor} = require("prosemirror-dropcursor")
 const {gapCursor} = require("prosemirror-gapcursor")
 const {menuBar} = require("prosemirror-menu")
 
-const {buildMenuItems} = require("./menu")
+const {buildMenuItems, placeholderPlugin} = require("./menu")
 const {buildKeymap} = require("./keymap")
 const {buildInputRules} = require("./inputrules")
 
@@ -72,5 +72,6 @@ module.exports = {
   buildMenuItems,
   buildKeymap,
   buildInputRules,
+  placeholderPlugin,
   exampleSetup,
 }

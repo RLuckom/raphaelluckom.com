@@ -1,8 +1,9 @@
 const {wrapItem, blockTypeItem, Dropdown, DropdownSubmenu, joinUpItem, liftItem, selectParentNodeItem, undoItem, redoItem, icons, MenuItem} = require("prosemirror-menu")
-const {NodeSelection} = require("prosemirror-state")
+const {Plugin, NodeSelection} = require("prosemirror-state")
+const {Decoration, DecorationSet} = require("prosemirror-view")
 const {toggleMark} = require("prosemirror-commands")
 const {wrapInList} = require("prosemirror-schema-list")
-const {TextField, openPrompt} = require("./prompt")
+const {TextField, FileField, openPrompt} = require("./prompt")
 
 // Helpers to create specific types of items
 
@@ -14,6 +15,30 @@ function canInsert(state, nodeType) {
   }
   return false
 }
+
+let placeholderPlugin = new Plugin({
+  state: {
+    init() { return DecorationSet.empty },
+    apply(tr, set) {
+      // Adjust decoration positions to changes made by the transaction
+      set = set.map(tr.mapping, tr.doc)
+      // See if the transaction adds or removes any placeholders
+      let action = tr.getMeta(this)
+      if (action && action.add) {
+        let widget = document.createElement("placeholder")
+        let deco = Decoration.widget(action.add.pos, widget, {id: action.add.id})
+        set = set.add(tr.doc, [deco])
+      } else if (action && action.remove) {
+        set = set.remove(set.find(null, null,
+                                  spec => spec.id == action.remove.id))
+      }
+      return set
+    }
+  },
+  props: {
+    decorations(state) { return this.getState(state) }
+  }
+})
 
 function insertImageItem(nodeType) {
   return new MenuItem({
@@ -27,18 +52,143 @@ function insertImageItem(nodeType) {
       openPrompt({
         title: "Insert image",
         fields: {
-          src: new TextField({label: "Location", required: true, value: attrs && attrs.src}),
+          src: new FileField({label: "File", required: true, value: attrs && attrs.src}),
           title: new TextField({label: "Title", value: attrs && attrs.title}),
           alt: new TextField({label: "Description",
                               value: attrs ? attrs.alt : state.doc.textBetween(from, to, " ")})
         },
         callback(attrs) {
-          view.dispatch(view.state.tr.replaceSelectionWith(nodeType.createAndFill(attrs)))
+          console.log(attrs)
+          startImageUpload(view, attrs.src)
           view.focus()
         }
       })
     }
   })
+}
+
+function startImageUpload(view, file) {
+  // A fresh object to act as the ID for this upload
+  let id = {}
+
+  // Replace the selection with a placeholder
+  let tr = view.state.tr
+  if (!tr.selection.empty) tr.deleteSelection()
+  tr.setMeta(placeholderPlugin, {add: {id, pos: tr.selection.from}})
+  view.dispatch(tr)
+
+  file.arrayBuffer().then((buffer) => {
+    uploadFile(buffer, (e, url) => {
+      if (e) {
+        return view.dispatch(tr.setMeta(placeholderPlugin, {remove: {id}}))
+      }
+      let pos = findPlaceholder(view.state, id)
+      // If the content around the placeholder has been deleted, drop
+      // the image
+      if (pos == null) return
+        // Otherwise, insert it at the placeholder's position, and remove
+        // the placeholder
+        view.dispatch(view.state.tr
+                      .replaceWith(pos, pos, view.state.schema.nodes.image.create({src: url}))
+                      .setMeta(placeholderPlugin, {remove: {id}}))
+    })
+  })
+}
+
+function findPlaceholder(state, id) {
+  console.log(state)
+  console.log(id)
+  let decos = placeholderPlugin.getState(state)
+  let found = decos.find(null, null, spec => spec.id == id)
+  return found.length ? found[0].from : null
+}
+
+const credentialsAccessSchema = {
+  name: 'site AWS credentials',
+  value: {path: 'body'},
+  dataSource: 'GENERIC_API',
+  host: window.location.hostname,
+  path: 'api/actions/access/credentials'
+}
+
+const apiConfigSelector = {
+  source: 'credentials',
+  formatter: ({credentials}) => {
+    console.log(credentials)
+    return {
+      region: 'us-east-1',
+      accessKeyId: credentials[0].Credentials.AccessKeyId,
+      secretAccessKey: credentials[0].Credentials.SecretKey,
+      sessionToken: credentials[0].Credentials.SessionToken
+    }
+  }
+}
+
+//TODO: how to pick name for img
+function getName() {
+  return "name"
+}
+
+const ATTN_BKT = "test-human-attention"
+const ADMIN_SITE_BKT = "admin.raphaelluckom.com"
+const TEST_SITE_BKT = "test.raphaelluckom.com"
+const BLOG_POST_PREFIX = "posts/"
+const ATTN_PATH = "uploads/test-site/img/"
+const PRIV_LOAD_PATH = "staged-images/"
+
+function uploadFile(buffer, callback) {
+  const rawName = getName()
+  const putPath = ATTN_PATH + rawName
+  const getUrl = "https://admin.raphaelluckom.com/" + PRIV_LOAD_PATH + rawName 
+  const dependencies = {
+    credentials: {
+      accessSchema: credentialsAccessSchema
+    },
+    putImg: {
+      accessSchema: exploranda.dataSources.AWS.s3.putObject,
+      params: {
+        apiConfig: apiConfigSelector,
+        Body: {value: buffer },
+        Bucket: {value: ATTN_BKT },
+        Key: { value: putPath },
+      }
+    },
+    pollImage: {
+      accessSchema: {
+        name: 'GET url',
+        dataSource: 'GENERIC_API',
+        value: {path:  _.identity},
+      },
+      params: {
+        apiConfig: {value: {
+          url: getUrl,
+          method: 'HEAD'
+        }},
+      },
+      behaviors: {
+        retryParams: {
+          errorFilter: (err) => {
+            return err === 404
+          },
+          times: 10,
+          interval: (n) => n * 1000
+        },
+        detectErrors: (err, res) => {
+          console.log(err)
+          if (err) {
+            return 404
+          }
+        }
+      }
+    }
+  }
+  exploranda.Gopher(dependencies).report(
+    (e, r) => {
+      console.log(e)
+      console.log(r)
+      callback(e, getUrl)
+    }
+  )
 }
 
 function cmdItem(cmd, options) {
@@ -228,5 +378,6 @@ function buildMenuItems(schema) {
   return r
 }
 module.exports = {
-  buildMenuItems
+  buildMenuItems,
+  placeholderPlugin
 }

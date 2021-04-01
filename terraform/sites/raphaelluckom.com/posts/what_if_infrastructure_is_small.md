@@ -69,20 +69,20 @@ to escape, like drilling a small hole at the bottom of a dam, and letting time a
 [^2]: Two sources for this that I trust are Tim Hunkin's [The Secret Life of the Sewing Machine](https://youtu.be/g_qLCdrbU78?t=1402)
       and [enthusiast reports](https://cegrundler.com/tag/sewing-machine/).
 
-[^3]: It's the end of March, and my bill for this month of fairly consistend development is $1.86.
+[^3]: It's the end of March, and my bill for this month of fairly consistent development is $1.86.
 
 [^4]: Specifically, [this perspective](https://raphaelluckom.com/posts/the_cloud_is_just_a_server.html).
 
 [^5]: I approach this assertion in two ways. First, there is an advertising metric called Cost Per Click. This is the amount that an
       advertiser can expect to pay a platform like facebook per click on an ad from a target consumer. A brief search for "facebook cost per click"
       suggests that "over $1.50 " is pretty common. That means that the cost of running _the entire system_ I'm working on is likely equivalent
-      to the revenue facebook gets from a user clicking on two or three ads. And because CPC is not the only way ads are billed, it seems likely that
-      using other metrics would produce similar results. 
+      to the revenue facebook gets from a user clicking on two or three ads. CPC is not the only way ads are billed, but I suspect that
+      using other metrics would produce similar results.
 
       Of course, that analysis is about social media platforms, not cloud providers. Since I'm advocating _paying_ AWS, I shouldn't rely on
       "taking money away from facebook" as a balancing factor; those are not the same entity. But I believe that the overall use of cloud services
       (and their attendant social and environmental costs) would _decrease_ if people used these services more directly. When you start to see
       the amount of processing directed at [real-time ad auctions](https://en.wikipedia.org/wiki/Real-time_bidding), [large language models](https://www.washington.edu/news/2021/03/10/large-computer-language-models-carry-environmental-social-risks/), and
       generally creepy predictive analytics on huge user bases, it seems plausible to imagine that _most_ of the demand for computing resources
-      in the world is second- and higher-order pursuit of revenue by large corporations, not actual utility to users. If users bought their own services
+      connected to social media consists of second- and higher-order pursuit of revenue by large corporations, not actual utility to users. If users bought their own services
       at wholesale prices and denied a foothold to these exploitative processes, I doubt there would be such demand for computing in general.

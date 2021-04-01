@@ -1,7 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 const {EditorState, Plugin} = require("prosemirror-state")
 const {EditorView, Decoration, DecorationSet} = require("prosemirror-view")
-const {exampleSetup} = require("./prosemirror-setup/index")
+const {exampleSetup, placeholderPlugin} = require("./prosemirror-setup/index")
 
 const {
   defaultMarkdownParser,
@@ -10,6 +10,13 @@ const {
 } = require('prosemirror-markdown')
 
 let view
+
+const ATTN_BKT = "test-human-attention"
+const ADMIN_SITE_BKT = "admin.raphaelluckom.com"
+const TEST_SITE_BKT = "test.raphaelluckom.com"
+const BLOG_POST_PREFIX = "posts/"
+const ATTN_PATH = "uploads/test-site/img/"
+const PRIV_LOAD_PATH = "staged-images/"
 
 // https://gist.github.com/mbrehin/05c0d41a7e50eef7f95711e237502c85
 // script to replace <textarea> elements in forms with prosemirror editors 
@@ -47,73 +54,6 @@ function initWysiwyEditors() {
     })
   }
 }
-
-let placeholderPlugin = new Plugin({
-  state: {
-    init() { return DecorationSet.empty },
-    apply(tr, set) {
-      // Adjust decoration positions to changes made by the transaction
-      set = set.map(tr.mapping, tr.doc)
-      // See if the transaction adds or removes any placeholders
-      let action = tr.getMeta(this)
-      if (action && action.add) {
-        let widget = document.createElement("placeholder")
-        let deco = Decoration.widget(action.add.pos, widget, {id: action.add.id})
-        set = set.add(tr.doc, [deco])
-      } else if (action && action.remove) {
-        set = set.remove(set.find(null, null,
-                                  spec => spec.id == action.remove.id))
-      }
-      return set
-    }
-  },
-  props: {
-    decorations(state) { return this.getState(state) }
-  }
-})
-
-function findPlaceholder(state, id) {
-  let decos = placeholderPlugin.getState(state)
-  let found = decos.find(null, null, spec => spec.id == id)
-  return found.length ? found[0].from : null
-}
-
-function startImageUpload(view, file) {
-  // A fresh object to act as the ID for this upload
-  let id = {}
-
-  // Replace the selection with a placeholder
-  let tr = view.state.tr
-  if (!tr.selection.empty) tr.deleteSelection()
-  tr.setMeta(placeholderPlugin, {add: {id, pos: tr.selection.from}})
-  view.dispatch(tr)
-
-  file.arrayBuffer().then((buffer) => {
-    uploadFile(buffer, (e, url) => {
-      if (e) {
-        return view.dispatch(tr.setMeta(placeholderPlugin, {remove: {id}}))
-      }
-      let pos = findPlaceholder(view.state, id)
-      // If the content around the placeholder has been deleted, drop
-      // the image
-      if (pos == null) return
-        // Otherwise, insert it at the placeholder's position, and remove
-        // the placeholder
-        view.dispatch(view.state.tr
-                      .replaceWith(pos, pos, schema.nodes.image.create({src: url}))
-                      .setMeta(placeholderPlugin, {remove: {id}}))
-    })
-  })
-}
-
-const ATTN_BKT = "test-human-attention"
-const ATTN_PATH = "uploads/test-site/img/"
-const PRIV_LOAD_PATH = "staged-images/"
-
-//TODO: how to pick name for img
-function getName() {
-  return "name"
-}
 const credentialsAccessSchema = {
   name: 'site AWS credentials',
   value: {path: 'body'},
@@ -135,59 +75,25 @@ const apiConfigSelector = {
   }
 }
 
-function uploadFile(buffer, callback) {
-  const rawName = getName()
-  const putPath = ATTN_PATH + rawName
-  const getUrl = "https://admin.raphaelluckom.com/" + PRIV_LOAD_PATH + rawName 
+
+function listPostsDependencies(callback) {
   const dependencies = {
     credentials: {
       accessSchema: credentialsAccessSchema
     },
     putImg: {
-      accessSchema: exploranda.dataSources.AWS.s3.putObject,
+      accessSchema: exploranda.dataSources.AWS.s3.listObjects,
       params: {
         apiConfig: apiConfigSelector,
-        Body: {value: buffer },
-        Bucket: {value: ATTN_BKT },
-        Key: { value: putPath },
+        Bucket: {value: TEST_SITE_BKT },
+        Prefix: { value: BLOG_POST_PREFIX },
       }
     },
-    pollImage: {
-      accessSchema: {
-        name: 'GET url',
-        dataSource: 'GENERIC_API',
-        value: {path:  _.identity},
-      },
-      params: {
-        apiConfig: {value: {
-          url: getUrl,
-          method: 'HEAD'
-        }},
-      },
-      behaviors: {
-        retryParams: {
-          errorFilter: (err) => {
-            console.log(err)
-            console.log("filter")
-            return err === 404
-          },
-          times: 10,
-          interval: (n) => n * 1000
-        },
-        detectErrors: (err, res) => {
-          console.log(err)
-          if (err) {
-            return 404
-          }
-        }
-      }
-    }
   }
   exploranda.Gopher(dependencies).report(
     (e, r) => {
       console.log(e)
       console.log(r)
-      callback(e, getUrl)
     }
   )
 }
@@ -23911,7 +23817,7 @@ const {dropCursor} = require("prosemirror-dropcursor")
 const {gapCursor} = require("prosemirror-gapcursor")
 const {menuBar} = require("prosemirror-menu")
 
-const {buildMenuItems} = require("./menu")
+const {buildMenuItems, placeholderPlugin} = require("./menu")
 const {buildKeymap} = require("./keymap")
 const {buildInputRules} = require("./inputrules")
 
@@ -23977,6 +23883,7 @@ module.exports = {
   buildMenuItems,
   buildKeymap,
   buildInputRules,
+  placeholderPlugin,
   exampleSetup,
 }
 
@@ -24155,10 +24062,11 @@ module.exports = {buildKeymap}
 
 },{"prosemirror-commands":64,"prosemirror-history":67,"prosemirror-inputrules":68,"prosemirror-schema-list":73}],89:[function(require,module,exports){
 const {wrapItem, blockTypeItem, Dropdown, DropdownSubmenu, joinUpItem, liftItem, selectParentNodeItem, undoItem, redoItem, icons, MenuItem} = require("prosemirror-menu")
-const {NodeSelection} = require("prosemirror-state")
+const {Plugin, NodeSelection} = require("prosemirror-state")
+const {Decoration, DecorationSet} = require("prosemirror-view")
 const {toggleMark} = require("prosemirror-commands")
 const {wrapInList} = require("prosemirror-schema-list")
-const {TextField, openPrompt} = require("./prompt")
+const {TextField, FileField, openPrompt} = require("./prompt")
 
 // Helpers to create specific types of items
 
@@ -24170,6 +24078,30 @@ function canInsert(state, nodeType) {
   }
   return false
 }
+
+let placeholderPlugin = new Plugin({
+  state: {
+    init() { return DecorationSet.empty },
+    apply(tr, set) {
+      // Adjust decoration positions to changes made by the transaction
+      set = set.map(tr.mapping, tr.doc)
+      // See if the transaction adds or removes any placeholders
+      let action = tr.getMeta(this)
+      if (action && action.add) {
+        let widget = document.createElement("placeholder")
+        let deco = Decoration.widget(action.add.pos, widget, {id: action.add.id})
+        set = set.add(tr.doc, [deco])
+      } else if (action && action.remove) {
+        set = set.remove(set.find(null, null,
+                                  spec => spec.id == action.remove.id))
+      }
+      return set
+    }
+  },
+  props: {
+    decorations(state) { return this.getState(state) }
+  }
+})
 
 function insertImageItem(nodeType) {
   return new MenuItem({
@@ -24183,18 +24115,143 @@ function insertImageItem(nodeType) {
       openPrompt({
         title: "Insert image",
         fields: {
-          src: new TextField({label: "Location", required: true, value: attrs && attrs.src}),
+          src: new FileField({label: "File", required: true, value: attrs && attrs.src}),
           title: new TextField({label: "Title", value: attrs && attrs.title}),
           alt: new TextField({label: "Description",
                               value: attrs ? attrs.alt : state.doc.textBetween(from, to, " ")})
         },
         callback(attrs) {
-          view.dispatch(view.state.tr.replaceSelectionWith(nodeType.createAndFill(attrs)))
+          console.log(attrs)
+          startImageUpload(view, attrs.src)
           view.focus()
         }
       })
     }
   })
+}
+
+function startImageUpload(view, file) {
+  // A fresh object to act as the ID for this upload
+  let id = {}
+
+  // Replace the selection with a placeholder
+  let tr = view.state.tr
+  if (!tr.selection.empty) tr.deleteSelection()
+  tr.setMeta(placeholderPlugin, {add: {id, pos: tr.selection.from}})
+  view.dispatch(tr)
+
+  file.arrayBuffer().then((buffer) => {
+    uploadFile(buffer, (e, url) => {
+      if (e) {
+        return view.dispatch(tr.setMeta(placeholderPlugin, {remove: {id}}))
+      }
+      let pos = findPlaceholder(view.state, id)
+      // If the content around the placeholder has been deleted, drop
+      // the image
+      if (pos == null) return
+        // Otherwise, insert it at the placeholder's position, and remove
+        // the placeholder
+        view.dispatch(view.state.tr
+                      .replaceWith(pos, pos, view.state.schema.nodes.image.create({src: url}))
+                      .setMeta(placeholderPlugin, {remove: {id}}))
+    })
+  })
+}
+
+function findPlaceholder(state, id) {
+  console.log(state)
+  console.log(id)
+  let decos = placeholderPlugin.getState(state)
+  let found = decos.find(null, null, spec => spec.id == id)
+  return found.length ? found[0].from : null
+}
+
+const credentialsAccessSchema = {
+  name: 'site AWS credentials',
+  value: {path: 'body'},
+  dataSource: 'GENERIC_API',
+  host: window.location.hostname,
+  path: 'api/actions/access/credentials'
+}
+
+const apiConfigSelector = {
+  source: 'credentials',
+  formatter: ({credentials}) => {
+    console.log(credentials)
+    return {
+      region: 'us-east-1',
+      accessKeyId: credentials[0].Credentials.AccessKeyId,
+      secretAccessKey: credentials[0].Credentials.SecretKey,
+      sessionToken: credentials[0].Credentials.SessionToken
+    }
+  }
+}
+
+//TODO: how to pick name for img
+function getName() {
+  return "name"
+}
+
+const ATTN_BKT = "test-human-attention"
+const ADMIN_SITE_BKT = "admin.raphaelluckom.com"
+const TEST_SITE_BKT = "test.raphaelluckom.com"
+const BLOG_POST_PREFIX = "posts/"
+const ATTN_PATH = "uploads/test-site/img/"
+const PRIV_LOAD_PATH = "staged-images/"
+
+function uploadFile(buffer, callback) {
+  const rawName = getName()
+  const putPath = ATTN_PATH + rawName
+  const getUrl = "https://admin.raphaelluckom.com/" + PRIV_LOAD_PATH + rawName 
+  const dependencies = {
+    credentials: {
+      accessSchema: credentialsAccessSchema
+    },
+    putImg: {
+      accessSchema: exploranda.dataSources.AWS.s3.putObject,
+      params: {
+        apiConfig: apiConfigSelector,
+        Body: {value: buffer },
+        Bucket: {value: ATTN_BKT },
+        Key: { value: putPath },
+      }
+    },
+    pollImage: {
+      accessSchema: {
+        name: 'GET url',
+        dataSource: 'GENERIC_API',
+        value: {path:  _.identity},
+      },
+      params: {
+        apiConfig: {value: {
+          url: getUrl,
+          method: 'HEAD'
+        }},
+      },
+      behaviors: {
+        retryParams: {
+          errorFilter: (err) => {
+            return err === 404
+          },
+          times: 10,
+          interval: (n) => n * 1000
+        },
+        detectErrors: (err, res) => {
+          console.log(err)
+          if (err) {
+            return 404
+          }
+        }
+      }
+    }
+  }
+  exploranda.Gopher(dependencies).report(
+    (e, r) => {
+      console.log(e)
+      console.log(r)
+      callback(e, getUrl)
+    }
+  )
 }
 
 function cmdItem(cmd, options) {
@@ -24384,10 +24441,11 @@ function buildMenuItems(schema) {
   return r
 }
 module.exports = {
-  buildMenuItems
+  buildMenuItems,
+  placeholderPlugin
 }
 
-},{"./prompt":90,"prosemirror-commands":64,"prosemirror-menu":71,"prosemirror-schema-list":73,"prosemirror-state":74}],90:[function(require,module,exports){
+},{"./prompt":90,"prosemirror-commands":64,"prosemirror-menu":71,"prosemirror-schema-list":73,"prosemirror-state":74,"prosemirror-view":76}],90:[function(require,module,exports){
 const prefix = "ProseMirror-prompt"
 
 function openPrompt(options) {
@@ -24539,6 +24597,17 @@ class TextField extends Field {
   }
 }
 
+// ::- A field class for single-line text fields.
+class FileField extends Field {
+  read(dom) { return dom.files[0] }
+  render() {
+    let input = document.createElement("input")
+    input.type = "file"
+    input.value = this.options.value || ""
+    return input
+  }
+}
+
 
 // ::- A field class for dropdown fields based on a plain `<select>`
 // tag. Expects an option `options`, which should be an array of
@@ -24561,6 +24630,7 @@ module.exports = {
   Field,
   TextField,
   SelectField,
+  FileField,
   openPrompt
 }
 

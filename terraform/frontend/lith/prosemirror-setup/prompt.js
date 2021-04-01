@@ -149,6 +149,17 @@ class TextField extends Field {
   }
 }
 
+// ::- A field class for single-line text fields.
+class FileField extends Field {
+  read(dom) { return dom.files[0] }
+  render() {
+    let input = document.createElement("input")
+    input.type = "file"
+    input.value = this.options.value || ""
+    return input
+  }
+}
+
 
 // ::- A field class for dropdown fields based on a plain `<select>`
 // tag. Expects an option `options`, which should be an array of
@@ -171,5 +182,6 @@ module.exports = {
   Field,
   TextField,
   SelectField,
+  FileField,
   openPrompt
 }

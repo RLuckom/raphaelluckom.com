@@ -1752,6 +1752,20 @@ const namespaceDetails = {
   constructorArgs: {}
 };
 
+const getObjectTagging = {
+  dataSource: 'AWS',
+  namespaceDetails,
+  name: 'getObjectTagging',
+  value: {
+    path: _.identity,
+  },
+  apiMethod: 'getObjectTagging',
+  requiredParams: {
+    Bucket: {},
+    Key: {},
+  },
+};
+
 const listBuckets = {
   dataSource: 'AWS',
   namespaceDetails,
@@ -1972,7 +1986,7 @@ module.exports = {
   getBucketAcl, getBucketAclBuilder,
   getBucketPolicy, getBucketPolicyBuilder,
   listObjects, listObjectsBuilder,
-  copyObject, deleteObject, getObject, putObject, putObjectTagging
+  copyObject, deleteObject, getObject, putObject, putObjectTagging, getObjectTagging
 };
 
 },{"lodash":45}],18:[function(require,module,exports){
@@ -4623,10 +4637,7 @@ function needleStyleFetch(method, requestUrl, data, options, callback) {
       a[v[0]] = v[1]
       return a
     }, {}))
-    console.log(Array.from(response.headers.entries()))
     const contentType = headers['content-type']
-    console.log(headers)
-    console.log(contentType)
     if (!response.ok) {
       // TODO probably not clear enough
       return callback(response.statusText)

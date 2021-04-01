@@ -56,6 +56,20 @@ module human_attention_bucket {
           manual = true
         }
       },
+      {
+        priority = 2
+        filter = {
+          prefix = "uploads/test-site/posts/"
+          suffix = ".md"
+          tags = {}
+        }
+        enabled = true
+        destination = {
+          bucket = module.test_site.website_bucket_name
+          prefix = "posts/"
+          manual = true
+        }
+      },
     ]
   }
 }
@@ -91,7 +105,7 @@ module access_control_functions {
   protected_domain_routing = local.variables.admin_domain_routing
   user_group_name = local.variables.user_group_name
   http_header_values = {
-    "Content-Security-Policy" = "default-src 'self'; connect-src 'self' https://athena.us-east-1.amazonaws.com https://test-human-attention.s3.amazonaws.com; img-src 'self' data:;"
+    "Content-Security-Policy" = "default-src 'self'; connect-src 'self' https://athena.us-east-1.amazonaws.com https://s3.amazonaws.com https://test-human-attention.s3.amazonaws.com; img-src 'self' data:;"
     "Strict-Transport-Security" = "max-age=31536000; includeSubdomains; preload"
     "Referrer-Policy" = "same-origin"
     "X-XSS-Protection" = "1; mode=block"
@@ -142,6 +156,19 @@ module test_site {
     security_scope = "test"
     subsystem_name = "site"
   }
+  website_bucket_prefix_object_permissions = [
+    {
+      permission_type = "put_object"
+      prefix = "posts/"
+      arns = [module.human_attention_bucket.replication_lambda.role_arn]
+    }
+  ]
+  website_bucket_bucket_permissions = [
+    {
+      permission_type = "list_bucket"
+      arns = [module.cognito_identity_management.authenticated_role.arn]
+    }
+  ]
   routing = {
     domain_parts = module.visibility_system.serverless_site_configs["test"].domain_parts
     route53_zone_name = var.route53_zone_name

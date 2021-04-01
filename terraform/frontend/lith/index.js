@@ -1,6 +1,6 @@
 const {EditorState, Plugin} = require("prosemirror-state")
 const {EditorView, Decoration, DecorationSet} = require("prosemirror-view")
-const {exampleSetup} = require("./prosemirror-setup/index")
+const {exampleSetup, placeholderPlugin} = require("./prosemirror-setup/index")
 
 const {
   defaultMarkdownParser,
@@ -9,6 +9,13 @@ const {
 } = require('prosemirror-markdown')
 
 let view
+
+const ATTN_BKT = "test-human-attention"
+const ADMIN_SITE_BKT = "admin.raphaelluckom.com"
+const TEST_SITE_BKT = "test.raphaelluckom.com"
+const BLOG_POST_PREFIX = "posts/"
+const ATTN_PATH = "uploads/test-site/img/"
+const PRIV_LOAD_PATH = "staged-images/"
 
 // https://gist.github.com/mbrehin/05c0d41a7e50eef7f95711e237502c85
 // script to replace <textarea> elements in forms with prosemirror editors 
@@ -46,73 +53,6 @@ function initWysiwyEditors() {
     })
   }
 }
-
-let placeholderPlugin = new Plugin({
-  state: {
-    init() { return DecorationSet.empty },
-    apply(tr, set) {
-      // Adjust decoration positions to changes made by the transaction
-      set = set.map(tr.mapping, tr.doc)
-      // See if the transaction adds or removes any placeholders
-      let action = tr.getMeta(this)
-      if (action && action.add) {
-        let widget = document.createElement("placeholder")
-        let deco = Decoration.widget(action.add.pos, widget, {id: action.add.id})
-        set = set.add(tr.doc, [deco])
-      } else if (action && action.remove) {
-        set = set.remove(set.find(null, null,
-                                  spec => spec.id == action.remove.id))
-      }
-      return set
-    }
-  },
-  props: {
-    decorations(state) { return this.getState(state) }
-  }
-})
-
-function findPlaceholder(state, id) {
-  let decos = placeholderPlugin.getState(state)
-  let found = decos.find(null, null, spec => spec.id == id)
-  return found.length ? found[0].from : null
-}
-
-function startImageUpload(view, file) {
-  // A fresh object to act as the ID for this upload
-  let id = {}
-
-  // Replace the selection with a placeholder
-  let tr = view.state.tr
-  if (!tr.selection.empty) tr.deleteSelection()
-  tr.setMeta(placeholderPlugin, {add: {id, pos: tr.selection.from}})
-  view.dispatch(tr)
-
-  file.arrayBuffer().then((buffer) => {
-    uploadFile(buffer, (e, url) => {
-      if (e) {
-        return view.dispatch(tr.setMeta(placeholderPlugin, {remove: {id}}))
-      }
-      let pos = findPlaceholder(view.state, id)
-      // If the content around the placeholder has been deleted, drop
-      // the image
-      if (pos == null) return
-        // Otherwise, insert it at the placeholder's position, and remove
-        // the placeholder
-        view.dispatch(view.state.tr
-                      .replaceWith(pos, pos, schema.nodes.image.create({src: url}))
-                      .setMeta(placeholderPlugin, {remove: {id}}))
-    })
-  })
-}
-
-const ATTN_BKT = "test-human-attention"
-const ATTN_PATH = "uploads/test-site/img/"
-const PRIV_LOAD_PATH = "staged-images/"
-
-//TODO: how to pick name for img
-function getName() {
-  return "name"
-}
 const credentialsAccessSchema = {
   name: 'site AWS credentials',
   value: {path: 'body'},
@@ -134,59 +74,25 @@ const apiConfigSelector = {
   }
 }
 
-function uploadFile(buffer, callback) {
-  const rawName = getName()
-  const putPath = ATTN_PATH + rawName
-  const getUrl = "https://admin.raphaelluckom.com/" + PRIV_LOAD_PATH + rawName 
+
+function listPostsDependencies(callback) {
   const dependencies = {
     credentials: {
       accessSchema: credentialsAccessSchema
     },
     putImg: {
-      accessSchema: exploranda.dataSources.AWS.s3.putObject,
+      accessSchema: exploranda.dataSources.AWS.s3.listObjects,
       params: {
         apiConfig: apiConfigSelector,
-        Body: {value: buffer },
-        Bucket: {value: ATTN_BKT },
-        Key: { value: putPath },
+        Bucket: {value: TEST_SITE_BKT },
+        Prefix: { value: BLOG_POST_PREFIX },
       }
     },
-    pollImage: {
-      accessSchema: {
-        name: 'GET url',
-        dataSource: 'GENERIC_API',
-        value: {path:  _.identity},
-      },
-      params: {
-        apiConfig: {value: {
-          url: getUrl,
-          method: 'HEAD'
-        }},
-      },
-      behaviors: {
-        retryParams: {
-          errorFilter: (err) => {
-            console.log(err)
-            console.log("filter")
-            return err === 404
-          },
-          times: 10,
-          interval: (n) => n * 1000
-        },
-        detectErrors: (err, res) => {
-          console.log(err)
-          if (err) {
-            return 404
-          }
-        }
-      }
-    }
   }
   exploranda.Gopher(dependencies).report(
     (e, r) => {
       console.log(e)
       console.log(r)
-      callback(e, getUrl)
     }
   )
 }
