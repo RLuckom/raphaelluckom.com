@@ -13,25 +13,25 @@
   </head>
   <body>
     <header>
-      header contentsssssss
+      <div class="header-block"><h1 class="heading">Private Site</h1></div>
     </header>
     <main>
-      main content
-      <form action="" method="get" id="postitem" class="form-example">
-        <div class="form-example">
-          <label for="tite">Title: </label>
-          <input type="text" name="title" id="title" required>
+      <section class="cards">
+        <div>
+            <label for="tite">Title: 
+              <input type="text" name="title" id="title" required>
+            </label>
+          <div>
+            <label for="main">write the post: 
+              <textarea form="postitem" name="main" id="text" class="prosemirror">
+              </textarea>
+            </label>
+          </div>
+          <h1 class="tool-title">
+            post a blog entry
+          </h1>
         </div>
-        <div class="form-example">
-          <label for="main">write the post: </label>
-          <textarea form="postitem" name="main" id="text" class="prosemirror">
-          </textarea>
-        </div>
-        <div class="form-example">
-          <input type="submit" value="post!" id="submitpost">
-        </div>
-      </form>
-      <div>Insert image: <input type=file id=image-upload></div>
+      </section>
     </main>
   </body>
 </html>

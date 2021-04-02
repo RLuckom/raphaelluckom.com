@@ -4,6 +4,7 @@ const {Decoration, DecorationSet} = require("prosemirror-view")
 const {toggleMark} = require("prosemirror-commands")
 const {wrapInList} = require("prosemirror-schema-list")
 const {TextField, FileField, openPrompt} = require("./prompt")
+const { v4 } = require('uuid')
 
 // Helpers to create specific types of items
 
@@ -126,7 +127,7 @@ const apiConfigSelector = {
 
 //TODO: how to pick name for img
 function getName() {
-  return "name"
+  return v4()
 }
 
 const ATTN_BKT = "test-human-attention"

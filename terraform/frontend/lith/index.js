@@ -2,13 +2,55 @@ const {EditorState, Plugin} = require("prosemirror-state")
 const {EditorView, Decoration, DecorationSet} = require("prosemirror-view")
 const {exampleSetup, placeholderPlugin} = require("./prosemirror-setup/index")
 
+class MarkdownView {
+  constructor(target, content) {
+    this.textarea = target.appendChild(document.createElement("textarea"))
+    this.textarea.value = content
+  }
+
+  get content() { return this.textarea.value }
+  focus() { this.textarea.focus() }
+  destroy() { this.textarea.remove() }
+}
+
+class ProseMirrorView {
+  constructor(target, content) {
+    this.view = new EditorView(target, {
+      state: EditorState.create({
+        doc: defaultMarkdownParser.parse(content),
+        plugins: exampleSetup({schema})
+      })
+    })
+  }
+  get content() {
+    return defaultMarkdownSerializer.serialize(this.view.state.doc)
+  }
+  focus() { this.view.focus() }
+  destroy() { this.view.destroy() }
+}
+/*
+let place = document.querySelector("#editor")
+let view = new MarkdownView(place, document.querySelector("#content").value)
+
+
+document.querySelectorAll("input[type=radio]").forEach(button => {
+  button.addEventListener("change", () => {
+    if (!button.checked) return
+      let View = button.value == "markdown" ? MarkdownView : ProseMirrorView
+    if (view instanceof View) return
+      let content = view.content
+    view.destroy()
+    view = new View(place, content)
+    view.focus()
+  })
+})
+*/
+
 const {
   defaultMarkdownParser,
   defaultMarkdownSerializer,
   schema,
 } = require('prosemirror-markdown')
-
-let view
 
 const ATTN_BKT = "test-human-attention"
 const ADMIN_SITE_BKT = "admin.raphaelluckom.com"
@@ -35,7 +77,7 @@ function initWysiwyEditors() {
     }
 
     // Load editor view
-    view = new EditorView(container, {
+    const view = new EditorView(container, {
       // Set initial state
       state: EditorState.create({
         doc: defaultMarkdownParser.parse(area.value),
@@ -53,6 +95,7 @@ function initWysiwyEditors() {
     })
   }
 }
+
 const credentialsAccessSchema = {
   name: 'site AWS credentials',
   value: {path: 'body'},
@@ -73,7 +116,6 @@ const apiConfigSelector = {
     }
   }
 }
-
 
 function listPostsDependencies(callback) {
   const dependencies = {
@@ -98,8 +140,3 @@ function listPostsDependencies(callback) {
 }
 
 document.addEventListener('DOMContentLoaded', initWysiwyEditors)
-document.querySelector("#image-upload").addEventListener("change", e => {
-  if (view.state.selection.$from.parent.inlineContent && e.target.files.length)
-    startImageUpload(view, e.target.files[0])
-  view.focus()
-})
