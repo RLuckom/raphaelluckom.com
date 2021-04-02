@@ -23,10 +23,9 @@ module human_attention_bucket {
   replication_lambda_event_configs = local.notify_failure_only
   security_scope = "prod"
   replication_function_logging_config = module.visibility_system.lambda_log_configs["prod"]["human"].config
-  //TODO: check cors
   cors_rules = [{
     allowed_headers = ["authorization", "content-type", "x-amz-content-sha256", "x-amz-date", "x-amz-security-token", "x-amz-user-agent"]
-    allowed_methods = ["PUT"]
+    allowed_methods = ["PUT", "GET"]
     allowed_origins = ["https://admin.raphaelluckom.com"]
     expose_headers = ["ETag"]
     max_age_seconds = 3000
@@ -152,6 +151,13 @@ module test_site {
   nav_links = var.nav_links
   site_title = var.prod_site_title
   coordinator_data = module.visibility_system.serverless_site_configs["test"]
+  website_bucket_cors_rules = [{
+    allowed_headers = ["authorization", "content-type", "x-amz-content-sha256", "x-amz-date", "x-amz-security-token", "x-amz-user-agent"]
+    allowed_methods = ["PUT", "GET"]
+    allowed_origins = ["https://admin.raphaelluckom.com"]
+    expose_headers = ["ETag"]
+    max_age_seconds = 3000
+  }]
   system_id = {
     security_scope = "test"
     subsystem_name = "site"
