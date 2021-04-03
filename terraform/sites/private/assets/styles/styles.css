@@ -66,6 +66,21 @@ header {
   display: block;
 }
 
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+footer {
+  margin-top: auto;
+  background-color: powderblue;
+}
+
+main {
+  max-width: 960px;
+}
+
 /* styles cribbed from https://grid-cats.glitch.me/ */
 .site-tools {
   display: grid;

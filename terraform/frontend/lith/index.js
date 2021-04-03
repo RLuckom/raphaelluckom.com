@@ -140,3 +140,4 @@ function listPostsDependencies(callback) {
 }
 
 document.addEventListener('DOMContentLoaded', initWysiwyEditors)
+document.addEventListener('DOMContentLoaded', listPostsDependencies)

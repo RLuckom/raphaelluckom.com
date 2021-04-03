@@ -141,6 +141,7 @@ function listPostsDependencies(callback) {
 }
 
 document.addEventListener('DOMContentLoaded', initWysiwyEditors)
+document.addEventListener('DOMContentLoaded', listPostsDependencies)
 
 },{"./prosemirror-setup/index":101,"prosemirror-markdown":70,"prosemirror-state":74,"prosemirror-view":76}],2:[function(require,module,exports){
 'use strict';

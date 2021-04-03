@@ -43,6 +43,7 @@ module human_attention_bucket {
     rules = [
       {
         priority = 1
+        replicate_delete = true
         filter = {
           prefix = "uploads/test-site/img/"
           suffix = ""
@@ -63,6 +64,7 @@ module human_attention_bucket {
           tags = {}
         }
         enabled = true
+        replicate_delete = true
         destination = {
           bucket = module.test_site.website_bucket_name
           prefix = "posts/"
@@ -133,13 +135,7 @@ module admin_site {
   lambda_authorizers = module.get_access_creds.lambda_authorizer_config
   lambda_origins = module.get_access_creds.lambda_origins
   routing = local.variables.admin_domain_routing
-  website_bucket_prefix_object_permissions = [
-    {
-      permission_type = "put_object"
-      prefix = "staged-images/"
-      arns = [module.human_attention_bucket.replication_lambda.role_arn]
-    }
-  ]
+  website_bucket_prefix_object_permissions = module.human_attention_bucket.replication_function_permissions_needed[module.admin_site.website_bucket_name]
   access_control_function_qualified_arns = [module.access_control_functions.access_control_function_qualified_arns]
   coordinator_data = module.visibility_system.serverless_site_configs["test_admin"]
   subject_alternative_names = ["www.admin.raphaelluckom.com"]
@@ -162,13 +158,7 @@ module test_site {
     security_scope = "test"
     subsystem_name = "site"
   }
-  website_bucket_prefix_object_permissions = [
-    {
-      permission_type = "put_object"
-      prefix = "posts/"
-      arns = [module.human_attention_bucket.replication_lambda.role_arn]
-    }
-  ]
+  website_bucket_prefix_object_permissions = module.human_attention_bucket.replication_function_permissions_needed[module.test_site.website_bucket_name]
   website_bucket_bucket_permissions = [
     {
       permission_type = "list_bucket"
