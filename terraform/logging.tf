@@ -84,18 +84,6 @@ locals {
     prefix = ""
     debug = false
   }
-  media_storage_policy = {
-    prefix = local.media_storage_config.prefix
-    actions = ["s3:PutObject"]
-    principals = [
-      {
-        type = "AWS"
-        identifiers = [
-          module.image_archive_lambda.role.arn,
-        ]
-      }
-    ]
-  }
   media_site_cloudfront_logging_config = {
     bucket = local.visibility_bucket_name
     prefix = "media.raphaelluckom"

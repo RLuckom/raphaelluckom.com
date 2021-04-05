@@ -73,7 +73,7 @@ function getImageAutoRotated({inputBucket, inputKey}, addDependency, addResource
   })
 }
 
-function publishImageWebSizes({autoRotatedImageDependencyName, publicHostingBucket, publicHostingPrefix, mediaId, widths}, addDependency, addResourceReference, getDependencyName, processParams, processParamValue, addFullfilledResource, transformers) {
+function publishImageWebSizes({autoRotatedImageDependencyName, hostingBucket, hostingPrefix, mediaId, widths}, addDependency, addResourceReference, getDependencyName, processParams, processParamValue, addFullfilledResource, transformers) {
   const resize = addDependency('resize', {
     accessSchema: exploranda.dataSources.sharp.resize.resizeOne,
     params: {
@@ -86,8 +86,8 @@ function publishImageWebSizes({autoRotatedImageDependencyName, publicHostingBuck
     }
   })
   const fulfilledResource = {
-    bucket: publicHostingBucket,
-    key: _.map(widths, (w) => `${(_.endsWith(publicHostingPrefix, '/') || !publicHostingPrefix) ? publicHostingPrefix : publicHostingPrefix + '/'}${mediaId}-${w}.JPG`)
+    bucket: hostingBucket,
+    key: _.map(widths, (w) => `${(_.endsWith(hostingPrefix, '/') || !hostingPrefix) ? hostingPrefix : hostingPrefix + '/'}${mediaId}/${w}.JPG`)
   }
   const save = addDependency('save',  {
     accessSchema: exploranda.dataSources.AWS.s3.putObject,
