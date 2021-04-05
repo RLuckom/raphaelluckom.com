@@ -66,13 +66,14 @@ Let's go through them one by one:
    the _default_ type of interaction; just as now, most feed items between friends would not be monetized. But some people
    could offer content for sale to the public as well as for free. 
 
-3. Would you have to sign in on every device to be billed correctly? As long as you connect to _your site_ and view content through
-   that interface, the content creators have a way to get paid--your site would pay them directly through microtransactions.
-   You could connect to your site any way you want--on your phone, on your laptop, a set-top box. Doesn't matter.
+3. Would you have to sign in on every device to be billed correctly? Yes, but you'd just need to sign in to your own site. 
+   As long as you view content through that interface, the content creators have a way to get paid--your site would pay
+   them directly through microtransactions. You could connect to your site any way you want--on your phone, on your laptop,
+   a set-top box. Doesn't matter.
 
 What starts to become apparent is how _different_ the market might look to someone who has their own services on the network,
 acting directly in their own interest[^8]. More and more of the tiny intrusions on one's personal life online would start to look
-like robocalls--automated, unwelcome, and unnecessary. Another side effect of this structure might be fewer stores of aggregated
+like robocalls--unhuman, unwelcome, and unnecessary. Another side effect of this structure might be fewer stores of aggregated
 data about individuals[^9].
 
 So what would it take to make that happen? I suspect that a network-hosted peer-to-peer system that was profitable for artists and small craftspeople

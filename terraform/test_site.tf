@@ -30,49 +30,6 @@ module human_attention_bucket {
     expose_headers = ["ETag"]
     max_age_seconds = 3000
   }]
-  prefix_object_permissions = [
-    {
-      permission_type = "put_object"
-      prefix = "uploads/test-site/img/"
-      arns = [module.cognito_identity_management.authenticated_role.arn]
-    }
-  ]
-  replication_configuration = {
-    role_arn = ""
-    donut_days_layer = module.donut_days.layer_config
-    rules = [
-      {
-        priority = 1
-        replicate_delete = true
-        filter = {
-          prefix = "uploads/test-site/img/"
-          suffix = ""
-          tags = {}
-        }
-        enabled = true
-        destination = {
-          bucket = module.admin_site.website_bucket_name
-          prefix = "staged-images/"
-          manual = true
-        }
-      },
-      {
-        priority = 2
-        filter = {
-          prefix = "uploads/test-site/posts/"
-          suffix = ".md"
-          tags = {}
-        }
-        enabled = true
-        replicate_delete = true
-        destination = {
-          bucket = module.test_site.website_bucket_name
-          prefix = "posts/"
-          manual = true
-        }
-      },
-    ]
-  }
 }
 
 module cognito_user_management {
@@ -133,9 +90,16 @@ module admin_site {
   }
   asset_path = "${path.root}/sites/private"
   lambda_authorizers = module.get_access_creds.lambda_authorizer_config
+  forbidden_website_paths = ["uploads/"]
   lambda_origins = module.get_access_creds.lambda_origins
   routing = local.variables.admin_domain_routing
-  website_bucket_prefix_object_permissions = module.human_attention_bucket.replication_function_permissions_needed[module.admin_site.website_bucket_name]
+  website_bucket_prefix_object_permissions = [
+    {
+      permission_type = "put_object"
+      prefix = "uploads/"
+      arns = [module.cognito_identity_management.authenticated_role.arn]
+    }
+  ]
   access_control_function_qualified_arns = [module.access_control_functions.access_control_function_qualified_arns]
   coordinator_data = module.visibility_system.serverless_site_configs["test_admin"]
   subject_alternative_names = ["www.admin.raphaelluckom.com"]
@@ -158,7 +122,6 @@ module test_site {
     security_scope = "test"
     subsystem_name = "site"
   }
-  website_bucket_prefix_object_permissions = module.human_attention_bucket.replication_function_permissions_needed[module.test_site.website_bucket_name]
   website_bucket_bucket_permissions = [
     {
       permission_type = "list_bucket"
