@@ -52,11 +52,9 @@ const {
   schema,
 } = require('prosemirror-markdown')
 
-const ATTN_BKT = "test-human-attention"
-const ADMIN_SITE_BKT = "admin.raphaelluckom.com"
-const TEST_SITE_BKT = "test.raphaelluckom.com"
+const ADMIN_SITE_BKT = "admin-raphaelluckom-com"
+const TEST_SITE_BKT = "test-raphaelluckom-com"
 const BLOG_POST_PREFIX = "posts/"
-const ATTN_PATH = "uploads/test-site/img/"
 const PRIV_LOAD_PATH = "staged-images/"
 
 // https://gist.github.com/mbrehin/05c0d41a7e50eef7f95711e237502c85
@@ -140,4 +138,3 @@ function listPostsDependencies(callback) {
 }
 
 document.addEventListener('DOMContentLoaded', initWysiwyEditors)
-document.addEventListener('DOMContentLoaded', listPostsDependencies)

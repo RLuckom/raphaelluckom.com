@@ -63,7 +63,7 @@ module access_control_functions {
   protected_domain_routing = local.variables.admin_domain_routing
   user_group_name = local.variables.user_group_name
   http_header_values = {
-    "Content-Security-Policy" = "default-src 'self'; connect-src 'self' https://athena.us-east-1.amazonaws.com https://s3.amazonaws.com https://test-human-attention.s3.amazonaws.com; img-src 'self' data:;"
+    "Content-Security-Policy" = "default-src 'self'; connect-src 'self' https://athena.us-east-1.amazonaws.com https://s3.amazonaws.com https://admin-raphaelluckom-com.s3.amazonaws.com; img-src 'self' data:;"
     "Strict-Transport-Security" = "max-age=31536000; includeSubdomains; preload"
     "Referrer-Policy" = "same-origin"
     "X-XSS-Protection" = "1; mode=block"

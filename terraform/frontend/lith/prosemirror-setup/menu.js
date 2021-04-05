@@ -130,16 +130,15 @@ function getName() {
   return v4()
 }
 
-const ATTN_BKT = "test-human-attention"
-const ADMIN_SITE_BKT = "admin.raphaelluckom.com"
-const TEST_SITE_BKT = "test.raphaelluckom.com"
+const ADMIN_SITE_BKT = "admin-raphaelluckom-com"
+const TEST_SITE_BKT = "test-raphaelluckom-com"
 const BLOG_POST_PREFIX = "posts/"
-const ATTN_PATH = "uploads/test-site/img/"
+const UPLOAD_PREFIX = "uploads/img/"
 const PRIV_LOAD_PATH = "staged-images/"
 
 function uploadFile(buffer, callback) {
   const rawName = getName()
-  const putPath = ATTN_PATH + rawName
+  const putPath = UPLOAD_PREFIX + rawName
   const getUrl = "https://admin.raphaelluckom.com/" + PRIV_LOAD_PATH + rawName 
   const dependencies = {
     credentials: {
@@ -150,7 +149,7 @@ function uploadFile(buffer, callback) {
       params: {
         apiConfig: apiConfigSelector,
         Body: {value: buffer },
-        Bucket: {value: ATTN_BKT },
+        Bucket: {value: ADMIN_SITE_BKT },
         Key: { value: putPath },
       }
     },
