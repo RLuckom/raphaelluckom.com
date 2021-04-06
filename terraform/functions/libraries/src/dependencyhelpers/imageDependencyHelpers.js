@@ -87,7 +87,7 @@ function publishImageWebSizes({autoRotatedImageDependencyName, hostingBucket, ho
   })
   const fulfilledResource = {
     bucket: hostingBucket,
-    key: _.map(widths, (w) => `${(_.endsWith(hostingPrefix, '/') || !hostingPrefix) ? hostingPrefix : hostingPrefix + '/'}${mediaId}/${w}.JPG`)
+    key: _.map(widths, (w) => `${(_.endsWith(hostingPrefix, '/') || !hostingPrefix) ? hostingPrefix : hostingPrefix + '/'}${mediaId}/${w}.jpg`)
   }
   const save = addDependency('save',  {
     accessSchema: exploranda.dataSources.AWS.s3.putObject,

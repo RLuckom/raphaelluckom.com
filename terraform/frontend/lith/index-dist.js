@@ -53,12 +53,10 @@ const {
   schema,
 } = require('prosemirror-markdown')
 
-const ATTN_BKT = "test-human-attention"
-const ADMIN_SITE_BKT = "admin.raphaelluckom.com"
-const TEST_SITE_BKT = "test.raphaelluckom.com"
+const ADMIN_SITE_BKT = "admin-raphaelluckom-com"
+const TEST_SITE_BKT = "test-raphaelluckom-com"
 const BLOG_POST_PREFIX = "posts/"
-const ATTN_PATH = "uploads/test-site/img/"
-const PRIV_LOAD_PATH = "staged-images/"
+const PRIV_LOAD_PATH = "img/"
 
 // https://gist.github.com/mbrehin/05c0d41a7e50eef7f95711e237502c85
 // script to replace <textarea> elements in forms with prosemirror editors 
@@ -141,7 +139,6 @@ function listPostsDependencies(callback) {
 }
 
 document.addEventListener('DOMContentLoaded', initWysiwyEditors)
-document.addEventListener('DOMContentLoaded', listPostsDependencies)
 
 },{"./prosemirror-setup/index":101,"prosemirror-markdown":70,"prosemirror-state":74,"prosemirror-view":76}],2:[function(require,module,exports){
 'use strict';
@@ -25070,17 +25067,16 @@ function getName() {
   return v4()
 }
 
-const ATTN_BKT = "test-human-attention"
-const ADMIN_SITE_BKT = "admin.raphaelluckom.com"
-const TEST_SITE_BKT = "test.raphaelluckom.com"
+const ADMIN_SITE_BKT = "admin-raphaelluckom-com"
+const TEST_SITE_BKT = "test-raphaelluckom-com"
 const BLOG_POST_PREFIX = "posts/"
-const ATTN_PATH = "uploads/test-site/img/"
-const PRIV_LOAD_PATH = "staged-images/"
+const UPLOAD_PREFIX = "uploads/img/"
+const PRIV_LOAD_PATH = "img/"
 
 function uploadFile(buffer, callback) {
   const rawName = getName()
-  const putPath = ATTN_PATH + rawName
-  const getUrl = "https://admin.raphaelluckom.com/" + PRIV_LOAD_PATH + rawName 
+  const putPath = UPLOAD_PREFIX + rawName
+  const getUrl = `https://admin.raphaelluckom.com/${PRIV_LOAD_PATH}${rawName}/500.jpg`
   const dependencies = {
     credentials: {
       accessSchema: credentialsAccessSchema
@@ -25090,7 +25086,7 @@ function uploadFile(buffer, callback) {
       params: {
         apiConfig: apiConfigSelector,
         Body: {value: buffer },
-        Bucket: {value: ATTN_BKT },
+        Bucket: {value: ADMIN_SITE_BKT },
         Key: { value: putPath },
       }
     },

@@ -55,7 +55,7 @@ const {
 const ADMIN_SITE_BKT = "admin-raphaelluckom-com"
 const TEST_SITE_BKT = "test-raphaelluckom-com"
 const BLOG_POST_PREFIX = "posts/"
-const PRIV_LOAD_PATH = "staged-images/"
+const PRIV_LOAD_PATH = "img/"
 
 // https://gist.github.com/mbrehin/05c0d41a7e50eef7f95711e237502c85
 // script to replace <textarea> elements in forms with prosemirror editors 

@@ -134,12 +134,12 @@ const ADMIN_SITE_BKT = "admin-raphaelluckom-com"
 const TEST_SITE_BKT = "test-raphaelluckom-com"
 const BLOG_POST_PREFIX = "posts/"
 const UPLOAD_PREFIX = "uploads/img/"
-const PRIV_LOAD_PATH = "staged-images/"
+const PRIV_LOAD_PATH = "img/"
 
 function uploadFile(buffer, callback) {
   const rawName = getName()
   const putPath = UPLOAD_PREFIX + rawName
-  const getUrl = "https://admin.raphaelluckom.com/" + PRIV_LOAD_PATH + rawName 
+  const getUrl = `https://admin.raphaelluckom.com/${PRIV_LOAD_PATH}${rawName}/500.jpg`
   const dependencies = {
     credentials: {
       accessSchema: credentialsAccessSchema

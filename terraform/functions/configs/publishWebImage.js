@@ -6,7 +6,17 @@ module.exports = {
         mediaId: {
           or: [
             {ref: 'event.mediaId'},
-            {helper: "uuid"},
+            { 
+              helper: 'transform',
+              params: {
+                func: {value: ({key}) => key.split('/').pop()},
+                  arg: {
+                  all: {
+                    key: { ref: 'event.Records[0].s3.object.key'}
+                  }
+                }
+              }
+            },
           ]
         },
         widths: { value: [500] },

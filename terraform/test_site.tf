@@ -98,8 +98,31 @@ module admin_site {
       permission_type = "put_object"
       prefix = "uploads/"
       arns = [module.cognito_identity_management.authenticated_role.arn]
+    },
+    {
+      permission_type = "put_object"
+      prefix = "img/"
+      arns = [module.upload_img.role.arn]
+    },
+  ]
+  website_bucket_lambda_notifications =  [
+    {
+      lambda_arn = module.upload_img.lambda.arn
+      lambda_name = module.upload_img.lambda.function_name
+      lambda_role_arn = module.upload_img.role.arn
+      permission_type     = "read_and_tag_known"
+      events              = ["s3:ObjectCreated:*"]
+      filter_prefix       = "uploads/"
+      filter_suffix       = ""
     }
   ]
+  website_bucket_cors_rules = [{
+    allowed_headers = ["authorization", "content-type", "x-amz-content-sha256", "x-amz-date", "x-amz-security-token", "x-amz-user-agent"]
+    allowed_methods = ["PUT", "GET"]
+    allowed_origins = ["https://admin.raphaelluckom.com"]
+    expose_headers = ["ETag"]
+    max_age_seconds = 3000
+  }]
   access_control_function_qualified_arns = [module.access_control_functions.access_control_function_qualified_arns]
   coordinator_data = module.visibility_system.serverless_site_configs["test_admin"]
   subject_alternative_names = ["www.admin.raphaelluckom.com"]
@@ -136,7 +159,7 @@ module test_site {
 module upload_img {
   source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
   timeout_secs = 10
-  mem_mb = 128
+  mem_mb = 256
   logging_config = module.visibility_system.lambda_log_configs["prod"]["human"].config
   additional_dependency_helpers = [{
     file_contents = file("./functions/libraries/src/dependencyhelpers/imageDependencyHelpers.js")
