@@ -6,6 +6,24 @@ provider "aws" {
   profile    = "default"
 }
 
+provider "aws" {
+  shared_credentials_file = "/.aws/credentials"
+  alias = "frankfurt"
+  region     = "eu-central-1"
+}
+
+provider "aws" {
+  shared_credentials_file = "/.aws/credentials"
+  alias = "sydney"
+  region     = "ap-southeast-2"
+}
+
+provider "aws" {
+  shared_credentials_file = "/.aws/credentials"
+  alias = "canada"
+  region     = "ca-central-1"
+}
+
 terraform {
   required_providers {
     aws = {
@@ -13,7 +31,7 @@ terraform {
       version = "~> 3.0"
     }
   }
-  required_version = ">= 0.13"
+  required_version = ">= 0.14"
   backend "s3" {
     shared_credentials_file = "/.aws/credentials"
     bucket = "raph"

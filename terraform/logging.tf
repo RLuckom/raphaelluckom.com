@@ -12,7 +12,7 @@ module visibility_system {
   scoped_logging_functions = {
     prod = {
       prod = module.prod_site.lambda_logging_roles
-      human = concat(module.human_attention_bucket.lambda_logging_roles, [module.upload_img.role.arn])
+      human = concat(module.human_attention_archive.lambda_logging_roles, [module.upload_img.role.arn])
     }
     test = {}
   }

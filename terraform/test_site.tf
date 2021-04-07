@@ -17,18 +17,24 @@ locals {
   }
 }
 
-module human_attention_bucket {
-  source = "github.com/RLuckom/terraform_modules//aws/state/object_store/bucket"
-  name = "test-human-attention"
-  replication_lambda_event_configs = local.notify_failure_only
+module human_attention_archive {
+  source = "github.com/RLuckom/terraform_modules//aws/state/object_store/replicated_archive?ref=deep-archive"
+  providers = {
+    aws.replica1 = aws.frankfurt
+    aws.replica2 = aws.sydney
+    aws.replica3 = aws.canada
+  }
+  bucket_prefix = "test-human-attention"
   security_scope = "prod"
+  replication_lambda_event_configs = local.notify_failure_only
   replication_function_logging_config = module.visibility_system.lambda_log_configs["prod"]["human"].config
-  cors_rules = [{
-    allowed_headers = ["authorization", "content-type", "x-amz-content-sha256", "x-amz-date", "x-amz-security-token", "x-amz-user-agent"]
-    allowed_methods = ["GET"]
-    allowed_origins = ["https://admin.raphaelluckom.com"]
-    expose_headers = ["ETag"]
-    max_age_seconds = 3000
+  donut_days_layer_config = module.donut_days.layer_config
+  replication_sources = [{
+    bucket = module.admin_site.website_bucket_name
+    prefix = "uploads/"
+    suffix = ""
+    tags = {}
+    storage_class = "GLACIER"
   }]
 }
 
@@ -83,7 +89,7 @@ module get_access_creds {
 }
 
 module admin_site {
-  source = "github.com/RLuckom/terraform_modules//aws/serverless_site/capstan"
+  source = "github.com/RLuckom/terraform_modules//aws/serverless_site/capstan?ref=deep-archive"
   system_id = {
     security_scope = "test"
     subsystem_name = "test"
@@ -93,20 +99,16 @@ module admin_site {
   forbidden_website_paths = ["uploads/"]
   lambda_origins = module.get_access_creds.lambda_origins
   routing = local.variables.admin_domain_routing
-  website_bucket_prefix_object_permissions = [
-    {
+  website_bucket_prefix_object_permissions = concat(
+    [{
       permission_type = "put_object"
       prefix = "uploads/"
       arns = [module.cognito_identity_management.authenticated_role.arn]
-    },
-    {
-      permission_type = "put_object"
-      prefix = "img/"
-      arns = [module.upload_img.role.arn]
-    },
-  ]
-  website_bucket_lambda_notifications =  [
-    {
+    }],
+    module.human_attention_archive.replication_function_permissions_needed[module.admin_site.website_bucket_name]
+  )
+  website_bucket_lambda_notifications = concat(
+    [{
       lambda_arn = module.upload_img.lambda.arn
       lambda_name = module.upload_img.lambda.function_name
       lambda_role_arn = module.upload_img.role.arn
@@ -114,8 +116,10 @@ module admin_site {
       events              = ["s3:ObjectCreated:*"]
       filter_prefix       = "uploads/"
       filter_suffix       = ""
-    }
-  ]
+    }],
+    module.human_attention_archive.bucket_notifications[module.admin_site.website_bucket_name]
+  )
+
   website_bucket_cors_rules = [{
     allowed_headers = ["authorization", "content-type", "x-amz-content-sha256", "x-amz-date", "x-amz-security-token", "x-amz-user-agent"]
     allowed_methods = ["PUT", "GET"]
