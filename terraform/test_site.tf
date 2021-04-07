@@ -18,7 +18,7 @@ locals {
 }
 
 module human_attention_archive {
-  source = "github.com/RLuckom/terraform_modules//aws/state/object_store/replicated_archive?ref=deep-archive"
+  source = "github.com/RLuckom/terraform_modules//aws/state/object_store/replicated_archive"
   providers = {
     aws.replica1 = aws.frankfurt
     aws.replica2 = aws.sydney
@@ -89,7 +89,7 @@ module get_access_creds {
 }
 
 module admin_site {
-  source = "github.com/RLuckom/terraform_modules//aws/serverless_site/capstan?ref=deep-archive"
+  source = "github.com/RLuckom/terraform_modules//aws/serverless_site/capstan"
   system_id = {
     security_scope = "test"
     subsystem_name = "test"
@@ -104,6 +104,11 @@ module admin_site {
       permission_type = "put_object"
       prefix = "uploads/"
       arns = [module.cognito_identity_management.authenticated_role.arn]
+    }],
+    [{
+      permission_type = "put_object"
+      prefix = "img/"
+      arns = [module.upload_img.role.arn]
     }],
     module.human_attention_archive.replication_function_permissions_needed[module.admin_site.website_bucket_name]
   )
