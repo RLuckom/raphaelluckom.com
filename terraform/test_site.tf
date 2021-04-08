@@ -33,7 +33,11 @@ module human_attention_archive {
     bucket = module.admin_site.website_bucket_name
     prefix = "uploads/"
     suffix = ""
-    tags = {}
+    filter_tags = {}
+    completion_tags = [{
+      Key = "Archived"
+      Value = "true"
+    }]
     storage_class = "GLACIER"
   }]
 }
