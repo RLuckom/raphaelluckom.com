@@ -1,6 +1,57 @@
+const _ = require('lodash'); 
+const ExifReader = require('exifreader');
+
+function exifMeta(img) {
+  let meta = {}
+  try {
+    meta = ExifReader.load(img, {expanded: true})
+  } catch(e) {}
+  let date
+  try {
+    const year = meta.exif.DateTimeOriginal.description.slice(0, 4)
+    const month = meta.exif.DateTimeOriginal.description.slice(5, 7)
+    const day = meta.exif.DateTimeOriginal.description.slice(8, 10)
+    const hour = meta.exif.DateTimeOriginal.description.slice(11, 13)
+    const minute = meta.exif.DateTimeOriginal.description.slice(14, 16)
+    const second = meta.exif.DateTimeOriginal.description.slice(17, 19)
+    date = {year, month, day, hour, minute, second}
+  } catch(e) {
+    const now = new Date()
+    date = {
+      year: now.getFullYear(),
+      month: now.getMonth(),
+      day: now.getUTCDate(),
+      hour: now.getUTCHours(),
+      minute: now.getUTCMinutes(),
+      second: now.getUTCSeconds(),
+    }
+  }
+  if (_.get(meta, 'exif.MakerNote')) {
+    delete meta.exif.MakerNote
+  }
+  const ret = {
+    image: img,
+    meta: {
+      file: meta.file,
+      exif: meta.exif,
+      xmp: meta.xmp,
+      iptc: meta.iptc,
+      // I think the gps is getters not data so it doesn't json nicely
+      gps: meta.gps ? {
+        Latitude: meta.gps.Latitude,
+        Longitude: meta.gps.Longitude,
+        Altitude: meta.gps.Altitude,
+      } : null,
+      timestamp: date.year + "-" + date.month + "-" + date.day + "T" +  date.hour + ":" + date.minute + ":" + date.second + ".000",
+    },
+    date
+  };
+  return ret
+}
+
 module.exports = {
   stages: {
-    intro: {
+    file: {
       index: 0,
       transformers: {
         mediaId: {
@@ -19,7 +70,7 @@ module.exports = {
             },
           ]
         },
-        widths: { value: [500] },
+        widths: { value: [50, 500] },
         bucket: {
           or: [
             {ref: 'event.bucket'},
@@ -34,30 +85,168 @@ module.exports = {
         },
       },
       dependencies: {
-        getImage: {
-          action: 'image.getImageAutoRotated',
+        file: {
+          action: 'exploranda',
           params: {
-            inputBucket: { ref: 'stage.bucket' },
-            inputKey: { ref: 'stage.imageKey' },
+            accessSchema: {value: 'dataSources.AWS.s3.getObject'},
+            explorandaParams: {
+              Bucket: {ref: 'stage.bucket'},
+              Key: {ref: 'stage.imageKey'},
+            }
           }
-        },
-        publishImageWebSizes: {
-          action: 'image.publishImageWebSizes',
-          params: {
-            autoRotatedImageDependencyName: { 
-              helper: 'qualifiedDependencyName',
-              params: {
-                configStepName: { value: 'getImage' },
-                dependencyName: { value: 'autoRotatedImage' },
-              },
-            },
-            hostingBucket: { value: '${media_hosting_bucket}' },
-            hostingPrefix: { value: '${media_storage_prefix}' },
-            mediaId: { ref: 'stage.mediaId' },
-            widths: { ref: 'stage.widths' },
-          }
-        },
+        }
       }
-    }
+    },
+    fileType: {
+      index: 1,
+      dependencies: {
+        fileType: {
+          action: 'exploranda',
+          params: {
+            accessSchema: {value: 'dataSources.FILE_TYPE.fromBuffer'},
+            explorandaParams: {
+              file: { ref: 'file.results.file[0].Body'}
+            }
+          }
+        }
+      }
+    },
+    image: {
+      index: 2,
+      dependencies: {
+        image: {
+          action: 'exploranda',
+          params: {
+            accessSchema: {
+              value: {
+                dataSource: 'SYNTHETIC',
+                value: { path: _.identity},
+                transformation: ({meta}) => {
+                  return meta
+                }
+              }
+            },
+            explorandaParams: {
+              meta: {
+                helper: ({image, fileType}) => {
+                  if (!fileType) {
+                    return { image }
+                  }
+                  const { ext } = fileType
+                  let meta = {image}
+                  if (['png', 'jpg', 'tif', 'webp', 'heic'].indexOf(ext) !== -1) {
+                    meta = exifMeta(image)
+                  }
+                  meta.fileType = fileType
+                  return meta
+                },
+                params: {
+                  image: { ref: 'file.results.file[0].Body'},
+                  fileType: { ref: 'fileType.results.fileType[0]'}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    rotatedImage: {
+      index: 3,
+      transformers: {
+        useSharp: {
+          helper: ({ext}) => ['png', 'jpg', 'tif', 'webp', 'heic'].indexOf(ext) !== -1,
+          params: {
+            ext: { ref: 'fileType.results.fileType[0].ext'},
+          }
+        },
+      },
+      dependencies: {
+        rotatedImage: {
+          condition: {ref: 'stage.useSharp'},
+          action: 'exploranda',
+          params: {
+            accessSchema: {value: 'dataSources.sharp.rotate.rotateOne'},
+            explorandaParams: {
+              image: { ref: 'image.results.image[0].image' }
+            }
+          }
+        }
+      }
+    },
+    resizeImage: {
+      index: 4,
+      transformers: {
+        widths: { value: [50, 500] }
+      },
+      dependencies: {
+        resizedImage: {
+          condition: {ref: 'rotatedImage.vars.useSharp'},
+          action: 'exploranda',
+          params: {
+            accessSchema: {value: 'dataSources.sharp.resize.resizeOne'},
+            explorandaParams: {
+              image: { ref: 'rotatedImage.results.rotatedImage[0]' },
+              width: {ref: 'stage.widths'},
+              withoutEnlargement: {value: true},
+            }
+          }
+        }
+      }
+    },
+    saveResizedImage: {
+      index: 5,
+      transformers: {
+        widths: { value: [50, 500] }
+      },
+      dependencies: {
+        save: {
+          action: 'exploranda',
+          params: {
+            accessSchema: { value: 'dataSources.AWS.s3.putObject' },
+            explorandaParams: {
+              Bucket: { value: '${media_hosting_bucket}' },
+              Body: { or: [
+                { ref: 'resizeImage.results.resizedImage' },
+                { 
+                  helper: ({widths, image}) => _.times(widths.length, _.constant(image)),
+                  params: {
+                    widths: { ref: 'stage.widths' },
+                    image: { ref: 'image.results.image[0].image' }
+                  }
+                } ],
+              },
+              Key: {
+                helper: ({widths, ext, mediaId}) => _.map(widths, (w) => "${trim(media_storage_prefix, "/")}/" + mediaId + "/" + w + "." + ext),
+                params: {
+                  ext: { ref: 'fileType.results.fileType[0].ext'},
+                  mediaId: { ref: 'file.vars.mediaId' },
+                  widths: { ref: 'stage.widths' },
+                }
+              }
+            }
+          }
+        }
+      },
+    },
+    tagUploadComplete: {
+      index: 6,
+      dependencies: {
+        tag: {
+          action: 'exploranda',
+          params: {
+            accessSchema: {value: 'dataSources.AWS.s3.putObjectTagging'},
+            params: {
+              explorandaParams: {
+                Key: {ref: 'event.Records[0].s3.object.key'},
+                Bucket: {ref: 'event.Records[0].s3.bucket.name'},
+                Tagging: {value: {
+                  TagSet: ${tags}
+                }}
+              }
+            }
+          },
+        },
+      },
+    },
   }
 }

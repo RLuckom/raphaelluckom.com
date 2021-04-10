@@ -172,15 +172,16 @@ module test_site {
 module upload_img {
   source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
   timeout_secs = 10
-  mem_mb = 256
+  mem_mb = 1024
   logging_config = module.visibility_system.lambda_log_configs["prod"]["human"].config
-  additional_dependency_helpers = [{
-    file_contents = file("./functions/libraries/src/dependencyhelpers/imageDependencyHelpers.js")
-    helper_name = "image"
-  }]
+  log_level = true
   config_contents = templatefile("./functions/configs/publishWebImage.js", {
     media_hosting_bucket = module.admin_site.website_bucket_name
     media_storage_prefix = "img/"
+    tags = jsonencode([{
+      Key = "imagePublished"
+      Value = "true"
+    }])
   })
   lambda_event_configs = local.notify_failure_only
   action_name = "upload_img"

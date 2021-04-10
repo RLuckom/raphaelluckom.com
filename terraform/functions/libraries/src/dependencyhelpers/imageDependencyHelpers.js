@@ -1,6 +1,7 @@
 const { exploranda } = require('donut-days');
 const _ = require('lodash'); 
 const crypto = require('crypto')
+const FileType = require('file-type')
 
 const ExifReader = require('exifreader');
 
@@ -10,64 +11,106 @@ function sha1(buf) {
   return hash.digest('hex')
 }
 
+function exifMeta(img) {
+  let meta = {}
+  try {
+    meta = ExifReader.load(img, {expanded: true})
+  } catch(e) {}
+  let date
+  try {
+    const year = meta.exif.DateTimeOriginal.description.slice(0, 4)
+    const month = meta.exif.DateTimeOriginal.description.slice(5, 7)
+    const day = meta.exif.DateTimeOriginal.description.slice(8, 10)
+    const hour = meta.exif.DateTimeOriginal.description.slice(11, 13)
+    const minute = meta.exif.DateTimeOriginal.description.slice(14, 16)
+    const second = meta.exif.DateTimeOriginal.description.slice(17, 19)
+    date = {year, month, day, hour, minute, second}
+  } catch(e) {
+    const now = new Date()
+    date = {
+      year: now.getFullYear(),
+      month: now.getMonth(),
+      day: now.getUTCDate(),
+      hour: now.getUTCHours(),
+      minute: now.getUTCMinutes(),
+      second: now.getUTCSeconds(),
+    }
+  }
+  if (_.get(meta, 'exif.MakerNote')) {
+    delete meta.exif.MakerNote
+  }
+  const ret = {
+    image: img,
+    meta: {
+      file: meta.file,
+      exif: meta.exif,
+      xmp: meta.xmp,
+      iptc: meta.iptc,
+      // I think the gps is getters not data so it doesn't json nicely
+      gps: meta.gps ? {
+        Latitude: meta.gps.Latitude,
+        Longitude: meta.gps.Longitude,
+        Altitude: meta.gps.Altitude,
+      } : null,
+      timestamp: `${date.year}-${date.month}-${date.day} ${date.hour}:${date.minute}:${date.second}.000` ,
+    },
+    date
+  };
+  return ret
+}
+
 function getImageAutoRotated({inputBucket, inputKey}, addDependency, addResourceReference, getDependencyName, processParams, processParamValue, addFullfilledResource, transformers) {
-  const image = addDependency('image', {
+  const file = addDependency('file', {
     accessSchema: exploranda.dataSources.AWS.s3.getObject,
     params: {
       Bucket: {value: inputBucket},
       Key: {value: inputKey}
+    }
+  })
+  const fileType = addDependency('fileType', {
+    accessSchema: exploranda.dataSources.FILE_TYPE.fromBuffer,
+    params: {
+      file: {
+        source: file,
+        formatter: ({file}) => file[0].Body
+      }
     },
-    formatter: (res) => _.map(res, (r) => {
-      const meta = ExifReader.load(r.Body, {expanded: true})
-      let date
-      try {
-        const year = meta.exif.DateTimeOriginal.description.slice(0, 4)
-        const month = meta.exif.DateTimeOriginal.description.slice(5, 7)
-        const day = meta.exif.DateTimeOriginal.description.slice(8, 10)
-        const hour = meta.exif.DateTimeOriginal.description.slice(11, 13)
-        const minute = meta.exif.DateTimeOriginal.description.slice(14, 16)
-        const second = meta.exif.DateTimeOriginal.description.slice(17, 19)
-        date = {year, month, day, hour, minute, second}
-      } catch(e) {
-        const now = new Date()
-        date = {
-          year: now.getFullYear(),
-          month: now.getMonth(),
-          day: now.getUTCDate(),
-          hour: now.getUTCHours(),
-          minute: now.getUTCMinutes(),
-          second: now.getUTCSeconds(),
-        }
+  })
+  const image = addDependency('image', {
+    accessSchema: {
+      dataSource: 'SYNTHETIC',
+      value: { path: _.identity},
+      transformation: ({meta}) => {
+        return meta
       }
-      if (_.get(meta, 'exif.MakerNote')) {
-        delete meta.exif.MakerNote
+    },
+    params: {
+      meta: {
+        source: [file, filteType],
+        formatter: (({file, fileType}) => {
+          const img = file[0].Body
+          fileType = fileType[0]
+          if (!filetype) {
+            return
+          }
+          const { ext, mime } = filetype
+          let meta = {image: img}
+          if (_.find(['png', 'jpg', 'tif', 'webp', 'heic'], ext)) {
+            meta = exifMeta(img)
+          }
+          meta.fileType = fileType
+          return meta
+        })
       }
-      const ret = {
-        image: r.Body,
-        meta: {
-          file: meta.file,
-          exif: meta.exif,
-          xmp: meta.xmp,
-          iptc: meta.iptc,
-          // I think the gps is getters not data so it doesn't json nicely
-          gps: meta.gps ? {
-            Latitude: meta.gps.Latitude,
-            Longitude: meta.gps.Longitude,
-            Altitude: meta.gps.Altitude,
-          } : null,
-          timestamp: `${date.year}-${date.month}-${date.day} ${date.hour}:${date.minute}:${date.second}.000` ,
-        },
-        date
-      };
-      return ret
-    })
+    }
   })
   const autoRotatedImage = addDependency('autoRotatedImage', {
     accessSchema: exploranda.dataSources.sharp.rotate.rotateOne,
     params: {
       image: {
         source: image,
-        formatter: (params) => params[image][0].image
+        formatter: (params) => {
+          return _.find(['jpg', 'png', 'webp', 'tif'], _.get(params[image], '[0].fileType.ext')) ? params[image][0].image : []
       },
     }
   })
