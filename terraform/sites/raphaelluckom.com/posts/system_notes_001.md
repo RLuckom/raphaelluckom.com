@@ -50,26 +50,27 @@ complex than the already-tested process.
 In the following paragraphs I'll address each of the fundamental web service areas and describe how my system provides
 them:
 
-### Access Control
+#### Access Control
 The user-management is provided by [AWS Cognito](https://aws.amazon.com/cognito/), which is free for a single-user use case.
 The access control for private site areas sits at the edge of the system. In a [previous post](https://raphaelluckom.com/posts/login_system_notes.html) I
 described the implementation details of this system; in my [first post on testing](https://raphaelluckom.com/posts/on_testing_000.html) I described
 how it works in a more accessible way. The basic outline is that Cognito provides OAuth2.0 endpoints, and a combination of built-in AWS functionality
-and hosted access-control functions guard private endpoints[^5]. Every forseeable piece of functionality I intend for this system can feasibly
+and hosted access-control functions guard private site areas[^5]. Every forseeable piece of functionality I intend for this system can feasibly
 make use of these security controls.
 
-### UI
+#### UI
 Table stakes for an effective UI are basically two capabilities:
 
 1. Ability to serve assets from URLs, including media, markup, and scripts
 2. Ability to call server-side functions from scripts running on a web page.
 
 For this system, assets are hosted using AWS S3 and delivered using AWS Cloudfront. Scripts in the browser can either use
-system-specific server-side code or they can get scope-limited credentials to interact with AWS services like S3 directly. Specifically,
-I've prototyped hosting a private site, uploading images to S3 hosting, getting AWS access credentials, and running log queries in the browser.
-These prototypes cover a broad enough group of use-cases that I'm confident that all the others I intend can be added.
+system-specific server-side code (i.e. lambda functions I write) or they can get scope-limited credentials to interact with AWS services like
+S3 directly. Specifically, I've prototyped hosting a private site, getting AWS access credentials, uploading images to S3 hosting, and
+running log queries in the browser. These prototypes cover a broad enough group of use-cases that I'm confident that all the others I 
+intend can be added.
 
-### API and Domain Logic
+#### API and Domain Logic
 The blog system example in the practitioner-journey series demonstrates using event-driven lambda functions to perform all of the
 system-specific server-side processing, while a content-delivery network (Cloudfront, in the case of AWS) provides basic file-serving
 functionality. I've validated my ability to trigger events from the browser, and there are even published guides for things like
@@ -78,7 +79,7 @@ which I believe could be made to work on pay-as-you-go terms. I've also looked i
 my existing combination of lambda and S3 would be sufficient to integrate payment processing. Various permutations of the existing code
 used for access control could also enable private messages or content-sharing between friend or subscriber groups.
 
-### Application Data
+#### Application Data
 My prototype demonstrates both a _feasible structure_ for application data and a _backup strategy_. Artifacts of human attention,
 --text, media, etc.-- will be stored in S3. The prototype blog system I outlined demonstrated how text and images could be stored
 in S3 in convenient forms. In the past two weeks, I've also made provision for backups: I've made a terraform module that creates
@@ -87,16 +88,16 @@ anything added to those paths into deep storage in all three locations. I believ
 solutions currently available to consumers, and cheaper[^6]. Both of the data stores I use--S3 and Dynamo--are functionally limitless
 as far as an average single user is concerned, so there's no chance of filling up a drive.
 
-### Logging and Analytics
+#### Logging and Analytics
 The prototype generates logs from Cloudfront, APIGateway, and Lambda. All the logs from Cloudfront and Lambda are stored in S3 and can be
-queried using SQL syntax. The logs fro APIGateway are delivered to AWS Cloudwatch, Amazon's logging platform. I've prototyped a system for
+queried using SQL syntax. The logs from APIGateway are delivered to AWS Cloudwatch, Amazon's logging platform. I've prototyped a system for
 moving logs out of cloudwatch and into S3, but I haven't found enough use for the APIGateway logs yet to make it worthwhile. All of the logs stored
 in S3 have sensible expiration times, so they won't stick around costing money forever. This log system design allows arbitrary analytics
 to be set up on the collected data; the metric I use most frequently is a query that shows me the plausibly-human[^7] traffic to this site.
 Crucially, the logging system is defined centrally in terraform, so that each function and cloudfront distribution is told where to send its logs, and
 given the appropriate minimal permissions needed to do so.
 
-### Conclusion
+#### Conclusion
 This foundation seems good to me. I trust these subsystems, and I feel like I have enough maneuvering room that I can implement whatever features
 turn out to be required. At various points over the last couple of weeks I've been able to quickly implement things, or test out things, that would
 have been more difficult without having this pre-work complete. I've had the nice experience of actually being able to use the work that Raphael-in-the-past
@@ -115,7 +116,7 @@ upgrades without losing their data or being forced into changes they don't want.
       to operate, where the challenges are and what opportunities exist for improvement.
 
 [^2]: By "reliable," I mean that the system tends to operate without errors, and with no required maintenance,
-      to a degree comparable to the ordinary person's experience of a hosted service like facebook. As a very rough guide, We can observe
+      to a degree comparable to the ordinary person's experience of a hosted service like facebook. As a very rough guide, we can observe
       that facebook appeared to have [at least 24 hours](https://www.theverge.com/2019/3/14/18265185/facebook-instagram-whatsapp-outage-2019-return-back)
       of degraded performance in 2019, which would be 99.7% uptime. I think this is a fairly modest target; it's common to aim for
       99.9% or even 99.99% (service-level agreements are often described in "nines," where "one nine" means 99.9% and "two nines" means 99.99%).
@@ -143,7 +144,7 @@ upgrades without losing their data or being forced into changes they don't want.
 
 [^4]: By "single user" I mean that by default, the system is designed to have all the previous properties--cheap, reliable, hostable--when
       deployed by _one_ non-practitioner who intends to use it themselves. One of my favorite pragmatic guides to operating social media
-      systems is [Run your own social](https://runyourown.social/), by Darius Kazemi. He describes his experience running a version of the
+      systems is [Run Your Own Social](https://runyourown.social/), by Darius Kazemi. He describes his experience running a version of the
       [mastodon](https://mastodon.social/about) social network software for a group of his friends, and offers realism and advice about what that
       entails. His top-line advice is that the type of communal social network he describes should have no more than 50-100 users. He says:
 
@@ -152,18 +153,17 @@ upgrades without losing their data or being forced into changes they don't want.
       > (who I believe actually owned the server and its domain) said they were burned out on running the server. In the end, the site was shut down.
       > According to archive.org it had about 2400 registered accounts in April 2018, shortly before the instance was deleted. If we look at instances
       > of similar size today we can extrapolate that there were perhaps 500 active users on the server at the time it went dark...
-      > ...
+
       > I posit that 500 active, invested community members will not be able to achieve a values-based harmony or consensus. It's simply too big to
       > be possible. My assertion is not backed up by any studies I have read but rather my personal experience in online and offline groups of all kinds.
       > You cannot wrangle consensus from 500 people. With that many active, committed community members you will necessarily have at least a few dedicated
       > members who feel investment and ownership in the community who are also extremely unhappy with the direction of the community. 
 
-      I see no reason to doubt Mr. Kazemi's account--it's internally consistent, narrowly focused, and based on real-world experience. It is _because_
-      I find this account convincing that I explicitly do _not_ want to rely on the economies of scale that arise when multiple users all share
-      a centralized system. I trust that the 50-100 users number is approximately right for a single instance, but I'm not sure how well it works
-      for the users themselves. Specifically, I think that in any group of 50-100 people, some of the people will be _centered_ in the group--they'll
-      have most or all of their social needs met by others in the group--and others will be _on the edges_--they will fit better in _that_ group than
-      in any other, but their values and interests will not necessarily align well with the average within the group.
+      I see no reason to doubt Mr. Kazemi. It is _because_ I find this account convincing that I explicitly do _not_ want to rely on the economies
+      of scale that arise when multiple users all share a centralized system. I trust that the 50-100 users number is approximately right for a single 
+      instance, but I'm not sure how well it works for the users themselves. Specifically, I think that in any group of 50-100 people, some of the people
+      will be _centered_ in the group--they'll have most or all of their social needs met by others in the group--and others will be _on the edges_--they
+      will fit better in _that_ group than in any other, but their values and interests will not necessarily align well with the average within the group.
 
       However, in a system where each individual owns their own platform, such edge / center differences need not exist. Each person would establish
       connections proactively between their own site and the sites of people they like. Each person would be _centered_ in their own social group.
@@ -175,7 +175,7 @@ upgrades without losing their data or being forced into changes they don't want.
       authorizations such as those given by Cognito, while Cloudfront provides a way for system-designer-supplied functions to validate requests and
       guard access.
 
-[^6]: In the US, Apple's iCloud backup solution costs $0.99 / month for 50GB of storage. THe same amount of data stored in the system I've prototyped
+[^6]: In the US, Apple's iCloud backup solution costs $0.99 / month for 50GB of storage. The same amount of data stored in the system I've prototyped
       would cost around $0.67 (50GB replicated 3 times at $0.004 per GB per month). There are admittedly other factors to consider--the storage for the
       non-archival versions of the data (hopefully smaller), and a comparison between Apple's durability strategy (where the data is backed up and how)
       and mine.
