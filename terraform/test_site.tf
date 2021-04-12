@@ -172,7 +172,7 @@ module test_site {
 module upload_img {
   source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
   timeout_secs = 10
-  mem_mb = 1024
+  mem_mb = 512
   logging_config = module.visibility_system.lambda_log_configs["prod"]["human"].config
   log_level = true
   config_contents = templatefile("./functions/configs/publishWebImage.js", {

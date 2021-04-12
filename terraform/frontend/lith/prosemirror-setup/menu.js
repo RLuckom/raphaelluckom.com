@@ -79,7 +79,7 @@ function startImageUpload(view, file) {
   view.dispatch(tr)
 
   file.arrayBuffer().then((buffer) => {
-    uploadFile(buffer, (e, url) => {
+    uploadFile(buffer, file.name.split('.').pop(), (e, url) => {
       if (e) {
         return view.dispatch(tr.setMeta(placeholderPlugin, {remove: {id}}))
       }
@@ -136,10 +136,10 @@ const BLOG_POST_PREFIX = "posts/"
 const UPLOAD_PREFIX = "uploads/img/"
 const PRIV_LOAD_PATH = "img/"
 
-function uploadFile(buffer, callback) {
+function uploadFile(buffer, ext, callback) {
   const rawName = getName()
   const putPath = UPLOAD_PREFIX + rawName
-  const getUrl = `https://admin.raphaelluckom.com/${PRIV_LOAD_PATH}${rawName}/500.jpg`
+  const getUrl = `https://admin.raphaelluckom.com/${PRIV_LOAD_PATH}${rawName}/500.${ext}`
   const dependencies = {
     credentials: {
       accessSchema: credentialsAccessSchema

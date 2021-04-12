@@ -13,7 +13,7 @@ that provides its owner with _online agency_, broadly defined to include things 
 sending and receiving, document storage and composition, durable data backup, etc. 
 
 I am working on a proof-of-concept system that fulfills the top-level requirements--cost, reliability, and hostability
-at single-user scale--and provides enough of the intended feature-set to demonstrate that implementing the _entire_ feature-set
+at single-user scale--and provides enough of the intended feature set to demonstrate that implementing the _entire_ feature set
 is feasible. That is, I'm building a set of foundational features--user management, logging and analytics, deployment, backups,
 hosting and networking, UI--that will support my initial feature set and provide a clear path for adding subsequent features.
 In this post I'm going to describe that foundation at a high level, making the case that it is effectively finished and most of the

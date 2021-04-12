@@ -1,5 +1,6 @@
 const _ = require('lodash'); 
 const ExifReader = require('exifreader');
+const isSvg = require('is-svg')
 
 function exifMeta(img) {
   let meta = {}
@@ -111,8 +112,28 @@ module.exports = {
         }
       }
     },
-    image: {
+    imageType: {
       index: 2,
+      transformers: {
+        imageType: {
+          helper: ({image, fileType}) => {
+            if (_.get(fileType, 'ext') === "xml" && isSvg(image)) {
+              return {
+                ext: 'svg',
+                mime: 'image/svg+xml'
+              }
+            }
+            return fileType
+          },
+          params: {
+            image: { ref: 'file.results.file[0].Body'},
+            fileType: { ref: 'fileType.results.fileType[0]'}
+          }
+        }
+      },
+    },
+    image: {
+      index: 3,
       dependencies: {
         image: {
           action: 'exploranda',
@@ -142,7 +163,7 @@ module.exports = {
                 },
                 params: {
                   image: { ref: 'file.results.file[0].Body'},
-                  fileType: { ref: 'fileType.results.fileType[0]'}
+                  fileType: { ref: 'imageType.vars.imageType'}
                 }
               }
             }
@@ -151,12 +172,12 @@ module.exports = {
       }
     },
     rotatedImage: {
-      index: 3,
+      index: 4,
       transformers: {
         useSharp: {
           helper: ({ext}) => ['png', 'jpg', 'tif', 'webp', 'heic'].indexOf(ext) !== -1,
           params: {
-            ext: { ref: 'fileType.results.fileType[0].ext'},
+            ext: { ref: 'imageType.vars.imageType.ext'},
           }
         },
       },
@@ -174,7 +195,7 @@ module.exports = {
       }
     },
     resizeImage: {
-      index: 4,
+      index: 5,
       transformers: {
         widths: { value: [50, 500] }
       },
@@ -194,7 +215,7 @@ module.exports = {
       }
     },
     saveResizedImage: {
-      index: 5,
+      index: 6,
       transformers: {
         widths: { value: [50, 500] }
       },
@@ -215,10 +236,11 @@ module.exports = {
                   }
                 } ],
               },
+              ContentType: { ref: 'imageType.vars.imageType.mime'},
               Key: {
                 helper: ({widths, ext, mediaId}) => _.map(widths, (w) => "${trim(media_storage_prefix, "/")}/" + mediaId + "/" + w + "." + ext),
                 params: {
-                  ext: { ref: 'fileType.results.fileType[0].ext'},
+                  ext: { ref: 'imageType.vars.imageType.ext'},
                   mediaId: { ref: 'file.vars.mediaId' },
                   widths: { ref: 'stage.widths' },
                 }
@@ -229,7 +251,7 @@ module.exports = {
       },
     },
     tagUploadComplete: {
-      index: 6,
+      index: 7,
       dependencies: {
         tag: {
           action: 'exploranda',
