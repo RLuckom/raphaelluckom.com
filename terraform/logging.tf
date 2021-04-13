@@ -21,8 +21,8 @@ module visibility_system {
       raphaelluckom_com = {
         add_partition_permission_names = []
         add_partition_permission_arns = []
-        query_permission_names = [module.cognito_identity_management.authenticated_role.name]
-        query_permission_arns = [module.cognito_identity_management.authenticated_role.arn]
+        query_permission_names = [module.cognito_identity_management.authenticated_role["athena"].name]
+        query_permission_arns = [module.cognito_identity_management.authenticated_role["athena"].arn]
       }
     }
   }

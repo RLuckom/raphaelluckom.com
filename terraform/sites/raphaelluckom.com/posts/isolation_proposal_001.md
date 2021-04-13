@@ -13,7 +13,7 @@ _This post describes a proposal for giving parts of a UI minimal permissions. I 
 to work, but I'd like to write it out so that others can try to poke holes in it before I get
 too invested. It's going to be somewhat technical._
 
-What I am describing is basically a means for isolating the permissions given to plugins in
+This proposal concerns a strategy for isolating the permissions given to plugins in
 a plugin architecture. I'm looking for insight into whether this design can succeed in isolating
 those permissions.
 
@@ -28,6 +28,9 @@ for any one of several roles.
 For the purpose of this discussion, a _plugin_ consists of an arbitrary[^1] directory of files
 to be served to a browser over HTTPS. The plugin authors would _not_ be allowed to set response 
 headers for these pages--the CSP header, specifically, would restrict the plugin capabilities. 
+To prevent cross-plugin attacks, the CSP for each plugin could be narrowed to only allow requests
+to whitelisted API paths, even within the host domain.
+
 Plugin authors would specify the permissions required by their plugin. On plugin installation, 
 a role with those permissions would be created, and it would be included in the set of roles that 
 can be given in return for the ID token of an authorized user[^2]. The goal of this design is 
@@ -49,9 +52,7 @@ the endpoint would use the `Referer` header to determine which page sent the req
 look up the appropriate role based on the page prefix (i.e. a request originating from `plugins/blog/index.html` 
 would map to the role for the `blog` plugin). The `get-credentials` code would then attempt to
 exchange the ID JWT for a set of AWS credentials with the requested role. If successful, these
-would be returned to the script running on the page. To prevent cross-plugin attacks, the CSP
-for each plugin could be narrowed to only allow requests to whitelisted API paths, even within
-the host domain.
+would be returned to the script running on the page. 
 
 I'm looking for ways that this design could fail, where failure is defined as plugin code gaining
 access to permissions outside those included in the requested set, such as those of a different

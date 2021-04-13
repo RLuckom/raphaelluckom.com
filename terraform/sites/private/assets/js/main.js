@@ -371,5 +371,6 @@ const dependencies = {
 }
 
 exploranda.Gopher(dependencies).report((e, d) => {
-  console.log(d.results)
+  console.log(e)
+  console.log(d)
 })

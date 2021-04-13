@@ -54,8 +54,17 @@ module cognito_user_management {
 module cognito_identity_management {
   source = "github.com/RLuckom/terraform_modules//aws/access_control/hinge"
   system_id = local.variables.cognito_system_id
+  required_group = local.variables.user_group_name
   client_id               = module.cognito_user_management.user_pool_client.id
   provider_endpoint           = module.cognito_user_management.user_pool.endpoint
+  authenticated_policy_statements = {
+    athena = []
+    blog = []
+  }
+  plugin_role_name_map = {
+    "blog" = "blog"
+    "visibility" = "athena"
+  }
 }
 
 resource random_password nonce_signing_secret {
@@ -90,6 +99,7 @@ module get_access_creds {
   gateway_name_stem = "test_site"
   client_id = module.cognito_user_management.user_pool_client.id
   aws_sdk_layer = module.aws_sdk.layer_config
+  plugin_role_map = module.cognito_identity_management.plugin_role_map
 }
 
 module admin_site {
@@ -106,8 +116,8 @@ module admin_site {
   website_bucket_prefix_object_permissions = concat(
     [{
       permission_type = "put_object"
-      prefix = "uploads/"
-      arns = [module.cognito_identity_management.authenticated_role.arn]
+      prefix = "uploads/img/"
+      arns = [module.cognito_identity_management.authenticated_role["blog"].arn]
     }],
     [{
       permission_type = "put_object"
@@ -154,7 +164,7 @@ module test_site {
   website_bucket_bucket_permissions = [
     {
       permission_type = "list_bucket"
-      arns = [module.cognito_identity_management.authenticated_role.arn]
+      arns = [module.cognito_identity_management.authenticated_role["blog"].arn]
     }
   ]
   routing = {
