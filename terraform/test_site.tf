@@ -89,6 +89,16 @@ module access_control_functions {
     "X-Frame-Options" = "DENY"
     "X-Content-Type-Options" = "nosniff"
   }
+  http_header_values_by_plugin = {
+    visibility = {
+      "Content-Security-Policy" = "default-src 'self'"
+      "Strict-Transport-Security" = "max-age=31536000; includeSubdomains; preload"
+      "Referrer-Policy" = "same-origin"
+      "X-XSS-Protection" = "1; mode=block"
+      "X-Frame-Options" = "DENY"
+      "X-Content-Type-Options" = "nosniff"
+    }
+  }
 }
 
 module get_access_creds {
