@@ -82,7 +82,7 @@ module access_control_functions {
   protected_domain_routing = local.variables.admin_domain_routing
   user_group_name = local.variables.user_group_name
   http_header_values = {
-    "Content-Security-Policy" = "default-src 'self'; connect-src 'self' https://athena.us-east-1.amazonaws.com https://s3.amazonaws.com https://admin-raphaelluckom-com.s3.amazonaws.com; img-src 'self' data:;"
+    "Content-Security-Policy" = "default-src 'none'; style-src 'self'; script-src https://admin.raphaelluckom.com/assets/js/; object-src 'none'; connect-src 'self' https://athena.us-east-1.amazonaws.com https://s3.amazonaws.com https://admin-raphaelluckom-com.s3.amazonaws.com; img-src 'self' data:;"
     "Strict-Transport-Security" = "max-age=31536000; includeSubdomains; preload"
     "Referrer-Policy" = "same-origin"
     "X-XSS-Protection" = "1; mode=block"
@@ -91,7 +91,15 @@ module access_control_functions {
   }
   http_header_values_by_plugin = {
     visibility = {
-      "Content-Security-Policy" = "default-src 'self'"
+      "Content-Security-Policy" = "default-src 'none'; style-src 'self'; script-src https://admin.raphaelluckom.com/plugins/visibility/assets/js/; object-src 'none'; connect-src 'self' https://athena.us-east-1.amazonaws.com https://s3.amazonaws.com https://admin-raphaelluckom-com.s3.amazonaws.com; img-src 'self' data:;"
+      "Strict-Transport-Security" = "max-age=31536000; includeSubdomains; preload"
+      "Referrer-Policy" = "same-origin"
+      "X-XSS-Protection" = "1; mode=block"
+      "X-Frame-Options" = "DENY"
+      "X-Content-Type-Options" = "nosniff"
+    }
+    blog = {
+      "Content-Security-Policy" = "default-src 'none'; style-src 'self'; script-src https://admin.raphaelluckom.com/plugins/blog/assets/js/; object-src 'none'; connect-src 'self' https://athena.us-east-1.amazonaws.com https://s3.amazonaws.com https://admin-raphaelluckom-com.s3.amazonaws.com; img-src 'self' data:;"
       "Strict-Transport-Security" = "max-age=31536000; includeSubdomains; preload"
       "Referrer-Policy" = "same-origin"
       "X-XSS-Protection" = "1; mode=block"
@@ -112,13 +120,35 @@ module get_access_creds {
   plugin_role_map = module.cognito_identity_management.plugin_role_map
 }
 
+module admin_site_frontpage {
+  source = "./modules/admin_site_ui"
+  plugin_configs = [
+    module.admin_site_blog_plugin.plugin_config,
+    module.admin_site_visibility_plugin.plugin_config
+  ]
+}
+
+module admin_site_blog_plugin {
+  source = "./modules/plugins/blog"
+  default_styles_path = module.admin_site_frontpage.default_styles_path
+}
+
+module admin_site_visibility_plugin {
+  source = "./modules/plugins/visibility"
+  default_styles_path = module.admin_site_frontpage.default_styles_path
+}
+
 module admin_site {
   source = "github.com/RLuckom/terraform_modules//aws/serverless_site/capstan"
   system_id = {
     security_scope = "test"
     subsystem_name = "test"
   }
-  asset_path = "${path.root}/sites/private"
+  file_configs = concat(
+    module.admin_site_frontpage.files,
+    module.admin_site_blog_plugin.files,
+    module.admin_site_visibility_plugin.files
+  )
   lambda_authorizers = module.get_access_creds.lambda_authorizer_config
   forbidden_website_paths = ["uploads/"]
   lambda_origins = module.get_access_creds.lambda_origins

@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <link rel="stylesheet" href="/assets/styles/styles.css">
+    <link rel="stylesheet" href="/${trimprefix(styles_path, "/")}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Private Site</title>
     <meta name="description" content="This is the private part of the site">
@@ -13,20 +13,17 @@
     </header>
     <main>
       <section class="site-tools">
-        <a href="/plugins/blog/index.html">
+        ${join("\n", [for plugin_config in plugin_configs : 
+<<EOF
+        <a href="/plugins/${plugin_config.name}/index.html">
           <div class="site-tool-card">
             <h1 class="tool-title">
-              post a blog entry
+              ${plugin_config.slug}
             </h1>
           </div>
         </a>
-        <a href="/plugins/visibility/index.html">
-          <div class="site-tool-card">
-            <h1 class="tool-title">
-              view the logs
-            </h1>
-          </div>
-        </a>
+EOF
+])}
       </section>
     </main>
     <footer>
