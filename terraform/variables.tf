@@ -40,10 +40,5 @@ variable "route53_zone_name" {
   default = "raphaelluckom.com."
 }
 
-variable "lambda_bucket_name" {
-  type = string
-  default = "rluckom.lambda"
-}
-
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}

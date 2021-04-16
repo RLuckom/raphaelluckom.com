@@ -6,7 +6,7 @@ module visibility_system {
       subsystem_names = ["test"]
     }, {
       security_scope = "prod"
-      subsystem_names = ["prod", "media", "human"]
+      subsystem_names = ["prod", "human"]
     }
   ]
   scoped_logging_functions = {
@@ -28,7 +28,6 @@ module visibility_system {
   }
   cloudfront_delivery_bucket = "${var.bucket_prefix}-cloudfront-delivery"
   visibility_data_bucket = "${var.bucket_prefix}-visibility-data"
-  lambda_source_bucket = aws_s3_bucket.lambda_bucket.id
   donut_days_layer = module.donut_days.layer_config
   lambda_event_configs = local.notify_failure_only
   serverless_site_configs = {
@@ -62,31 +61,5 @@ module visibility_system {
         controlled_domain_part = "admin.raphaelluckom"
       }
     }
-    media = {
-      system_id = {
-        security_scope = "prod"
-        subsystem_name = "media"
-      }
-      domain_parts = {
-        top_level_domain = "com"
-        controlled_domain_part = "media.raphaelluckom"
-      }
-    }
-  }
-}
-
-locals {
-  cloudfront_delivery_bucket_name = "${var.bucket_prefix}-visibility-data"
-  visibility_bucket_name = "${var.bucket_prefix}-visibility-data"
-  media_output_bucket_name = "rluckom.photos.partition"
-  media_storage_config = {
-    bucket = local.media_output_bucket_name
-    prefix = ""
-    debug = false
-  }
-  media_site_cloudfront_logging_config = {
-    bucket = local.visibility_bucket_name
-    prefix = "media.raphaelluckom"
-    include_cookies = false
   }
 }

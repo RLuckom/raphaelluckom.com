@@ -1,11 +1,3 @@
-resource "aws_s3_bucket" "lambda_bucket" {
-  bucket = var.lambda_bucket_name
-
-  tags = {
-    Name        = "lambda"
-  }
-}
-
 module "slack_event_relay" {
   source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   timeout_secs = 2
@@ -17,13 +9,12 @@ module "slack_event_relay" {
   source_contents = [
     {
       file_name = "index.js"
-      file_contents = file("${path.root}/functions/libraries/src/entrypoints/send_event_to_slack.js") 
+      file_contents = file("./functions/src/slackNotifier.js") 
     },
   ]
   lambda_details = {
     action_name = "slack_event_relay"
     scope_name = "test"
-    bucket = aws_s3_bucket.lambda_bucket.id
     policy_statements = concat(
       local.permission_sets.read_slack_credentials
     )
@@ -81,8 +72,4 @@ module "image_dependencies" {
 
 module "markdown_tools" {
   source = "github.com/RLuckom/terraform_modules//aws/layers/markdown_tools"
-}
-
-module "nlp" {
-  source = "github.com/RLuckom/terraform_modules//aws/layers/nlp"
 }

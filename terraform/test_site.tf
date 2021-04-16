@@ -225,7 +225,7 @@ module upload_img {
   mem_mb = 512
   logging_config = module.visibility_system.lambda_log_configs["prod"]["human"].config
   log_level = true
-  config_contents = templatefile("./functions/configs/publishWebImage.js", {
+  config_contents = templatefile("./functions/src/publishWebImage.js", {
     media_hosting_bucket = module.admin_site.website_bucket_name
     media_storage_prefix = "img/"
     tags = jsonencode([{

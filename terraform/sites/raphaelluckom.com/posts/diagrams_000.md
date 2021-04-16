@@ -11,7 +11,7 @@ meta:
 Good news / bad news time. The good news is, I finally made a start on diagramming my system.
 The bad news is, it looks like this:
 
-![Some illegible scribbles in the bottom corner of a large notebook page](https://media.raphaelluckom.com/images/0756fb04-613e-4dba-975e-75ef66acb4f2-1000.JPG)
+![Some illegible scribbles in the bottom corner of a large notebook page](https://raphaelluckom.com/img/0756fb04-613e-4dba-975e-75ef66acb4f2-1000.JPG)
 
 I drew this diagram about a week ago, when I was [stuck thinking about what to do next](https://raphaelluckom.com/posts/deciding_what_comes_next.html). 
 I'm going to call diagrams like this _pragmatic diagrams_, because they are imaginative, personal, and non-rigorous

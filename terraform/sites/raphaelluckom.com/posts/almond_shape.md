@@ -26,7 +26,7 @@ where a human-adapted control surface--the handles or the apex of a shoulder str
 allows a person to carry and control a volume of objects that no human control
 surface (a hand or shoulder) would be able to manage. 
 
-![A yellow and white cloth shoulder bag with a teal shoulder strap on an oak table](https://media.raphaelluckom.com/images/2a5110b7-a6e6-4574-8c0b-2197edbc6607-1000.JPG "Hand stitched shopping bag loosely based on the Japanese _azuma bukuro_ pattern, made from cloth napkins and scrap fabric. This pattern is really neat because the construction encourages the bag to stretch, even when made of non-stretchy fabric")
+![A yellow and white cloth shoulder bag with a teal shoulder strap on an oak table](https://raphaelluckom.com/img/2a5110b7-a6e6-4574-8c0b-2197edbc6607-1000.JPG "Hand stitched shopping bag loosely based on the Japanese _azuma bukuro_ pattern, made from cloth napkins and scrap fabric. This pattern is really neat because the construction encourages the bag to stretch, even when made of non-stretchy fabric")
 
 This idea of a _human-adapted control surface_ (HACS) for a system that would
 otherwise exceed some human capacity is found in many places. I would use the term
