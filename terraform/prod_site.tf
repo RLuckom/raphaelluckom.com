@@ -4,14 +4,6 @@ module prod_site {
   nav_links = var.nav_links
   site_title = var.prod_site_title
   coordinator_data = module.visibility_system.serverless_site_configs["raphaelluckom_com"]
-  system_id = {
-    security_scope = "prod"
-    subsystem_name = "prod"
-  }
-  routing = {
-    domain_parts = module.visibility_system.serverless_site_configs["raphaelluckom_com"].domain_parts
-    route53_zone_name = var.route53_zone_name
-  }
   subject_alternative_names = ["www.raphaelluckom.com"]
   trails_table_name = "prod-trails_table"
   lambda_event_configs = local.notify_failure_only

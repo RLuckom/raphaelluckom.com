@@ -40,5 +40,78 @@ variable "route53_zone_name" {
   default = "raphaelluckom.com."
 }
 
+locals {
+  system_ids = zipmap(
+    keys(var.supported_system_definitions),
+    [ for security_scope, system_config in var.supported_system_definitions : zipmap(
+      keys(system_config.subsystems),
+      [ for subsystem_name in keys(system_config.subsystems) : {
+        security_scope = security_scope
+        subsystem_name = subsystem_name
+      }]
+    )]
+  )
+}
+
+variable supported_system_definitions {
+  type = map(object({
+    subsystems = map(object({
+      serverless_site_configs = map(object({
+        route53_zone_name = string
+        domain_parts = object({
+          top_level_domain = string
+          controlled_domain_part = string
+        })
+      }))
+    }))
+  }))
+  default = {
+    prod = {
+      subsystems = {
+        prod = {
+          serverless_site_configs = {
+            raphaelluckom_com = {
+              route53_zone_name = "raphaelluckom.com."
+              domain_parts = {
+                top_level_domain = "com"
+                controlled_domain_part = "raphaelluckom"
+              }
+            }
+          }
+        }
+        human = {
+          serverless_site_configs = {}
+        }
+      }
+    }
+    test = {
+      subsystems = {
+        admin = {
+          serverless_site_configs = {
+            test_admin = {
+              route53_zone_name = "raphaelluckom.com."
+              domain_parts = {
+                top_level_domain = "com"
+                controlled_domain_part = "admin.raphaelluckom"
+              }
+            }
+          }
+        }
+        test = {
+          serverless_site_configs = {
+            test = {
+              route53_zone_name = "raphaelluckom.com."
+              domain_parts = {
+                top_level_domain = "com"
+                controlled_domain_part = "test.raphaelluckom"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}

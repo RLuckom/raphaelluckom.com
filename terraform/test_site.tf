@@ -2,18 +2,7 @@ locals {
   variables = {
     user_group_name         = "home_user_group"
     user_email = "raph.aelluckom@gmail.com"
-    cognito_system_id = {
-      security_scope = "test"
-      subsystem_name = "cognito"
-    }
-    admin_domain_routing = {
-      domain_parts = module.visibility_system.serverless_site_configs["test_admin"].domain_parts
-      route53_zone_name = "raphaelluckom.com"
-    }
-    test_domain_routing = {
-      domain_parts = module.visibility_system.serverless_site_configs["test"].domain_parts
-      route53_zone_name = "raphaelluckom.com"
-    }
+    cognito_system_id = local.system_ids.test.admin
   }
 }
 
@@ -24,7 +13,7 @@ module human_attention_archive {
     aws.replica2 = aws.sydney
     aws.replica3 = aws.canada
   }
-  bucket_prefix = "test-human-attention"
+  bucket_prefix = var.bucket_prefix
   security_scope = "prod"
   replication_lambda_event_configs = local.notify_failure_only
   replication_function_logging_config = module.visibility_system.lambda_log_configs["prod"]["human"].config
@@ -45,7 +34,7 @@ module human_attention_archive {
 module cognito_user_management {
   source = "github.com/RLuckom/terraform_modules//aws/state/user_mgmt/stele"
   system_id = local.variables.cognito_system_id
-  protected_domain_routing = local.variables.admin_domain_routing
+  protected_domain_routing = module.visibility_system.serverless_site_configs["test_admin"].routing
   additional_protected_domains = ["test.raphaelluckom.com", "www.test.raphaelluckom.com"]
   user_group_name = local.variables.user_group_name
   user_email = local.variables.user_email
@@ -79,7 +68,7 @@ module access_control_functions {
   security_scope = local.variables.cognito_system_id.security_scope
   client_secret = module.cognito_user_management.user_pool_client.client_secret
   nonce_signing_secret = random_password.nonce_signing_secret.result
-  protected_domain_routing = local.variables.admin_domain_routing
+  protected_domain_routing = module.visibility_system.serverless_site_configs["test_admin"].routing
   user_group_name = local.variables.user_group_name
   http_header_values = {
     "Content-Security-Policy" = "default-src 'none'; style-src 'self'; script-src https://admin.raphaelluckom.com/assets/js/; object-src 'none'; connect-src 'self' https://athena.us-east-1.amazonaws.com https://s3.amazonaws.com https://admin-raphaelluckom-com.s3.amazonaws.com; img-src 'self' data:;"
@@ -140,10 +129,6 @@ module admin_site_visibility_plugin {
 
 module admin_site {
   source = "github.com/RLuckom/terraform_modules//aws/serverless_site/capstan"
-  system_id = {
-    security_scope = "test"
-    subsystem_name = "test"
-  }
   file_configs = concat(
     module.admin_site_frontpage.files,
     module.admin_site_blog_plugin.files,
@@ -152,7 +137,6 @@ module admin_site {
   lambda_authorizers = module.get_access_creds.lambda_authorizer_config
   forbidden_website_paths = ["uploads/"]
   lambda_origins = module.get_access_creds.lambda_origins
-  routing = local.variables.admin_domain_routing
   website_bucket_prefix_object_permissions = concat(
     [{
       permission_type = "put_object"
@@ -197,20 +181,12 @@ module test_site {
   nav_links = var.nav_links
   site_title = var.prod_site_title
   coordinator_data = module.visibility_system.serverless_site_configs["test"]
-  system_id = {
-    security_scope = "test"
-    subsystem_name = "site"
-  }
   website_bucket_bucket_permissions = [
     {
       permission_type = "list_bucket"
       arns = [module.cognito_identity_management.authenticated_role["blog"].arn]
     }
   ]
-  routing = {
-    domain_parts = module.visibility_system.serverless_site_configs["test"].domain_parts
-    route53_zone_name = var.route53_zone_name
-  }
   subject_alternative_names = ["www.test.raphaelluckom.com"]
   lambda_event_configs = local.notify_failure_only
   layers = {
