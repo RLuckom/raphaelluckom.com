@@ -7,8 +7,8 @@ meta:
   trail:
     - check-in
 ---
-It's the end of April, and I'm watching a sullen freezing rain come down on the mulch beds,
-where a couple of enterprising hyacinths came up a week ago, bloomed, and promptly fell over.
+It's the middle of April, and I'm watching a sullen freezing rain come down on the mulch beds,
+where some enterprising hyacinths came up a week ago, bloomed, and promptly fell over.
 I'm in housekeeping mode again. Every time I make a new entry in the [practitioner-journey](https://raphaelluckom.com/trails/practitioner-journey.html)
 series, it takes at least a week, after I think the work is complete, of tidying up--removing
 redundant or unused pieces of code, improving the flow of configuration data through the system
@@ -60,10 +60,11 @@ With the end of this phase comes an opportunity to revisit the potential for col
 system designs that can be relied on by non-practitioners.
 
 Over the next few weeks I'm going to be working on this (hopefully final, for this phase) thread-gathering exercise. There are
-three subsystems that I haven't yet released in any exercise that will all have to be included in the next exercise: the visibility
-subsystem, the user management subsystem, and the admin site subsystem. Once these are ready for release, I will be able to combine
-them with the blog subsystem from the last exercise to demonstrate a sustainable complete solution. And with _that_ done, I'll have
-a good perspective on what interfaces can be provided for other practitioners to contribute their own work.
+four subsystems that I haven't yet released in any exercise that will all have to be included in the next exercise: the visibility
+subsystem, the user management subsystem, the archive subsystem, and the admin site subsystem. Once these are ready for release,
+I will be able to combine them with the blog subsystem from the last exercise to demonstrate a sustainable complete solution. 
+And with _that_ done, I'll have a good perspective on what interfaces can be provided for other practitioners to contribute
+their own work.
 
 [^1]: The opportunity to freely make decisions about local appropriateness, and to observe (and have to live with)
       the results of those decisions, is a prerequisite for learning system design. Leaders who deny this opportunity
