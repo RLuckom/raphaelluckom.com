@@ -143,23 +143,15 @@ module admin_site {
       prefix = "uploads/img/"
       arns = [module.cognito_identity_management.authenticated_role["blog"].arn]
     }],
-    [{
-      permission_type = "put_object"
-      prefix = "img/"
-      arns = [module.upload_img.role.arn]
-    }],
+    [
+      module.process_image_uploads.image_destination_permission_needed
+    ],
     module.human_attention_archive.replication_function_permissions_needed[module.admin_site.website_bucket_name]
   )
   website_bucket_lambda_notifications = concat(
-    [{
-      lambda_arn = module.upload_img.lambda.arn
-      lambda_name = module.upload_img.lambda.function_name
-      lambda_role_arn = module.upload_img.role.arn
-      permission_type     = "read_and_tag_known"
-      events              = ["s3:ObjectCreated:*"]
-      filter_prefix       = "uploads/"
-      filter_suffix       = ""
-    }],
+    [
+      module.process_image_uploads.lambda_notification_config
+    ],
     module.human_attention_archive.bucket_notifications[module.admin_site.website_bucket_name]
   )
 
@@ -195,25 +187,17 @@ module test_site {
   }
 }
 
-module upload_img {
-  source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
-  timeout_secs = 10
-  mem_mb = 512
+module process_image_uploads {
+  source = "github.com/RLuckom/terraform_modules//aws/utility_functions/image_upload_processor?ref=image-proc"
   logging_config = module.visibility_system.lambda_log_configs["prod"]["human"].config
-  log_level = true
-  config_contents = templatefile("./functions/src/publishWebImage.js", {
-    media_hosting_bucket = module.admin_site.website_bucket_name
-    media_storage_prefix = "img/"
-    tags = jsonencode([{
-      Key = "imagePublished"
-      Value = "true"
-    }])
-  })
   lambda_event_configs = local.notify_failure_only
-  action_name = "upload_img"
-  scope_name = module.visibility_system.lambda_log_configs["prod"]["human"].security_scope
-  donut_days_layer = module.donut_days.layer_config
-  additional_layers = [
-    module.image_dependencies.layer_config
-  ]
+  security_scope = module.visibility_system.lambda_log_configs["prod"]["human"].security_scope
+  image_layer = module.image_dependencies.layer_config
+  io_config = {
+    input_bucket = module.admin_site.website_bucket_name
+    input_path = "uploads/img/"
+    output_bucket = module.admin_site.website_bucket_name
+    output_path = "img/"
+    tags = []
+  }
 }
