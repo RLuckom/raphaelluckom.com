@@ -1,0 +1,122 @@
+module cognito_user_management {
+  source = "github.com/RLuckom/terraform_modules//aws/state/user_mgmt/stele"
+  system_id = local.variables.cognito_system_id
+  protected_domain_routing = module.visibility_system.serverless_site_configs["test_admin"].routing
+  additional_protected_domains = ["test.raphaelluckom.com", "www.test.raphaelluckom.com"]
+  user_group_name = local.variables.user_group_name
+  user_email = local.variables.user_email
+}
+
+module cognito_identity_management {
+  source = "github.com/RLuckom/terraform_modules//aws/access_control/hinge"
+  system_id = local.variables.cognito_system_id
+  required_group = local.variables.user_group_name
+  client_id               = module.cognito_user_management.user_pool_client.id
+  provider_endpoint           = module.cognito_user_management.user_pool.endpoint
+  authenticated_policy_statements = {
+    athena = []
+    blog = []
+  }
+  plugin_role_name_map = {
+    "blog" = "blog"
+    "visibility" = "athena"
+  }
+}
+
+resource random_password nonce_signing_secret {
+  length = 16
+  override_special = "-._~"
+}
+
+module access_control_functions {
+  source = "github.com/RLuckom/terraform_modules//aws/access_control/gattice"
+  token_issuer = "https://${module.cognito_user_management.user_pool.endpoint}"
+  client_id = module.cognito_user_management.user_pool_client.id
+  security_scope = local.variables.cognito_system_id.security_scope
+  client_secret = module.cognito_user_management.user_pool_client.client_secret
+  nonce_signing_secret = random_password.nonce_signing_secret.result
+  protected_domain_routing = module.visibility_system.serverless_site_configs["test_admin"].routing
+  user_group_name = local.variables.user_group_name
+  http_header_values = {
+    "Content-Security-Policy" = "default-src 'none'; style-src 'self'; object-src 'none'; img-src 'self' data:;"
+    "Strict-Transport-Security" = "max-age=31536000; includeSubdomains; preload"
+    "Referrer-Policy" = "same-origin"
+    "X-Frame-Options" = "DENY"
+    "X-Content-Type-Options" = "nosniff"
+  }
+  http_header_values_by_plugin = {
+    visibility = {
+      "Content-Security-Policy" = "default-src 'none'; style-src 'self'; script-src https://admin.raphaelluckom.com/plugins/visibility/assets/js/; object-src 'none'; connect-src 'self' https://athena.us-east-1.amazonaws.com https://s3.amazonaws.com https://admin-raphaelluckom-com.s3.amazonaws.com; img-src 'self' data:;"
+      "Strict-Transport-Security" = "max-age=31536000; includeSubdomains; preload"
+      "Referrer-Policy" = "same-origin"
+      "X-Frame-Options" = "DENY"
+      "X-Content-Type-Options" = "nosniff"
+    }
+    blog = {
+      "Content-Security-Policy" = "default-src 'none'; style-src 'self'; script-src https://admin.raphaelluckom.com/plugins/blog/assets/js/; object-src 'none'; connect-src 'self' https://s3.amazonaws.com https://admin-raphaelluckom-com.s3.amazonaws.com; img-src 'self' data:;"
+      "Strict-Transport-Security" = "max-age=31536000; includeSubdomains; preload"
+      "Referrer-Policy" = "same-origin"
+      "X-Frame-Options" = "DENY"
+      "X-Content-Type-Options" = "nosniff"
+    }
+  }
+}
+
+module get_access_creds {
+  source = "github.com/RLuckom/terraform_modules//aws/access_control/cognito_to_aws_creds"
+  identity_pool_id = module.cognito_identity_management.identity_pool.id
+  user_pool_endpoint = module.cognito_user_management.user_pool.endpoint
+  api_path = "/api/actions/access/credentials"
+  gateway_name_stem = "test_site"
+  client_id = module.cognito_user_management.user_pool_client.id
+  aws_sdk_layer = module.aws_sdk.layer_config
+  plugin_role_map = module.cognito_identity_management.plugin_role_map
+}
+
+module admin_site {
+  source = "github.com/RLuckom/terraform_modules//aws/serverless_site/capstan"
+  file_configs = concat(
+    module.admin_site_frontpage.files,
+    module.admin_site_blog_plugin.files,
+    module.admin_site_visibility_plugin.files
+  )
+  lambda_authorizers = module.get_access_creds.lambda_authorizer_config
+  forbidden_website_paths = ["uploads/"]
+  lambda_origins = module.get_access_creds.lambda_origins
+  website_bucket_prefix_object_permissions = concat(
+    [{
+      permission_type = "put_object"
+      prefix = "uploads/img/"
+      arns = [module.cognito_identity_management.authenticated_role["blog"].arn]
+    }],
+    [
+      module.process_image_uploads.image_destination_permission_needed
+    ],
+    module.human_attention_archive.replication_function_permissions_needed[module.admin_site.website_bucket_name]
+  )
+  website_bucket_lambda_notifications = concat(
+    [
+      module.process_image_uploads.lambda_notification_config
+    ],
+    module.human_attention_archive.bucket_notifications[module.admin_site.website_bucket_name]
+  )
+
+  website_bucket_cors_rules = [{
+    allowed_headers = ["authorization", "content-type", "x-amz-content-sha256", "x-amz-date", "x-amz-security-token", "x-amz-user-agent"]
+    allowed_methods = ["PUT", "GET"]
+    allowed_origins = ["https://admin.raphaelluckom.com"]
+    expose_headers = ["ETag"]
+    max_age_seconds = 3000
+  }]
+  access_control_function_qualified_arns = [module.access_control_functions.access_control_function_qualified_arns]
+  coordinator_data = module.visibility_system.serverless_site_configs["test_admin"]
+  subject_alternative_names = ["www.admin.raphaelluckom.com"]
+}
+
+module admin_site_frontpage {
+  source = "./modules/admin_site_ui"
+  plugin_configs = [
+    module.admin_site_blog_plugin.plugin_config,
+    module.admin_site_visibility_plugin.plugin_config
+  ]
+}
