@@ -1,6 +1,6 @@
 module admin_site_blog_plugin {
   source = "./modules/plugins/blog"
-  default_styles_path = module.admin_site_frontpage.default_styles_path
+  default_styles_path = module.perimeter.default_styles_path
 }
 
 module test_site {
@@ -12,7 +12,7 @@ module test_site {
   website_bucket_bucket_permissions = [
     {
       permission_type = "list_bucket"
-      arns = [module.cognito_identity_management.authenticated_role["blog"].arn]
+      arns = [module.perimeter.plugin_authenticated_roles["blog"].arn]
     }
   ]
   subject_alternative_names = ["www.test.raphaelluckom.com"]
@@ -30,9 +30,9 @@ module process_image_uploads {
   security_scope = module.visibility_system.lambda_log_configs["prod"]["human"].security_scope
   image_layer = module.image_dependencies.layer_config
   io_config = {
-    input_bucket = module.admin_site.website_bucket_name
+    input_bucket = module.perimeter.website_bucket_name
     input_path = "uploads/img/"
-    output_bucket = module.admin_site.website_bucket_name
+    output_bucket = module.perimeter.website_bucket_name
     output_path = "img/"
     tags = []
   }

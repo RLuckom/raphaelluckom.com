@@ -47,7 +47,7 @@ locals {
 
 output files {
   value = [ for conf in local.files : {
-    key = trimprefix(conf.key, "/")
+    plugin_relative_key = replace(conf.key, local.file_prefix, "")
     file_path = conf.file_path
     file_contents = conf.file_contents
     content_type = conf.content_type
