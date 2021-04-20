@@ -1,4 +1,4 @@
-module perimeter {
+module admin_interface {
   source = "./modules/derestreet"
   system_id = local.variables.cognito_system_id
   coordinator_data = module.visibility_system.serverless_site_configs["test_admin"]
@@ -44,7 +44,7 @@ module perimeter {
     }
   }
   archive_system = {
-    bucket_permissions_needed = module.human_attention_archive.replication_function_permissions_needed[module.perimeter.website_bucket_name]
-    lambda_notifications = module.human_attention_archive.bucket_notifications[module.perimeter.website_bucket_name]
+    bucket_permissions_needed = module.human_attention_archive.replication_function_permissions_needed[module.admin_interface.website_bucket_name]
+    lambda_notifications = module.human_attention_archive.bucket_notifications[module.admin_interface.website_bucket_name]
   }
 }

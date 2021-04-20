@@ -13,8 +13,8 @@ module visibility_system {
           glue_permission_name_map = {
             add_partition_permission_names = []
             add_partition_permission_arns = []
-            query_permission_names = [module.perimeter.plugin_authenticated_roles["visibility"].name]
-            query_permission_arns = [module.perimeter.plugin_authenticated_roles["visibility"].arn]
+            query_permission_names = [module.admin_interface.plugin_authenticated_roles["visibility"].name]
+            query_permission_arns = [module.admin_interface.plugin_authenticated_roles["visibility"].arn]
           }
         }
         human = {
@@ -55,5 +55,5 @@ module visibility_system {
 
 module admin_site_visibility_plugin {
   source = "./modules/plugins/visibility"
-  default_styles_path = module.perimeter.default_styles_path
+  default_styles_path = module.admin_interface.default_styles_path
 }
