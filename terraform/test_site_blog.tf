@@ -1,6 +1,13 @@
 module admin_site_blog_plugin {
   source = "./modules/plugins/blog"
   default_styles_path = module.admin_interface.default_styles_path
+  name = "blog"
+  logging_config = module.visibility_system.lambda_log_configs["prod"]["human"].config
+  lambda_event_configs = local.notify_failure_only
+  security_scope = module.visibility_system.lambda_log_configs["prod"]["human"].security_scope
+  image_layer = module.image_dependencies.layer_config
+  donut_days_layer = module.donut_days.layer_config
+  plugin_config = module.admin_interface.plugin_config
 }
 
 module test_site {
@@ -20,20 +27,5 @@ module test_site {
   layers = {
     donut_days = module.donut_days.layer_config
     markdown_tools = module.markdown_tools.layer_config
-  }
-}
-
-module process_image_uploads {
-  source = "github.com/RLuckom/terraform_modules//aws/utility_functions/image_upload_processor?ref=image-proc"
-  logging_config = module.visibility_system.lambda_log_configs["prod"]["human"].config
-  lambda_event_configs = local.notify_failure_only
-  security_scope = module.visibility_system.lambda_log_configs["prod"]["human"].security_scope
-  image_layer = module.image_dependencies.layer_config
-  io_config = {
-    input_bucket = module.admin_interface.website_bucket_name
-    input_path = "uploads/img/"
-    output_bucket = module.admin_interface.website_bucket_name
-    output_path = "img/"
-    tags = []
   }
 }

@@ -18,7 +18,7 @@ module visibility_system {
           }
         }
         human = {
-          scoped_logging_functions = concat(module.human_attention_archive.lambda_logging_roles, [module.process_image_uploads.lambda_role.arn])
+          scoped_logging_functions = concat(module.human_attention_archive.lambda_logging_roles, module.admin_site_blog_plugin.lambda_logging_arns)
           glue_permission_name_map = {
             add_partition_permission_names = []
             add_partition_permission_arns = []

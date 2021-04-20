@@ -18,7 +18,7 @@ class ProseMirrorView {
     this.view = new EditorView(target, {
       state: EditorState.create({
         doc: defaultMarkdownParser.parse(content),
-        plugins: exampleSetup({schema})
+        plugins: exampleSetup({schema, config: window.CONFIG})
       })
     })
   }
@@ -79,7 +79,7 @@ function initWysiwyEditors() {
       // Set initial state
       state: EditorState.create({
         doc: defaultMarkdownParser.parse(area.value),
-        plugins: exampleSetup({ schema }).concat(placeholderPlugin),
+        plugins: exampleSetup({ schema, config: window.CONFIG }).concat(placeholderPlugin),
       }),
       dispatchTransaction(tr) {
         const { state } = view.state.applyTransaction(tr)

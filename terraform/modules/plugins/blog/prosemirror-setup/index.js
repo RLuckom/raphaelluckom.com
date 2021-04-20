@@ -57,7 +57,7 @@ function exampleSetup(options) {
   ]
   if (options.menuBar !== false)
     plugins.push(menuBar({floating: options.floatingMenu !== false,
-                          content: options.menuContent || buildMenuItems(options.schema).fullMenu}))
+                          content: options.menuContent || buildMenuItems({schema: options.schema, config: options.config}).fullMenu}))
   if (options.history !== false)
     plugins.push(history())
 

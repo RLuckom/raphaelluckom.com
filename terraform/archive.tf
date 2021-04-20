@@ -11,7 +11,7 @@ module human_attention_archive {
   replication_function_logging_config = module.visibility_system.lambda_log_configs["prod"]["human"].config
   donut_days_layer_config = module.donut_days.layer_config
   replication_sources = [{
-    bucket = module.admin_interface.website_bucket_name
+    bucket = module.admin_interface.website_config.bucket_name
     prefix = "uploads/"
     suffix = ""
     filter_tags = {}

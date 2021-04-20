@@ -19,7 +19,7 @@ class ProseMirrorView {
     this.view = new EditorView(target, {
       state: EditorState.create({
         doc: defaultMarkdownParser.parse(content),
-        plugins: exampleSetup({schema})
+        plugins: exampleSetup({schema, config: window.CONFIG})
       })
     })
   }
@@ -80,7 +80,7 @@ function initWysiwyEditors() {
       // Set initial state
       state: EditorState.create({
         doc: defaultMarkdownParser.parse(area.value),
-        plugins: exampleSetup({ schema }).concat(placeholderPlugin),
+        plugins: exampleSetup({ schema, config: window.CONFIG }).concat(placeholderPlugin),
       }),
       dispatchTransaction(tr) {
         const { state } = view.state.applyTransaction(tr)
@@ -24742,7 +24742,7 @@ function exampleSetup(options) {
   ]
   if (options.menuBar !== false)
     plugins.push(menuBar({floating: options.floatingMenu !== false,
-                          content: options.menuContent || buildMenuItems(options.schema).fullMenu}))
+                          content: options.menuContent || buildMenuItems({schema: options.schema, config: options.config}).fullMenu}))
   if (options.history !== false)
     plugins.push(history())
 
@@ -24978,7 +24978,7 @@ let placeholderPlugin = new Plugin({
   }
 })
 
-function insertImageItem(nodeType) {
+function insertImageItem(nodeType, config) {
   return new MenuItem({
     title: "Insert image",
     label: "Image",
@@ -24997,7 +24997,7 @@ function insertImageItem(nodeType) {
         },
         callback(attrs) {
           console.log(attrs)
-          startImageUpload(view, attrs.src)
+          startImageUpload(view, attrs.src, config)
           view.focus()
         }
       })
@@ -25005,7 +25005,7 @@ function insertImageItem(nodeType) {
   })
 }
 
-function startImageUpload(view, file) {
+function startImageUpload(view, file, config) {
   // A fresh object to act as the ID for this upload
   let id = {}
 
@@ -25016,7 +25016,7 @@ function startImageUpload(view, file) {
   view.dispatch(tr)
 
   file.arrayBuffer().then((buffer) => {
-    uploadFile(buffer, file.name.split('.').pop(), (e, url) => {
+    uploadFile(config, buffer, file.name.split('.').pop(), (e, url) => {
       if (e) {
         return view.dispatch(tr.setMeta(placeholderPlugin, {remove: {id}}))
       }
@@ -25067,16 +25067,10 @@ function getName() {
   return v4()
 }
 
-const ADMIN_SITE_BKT = "admin-raphaelluckom-com"
-const TEST_SITE_BKT = "test-raphaelluckom-com"
-const BLOG_POST_PREFIX = "posts/"
-const UPLOAD_PREFIX = "uploads/img/"
-const PRIV_LOAD_PATH = "img/"
-
-function uploadFile(buffer, ext, callback) {
+function uploadFile(config, buffer, ext, callback) {
   const rawName = getName()
-  const putPath = UPLOAD_PREFIX + rawName
-  const getUrl = `https://admin.raphaelluckom.com/${PRIV_LOAD_PATH}${rawName}/500.${ext}`
+  const putPath = config.private_storage_image_upload_path + rawName
+  const getUrl = `https://${config.domain}/${config.plugin_image_hosting_path}${rawName}/500.${ext}`
   const dependencies = {
     credentials: {
       accessSchema: credentialsAccessSchema
@@ -25086,7 +25080,7 @@ function uploadFile(buffer, ext, callback) {
       params: {
         apiConfig: apiConfigSelector,
         Body: {value: buffer },
-        Bucket: {value: ADMIN_SITE_BKT },
+        Bucket: {value: config.private_storage_bucket },
         Key: { value: putPath },
       }
     },
@@ -25246,7 +25240,7 @@ function wrapListItem(nodeType, options) {
 // **`fullMenu`**`: [[MenuElement]]`
 //   : An array of arrays of menu elements for use as the full menu
 //     for, for example the [menu bar](https://github.com/prosemirror/prosemirror-menu#user-content-menubar).
-function buildMenuItems(schema) {
+function buildMenuItems({schema, config}) {
   let r = {}, type
   if (type = schema.marks.strong)
     r.toggleStrong = markItem(type, {title: "Toggle strong style", icon: icons.strong})
@@ -25258,7 +25252,7 @@ function buildMenuItems(schema) {
     r.toggleLink = linkItem(type)
 
   if (type = schema.nodes.image)
-    r.insertImage = insertImageItem(type)
+    r.insertImage = insertImageItem(type, config)
   if (type = schema.nodes.bullet_list)
     r.wrapBulletList = wrapListItem(type, {
       title: "Wrap in bullet list",

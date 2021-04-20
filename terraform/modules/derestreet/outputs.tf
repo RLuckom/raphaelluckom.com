@@ -9,8 +9,21 @@ output human_attention_archive_config {
   }
 }
 
-output website_bucket_name {
-  value = module.admin_site.website_bucket_name  
+output website_config {
+  value = {
+    bucket_name = module.admin_site.website_bucket_name
+    domain = module.admin_site.routing.domain
+  }
+}
+
+output plugin_config {
+  value = {
+    bucket_name = module.admin_site.website_bucket_name
+    domain = module.admin_site.routing.domain
+    plugin_source_root = "${local.plugin_root}/"
+    plugin_upload_root = "${local.upload_root}/${local.plugin_root}/"
+    plugin_hosting_root = "${local.asset_hosting_root}/${local.plugin_root}/"
+  }
 }
 
 output default_styles_path {
