@@ -6,8 +6,28 @@ variable name {
   type = string
 }
 
-variable security_scope {
+variable maintainer {
+  type = object({
+    name = string
+    email = string
+  })
+  default = {
+    name = ""
+    email = ""
+  }
+}
+
+variable nav_links {
+  type = list(object({
+    name = string
+    target = string
+  }))
+  default = []
+}
+
+variable site_title {
   type = string
+  default = "Test Site"
 }
 
 variable plugin_config {
@@ -24,6 +44,28 @@ variable plugin_config {
   })
 }
 
+variable coordinator_data {
+  type = object({
+    system_id = object({
+      security_scope = string
+      subsystem_name = string
+    })
+    routing = object({
+      domain_parts = object({
+        top_level_domain = string
+        controlled_domain_part = string
+      })
+      domain = string
+      route53_zone_name = string
+    })
+    // these can be set to "" if NA
+    lambda_log_delivery_prefix = string
+    lambda_log_delivery_bucket = string
+    cloudfront_log_delivery_prefix = string
+    cloudfront_log_delivery_bucket = string
+  })
+}
+
 variable image_layer {
   type = object({
     present = bool
@@ -36,6 +78,17 @@ variable image_layer {
 }
 
 variable donut_days_layer {
+  type = object({
+    present = bool
+    arn = string
+  })
+  default = {
+    present = false
+    arn = ""
+  }
+}
+
+variable markdown_tools_layer {
   type = object({
     present = bool
     arn = string
