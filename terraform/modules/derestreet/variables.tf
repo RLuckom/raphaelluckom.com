@@ -31,10 +31,16 @@ variable user_email {
   type = string
 }
 
-variable plugin_configs {
+variable plugin_static_configs {
   type = map(object({
     role_name_stem = string
     slug = string
+  }))
+  default = {}
+}
+
+variable plugin_configs {
+  type = map(object({
     additional_connect_sources = list(string)
     policy_statements = list(object({
       actions = list(string)
@@ -169,8 +175,8 @@ locals {
   plugin_configs = zipmap(
     [for k in keys(var.plugin_configs) : replace(k, "/", "")],
     [for name, config in var.plugin_configs : {
-      role_name_stem = config.role_name_stem
-      slug = config.slug
+      role_name_stem = var.plugin_static_configs[name].role_name_stem
+      slug = var.plugin_static_configs[name].slug
       additional_connect_sources = config.additional_connect_sources
       policy_statements = config.policy_statements
       http_header_values = merge(

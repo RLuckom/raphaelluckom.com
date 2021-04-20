@@ -5,9 +5,9 @@ module admin_site_blog_plugin {
   logging_config = module.visibility_system.lambda_log_configs["prod"]["human"].config
   lambda_event_configs = local.notify_failure_only
   security_scope = module.visibility_system.lambda_log_configs["prod"]["human"].security_scope
+  plugin_config = module.admin_interface.plugin_config["blog"]
   image_layer = module.image_dependencies.layer_config
   donut_days_layer = module.donut_days.layer_config
-  plugin_config = module.admin_interface.plugin_config
 }
 
 module test_site {

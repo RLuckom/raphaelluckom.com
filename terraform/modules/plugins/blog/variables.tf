@@ -14,9 +14,13 @@ variable plugin_config {
   type = object({
     domain = string
     bucket_name = string
-    plugin_upload_root = string
-    plugin_hosting_root = string
-    plugin_source_root = string
+    upload_root = string
+    hosting_root = string
+    source_root = string
+    authenticated_role = object({
+      arn = string
+      name = string
+    })
   })
 }
 
@@ -68,7 +72,7 @@ variable logging_config {
 }
 
 locals {
-  file_prefix = "${trim(var.plugin_config.plugin_source_root, "/")}/${var.name}"
+  file_prefix = trim(var.plugin_config.source_root, "/")
   editor_styles_path = "${local.file_prefix}/assets/styles/editor.css"
   exploranda_script_path = "${local.file_prefix}/assets/js/exploranda-browser.js"
   config_path = "${local.file_prefix}/assets/js/config.js"
@@ -77,8 +81,8 @@ locals {
   plugin_config = {
     domain = var.plugin_config.domain
     private_storage_bucket = var.plugin_config.bucket_name
-    private_storage_image_upload_path = "${trimsuffix(var.plugin_config.plugin_upload_root, "/")}/${var.name}/img/"
-    plugin_image_hosting_path = "${trimsuffix(var.plugin_config.plugin_hosting_root, "/")}/${var.name}/img/"
+    private_storage_image_upload_path = "${trimsuffix(var.plugin_config.upload_root, "/")}/img/"
+    plugin_image_hosting_path = "${trimsuffix(var.plugin_config.hosting_root, "/")}/img/"
   }
   files = [
     {

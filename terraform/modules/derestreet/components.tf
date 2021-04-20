@@ -13,7 +13,7 @@ module cognito_identity_management {
   required_group = var.user_group_name
   client_id               = module.cognito_user_management.user_pool_client.id
   provider_endpoint           = module.cognito_user_management.user_pool.endpoint
-  plugin_configs = local.plugin_configs
+  plugin_configs = var.plugin_static_configs
 }
 
 resource random_password nonce_signing_secret {

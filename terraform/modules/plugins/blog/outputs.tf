@@ -17,12 +17,20 @@ output plugin_relative_bucket_host_permissions_needed {
     role_arn = module.process_image_uploads.lambda_role.arn
   }]
 }
+
 output plugin_relative_bucket_upload_permissions_needed {
   value = [{
     permission_type = "put_object"
     plugin_relative_key = "/img/"
     role_arn = null
   }]
+}
+
+output static_config {
+  value = {
+    role_name_stem = "blog"
+    slug = "blog"
+  }
 }
 
 output lambda_logging_arns {

@@ -17,13 +17,16 @@ output website_config {
 }
 
 output plugin_config {
-  value = {
+  value = zipmap(
+    keys(var.plugin_static_configs),
+    [for k, v in var.plugin_static_configs : {
     bucket_name = module.admin_site.website_bucket_name
     domain = module.admin_site.routing.domain
-    plugin_source_root = "${local.plugin_root}/"
-    plugin_upload_root = "${local.upload_root}/${local.plugin_root}/"
-    plugin_hosting_root = "${local.asset_hosting_root}/${local.plugin_root}/"
-  }
+    authenticated_role = module.cognito_identity_management.authenticated_role[replace(k, "/", "")]
+    source_root = "${local.plugin_root}/${replace(k, "/", "")}/"
+    upload_root = "${local.upload_root}/${local.plugin_root}/${replace(k, "/", "")}/"
+    hosting_root = "${local.asset_hosting_root}/${local.plugin_root}/${replace(k, "/", "")}/"
+  }])
 }
 
 output default_styles_path {

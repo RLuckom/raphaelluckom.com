@@ -40,19 +40,6 @@ variable "route53_zone_name" {
   default = "raphaelluckom.com."
 }
 
-locals {
-  system_ids = zipmap(
-    keys(var.supported_system_definitions),
-    [ for security_scope, system_config in var.supported_system_definitions : zipmap(
-      keys(system_config.subsystems),
-      [ for subsystem_name in keys(system_config.subsystems) : {
-        security_scope = security_scope
-        subsystem_name = subsystem_name
-      }]
-    )]
-  )
-}
-
 variable supported_system_definitions {
   type = map(object({
     subsystems = map(object({
