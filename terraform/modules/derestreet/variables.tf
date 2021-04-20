@@ -182,7 +182,7 @@ locals {
       upload_prefix = "${local.upload_root}/${local.plugin_root}/${replace(name, "/", "")}/"
       asset_hosting_prefix = "${local.asset_hosting_root}/${local.plugin_root}/${replace(name, "/", "")}/"
       lambda_notifications = [for notification in config.lambda_notifications : {
-        filter_prefix = "${local.upload_root}/${local.plugin_root}/${replace(name, "/", "")}/${notification.plugin_relative_filter_prefix}"
+        filter_prefix = "${local.upload_root}/${local.plugin_root}/${replace(name, "/", "")}/${trim(notification.plugin_relative_filter_prefix, "/")}"
         filter_suffix = notification.filter_suffix
         lambda_arn = notification.lambda_arn
         lambda_arn = notification.lambda_arn
