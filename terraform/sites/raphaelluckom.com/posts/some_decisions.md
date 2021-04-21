@@ -31,7 +31,7 @@ The following things are in scope:
 
 1. An administration website controlled by a login system. This will include two plugins: a plugin for managing
    a blog (see #2) and a plugin for viewing traffic to the blog. The plugin for managing the blog will allow
-   the user to write, adit, post, and delete blog entries. The plugin for viewing traffic will display some
+   the user to write, edit, post, and delete blog entries. The plugin for viewing traffic will display some
    convenient view of the data from the site's request logs (not necessarily anything else). For the purpose
    of this item, "writing a blog post" _includes_ uploading any images to be included in the post, as well as
    processing and storing them appropriately.
@@ -45,7 +45,7 @@ The following things are in scope:
    Those files will be managed from the administration site.
 
 3. A _visibility system_ that collects and manages the operational data from the rest of the deployed system.
-   This starts with an outline of the overall deployed infrastructure, we tell it "there's going to be a blog, and
+   This starts with an outline of the overall deployed infrastructure; we tell it "there's going to be a blog, and
    an admin site, etc." The visibility system's job is to say "OK, tell the blog site to send its logs _here_ and I'll
    take care of them; tell the admin site to send its logs _there_, and if you have random cloud functions, tell them
    to send their logs to this other place. _Then_, when you want to look at any of that data, you go over _here_ and you
@@ -81,6 +81,12 @@ The following things are out of scope:
 
 3. Any functionality beyond "blog," including direct messaging, payment processing, etc. These are for subsequent releases.
 
+Finally, an alpha system carries _risk_. I've been using these subsystems for between one and four months; they seem to me to be
+cheap, reliable, and secure, and their designs stable. However, any of those things can turn out not to be the case when software is first
+released to a wide audience. If there are significant bugs affecting the system's cost, reliability, or security, or if for some reason
+the design of one or more subsystems needs to change significantly, then deployed alpha systems may need to be changed significantly,
+including being deleted and rebuilt.
+
 #### The plugin system will use guard rails, not barricades, between plugins and the main system
 Both guard rails and barricades are types of security controls, but their functions are different. Guard
 rails protect against accidents, while barricades protect against adversaries. There are two modes where we need
@@ -110,9 +116,47 @@ would _not_ be able to modify AWS permissions, create cloud functions, alter net
 In a [previous post](https://raphaelluckom.com/posts/isolation_proposal_001.html), I outlined my proposal for isolating plugin
 permissions from each other during operation. I've tried my best to invite critique of that design; I posted it to [security stack exchange](https://security.stackexchange.com/questions/248281/isolating-permissions-available-to-browser-js-via-oauth-and-referer)
 and all my social media except instagram. So far no one has come forward with vulnerabilities, but my network is small. I should
-also admit that "inviting critique" in this case equals "soliciting unpaid labor." I happen to think that most of the people capanble
+also admit that "inviting critique" in this case equals "soliciting unpaid labor." I happen to think that most of the people capable
 of that kind of critique _owe_ the world a bit of pro-bono work, given the externalities software has imposed on society, but I'm
 not volunteering to fight that battle in addition to the unpaid work I'm already doing.
+
+#### This system is not intended or designed to guard against anyone who can show AWS a warrant
+This system does not encrypt the owner's data; it relies for its security on the AWS permission system. AWS _does_ provide encryption
+options for S3, but I'm not using them right now. My reasoning (definitely up for debate if you see something I'm missing) is:
+
+The most (only?) secure way to use a system like AWS, if you want to protect your data _from_ AWS, is to encrypt it _before_ it gets to AWS
+and not decrypt it until after it leaves. Doing that would require that you have encryption / decryption keys stored on the devices where
+you use this system. That kind of key management (actually doing it right, not just making it look ok from a distance) is _hard_, and I'm
+not confident enough in my abilities to attempt it. The best long-term possibility that I see would be for an enterprising [Secure Scuttlebutt](https://scuttlebutt.nz/)
+practitioner to use this system as an intermediary for storing and transferring SSB data. That could work, and it could be designed to pre-encrypt
+data before it hit AWS servers, making it a plausibly-effective direction to explore.
+
+Barring an end-to-end solution, the remaining encryption options are those offered by AWS itself. We must assume that AWS would comply with a
+US warrant (including a [secret warrant](https://en.wikipedia.org/wiki/United_States_Foreign_Intelligence_Surveillance_Court#FISA_warrants)).
+What that means is that if we encrypt data with a key managed by AWS, AWS will be able to use that key to decrypt the data, and will do so
+if presented with a warrant. So we're not talking about security from nation-states. What remains? I can think of three other directions adversaries
+might come from: people who break into the services we build on AWS through the public internet; people _within_ AWS who want to spy on our data;
+and people who get access to an un-wiped AWS hard drive on which our data has been stored (for instance, someone breaking into the data center
+or somehow getting a drive that was disposed of improperly). The encryption AWS offers for S3 is _encryption at rest_, which means that S3 encrypts
+the data before storing it and decrypts it when we access it. What this means is that _within our system_, anything that has permission to _look_
+at the data _also_ has permission to decrypt it. If any of these services were compromised, it wouldn't matter whether the data was encrypted; the
+adversary would necessarily have permission to use the key as well. So that means that this encryption only protects us against two things--people
+within AWS who _have_ access to the S3 services but _don't_ have access to the key-management services, and people who can get their hands on AWS
+hard drives.
+
+We could still use this encryption to defend against these two types of threats. But there are two costs to this decision, and one of them is
+kind of important. The less-important cost is money. It would probably be slightly-to-somewhat more expensive to encrypt all this data, depending
+on how we wanted to do it. My other worry, though, which is ultimately why I don't want to use this encryption, is the risk of data loss. When
+data is securely encrypted, losing access to the key is the same as losing access to the data. Now, I'm confident that AWS has done a good job
+on their key management systems. But there can't be _zero_ risk--there's always a little--that something could go wrong and mess up those key stores.
+
+So, when we stack up all the pros and cons, we see that encryption is a little more expensive than not, a little riskier than not in terms of data loss,
+_doesn't_ protect us from the most likely scenarios, and only _does_ protect us against some fairly unlikely ones. I've thought about this a lot, and I
+keep landing in the "no" column.
+
+I imagine that some people will feel strongly that they want this, and that's ok. If you're one of those people, feel free to say so; if I hear
+that from enough people I'll probably do it (or make it an option) on that basis alone. But for now it's not a priority. And as I said before, if
+you're looking for security against nation states, you're going to need more help than I or this system can give you.
 
 #### Conclusion
 In my [early January check-in](https://raphaelluckom.com/posts/early_january_check_in.html), I wrote about the basic components
