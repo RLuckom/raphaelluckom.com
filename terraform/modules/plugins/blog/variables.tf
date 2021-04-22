@@ -130,7 +130,7 @@ locals {
   exploranda_script_path = "${local.file_prefix}/assets/js/exploranda-browser.js"
   config_path = "${local.file_prefix}/assets/js/config.js"
   aws_script_path = "${local.file_prefix}/assets/js/aws-sdk-2.868.0.min.js"
-  index_js_path = "${local.file_prefix}/assets/js/index-dist-${filemd5("${path.module}/index-dist.js")}.js"
+  index_js_path = "${local.file_prefix}/assets/js/index-dist-${filemd5("${path.module}/src/index-dist.js")}.js"
   plugin_config = {
     domain = var.plugin_config.domain
     private_storage_bucket = var.plugin_config.bucket_name
@@ -148,7 +148,7 @@ EOF
     },
     {
       key = "${local.file_prefix}/index.html"
-      file_contents = templatefile("${path.module}/index.html", {
+      file_contents = templatefile("${path.module}/src/index.html", {
       editor_styles_path = local.editor_styles_path
       default_styles_path = var.default_styles_path
       exploranda_script_path = local.exploranda_script_path
@@ -162,25 +162,25 @@ EOF
     {
       key = local.index_js_path
       file_contents = null
-      file_path = "${path.module}/index-dist.js"
+      file_path = "${path.module}/src/index-dist.js"
       content_type = "application/javascript"
     },
     {
       key = local.editor_styles_path
       file_path = ""
-      file_contents = file("${path.module}/editor.css")
+      file_contents = file("${path.module}/src/editor.css")
       content_type = "text/css"
     },
     {
       key = local.exploranda_script_path
       file_contents = null
-      file_path = "${path.module}/exploranda-browser.js"
+      file_path = "${path.module}/src/exploranda-browser.js"
       content_type = "application/javascript"
     },
     {
       key = local.aws_script_path
       file_contents = null
-      file_path = "${path.module}/aws-sdk-2.868.0.min.js"
+      file_path = "${path.module}/src/aws-sdk-2.868.0.min.js"
       content_type = "application/javascript"
     },
   ]
