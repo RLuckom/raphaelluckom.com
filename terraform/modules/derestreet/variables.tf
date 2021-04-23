@@ -56,7 +56,24 @@ variable plugin_configs {
       role_arn = string
       permission_type = string
     }))
-    lambda_notifications = list(object({
+    plugin_relative_lambda_origins = list(object({
+      plugin_relative_path = string
+      forwarded_headers = list(string)
+      lambda = object({
+        arn = string
+        name = string
+      })
+    }))
+    upload_path_lambda_notifications = list(object({
+      lambda_arn = string
+      lambda_name = string
+      lambda_role_arn = string
+      events = list(string)
+      plugin_relative_filter_prefix = string
+      filter_suffix = string
+      permission_type = string
+    }))
+    storage_path_lambda_notifications = list(object({
       lambda_arn = string
       lambda_name = string
       lambda_role_arn = string
@@ -140,17 +157,13 @@ variable get_access_creds_path_for_lambda_origin {
   default = "/api/actions/access/credentials"
 }
 
-variable get_access_creds_gateway_name_stem {
-  type = string
-  default = "default"
-}
-
 module aws_sdk {
   count = local.need_aws_sdk_layer ? 1 : 0
   source = "github.com/RLuckom/terraform_modules//aws/layers/aws_sdk"
 }
 
 locals {
+  gateway_name_stem = "default"
   plugin_root = trim(var.plugin_root, "/")
   upload_root = trim(var.upload_root, "/")
   asset_hosting_root = trim(var.asset_hosting_root, "/")
@@ -172,23 +185,69 @@ locals {
       }]
     )
   ])
+  route_to_function_names = flatten([for name, config in var.plugin_configs : [ for origin in config.plugin_relative_lambda_origins : {
+    path = "/${local.plugin_root}/${replace(name, "/", "")}/${trim(origin.plugin_relative_path, "/")}"
+    name = origin.lambda.name
+  }]])
+  route_to_function_name_map = zipmap(
+    [ for entry in local.route_to_function_names : entry.path],
+    [ for entry in local.route_to_function_names : entry.name]
+  )
   plugin_configs = zipmap(
     [for k in keys(var.plugin_configs) : replace(k, "/", "")],
     [for name, config in var.plugin_configs : {
       role_name_stem = var.plugin_static_configs[name].role_name_stem
       slug = var.plugin_static_configs[name].slug
-      additional_connect_sources = config.additional_connect_sources
+      additional_connect_sources = concat(
+        config.additional_connect_sources,
+        [ for origin in config.plugin_relative_lambda_origins :
+          "https://${var.coordinator_data.routing.domain}/${local.plugin_root}/${replace(name, "/", "")}/${trim(origin.plugin_relative_path, "/")}"
+        ]
+      )
       policy_statements = config.policy_statements
       http_header_values = merge(
         {
-          "Content-Security-Policy" = "default-src 'none'; style-src 'self'; script-src https://${var.coordinator_data.routing.domain}/${local.plugin_root}/${replace(name, "/", "")}/assets/js/; object-src 'none'; connect-src 'self' ${join(" ", [for source in config.additional_connect_sources : source])}; img-src 'self' data:;"
+          "Content-Security-Policy" = "default-src 'none'; style-src 'self'; script-src https://${var.coordinator_data.routing.domain}/${local.plugin_root}/${replace(name, "/", "")}/assets/js/; object-src 'none'; connect-src 'self' ${join(" ", concat(config.additional_connect_sources, [ for origin in config.plugin_relative_lambda_origins : "https://${var.coordinator_data.routing.domain}/${local.plugin_root}/${replace(name, "/", "")}/${trim(origin.plugin_relative_path, "/")}" ]))}; img-src 'self' data:;"
         },
         var.default_static_headers
       )
       upload_prefix = "${local.upload_root}/${local.plugin_root}/${replace(name, "/", "")}/"
       asset_hosting_prefix = "${local.asset_hosting_root}/${local.plugin_root}/${replace(name, "/", "")}/"
-      lambda_notifications = [for notification in config.lambda_notifications : {
+      lambda_origins = [ for origin in config.plugin_relative_lambda_origins : {
+        path = "/${local.plugin_root}/${replace(name, "/", "")}/${trim(origin.plugin_relative_path, "/")}"
+        authorizer = "default"
+        gateway_name_stem = local.gateway_name_stem
+        allowed_methods = ["HEAD", "DELETE", "POST", "GET", "OPTIONS", "PUT", "PATCH"]
+        cached_methods = ["GET", "HEAD"]
+        compress = true
+        ttls = {
+          min = 0
+          default = 0
+          max = 0
+        }
+        forwarded_values = {
+          query_string = true
+          query_string_cache_keys = []
+          headers = origin.forwarded_headers
+          cookie_names = ["ID-TOKEN"]
+        }
+        lambda = {
+          arn = module.apigateway_dispatcher.apigateway_dispatcher.lambda.arn
+          name = module.apigateway_dispatcher.apigateway_dispatcher.lambda.function_name
+        }
+      }]
+      upload_path_lambda_notifications = [for notification in config.upload_path_lambda_notifications : {
         filter_prefix = "${local.upload_root}/${local.plugin_root}/${replace(name, "/", "")}/${trim(notification.plugin_relative_filter_prefix, "/")}"
+        filter_suffix = notification.filter_suffix
+        lambda_arn = notification.lambda_arn
+        lambda_arn = notification.lambda_arn
+        lambda_role_arn = notification.lambda_role_arn
+        lambda_name = notification.lambda_name
+        events = notification.events
+        permission_type = notification.permission_type
+      }]
+      storage_path_lambda_notifications = [for notification in config.storage_path_lambda_notifications : {
+        filter_prefix = "${local.plugin_root}/${replace(name, "/", "")}/${trim(notification.plugin_relative_filter_prefix, "/")}"
         filter_suffix = notification.filter_suffix
         lambda_arn = notification.lambda_arn
         lambda_arn = notification.lambda_arn

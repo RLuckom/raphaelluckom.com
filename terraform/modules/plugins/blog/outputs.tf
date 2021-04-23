@@ -10,6 +10,17 @@ output plugin_relative_lambda_notifications {
   }]
 }
 
+output plugin_relative_lambda_origins {
+  value = [{
+    plugin_relative_path = "/post-entry"
+    forwarded_headers = []
+    lambda = {
+      arn = module.post_entry_lambda.lambda.arn
+      name = module.post_entry_lambda.lambda.function_name
+    }
+  }]
+}
+
 output plugin_relative_bucket_host_permissions_needed {
   value = [{
     permission_type = "put_object"

@@ -45,10 +45,20 @@ module get_access_creds {
   identity_pool_id = module.cognito_identity_management.identity_pool.id
   user_pool_endpoint = module.cognito_user_management.user_pool.endpoint
   api_path = var.get_access_creds_path_for_lambda_origin
-  gateway_name_stem = var.get_access_creds_gateway_name_stem
+  gateway_name_stem = local.gateway_name_stem
   client_id = module.cognito_user_management.user_pool_client.id
   aws_sdk_layer = local.aws_sdk_layer_config
   plugin_role_map = module.cognito_identity_management.plugin_role_map
+}
+
+module apigateway_dispatcher {
+  source = "github.com/RLuckom/terraform_modules//aws/access_control/apigateway_dispatcher"
+  identity_pool_id = module.cognito_identity_management.identity_pool.id
+  user_pool_endpoint = module.cognito_user_management.user_pool.endpoint
+  client_id = module.cognito_user_management.user_pool_client.id
+  aws_sdk_layer = local.aws_sdk_layer_config
+  plugin_role_map = module.cognito_identity_management.plugin_role_map
+  route_to_function_name_map = local.route_to_function_name_map
 }
 
 module admin_site {
@@ -59,13 +69,17 @@ module admin_site {
   )
   lambda_authorizers = module.get_access_creds.lambda_authorizer_config
   forbidden_website_paths = var.forbidden_website_paths
-  lambda_origins = module.get_access_creds.lambda_origins
+  lambda_origins = concat(
+    module.get_access_creds.lambda_origins,
+    flatten(values(local.plugin_configs).*.lambda_origins)
+  )
   website_bucket_prefix_object_permissions = concat(
     flatten(values(local.plugin_bucket_permissions_needed)),
     var.archive_system.bucket_permissions_needed
   )
   website_bucket_lambda_notifications = concat(
-    flatten(values(local.plugin_configs).*.lambda_notifications),
+    flatten(values(local.plugin_configs).*.upload_path_lambda_notifications),
+    flatten(values(local.plugin_configs).*.storage_path_lambda_notifications),
     var.archive_system.lambda_notifications
   )
 
@@ -76,6 +90,7 @@ module admin_site {
     expose_headers = ["ETag"]
     max_age_seconds = 3000
   }]
+
   access_control_function_qualified_arns = [module.access_control_functions.access_control_function_qualified_arns]
   coordinator_data = var.coordinator_data
   subject_alternative_names = var.subject_alternative_names

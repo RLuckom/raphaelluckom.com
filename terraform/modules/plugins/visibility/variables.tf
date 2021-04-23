@@ -16,7 +16,7 @@ locals {
     {
       key = "${local.file_prefix}/index.html"
       file_path = ""
-      file_contents = templatefile("${path.module}/src/index.html", {
+      file_contents = templatefile("${path.module}/src/frontend/index.html", {
       default_styles_path = var.default_styles_path
       exploranda_script_path = local.exploranda_script_path
       aws_script_path = local.aws_script_path
@@ -27,19 +27,19 @@ locals {
     {
       key = local.index_js_path
       file_contents = null
-      file_path = "${path.module}/src/main.js"
+      file_path = "${path.module}/src/frontend/main.js"
       content_type = "application/javascript"
     },
     {
       key = local.exploranda_script_path
       file_contents = null
-      file_path = "${path.module}/src/exploranda-browser.js"
+      file_path = "${path.module}/src/frontend/exploranda-browser.js"
       content_type = "application/javascript"
     },
     {
       key = local.aws_script_path
       file_contents = null
-      file_path = "${path.module}/src/aws-sdk-2.868.0.min.js"
+      file_path = "${path.module}/src/frontend/aws-sdk-2.868.0.min.js"
       content_type = "application/javascript"
     },
   ]

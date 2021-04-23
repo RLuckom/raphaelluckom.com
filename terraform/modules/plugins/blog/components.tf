@@ -1,3 +1,18 @@
+module post_entry_lambda {
+  source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
+  config_contents = templatefile("${path.module}/src/backend/post_entry_config.js",
+  {
+  })
+  logging_config = var.logging_config
+  invoking_roles = [
+    var.plugin_config.authenticated_role.arn
+  ]
+  lambda_event_configs = var.lambda_event_configs
+  action_name = "post_entry"
+  scope_name = var.coordinator_data.system_id.security_scope
+  donut_days_layer = var.donut_days_layer
+}
+
 module process_image_uploads {
   source = "github.com/RLuckom/terraform_modules//aws/utility_functions/image_upload_processor"
   logging_config = var.logging_config

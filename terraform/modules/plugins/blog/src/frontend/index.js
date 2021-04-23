@@ -102,10 +102,17 @@ const credentialsAccessSchema = {
   path: 'api/actions/access/credentials'
 }
 
+const dummyAccessSchema = {
+  name: 'dummy lambda',
+  value: {path: 'body'},
+  dataSource: 'GENERIC_API',
+  host: window.location.hostname,
+  path: 'plugins/blog/post-entry'
+}
+
 const apiConfigSelector = {
   source: 'credentials',
   formatter: ({credentials}) => {
-    console.log(credentials)
     return {
       region: 'us-east-1',
       accessKeyId: credentials[0].Credentials.AccessKeyId,
@@ -117,16 +124,8 @@ const apiConfigSelector = {
 
 function listPostsDependencies(callback) {
   const dependencies = {
-    credentials: {
-      accessSchema: credentialsAccessSchema
-    },
-    putImg: {
-      accessSchema: exploranda.dataSources.AWS.s3.listObjects,
-      params: {
-        apiConfig: apiConfigSelector,
-        Bucket: {value: TEST_SITE_BKT },
-        Prefix: { value: BLOG_POST_PREFIX },
-      }
+    dummy: {
+      accessSchema: dummyAccessSchema
     },
   }
   exploranda.Gopher(dependencies).report(
@@ -138,3 +137,4 @@ function listPostsDependencies(callback) {
 }
 
 document.addEventListener('DOMContentLoaded', initWysiwyEditors)
+document.addEventListener('DOMContentLoaded', listPostsDependencies)
