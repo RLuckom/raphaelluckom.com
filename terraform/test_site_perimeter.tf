@@ -1,5 +1,5 @@
 module admin_interface {
-  source = "./modules/derestreet"
+  source = "github.com/RLuckom/terraform_modules//aws/serverless_site/derestreet"
   system_id = module.visibility_system.serverless_site_configs["test_admin"].system_id
   coordinator_data = module.visibility_system.serverless_site_configs["test_admin"]
   user_email = "raph.aelluckom@gmail.com"
