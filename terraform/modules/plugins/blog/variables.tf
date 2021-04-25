@@ -131,7 +131,8 @@ locals {
   config_path = "${local.file_prefix}/assets/js/config.js"
   aws_script_path = "${local.file_prefix}/assets/js/aws-sdk-2.868.0.min.js"
   index_js_path = "${local.file_prefix}/assets/js/index-${filemd5("${path.module}/src/frontend/index.js")}.js"
-  prosemirror_js_path = "${local.file_prefix}/assets/js/prosemirror-pkg-${filemd5("${path.module}/src/frontend/prosemirror-libs.js")}.js"
+  prosemirror_libs_js_path = "${local.file_prefix}/assets/js/prosemirror-pkg-${filemd5("${path.module}/src/frontend/prosemirror-libs.js")}.js"
+  prosemirror_setup_js_path = "${local.file_prefix}/assets/js/prosemirror-setup-${filemd5("${path.module}/src/frontend/prosemirror-libs.js")}.js"
   plugin_config = {
     domain = var.plugin_config.domain
     private_storage_bucket = var.plugin_config.bucket_name
@@ -155,16 +156,23 @@ EOF
       exploranda_script_path = local.exploranda_script_path
       aws_script_path = local.aws_script_path
       index_js_path = local.index_js_path
-      prosemirror_js_path = local.prosemirror_js_path
+      prosemirror_libs_js_path = local.prosemirror_libs_js_path
+      prosemirror_setup_js_path = local.prosemirror_setup_js_path
       config_path = local.config_path
     })
       content_type = "text/html"
       file_path = ""
     },
     {
-      key = local.prosemirror_js_path
+      key = local.prosemirror_libs_js_path
       file_contents = null
       file_path = "${path.module}/src/frontend/prosemirror-pkg.js"
+      content_type = "application/javascript"
+    },
+    {
+      key = local.prosemirror_setup_js_path
+      file_contents = null
+      file_path = "${path.module}/src/frontend/prosemirror-setup.js"
       content_type = "application/javascript"
     },
     {
