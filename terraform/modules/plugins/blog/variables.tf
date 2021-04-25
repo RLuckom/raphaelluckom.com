@@ -130,8 +130,8 @@ locals {
   exploranda_script_path = "${local.file_prefix}/assets/js/exploranda-browser.js"
   config_path = "${local.file_prefix}/assets/js/config.js"
   aws_script_path = "${local.file_prefix}/assets/js/aws-sdk-2.868.0.min.js"
-  index_js_path = "${local.file_prefix}/assets/js/index-dist-${filemd5("${path.module}/src/frontend/index-dist.js")}.js"
-  prosemirror_js_path = "${local.file_prefix}/assets/js/prosemirror-dist-${filemd5("${path.module}/src/frontend/prosemirror-pkg.js")}.js"
+  index_js_path = "${local.file_prefix}/assets/js/index-${filemd5("${path.module}/src/frontend/index.js")}.js"
+  prosemirror_js_path = "${local.file_prefix}/assets/js/prosemirror-pkg-${filemd5("${path.module}/src/frontend/prosemirror-libs.js")}.js"
   plugin_config = {
     domain = var.plugin_config.domain
     private_storage_bucket = var.plugin_config.bucket_name
@@ -170,7 +170,7 @@ EOF
     {
       key = local.index_js_path
       file_contents = null
-      file_path = "${path.module}/src/frontend/index-dist.js"
+      file_path = "${path.module}/src/frontend/index.js"
       content_type = "application/javascript"
     },
     {

@@ -8,6 +8,7 @@ const {menuBar, wrapItem, blockTypeItem, Dropdown, DropdownSubmenu, joinUpItem, 
 const {wrapInList, splitListItem, liftListItem, sinkListItem} = require("prosemirror-schema-list")
 const { EditorState, Plugin, NodeSelection } = require("prosemirror-state")
 const {EditorView, Decoration, DecorationSet} = require("prosemirror-view")
+const {defaultMarkdownParser, defaultMarkdownSerializer, schema} = require('prosemirror-markdown')
 
 const { v4 } = require('uuid')
 
@@ -21,5 +22,7 @@ module.exports = {
   history, undo, redo,
   gapCursor,
   dropCursor,
+  defaultMarkdownParser, defaultMarkdownSerializer, schema,
+  v4,
   toggleMark, baseKeymap, wrapIn, setBlockType, chainCommands, toggleMark, exitCode, joinUp, joinDown, lift, selectParentNode
 }
