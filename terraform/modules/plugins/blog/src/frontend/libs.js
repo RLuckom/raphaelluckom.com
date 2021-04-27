@@ -10,19 +10,24 @@ const { EditorState, Plugin, NodeSelection } = require("prosemirror-state")
 const {EditorView, Decoration, DecorationSet} = require("prosemirror-view")
 const {defaultMarkdownParser, defaultMarkdownSerializer, schema} = require('prosemirror-markdown')
 
-const { v4 } = require('uuid')
+const uuid = require('uuid')
+const yaml = require('js-yaml')
+const moment = require('moment')
+
 
 module.exports = {
-  EditorState, Plugin, NodeSelection,
-  EditorView, Decoration, DecorationSet,
-  wrapInList, splitListItem, liftListItem, sinkListItem,
-  menuBar, wrapItem, blockTypeItem, Dropdown, DropdownSubmenu, joinUpItem, liftItem, selectParentNodeItem, undoItem, redoItem, icons, MenuItem,
-  keymap,
-  undoInputRule, inputRules, wrappingInputRule, textblockTypeInputRule, smartQuotes, emDash, ellipsis,
-  history, undo, redo,
-  gapCursor,
-  dropCursor,
-  defaultMarkdownParser, defaultMarkdownSerializer, schema,
-  v4,
-  toggleMark, baseKeymap, wrapIn, setBlockType, chainCommands, toggleMark, exitCode, joinUp, joinDown, lift, selectParentNode
+  yaml, moment, uuid,
+  prosemirror: {
+    EditorState, Plugin, NodeSelection,
+    EditorView, Decoration, DecorationSet,
+    wrapInList, splitListItem, liftListItem, sinkListItem,
+    menuBar, wrapItem, blockTypeItem, Dropdown, DropdownSubmenu, joinUpItem, liftItem, selectParentNodeItem, undoItem, redoItem, icons, MenuItem,
+    keymap,
+    undoInputRule, inputRules, wrappingInputRule, textblockTypeInputRule, smartQuotes, emDash, ellipsis,
+    history, undo, redo,
+    gapCursor,
+    dropCursor,
+    defaultMarkdownParser, defaultMarkdownSerializer, schema,
+    toggleMark, baseKeymap, wrapIn, setBlockType, chainCommands, toggleMark, exitCode, joinUp, joinDown, lift, selectParentNode
+  }
 }

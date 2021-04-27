@@ -9,7 +9,7 @@ module visibility_system {
     prod = {
       subsystems = {
         prod = {
-          scoped_logging_functions = module.prod_site.lambda_logging_roles
+          scoped_logging_functions = concat(module.prod_site.lambda_logging_roles, module.admin_site_blog_plugin.lambda_logging_arns)
           glue_permission_name_map = {
             add_partition_permission_names = []
             add_partition_permission_arns = []

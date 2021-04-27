@@ -16,19 +16,19 @@ function initWysiwyEditors() {
     }
 
     // Load editor view
-    const view = new EditorView(container, {
+    const view = new prosemirror.EditorView(container, {
       // Set initial state
-      state: EditorState.create({
-        doc: defaultMarkdownParser.parse(area.value),
-        plugins: exampleSetup({ schema, config: window.CONFIG }).concat(placeholderPlugin),
+      state: prosemirror.EditorState.create({
+        doc: prosemirror.defaultMarkdownParser.parse(area.value),
+        plugins: exampleSetup({ schema: prosemirror.schema, config: window.CONFIG }).concat(placeholderPlugin),
       }),
       dispatchTransaction(tr) {
         const { state } = view.state.applyTransaction(tr)
         view.updateState(state)
         // Update textarea only if content has changed
         if (tr.docChanged) {
-          console.log(defaultMarkdownSerializer.serialize(tr.doc))
-          area.value = defaultMarkdownSerializer.serialize(tr.doc)
+          console.log(prosemirror.defaultMarkdownSerializer.serialize(tr.doc))
+          area.value = prosemirror.defaultMarkdownSerializer.serialize(tr.doc)
         }
       },
     })
@@ -43,31 +43,18 @@ const dummyAccessSchema = {
   path: 'plugins/blog/post-entry'
 }
 
-function listPostsDependencies(callback) {
-  const dependencies = {
-    dummy: {
-      accessSchema: dummyAccessSchema
-    },
-  }
-  exploranda.Gopher(dependencies).report(
-    (e, r) => {
-      console.log('end')
-      console.log(e)
-      console.log(r)
-    }
-  )
-}
-
 goph = buildGopher({
   awsDependencies: {
     listHostingRoot: listHostingRootDependency
   },
-  otherDependencies: {},
+  otherDependencies: {
+    dummy: pluginRelativeApiDependency("post-entry")
+  },
   defaultInputs: {}
 })
 
 function listBucketObjects(callback) {
-  goph.report("listHostingRoot",
+  goph.report(
     (e, r) => {
       console.log('end')
       console.log(e)

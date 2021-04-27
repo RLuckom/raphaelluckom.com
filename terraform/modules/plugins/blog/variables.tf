@@ -35,6 +35,7 @@ variable plugin_config {
     domain = string
     bucket_name = string
     upload_root = string
+    api_root = string
     hosting_root = string
     source_root = string
     authenticated_role = object({
@@ -132,12 +133,14 @@ locals {
   aws_script_path = "${local.file_prefix}/assets/js/aws-sdk-2.868.0.min.js"
   index_js_path = "${local.file_prefix}/assets/js/index-${filemd5("${path.module}/src/frontend/index.js")}.js"
   utils_js_path = "${local.file_prefix}/assets/js/utils-${filemd5("${path.module}/src/frontend/utils.js")}.js"
-  prosemirror_libs_js_path = "${local.file_prefix}/assets/js/prosemirror-pkg-${filemd5("${path.module}/src/frontend/prosemirror-libs.js")}.js"
+  libs_js_path = "${local.file_prefix}/assets/js/pkg-${filemd5("${path.module}/src/frontend/libs.js")}.js"
   prosemirror_setup_js_path = "${local.file_prefix}/assets/js/prosemirror-setup-${filemd5("${path.module}/src/frontend/prosemirror-setup.js")}.js"
   plugin_config = {
     domain = var.plugin_config.domain
     private_storage_bucket = var.plugin_config.bucket_name
     upload_root = "${trimsuffix(var.plugin_config.upload_root, "/")}/"
+    aws_credentials_endpoint = "api/actions/access/credentials"
+    api_root = "${trimsuffix(var.plugin_config.api_root, "/")}/"
     hosting_root = "${trimsuffix(var.plugin_config.hosting_root, "/")}/"
     private_storage_image_upload_path = "${trimsuffix(var.plugin_config.upload_root, "/")}/img/"
     plugin_image_hosting_path = "${trimsuffix(var.plugin_config.hosting_root, "/")}/img/"
@@ -160,7 +163,7 @@ EOF
       aws_script_path = local.aws_script_path
       index_js_path = local.index_js_path
       utils_js_path = local.utils_js_path
-      prosemirror_libs_js_path = local.prosemirror_libs_js_path
+      libs_js_path = local.libs_js_path
       prosemirror_setup_js_path = local.prosemirror_setup_js_path
       config_path = local.config_path
     })
@@ -168,9 +171,9 @@ EOF
       file_path = ""
     },
     {
-      key = local.prosemirror_libs_js_path
+      key = local.libs_js_path
       file_contents = null
-      file_path = "${path.module}/src/frontend/prosemirror-pkg.js"
+      file_path = "${path.module}/src/frontend/pkg.js"
       content_type = "application/javascript"
     },
     {

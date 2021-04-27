@@ -1,17 +1,3 @@
-const {
-  EditorState, Plugin, NodeSelection,
-  EditorView, Decoration, DecorationSet,
-  wrapInList, splitListItem, liftListItem, sinkListItem,
-  menuBar, wrapItem, blockTypeItem, Dropdown, DropdownSubmenu, joinUpItem, liftItem, selectParentNodeItem, undoItem, redoItem, icons, MenuItem,
-  keymap,
-  undoInputRule, inputRules, wrappingInputRule, textblockTypeInputRule, smartQuotes, emDash, ellipsis,
-  history, undo, redo,
-  gapCursor,
-  dropCursor,
-  defaultMarkdownParser, defaultMarkdownSerializer, schema,
-  v4,
-  toggleMark, baseKeymap, wrapIn, setBlockType, chainCommands, exitCode, joinUp, joinDown, lift, selectParentNode
-} = prosemirror
 
 // PROMPT
 //
@@ -207,9 +193,9 @@ function canInsert(state, nodeType) {
   return false
 }
 
-let placeholderPlugin = new Plugin({
+let placeholderPlugin = new prosemirror.Plugin({
   state: {
-    init() { return DecorationSet.empty },
+    init() { return prosemirror.DecorationSet.empty },
     apply(tr, set) {
       // Adjust decoration positions to changes made by the transaction
       set = set.map(tr.mapping, tr.doc)
@@ -217,7 +203,7 @@ let placeholderPlugin = new Plugin({
       let action = tr.getMeta(this)
       if (action && action.add) {
         let widget = document.createElement("placeholder")
-        let deco = Decoration.widget(action.add.pos, widget, {id: action.add.id})
+        let deco = prosemirror.Decoration.widget(action.add.pos, widget, {id: action.add.id})
         set = set.add(tr.doc, [deco])
       } else if (action && action.remove) {
         set = set.remove(set.find(null, null,
@@ -232,13 +218,13 @@ let placeholderPlugin = new Plugin({
 })
 
 function insertImageItem(nodeType, config) {
-  return new MenuItem({
+  return new prosemirror.MenuItem({
     title: "Insert image",
     label: "Image",
     enable(state) { return canInsert(state, nodeType) },
     run(state, _, view) {
       let {from, to} = state.selection, attrs = null
-      if (state.selection instanceof NodeSelection && state.selection.node.type == nodeType)
+      if (state.selection instanceof prosemirror.NodeSelection && state.selection.node.type == nodeType)
         attrs = state.selection.node.attrs
       openPrompt({
         title: "Insert image",
@@ -296,7 +282,7 @@ function findPlaceholder(state, id) {
 
 //TODO: how to pick name for img
 function getName() {
-  return v4()
+  return uuid.v4()
 }
 
 function uploadFile(config, buffer, ext, callback) {
@@ -363,7 +349,7 @@ function cmdItem(cmd, options) {
   if ((!options.enable || options.enable === true) && !options.select)
     passedOptions[options.enable ? "enable" : "select"] = state => cmd(state)
 
-  return new MenuItem(passedOptions)
+  return new prosemirror.MenuItem(passedOptions)
 }
 
 function markActive(state, type) {
@@ -378,18 +364,18 @@ function markItem(markType, options) {
     enable: true
   }
   for (let prop in options) passedOptions[prop] = options[prop]
-  return cmdItem(toggleMark(markType), passedOptions)
+  return cmdItem(prosemirror.toggleMark(markType), passedOptions)
 }
 
 function linkItem(markType) {
-  return new MenuItem({
+  return new prosemirror.MenuItem({
     title: "Add or remove link",
-    icon: icons.link,
+    icon: prosemirror.icons.link,
     active(state) { return markActive(state, markType) },
     enable(state) { return !state.selection.empty },
     run(state, dispatch, view) {
       if (markActive(state, markType)) {
-        toggleMark(markType)(state, dispatch)
+        prosemirror.toggleMark(markType)(state, dispatch)
         return true
       }
       openPrompt({
@@ -402,7 +388,7 @@ function linkItem(markType) {
           title: new TextField({label: "Title"})
         },
         callback(attrs) {
-          toggleMark(markType, attrs)(view.state, view.dispatch)
+          prosemirror.toggleMark(markType, attrs)(view.state, view.dispatch)
           view.focus()
         }
       })
@@ -411,7 +397,7 @@ function linkItem(markType) {
 }
 
 function wrapListItem(nodeType, options) {
-  return cmdItem(wrapInList(nodeType, options.attrs), options)
+  return cmdItem(prosemirror.wrapInList(nodeType, options.attrs), options)
 }
 
 // :: (Schema) → Object
@@ -475,11 +461,11 @@ function wrapListItem(nodeType, options) {
 function buildMenuItems({schema, config}) {
   let r = {}, type
   if (type = schema.marks.strong)
-    r.toggleStrong = markItem(type, {title: "Toggle strong style", icon: icons.strong})
+    r.toggleStrong = markItem(type, {title: "Toggle strong style", icon: prosemirror.icons.strong})
   if (type = schema.marks.em)
-    r.toggleEm = markItem(type, {title: "Toggle emphasis", icon: icons.em})
+    r.toggleEm = markItem(type, {title: "Toggle emphasis", icon: prosemirror.icons.em})
   if (type = schema.marks.code)
-    r.toggleCode = markItem(type, {title: "Toggle code font", icon: icons.code})
+    r.toggleCode = markItem(type, {title: "Toggle code font", icon: prosemirror.icons.code})
   if (type = schema.marks.link)
     r.toggleLink = linkItem(type)
 
@@ -488,38 +474,38 @@ function buildMenuItems({schema, config}) {
   if (type = schema.nodes.bullet_list)
     r.wrapBulletList = wrapListItem(type, {
       title: "Wrap in bullet list",
-      icon: icons.bulletList
+      icon: prosemirror.icons.bulletList
     })
   if (type = schema.nodes.ordered_list)
     r.wrapOrderedList = wrapListItem(type, {
       title: "Wrap in ordered list",
-      icon: icons.orderedList
+      icon: prosemirror.icons.orderedList
     })
   if (type = schema.nodes.blockquote)
-    r.wrapBlockQuote = wrapItem(type, {
+    r.wrapBlockQuote = prosemirror.wrapItem(type, {
       title: "Wrap in block quote",
-      icon: icons.blockquote
+      icon: prosemirror.icons.blockquote
     })
   if (type = schema.nodes.paragraph)
-    r.makeParagraph = blockTypeItem(type, {
+    r.makeParagraph = prosemirror.blockTypeItem(type, {
       title: "Change to paragraph",
       label: "Plain"
     })
   if (type = schema.nodes.code_block)
-    r.makeCodeBlock = blockTypeItem(type, {
+    r.makeCodeBlock = prosemirror.blockTypeItem(type, {
       title: "Change to code block",
       label: "Code"
     })
   if (type = schema.nodes.heading)
     for (let i = 1; i <= 10; i++)
-      r["makeHead" + i] = blockTypeItem(type, {
+      r["makeHead" + i] = prosemirror.blockTypeItem(type, {
         title: "Change to heading " + i,
         label: "Level " + i,
         attrs: {level: i}
       })
   if (type = schema.nodes.horizontal_rule) {
     let hr = type
-    r.insertHorizontalRule = new MenuItem({
+    r.insertHorizontalRule = new prosemirror.MenuItem({
       title: "Insert horizontal rule",
       label: "Horizontal rule",
       enable(state) { return canInsert(state, hr) },
@@ -528,15 +514,15 @@ function buildMenuItems({schema, config}) {
   }
 
   let cut = arr => arr.filter(x => x)
-  r.insertMenu = new Dropdown(cut([r.insertImage, r.insertHorizontalRule]), {label: "Insert"})
-  r.typeMenu = new Dropdown(cut([r.makeParagraph, r.makeCodeBlock, r.makeHead1 && new DropdownSubmenu(cut([
+  r.insertMenu = new prosemirror.Dropdown(cut([r.insertImage, r.insertHorizontalRule]), {label: "Insert"})
+  r.typeMenu = new prosemirror.Dropdown(cut([r.makeParagraph, r.makeCodeBlock, r.makeHead1 && new prosemirror.DropdownSubmenu(cut([
     r.makeHead1, r.makeHead2, r.makeHead3, r.makeHead4, r.makeHead5, r.makeHead6
   ]), {label: "Heading"})]), {label: "Type..."})
 
   r.inlineMenu = [cut([r.toggleStrong, r.toggleEm, r.toggleCode, r.toggleLink])]
-  r.blockMenu = [cut([r.wrapBulletList, r.wrapOrderedList, r.wrapBlockQuote, joinUpItem,
-                      liftItem, selectParentNodeItem])]
-  r.fullMenu = r.inlineMenu.concat([[r.insertMenu, r.typeMenu]], [[undoItem, redoItem]], r.blockMenu)
+  r.blockMenu = [cut([r.wrapBulletList, r.wrapOrderedList, r.wrapBlockQuote, prosemirror.joinUpItem,
+                      prosemirror.liftItem, prosemirror.selectParentNodeItem])]
+  r.fullMenu = r.inlineMenu.concat([[r.insertMenu, r.typeMenu]], [[prosemirror.undoItem, prosemirror.redoItem]], r.blockMenu)
 
   return r
 }
@@ -586,35 +572,35 @@ function buildKeymap(schema, mapKeys) {
   }
 
 
-  bind("Mod-z", undo)
-  bind("Shift-Mod-z", redo)
-  bind("Backspace", undoInputRule)
-  if (!mac) bind("Mod-y", redo)
+  bind("Mod-z", prosemirror.undo)
+  bind("Shift-Mod-z", prosemirror.redo)
+  bind("Backspace", prosemirror.undoInputRule)
+  if (!mac) bind("Mod-y", prosemirror.redo)
 
-  bind("Alt-ArrowUp", joinUp)
-  bind("Alt-ArrowDown", joinDown)
-  bind("Mod-BracketLeft", lift)
-  bind("Escape", selectParentNode)
+  bind("Alt-ArrowUp", prosemirror.joinUp)
+  bind("Alt-ArrowDown", prosemirror.joinDown)
+  bind("Mod-BracketLeft", prosemirror.lift)
+  bind("Escape", prosemirror.selectParentNode)
 
   if (type = schema.marks.strong) {
-    bind("Mod-b", toggleMark(type))
-    bind("Mod-B", toggleMark(type))
+    bind("Mod-b", prosemirror.toggleMark(type))
+    bind("Mod-B", prosemirror.toggleMark(type))
   }
   if (type = schema.marks.em) {
-    bind("Mod-i", toggleMark(type))
-    bind("Mod-I", toggleMark(type))
+    bind("Mod-i", prosemirror.toggleMark(type))
+    bind("Mod-I", prosemirror.toggleMark(type))
   }
   if (type = schema.marks.code)
-    bind("Mod-`", toggleMark(type))
+    bind("Mod-`", prosemirror.toggleMark(type))
 
   if (type = schema.nodes.bullet_list)
-    bind("Shift-Ctrl-8", wrapInList(type))
+    bind("Shift-Ctrl-8", prosemirror.wrapInList(type))
   if (type = schema.nodes.ordered_list)
-    bind("Shift-Ctrl-9", wrapInList(type))
+    bind("Shift-Ctrl-9", prosemirror.wrapInList(type))
   if (type = schema.nodes.blockquote)
-    bind("Ctrl->", wrapIn(type))
+    bind("Ctrl->", prosemirror.wrapIn(type))
   if (type = schema.nodes.hard_break) {
-    let br = type, cmd = chainCommands(exitCode, (state, dispatch) => {
+    let br = type, cmd = prosemirror.chainCommands(prosemirror.exitCode, (state, dispatch) => {
       dispatch(state.tr.replaceSelectionWith(br.create()).scrollIntoView())
       return true
     })
@@ -623,16 +609,16 @@ function buildKeymap(schema, mapKeys) {
     if (mac) bind("Ctrl-Enter", cmd)
   }
   if (type = schema.nodes.list_item) {
-    bind("Enter", splitListItem(type))
-    bind("Mod-[", liftListItem(type))
-    bind("Mod-]", sinkListItem(type))
+    bind("Enter", prosemirror.splitListItem(type))
+    bind("Mod-[", prosemirror.liftListItem(type))
+    bind("Mod-]", prosemirror.sinkListItem(type))
   }
   if (type = schema.nodes.paragraph)
-    bind("Shift-Ctrl-0", setBlockType(type))
+    bind("Shift-Ctrl-0", prosemirror.setBlockType(type))
   if (type = schema.nodes.code_block)
-    bind("Shift-Ctrl-\\", setBlockType(type))
+    bind("Shift-Ctrl-\\", prosemirror.setBlockType(type))
   if (type = schema.nodes.heading)
-    for (let i = 1; i <= 6; i++) bind("Shift-Ctrl-" + i, setBlockType(type, {level: i}))
+    for (let i = 1; i <= 6; i++) bind("Shift-Ctrl-" + i, prosemirror.setBlockType(type, {level: i}))
   if (type = schema.nodes.horizontal_rule) {
     let hr = type
     bind("Mod-_", (state, dispatch) => {
@@ -651,14 +637,14 @@ function buildKeymap(schema, mapKeys) {
 // Given a blockquote node type, returns an input rule that turns `"> "`
 // at the start of a textblock into a blockquote.
 function blockQuoteRule(nodeType) {
-  return wrappingInputRule(/^\s*>\s$/, nodeType)
+  return prosemirror.wrappingInputRule(/^\s*>\s$/, nodeType)
 }
 
 // : (NodeType) → InputRule
 // Given a list node type, returns an input rule that turns a number
 // followed by a dot at the start of a textblock into an ordered list.
 function orderedListRule(nodeType) {
-  return wrappingInputRule(/^(\d+)\.\s$/, nodeType, match => ({order: +match[1]}),
+  return prosemirror.wrappingInputRule(/^(\d+)\.\s$/, nodeType, match => ({order: +match[1]}),
                            (match, node) => node.childCount + node.attrs.order == +match[1])
 }
 
@@ -667,14 +653,14 @@ function orderedListRule(nodeType) {
 // (dash, plush, or asterisk) at the start of a textblock into a
 // bullet list.
 function bulletListRule(nodeType) {
-  return wrappingInputRule(/^\s*([-+*])\s$/, nodeType)
+  return prosemirror.wrappingInputRule(/^\s*([-+*])\s$/, nodeType)
 }
 
 // : (NodeType) → InputRule
 // Given a code block node type, returns an input rule that turns a
 // textblock starting with three backticks into a code block.
 function codeBlockRule(nodeType) {
-  return textblockTypeInputRule(/^```$/, nodeType)
+  return prosemirror.textblockTypeInputRule(/^```$/, nodeType)
 }
 
 // : (NodeType, number) → InputRule
@@ -683,7 +669,7 @@ function codeBlockRule(nodeType) {
 // the start of a textblock into a heading whose level corresponds to
 // the number of `#` signs.
 function headingRule(nodeType, maxLevel) {
-  return textblockTypeInputRule(new RegExp("^(#{1," + maxLevel + "})\\s$"),
+  return prosemirror.textblockTypeInputRule(new RegExp("^(#{1," + maxLevel + "})\\s$"),
                                 nodeType, match => ({level: match[1].length}))
 }
 
@@ -691,13 +677,13 @@ function headingRule(nodeType, maxLevel) {
 // A set of input rules for creating the basic block quotes, lists,
 // code blocks, and heading.
 function buildInputRules(schema) {
-  let rules = smartQuotes.concat(ellipsis, emDash), type
+  let rules = prosemirror.smartQuotes.concat(prosemirror.ellipsis, prosemirror.emDash), type
   if (type = schema.nodes.blockquote) rules.push(blockQuoteRule(type))
   if (type = schema.nodes.ordered_list) rules.push(orderedListRule(type))
   if (type = schema.nodes.bullet_list) rules.push(bulletListRule(type))
   if (type = schema.nodes.code_block) rules.push(codeBlockRule(type))
   if (type = schema.nodes.heading) rules.push(headingRule(type, 6))
-  return inputRules({rules})
+  return prosemirror.inputRules({rules})
 }
 
 
@@ -743,18 +729,18 @@ function buildInputRules(schema) {
 function exampleSetup(options) {
   let plugins = [
     buildInputRules(options.schema),
-    keymap(buildKeymap(options.schema, options.mapKeys)),
-    keymap(baseKeymap),
-    dropCursor(),
-    gapCursor()
+    prosemirror.keymap(buildKeymap(options.schema, options.mapKeys)),
+    prosemirror.keymap(prosemirror.baseKeymap),
+    prosemirror.dropCursor(),
+    prosemirror.gapCursor()
   ]
   if (options.menuBar !== false)
-    plugins.push(menuBar({floating: options.floatingMenu !== false,
+    plugins.push(prosemirror.menuBar({floating: options.floatingMenu !== false,
                           content: options.menuContent || buildMenuItems({schema: options.schema, config: options.config}).fullMenu}))
   if (options.history !== false)
-    plugins.push(history())
+    plugins.push(prosemirror.history())
 
-  return plugins.concat(new Plugin({
+  return plugins.concat(new prosemirror.Plugin({
     props: {
       attributes: {class: "ProseMirror-example-setup-style"}
     }
