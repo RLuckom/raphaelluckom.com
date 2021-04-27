@@ -37,6 +37,13 @@ output plugin_relative_bucket_upload_permissions_needed {
   }]
 }
 
+output plugin_relative_bucket_list_permissions_needed {
+  value = [{
+    plugin_relative_key = "/"
+    role_arn = null
+  }]
+}
+
 output static_config {
   value = {
     role_name_stem = "blog"

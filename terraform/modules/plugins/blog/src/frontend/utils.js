@@ -2,6 +2,9 @@ const credentialsAccessSchema = {
   name: 'site AWS credentials',
   value: {path: 'body'},
   dataSource: 'GENERIC_API',
+  behaviors: {
+    cacheLifetime: 30 * 60 * 1000
+  },
   host: window.location.hostname,
   path: 'api/actions/access/credentials'
 }

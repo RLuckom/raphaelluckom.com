@@ -137,6 +137,8 @@ locals {
   plugin_config = {
     domain = var.plugin_config.domain
     private_storage_bucket = var.plugin_config.bucket_name
+    upload_root = "${trimsuffix(var.plugin_config.upload_root, "/")}/"
+    hosting_root = "${trimsuffix(var.plugin_config.hosting_root, "/")}/"
     private_storage_image_upload_path = "${trimsuffix(var.plugin_config.upload_root, "/")}/img/"
     plugin_image_hosting_path = "${trimsuffix(var.plugin_config.hosting_root, "/")}/img/"
   }
