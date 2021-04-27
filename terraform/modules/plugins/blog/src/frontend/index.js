@@ -58,30 +58,16 @@ function listPostsDependencies(callback) {
   )
 }
 
-const listBucketDependencies = {
-  credentials: {
-    accessSchema: credentialsAccessSchema
+goph = buildGopher({
+  awsDependencies: {
+    listHostingRoot: listHostingRootDependency
   },
-  bucketDependencies: {
-    accessSchema: exploranda.dataSources.AWS.s3.listObjects,
-    params: {
-      apiConfig: apiConfigSelector,
-      Bucket: {value: CONFIG.private_storage_bucket },
-      Prefix: {
-        input: 'prefix',
-        formatter: (arg) => {
-          console.log(arg)
-          return arg.prefix
-        }
-      },
-    }
-  },
-};
-
-goph = exploranda.Gopher(listBucketDependencies, {prefix: CONFIG.hosting_root})
+  otherDependencies: {},
+  defaultInputs: {}
+})
 
 function listBucketObjects(callback) {
-  goph.report(
+  goph.report("listHostingRoot",
     (e, r) => {
       console.log('end')
       console.log(e)
@@ -91,4 +77,3 @@ function listBucketObjects(callback) {
 }
 
 document.addEventListener('DOMContentLoaded', initWysiwyEditors)
-document.addEventListener('DOMContentLoaded', listPostsDependencies)
