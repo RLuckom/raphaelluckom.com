@@ -126,6 +126,17 @@ variable logging_config {
   }
 }
 
+variable library_const_names {
+  type = list(string)
+  default = [
+    "yaml",
+    "moment",
+    "hljs", 
+    "prosemirror",
+    "uuid"
+  ]
+}
+
 locals {
   file_prefix = trim(var.plugin_config.source_root, "/")
   editor_styles_path = "${local.file_prefix}/assets/styles/editor.css"
@@ -151,6 +162,7 @@ locals {
       key = local.config_path
       file_contents = <<EOF
 window.CONFIG = ${jsonencode(local.plugin_config)}
+const {${join(", ", var.library_const_names)}} = window.LIBRARIES
 EOF
       file_path = null
       content_type = "application/javascript"

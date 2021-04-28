@@ -217,7 +217,7 @@ let placeholderPlugin = new prosemirror.Plugin({
   }
 })
 
-function insertImageItem(nodeType, config) {
+function insertImageItem(nodeType, uploadFile) {
   return new prosemirror.MenuItem({
     title: "Insert image",
     label: "Image",
@@ -236,7 +236,7 @@ function insertImageItem(nodeType, config) {
         },
         callback(attrs) {
           console.log(attrs)
-          startImageUpload(view, attrs.src, config)
+          startImageUpload(view, attrs.src, uploadFile)
           view.focus()
         }
       })
@@ -244,7 +244,7 @@ function insertImageItem(nodeType, config) {
   })
 }
 
-function startImageUpload(view, file, config) {
+function startImageUpload(view, file, uploadFile) {
   // A fresh object to act as the ID for this upload
   let id = {}
 
@@ -255,7 +255,7 @@ function startImageUpload(view, file, config) {
   view.dispatch(tr)
 
   file.arrayBuffer().then((buffer) => {
-    uploadFile(config, buffer, file.name.split('.').pop(), (e, url) => {
+    uploadFile(buffer, file.name.split('.').pop(), (e, url) => {
       if (e) {
         return view.dispatch(tr.setMeta(placeholderPlugin, {remove: {id}}))
       }
@@ -278,66 +278,6 @@ function findPlaceholder(state, id) {
   let decos = placeholderPlugin.getState(state)
   let found = decos.find(null, null, spec => spec.id == id)
   return found.length ? found[0].from : null
-}
-
-//TODO: how to pick name for img
-function getName() {
-  return uuid.v4()
-}
-
-function uploadFile(config, buffer, ext, callback) {
-  const rawName = getName()
-  const putPath = config.private_storage_image_upload_path + rawName
-  const getUrl = `https://${config.domain}/${config.plugin_image_hosting_path}${rawName}/500.${ext}`
-  const dependencies = {
-    credentials: {
-      accessSchema: credentialsAccessSchema
-    },
-    putImg: {
-      accessSchema: exploranda.dataSources.AWS.s3.putObject,
-      params: {
-        apiConfig: apiConfigSelector,
-        Body: {value: buffer },
-        Bucket: {value: config.private_storage_bucket },
-        Key: { value: putPath },
-      }
-    },
-    pollImage: {
-      accessSchema: {
-        name: 'GET url',
-        dataSource: 'GENERIC_API',
-        value: {path:  _.identity},
-      },
-      params: {
-        apiConfig: {value: {
-          url: getUrl,
-          method: 'HEAD'
-        }},
-      },
-      behaviors: {
-        retryParams: {
-          errorFilter: (err) => {
-            return err === 404
-          },
-          times: 10,
-          interval: (n) => n * 1000
-        },
-        detectErrors: (err, res) => {
-          console.log(err)
-          if (err) {
-            return 404
-          }
-        }
-      }
-    }
-  }
-  exploranda.Gopher(dependencies).report(
-    (e, r) => {
-      console.log(e)
-      console.log(r)
-      callback(e, getUrl)
-    }
-  )
 }
 
 function cmdItem(cmd, options) {
@@ -458,7 +398,7 @@ function wrapListItem(nodeType, options) {
 // **`fullMenu`**`: [[MenuElement]]`
 //   : An array of arrays of menu elements for use as the full menu
 //     for, for example the [menu bar](https://github.com/prosemirror/prosemirror-menu#user-content-menubar).
-function buildMenuItems({schema, config}) {
+function buildMenuItems({schema, uploadFile}) {
   let r = {}, type
   if (type = schema.marks.strong)
     r.toggleStrong = markItem(type, {title: "Toggle strong style", icon: prosemirror.icons.strong})
@@ -470,7 +410,7 @@ function buildMenuItems({schema, config}) {
     r.toggleLink = linkItem(type)
 
   if (type = schema.nodes.image)
-    r.insertImage = insertImageItem(type, config)
+    r.insertImage = insertImageItem(type, uploadFile)
   if (type = schema.nodes.bullet_list)
     r.wrapBulletList = wrapListItem(type, {
       title: "Wrap in bullet list",
@@ -736,7 +676,7 @@ function exampleSetup(options) {
   ]
   if (options.menuBar !== false)
     plugins.push(prosemirror.menuBar({floating: options.floatingMenu !== false,
-                          content: options.menuContent || buildMenuItems({schema: options.schema, config: options.config}).fullMenu}))
+                          content: options.menuContent || buildMenuItems({schema: options.schema, uploadFile: options.uploadFile}).fullMenu}))
   if (options.history !== false)
     plugins.push(prosemirror.history())
 
