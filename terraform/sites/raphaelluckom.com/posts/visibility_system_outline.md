@@ -20,7 +20,7 @@ maintenance. We don't want--and I mean this more seriously than it might seem--w
 any **stuff** collecting in the account over time that might require cleaning out. We are humans;
 humans make mistakes with predictable frequency. If we get used to manually deleting things,
 sooner or later we're going to delete the wrong thing by mistake[^1]. Or we might avoid deleting
-things altogether, and they'd just sit there, costing money and making the evemntual cleanup 
+things altogether, and they'd just sit there, costing money and making the eventual cleanup 
 more perilous.
 
 The good news is that we're really only talking about text files. A line from a request log looks like this

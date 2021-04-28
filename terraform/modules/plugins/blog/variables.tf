@@ -36,6 +36,7 @@ variable plugin_config {
     bucket_name = string
     upload_root = string
     api_root = string
+    aws_credentials_endpoint = string
     hosting_root = string
     source_root = string
     authenticated_role = object({
@@ -139,7 +140,7 @@ locals {
     domain = var.plugin_config.domain
     private_storage_bucket = var.plugin_config.bucket_name
     upload_root = "${trimsuffix(var.plugin_config.upload_root, "/")}/"
-    aws_credentials_endpoint = "api/actions/access/credentials"
+    aws_credentials_endpoint = var.plugin_config.aws_credentials_endpoint
     api_root = "${trimsuffix(var.plugin_config.api_root, "/")}/"
     hosting_root = "${trimsuffix(var.plugin_config.hosting_root, "/")}/"
     private_storage_image_upload_path = "${trimsuffix(var.plugin_config.upload_root, "/")}/img/"
