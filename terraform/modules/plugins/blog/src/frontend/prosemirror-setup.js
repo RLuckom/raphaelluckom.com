@@ -193,93 +193,6 @@ function canInsert(state, nodeType) {
   return false
 }
 
-let placeholderPlugin = new prosemirror.Plugin({
-  state: {
-    init() { return prosemirror.DecorationSet.empty },
-    apply(tr, set) {
-      // Adjust decoration positions to changes made by the transaction
-      set = set.map(tr.mapping, tr.doc)
-      // See if the transaction adds or removes any placeholders
-      let action = tr.getMeta(this)
-      if (action && action.add) {
-        let widget = document.createElement("placeholder")
-        let deco = prosemirror.Decoration.widget(action.add.pos, widget, {id: action.add.id})
-        set = set.add(tr.doc, [deco])
-      } else if (action && action.remove) {
-        set = set.remove(set.find(null, null,
-                                  spec => spec.id == action.remove.id))
-      }
-      return set
-    }
-  },
-  props: {
-    decorations(state) { return this.getState(state) }
-  }
-})
-
-function insertImageItem(nodeType, uploadFile) {
-  return new prosemirror.MenuItem({
-    title: "Insert image",
-    label: "Image",
-    enable(state) { return canInsert(state, nodeType) },
-    run(state, _, view) {
-      let {from, to} = state.selection, attrs = null
-      if (state.selection instanceof prosemirror.NodeSelection && state.selection.node.type == nodeType)
-        attrs = state.selection.node.attrs
-      openPrompt({
-        title: "Insert image",
-        fields: {
-          src: new FileField({label: "File", required: true, value: attrs && attrs.src}),
-          title: new TextField({label: "Title", value: attrs && attrs.title}),
-          alt: new TextField({label: "Description",
-                              value: attrs ? attrs.alt : state.doc.textBetween(from, to, " ")})
-        },
-        callback(attrs) {
-          console.log(attrs)
-          startImageUpload(view, attrs.src, uploadFile)
-          view.focus()
-        }
-      })
-    }
-  })
-}
-
-function startImageUpload(view, file, uploadFile) {
-  // A fresh object to act as the ID for this upload
-  let id = {}
-
-  // Replace the selection with a placeholder
-  let tr = view.state.tr
-  if (!tr.selection.empty) tr.deleteSelection()
-  tr.setMeta(placeholderPlugin, {add: {id, pos: tr.selection.from}})
-  view.dispatch(tr)
-
-  file.arrayBuffer().then((buffer) => {
-    uploadFile(buffer, file.name.split('.').pop(), (e, url) => {
-      if (e) {
-        return view.dispatch(tr.setMeta(placeholderPlugin, {remove: {id}}))
-      }
-      let pos = findPlaceholder(view.state, id)
-      // If the content around the placeholder has been deleted, drop
-      // the image
-      if (pos == null) return
-        // Otherwise, insert it at the placeholder's position, and remove
-        // the placeholder
-        view.dispatch(view.state.tr
-                      .replaceWith(pos, pos, view.state.schema.nodes.image.create({src: url}))
-                      .setMeta(placeholderPlugin, {remove: {id}}))
-    })
-  })
-}
-
-function findPlaceholder(state, id) {
-  console.log(state)
-  console.log(id)
-  let decos = placeholderPlugin.getState(state)
-  let found = decos.find(null, null, spec => spec.id == id)
-  return found.length ? found[0].from : null
-}
-
 function cmdItem(cmd, options) {
   let passedOptions = {
     label: options.title,
@@ -398,7 +311,7 @@ function wrapListItem(nodeType, options) {
 // **`fullMenu`**`: [[MenuElement]]`
 //   : An array of arrays of menu elements for use as the full menu
 //     for, for example the [menu bar](https://github.com/prosemirror/prosemirror-menu#user-content-menubar).
-function buildMenuItems({schema, uploadFile}) {
+function buildMenuItems({schema, insertImageItem}) {
   let r = {}, type
   if (type = schema.marks.strong)
     r.toggleStrong = markItem(type, {title: "Toggle strong style", icon: prosemirror.icons.strong})
@@ -410,7 +323,7 @@ function buildMenuItems({schema, uploadFile}) {
     r.toggleLink = linkItem(type)
 
   if (type = schema.nodes.image)
-    r.insertImage = insertImageItem(type, uploadFile)
+    r.insertImage = insertImageItem(type)
   if (type = schema.nodes.bullet_list)
     r.wrapBulletList = wrapListItem(type, {
       title: "Wrap in bullet list",
@@ -667,16 +580,126 @@ function buildInputRules(schema) {
 //     menuContent:: [[MenuItem]]
 //     Can be used to override the menu content.
 function exampleSetup(options) {
+  const imageIdPlugin = new prosemirror.Plugin({
+    state: {
+      init() { return [] },
+      apply(tr,val, state) {
+        let action = tr.getMeta(this)
+        if (action && action.add) {
+          const currentState = this.getState(state)
+          const ids =  _.concat(currentState, [action.add.imageId])
+          console.log(ids)
+          return ids
+        }
+        return val
+      }
+    }
+  })
+
+  const placeholderPlugin = new prosemirror.Plugin({
+    state: {
+      init() { return prosemirror.DecorationSet.empty },
+      apply(tr, set) {
+        // Adjust decoration positions to changes made by the transaction
+        set = set.map(tr.mapping, tr.doc)
+        // See if the transaction adds or removes any placeholders
+        let action = tr.getMeta(this)
+        if (action && action.add) {
+          let widget = document.createElement("placeholder")
+          let deco = prosemirror.Decoration.widget(action.add.pos, widget, {id: action.add.id})
+          set = set.add(tr.doc, [deco])
+        } else if (action && action.remove) {
+          set = set.remove(set.find(null, null,
+                                    spec => spec.id == action.remove.id))
+        }
+        return set
+      }
+    },
+    props: {
+      decorations(state) { return this.getState(state) }
+    }
+  })
+
+  function insertImageItem(nodeType) {
+    return new prosemirror.MenuItem({
+      title: "Insert image",
+      label: "Image",
+      enable(state) { return canInsert(state, nodeType) },
+      run(state, _, view) {
+        let {from, to} = state.selection, attrs = null
+        if (state.selection instanceof prosemirror.NodeSelection && state.selection.node.type == nodeType)
+          attrs = state.selection.node.attrs
+        openPrompt({
+          title: "Insert image",
+          fields: {
+            src: new FileField({label: "File", required: true, value: attrs && attrs.src}),
+            title: new TextField({label: "Title", value: attrs && attrs.title}),
+            alt: new TextField({label: "Description",
+                               value: attrs ? attrs.alt : state.doc.textBetween(from, to, " ")})
+          },
+          callback(attrs) {
+            startImageUpload(view, attrs.src)
+            view.focus()
+          }
+        })
+      }
+    })
+  }
+
+  function startImageUpload(view, file) {
+    // A fresh object to act as the ID for this upload
+    let id = {}
+
+    // Replace the selection with a placeholder
+    let tr = view.state.tr
+    if (!tr.selection.empty) tr.deleteSelection()
+      tr.setMeta(placeholderPlugin, {add: {id, pos: tr.selection.from}})
+    view.dispatch(tr)
+
+    file.arrayBuffer().then((buffer) => {
+      options.uploadFile(buffer, file.name.split('.').pop(), (e, {url, imageId}) => {
+        if (e) {
+          return view.dispatch(
+            tr.setMeta(placeholderPlugin, {remove: {id}}).setMeta(imageIdPlugin, {add: {imageId}})
+          )
+        }
+        let pos = findPlaceholder(view.state, id)
+        // If the content around the placeholder has been deleted, drop
+        // the image
+        if (pos == null) {
+          return
+        }
+        // Otherwise, insert it at the placeholder's position, and remove
+        // the placeholder
+        view.dispatch(
+          view.state.tr
+          .replaceWith(pos, pos, view.state.schema.nodes.image.create({src: url}))
+          .setMeta(placeholderPlugin, {remove: {id}})
+          .setMeta(imageIdPlugin, {add: {imageId}})
+        )
+        imageIds.push(imageId)
+      })
+    })
+  }
+
+  function findPlaceholder(state, id) {
+    let decos = placeholderPlugin.getState(state)
+    let found = decos.find(null, null, spec => spec.id == id)
+    return found.length ? found[0].from : null
+  }
+
   let plugins = [
+    placeholderPlugin,
     buildInputRules(options.schema),
     prosemirror.keymap(buildKeymap(options.schema, options.mapKeys)),
     prosemirror.keymap(prosemirror.baseKeymap),
     prosemirror.dropCursor(),
-    prosemirror.gapCursor()
+    prosemirror.gapCursor(),
+    imageIdPlugin,
   ]
   if (options.menuBar !== false)
     plugins.push(prosemirror.menuBar({floating: options.floatingMenu !== false,
-                          content: options.menuContent || buildMenuItems({schema: options.schema, uploadFile: options.uploadFile}).fullMenu}))
+                          content: options.menuContent || buildMenuItems({schema: options.schema, insertImageItem}).fullMenu}))
   if (options.history !== false)
     plugins.push(prosemirror.history())
 
