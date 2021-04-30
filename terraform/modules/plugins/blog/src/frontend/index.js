@@ -106,7 +106,7 @@ function parsePost(s) {
 // ( if they have the .prosemirror class ) 
 function initEditors() {
 
-  function uploadFile(buffer, ext, callback) {
+  function uploadImage(buffer, ext, callback) {
     const rawName = uuid.v4()
     const putPath = CONFIG.private_storage_image_upload_path + rawName
     const getUrl = `https://${CONFIG.domain}/${CONFIG.plugin_image_hosting_path}${rawName}/500.${ext}`
@@ -137,24 +137,7 @@ function initEditors() {
     } else {
       area.parentElement.appendChild(container)
     }
-
-    // Load editor view
-    const view = new prosemirror.EditorView(container, {
-      // Set initial state
-      state: prosemirror.EditorState.create({
-        doc: prosemirror.defaultMarkdownParser.parse(area.value),
-        plugins: exampleSetup({ schema: prosemirror.schema, uploadFile}),
-      }),
-      dispatchTransaction(tr) {
-        const { state } = view.state.applyTransaction(tr)
-        view.updateState(state)
-        // Update textarea only if content has changed
-        if (tr.docChanged) {
-          console.log(prosemirror.defaultMarkdownSerializer.serialize(tr.doc))
-          area.value = prosemirror.defaultMarkdownSerializer.serialize(tr.doc)
-        }
-      },
-    })
+    const { view, plugins } = prosemirrorView(area, container, uploadImage)
   }
 }
 

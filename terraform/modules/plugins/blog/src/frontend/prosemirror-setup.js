@@ -579,8 +579,9 @@ function buildInputRules(schema) {
 //
 //     menuContent:: [[MenuItem]]
 //     Can be used to override the menu content.
-function exampleSetup(options) {
+function prosemirrorView(area, container, uploadImage) {
   const imageIdPlugin = new prosemirror.Plugin({
+    key: 'imageIds',
     state: {
       init() { return [] },
       apply(tr,val, state) {
@@ -588,7 +589,6 @@ function exampleSetup(options) {
         if (action && action.add) {
           const currentState = this.getState(state)
           const ids =  _.concat(currentState, [action.add.imageId])
-          console.log(ids)
           return ids
         }
         return val
@@ -627,8 +627,9 @@ function exampleSetup(options) {
       enable(state) { return canInsert(state, nodeType) },
       run(state, _, view) {
         let {from, to} = state.selection, attrs = null
-        if (state.selection instanceof prosemirror.NodeSelection && state.selection.node.type == nodeType)
+        if (state.selection instanceof prosemirror.NodeSelection && state.selection.node.type == nodeType) {
           attrs = state.selection.node.attrs
+        }
         openPrompt({
           title: "Insert image",
           fields: {
@@ -652,12 +653,14 @@ function exampleSetup(options) {
 
     // Replace the selection with a placeholder
     let tr = view.state.tr
-    if (!tr.selection.empty) tr.deleteSelection()
-      tr.setMeta(placeholderPlugin, {add: {id, pos: tr.selection.from}})
+    if (!tr.selection.empty) {
+      tr.deleteSelection()
+    }
+    tr.setMeta(placeholderPlugin, {add: {id, pos: tr.selection.from}})
     view.dispatch(tr)
 
     file.arrayBuffer().then((buffer) => {
-      options.uploadFile(buffer, file.name.split('.').pop(), (e, {url, imageId}) => {
+      uploadImage(buffer, file.name.split('.').pop(), (e, {url, imageId}) => {
         if (e) {
           return view.dispatch(
             tr.setMeta(placeholderPlugin, {remove: {id}}).setMeta(imageIdPlugin, {add: {imageId}})
@@ -677,7 +680,6 @@ function exampleSetup(options) {
           .setMeta(placeholderPlugin, {remove: {id}})
           .setMeta(imageIdPlugin, {add: {imageId}})
         )
-        imageIds.push(imageId)
       })
     })
   }
@@ -690,22 +692,40 @@ function exampleSetup(options) {
 
   let plugins = [
     placeholderPlugin,
-    buildInputRules(options.schema),
-    prosemirror.keymap(buildKeymap(options.schema, options.mapKeys)),
+    buildInputRules(prosemirror.schema),
+    prosemirror.keymap(buildKeymap(prosemirror.schema)),
     prosemirror.keymap(prosemirror.baseKeymap),
     prosemirror.dropCursor(),
     prosemirror.gapCursor(),
     imageIdPlugin,
+    prosemirror.history(),
+    prosemirror.menuBar(
+      {
+        floating: true, 
+        content: buildMenuItems({schema: prosemirror.schema, insertImageItem}).fullMenu
+      }
+    ),
   ]
-  if (options.menuBar !== false)
-    plugins.push(prosemirror.menuBar({floating: options.floatingMenu !== false,
-                          content: options.menuContent || buildMenuItems({schema: options.schema, insertImageItem}).fullMenu}))
-  if (options.history !== false)
-    plugins.push(prosemirror.history())
+  // Load editor view
+  const view = new prosemirror.EditorView(container, {
+    // Set initial state
+    state: prosemirror.EditorState.create({
+      doc: prosemirror.defaultMarkdownParser.parse(area.value),
+      plugins,
+    }),
+    dispatchTransaction(tr) {
+      const { state } = view.state.applyTransaction(tr)
+      view.updateState(state)
+      // Update textarea only if content has changed
+      if (tr.docChanged) {
+        console.log(prosemirror.defaultMarkdownSerializer.serialize(tr.doc))
+        area.value = prosemirror.defaultMarkdownSerializer.serialize(tr.doc)
+      }
+    },
+  })
 
-  return plugins.concat(new prosemirror.Plugin({
-    props: {
-      attributes: {class: "ProseMirror-example-setup-style"}
-    }
-  }))
+  return {
+    view,
+    plugins,
+  }
 }
