@@ -59,11 +59,6 @@ goph = buildGopher({
       }
     }
   },
-  defaultInputs: {
-    url: "example.com",
-    putPath: 'default',
-    buffer: 'buf'
-  }
 })
 
 function parsePost(s) {
@@ -105,11 +100,26 @@ function parsePost(s) {
 // script to replace <textarea> elements in forms with prosemirror editors 
 // ( if they have the .prosemirror class ) 
 function initEditors() {
+  const canonicalImageTypes = {
+    png: 'png', 
+    jpg: 'jpg',
+    jpeg: 'jpg',
+    tif: 'tif',
+    tiff: 'tif',
+    webp: 'webp',
+    heic: 'heic',
+    svg: 'svg',
+    gif: 'gif',
+  }
 
   function uploadImage(buffer, ext, callback) {
     const rawName = uuid.v4()
+    const canonicalExt = canonicalImageTypes[_.toLower(ext)]
+    if (!canonicalExt) {
+      throw new Error("unsupported image type")
+    }
     const putPath = CONFIG.private_storage_image_upload_path + rawName
-    const getUrl = `https://${CONFIG.domain}/${CONFIG.plugin_image_hosting_path}${rawName}/500.${ext}`
+    const getUrl = `https://${CONFIG.domain}/${CONFIG.plugin_image_hosting_path}${rawName}/500.${canonicalExt}`
     goph.report(
       'pollImage',
       {
