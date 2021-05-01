@@ -68,7 +68,8 @@ actions, they will not go out of their way to bother us.
 
 The construction of this system gives us some amount of blanket protection against attacks like this. As an attacker, the best-case scenario
 is to find an insecure service, like a blog platform still using the default password, and then use it to install _your_ program on the vulnerable
-computer. That way, the computer running someone's old blog is _also_ running your bitcoin-mining software in the background. However, in this system,
+computer. That way, the computer running someone's old blog is _also_ running your bitcoin-mining software in the background. The system I'm
+building aims to raise the cost of that type of attack. In this system,
 there _are no_ always-on servers that an attacker could install a program on. There are only on-demand functions that run in response to requests.
 For another challenge, _even if_ an attacker could send a request that somehow "took over" one of the functions, the functions are limited in both
 runtime and memory. Whatever the attacker wanted to do would have to take less than a few seconds and not require much memory. Further, the attacker
