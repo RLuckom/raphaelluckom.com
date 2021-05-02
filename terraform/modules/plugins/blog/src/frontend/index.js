@@ -96,6 +96,32 @@ function parsePost(s) {
   }
 }
 
+function constructPost({images, postContent, author, date, draft, title, trails}) {
+  const frontMatter = yaml.dump({
+    title,
+    author,
+    date: date || new Date().toISOString(),
+    draft: draft || false,
+    meta: {
+      trails,
+      images
+    }
+  })
+  return `---\n${frontMatter}---\n${postContent}`
+}
+
+function onChange({images, postContent}) {
+  console.log(constructPost({
+    images,
+    postContent,
+    draft: !document.querySelector('#publish').checked,
+    date: new Date().toISOString(),
+    title: document.querySelector('#title').value,
+    author: document.querySelector('#author').value,
+    trails: _.map(document.querySelector('#trails').value.split(","), _.trim),
+  }))
+}
+
 // https://gist.github.com/mbrehin/05c0d41a7e50eef7f95711e237502c85
 // script to replace <textarea> elements in forms with prosemirror editors 
 // ( if they have the .prosemirror class ) 
@@ -147,7 +173,7 @@ function initEditors() {
     } else {
       area.parentElement.appendChild(container)
     }
-    const { view, plugins } = prosemirrorView(area, container, uploadImage)
+    const { view, plugins } = prosemirrorView(area, container, uploadImage, onChange)
   }
 }
 

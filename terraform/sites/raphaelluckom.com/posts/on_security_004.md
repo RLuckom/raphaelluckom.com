@@ -45,11 +45,9 @@ This would include:
    to their own site.
 
 The attackers in the first category have a goal of abusing, intimidating, silencing, slandering, etc. In general, those goals require
-some level of access to the person they're trying to attack. This blog, for instance, is pretty secure against those kinds of attacks; 
-it doesn't have a way to message me or post comments. If those kinds of attackers wanted to come after me, they'd be more likely
-to target my email or other social media accounts. However, if we're talking about _building_ personal social media, we obviously
-have to assume that at some point we _will_ allow comments and DMs, so we can't declare victory on the basis of a static blog. _When_
-we start to allow that kind of outside interaction with the site, we should include some controls:
+some level of access to the person they're trying to attack. In that context, it is _access to the operator_ that we want to protect.
+This means that any time we create a mechanism in the social media system that allows others to contact the system operator (such as reading
+private posts, or sending comments and DMs) we should include some controls:
 
 1. All mechanisms of interaction should be able to operate on an allow-list basis. That is, the site operator can choose to only accept
    comments and DMs from previously-approved friends[^2]. Obviously, the site operator would _also_ have the option of allowing comments

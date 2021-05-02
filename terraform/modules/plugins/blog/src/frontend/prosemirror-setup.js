@@ -579,7 +579,7 @@ function buildInputRules(schema) {
 //
 //     menuContent:: [[MenuItem]]
 //     Can be used to override the menu content.
-function prosemirrorView(area, container, uploadImage) {
+function prosemirrorView(area, container, uploadImage, onChange) {
   const imageIdPlugin = new prosemirror.Plugin({
     key: 'imageIds',
     state: {
@@ -718,7 +718,10 @@ function prosemirrorView(area, container, uploadImage) {
       view.updateState(state)
       // Update textarea only if content has changed
       if (tr.docChanged) {
-        console.log(prosemirror.defaultMarkdownSerializer.serialize(tr.doc))
+        onChange({
+          images: imageIdPlugin.getState(state),
+          postContent: prosemirror.defaultMarkdownSerializer.serialize(tr.doc),
+        })
         area.value = prosemirror.defaultMarkdownSerializer.serialize(tr.doc)
       }
     },

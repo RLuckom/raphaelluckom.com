@@ -25,11 +25,21 @@
             <label for="tite">Title: 
               <input type="text" name="title" id="title" required>
             </label>
+            <label for="Author">Author: 
+              <input type="text" name="author" id="author" required value="${operator}">
+            </label>
+            <label for="trails">Trails (comma-separated): 
+              <input type="text" name="trails" id="trails" required>
+            </label>
+            <label for="publish">Publish Post: 
+              <input type="checkbox" name="publish" id="publish" required>
+            </label>
           <div>
             <label for="main">write the post: 
               <textarea form="postitem" name="main" id="text" class="prosemirror editor">
               </textarea>
             </label>
+              <input type="button" name="submit" id="submit" value="Save">
           </div>
           <h1 class="tool-title">
             post a blog entry

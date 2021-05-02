@@ -170,6 +170,7 @@ EOF
     {
       key = "${local.file_prefix}/index.html"
       file_contents = templatefile("${path.module}/src/frontend/index.html", {
+      operator = var.maintainer.name
       editor_styles_path = local.editor_styles_path
       default_styles_path = var.default_styles_path
       exploranda_script_path = local.exploranda_script_path
