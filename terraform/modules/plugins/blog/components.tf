@@ -2,6 +2,11 @@ module post_entry_lambda {
   source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
   config_contents = templatefile("${path.module}/src/backend/post_entry_config.js",
   {
+    website_bucket = module.blog_site.website_bucket_name
+    original_image_prefix = "${var.plugin_config.hosting_root}img/"
+    public_hosting_image_prefix = "img/"
+    original_image_hosting_root = "https://${var.plugin_config.domain}/${var.plugin_config.hosting_root}img/"
+    blog_image_hosting_root = "/img/"
   })
   logging_config = var.logging_config
   invoking_roles = [
@@ -11,6 +16,7 @@ module post_entry_lambda {
   action_name = "post_entry"
   scope_name = var.coordinator_data.system_id.security_scope
   donut_days_layer = var.donut_days_layer
+  additional_layers = [var.markdown_tools_layer]
 }
 
 module process_image_uploads {
@@ -35,6 +41,18 @@ module blog_site {
   nav_links = var.nav_links
   site_title = var.site_title
   coordinator_data = var.coordinator_data
+  website_bucket_prefix_object_permissions = [
+    {
+      permission_type = "put_object"
+      prefix = "posts/"
+      arns = [module.post_entry_lambda.role.arn]
+    },
+    {
+      permission_type = "put_object"
+      prefix = "img/"
+      arns = [module.post_entry_lambda.role.arn]
+    },
+  ]
   website_bucket_bucket_permissions = [
     {
       permission_type = "list_bucket"

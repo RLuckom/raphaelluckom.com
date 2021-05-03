@@ -719,7 +719,7 @@ function prosemirrorView(area, container, uploadImage, onChange) {
       // Update textarea only if content has changed
       if (tr.docChanged) {
         onChange({
-          images: imageIdPlugin.getState(state),
+          imageIds: imageIdPlugin.getState(state),
           postContent: prosemirror.defaultMarkdownSerializer.serialize(tr.doc),
         })
         area.value = prosemirror.defaultMarkdownSerializer.serialize(tr.doc)

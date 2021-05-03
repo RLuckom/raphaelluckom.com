@@ -19,9 +19,27 @@ goph = buildGopher({
         },
       }
     },
+    putPost: {
+      accessSchema: exploranda.dataSources.AWS.s3.putObject,
+      params: {
+        Body: {
+          input: 'post',
+          formatter: ({post}) => {
+            return post
+          }
+        },
+        Bucket: {value: CONFIG.private_storage_bucket },
+        ContentType: { value: 'text/markdown' },
+        Key: { 
+          input: 'postKey',
+          formatter: ({postKey}) => {
+            return postKey
+          }
+        },
+      }
+    },
   },
   otherDependencies: {
-    dummy: pluginRelativeApiDependency("post-entry"),
     pollImage: {
       accessSchema: {
         name: 'GET url',
@@ -96,7 +114,7 @@ function parsePost(s) {
   }
 }
 
-function constructPost({images, postContent, author, date, draft, title, trails}) {
+function constructPost({imageIds, postContent, author, date, draft, title, trails}) {
   const frontMatter = yaml.dump({
     title,
     author,
@@ -104,22 +122,25 @@ function constructPost({images, postContent, author, date, draft, title, trails}
     draft: draft || false,
     meta: {
       trails,
-      images
+      imageIds
     }
   })
   return `---\n${frontMatter}---\n${postContent}`
 }
 
-function onChange({images, postContent}) {
-  console.log(constructPost({
-    images,
+let currentPost
+
+function onChange({imageIds, postContent}) {
+  currentPost = constructPost({
+    imageIds,
     postContent,
     draft: !document.querySelector('#publish').checked,
     date: new Date().toISOString(),
     title: document.querySelector('#title').value,
     author: document.querySelector('#author').value,
     trails: _.map(document.querySelector('#trails').value.split(","), _.trim),
-  }))
+  })
+  console.log(currentPost)
 }
 
 // https://gist.github.com/mbrehin/05c0d41a7e50eef7f95711e237502c85
@@ -161,6 +182,21 @@ function initEditors() {
       }
     )
   }
+
+  function uploadPost(post, name) {
+    const postKey = `${CONFIG.private_storage_post_upload_path}${name}.md`
+    goph.report(
+      'putPost',
+      {
+        postKey,
+        post,
+      },
+      (e, r) => {
+        console.log(e)
+        console.log(r)
+      }
+    )
+  }
   // Loop over every textareas to replace with dynamic editor
   for (const area of document.querySelectorAll('textarea.prosemirror')) {
     // Hide textarea
@@ -175,6 +211,7 @@ function initEditors() {
     }
     const { view, plugins } = prosemirrorView(area, container, uploadImage, onChange)
   }
+  document.getElementById('submit').onclick = () => uploadPost(currentPost, 'example')
 }
 
 document.addEventListener('DOMContentLoaded', initEditors)

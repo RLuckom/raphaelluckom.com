@@ -1,47 +1,71 @@
 output plugin_relative_lambda_notifications {
-  value = [{
-    lambda_arn = module.process_image_uploads.lambda_notification_config.lambda_arn
-    lambda_name = module.process_image_uploads.lambda_notification_config.lambda_name
-    lambda_role_arn = module.process_image_uploads.lambda_notification_config.lambda_role_arn
-    events = module.process_image_uploads.lambda_notification_config.events
-    plugin_relative_filter_prefix = "/img/"
-    filter_suffix = module.process_image_uploads.lambda_notification_config.filter_suffix
-    permission_type = module.process_image_uploads.lambda_notification_config.permission_type
-  }]
+  value = [
+    {
+      lambda_arn = module.process_image_uploads.lambda_notification_config.lambda_arn
+      lambda_name = module.process_image_uploads.lambda_notification_config.lambda_name
+      lambda_role_arn = module.process_image_uploads.lambda_notification_config.lambda_role_arn
+      events = module.process_image_uploads.lambda_notification_config.events
+      plugin_relative_filter_prefix = "/img/"
+      filter_suffix = module.process_image_uploads.lambda_notification_config.filter_suffix
+      permission_type = module.process_image_uploads.lambda_notification_config.permission_type
+    },
+    {
+      lambda_arn = module.post_entry_lambda.lambda.arn
+      lambda_name = module.post_entry_lambda.lambda.function_name
+      lambda_role_arn = module.post_entry_lambda.role.arn
+      events = ["s3:ObjectCreated:*"]
+      plugin_relative_filter_prefix = "/posts/"
+      filter_suffix = ".md"
+      permission_type = "read_and_tag_known"
+    },
+  ]
 }
 
 output plugin_relative_lambda_origins {
-  value = [{
-    plugin_relative_path = "/post-entry"
-    forwarded_headers = []
-    lambda = {
-      arn = module.post_entry_lambda.lambda.arn
-      name = module.post_entry_lambda.lambda.function_name
-    }
-  }]
+  value = []
 }
 
 output plugin_relative_bucket_host_permissions_needed {
-  value = [{
-    permission_type = "put_object"
-    plugin_relative_key = "/img/"
-    role_arn = module.process_image_uploads.lambda_role.arn
-  }]
+  value = [
+    {
+      permission_type = "put_object"
+      plugin_relative_key = "/img/"
+      role_arn = module.process_image_uploads.lambda_role.arn
+    },
+    {
+      permission_type = "read_and_tag_known"
+      plugin_relative_key = "/img/"
+      role_arn = module.post_entry_lambda.role.arn
+    },
+  ]
 }
 
 output plugin_relative_bucket_upload_permissions_needed {
-  value = [{
-    permission_type = "put_object"
-    plugin_relative_key = "/img/"
-    role_arn = null
-  }]
+  value = [
+    {
+      permission_type = "put_object"
+      plugin_relative_key = "/img/"
+      role_arn = null
+    },
+    {
+      permission_type = "put_object"
+      plugin_relative_key = "/posts/"
+      role_arn = null
+    },
+  ]
 }
 
 output plugin_relative_bucket_list_permissions_needed {
-  value = [{
-    plugin_relative_key = "/"
-    role_arn = null
-  }]
+  value = [
+    {
+      plugin_relative_key = "/"
+      role_arn = null
+    },
+    {
+      plugin_relative_key = "/img/"
+      role_arn = module.post_entry_lambda.role.arn
+    },
+  ]
 }
 
 output static_config {
@@ -52,5 +76,8 @@ output static_config {
 }
 
 output lambda_logging_arns {
-  value = [module.process_image_uploads.lambda_role.arn]
+  value = [
+    module.process_image_uploads.lambda_role.arn,
+    module.post_entry_lambda.role.arn
+  ]
 }
