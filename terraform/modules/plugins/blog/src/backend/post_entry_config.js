@@ -53,26 +53,43 @@ module.exports = {
               Key: {ref: 'event.Records[0].s3.object.key'},
             }
           },
-        }
+        },
       }
     },
     publish: {
       index: 1,
-      condition: {
-        helper: ({draft}) => !draft,
-        params: {
-          draft: {ref: 'parsePost.results.parsed.frontMatter.draft' },
-        }
-      },
       dependencies: {
+        savePost: {
+          action: 'exploranda',
+          params: {
+            accessSchema: {value: 'dataSources.AWS.s3.putObject'},
+            explorandaParams: {
+              Bucket: {ref: 'event.Records[0].s3.bucket.name'},
+              Key: {
+                helper: ({originalKey}) => _.replace(originalKey, "${original_post_upload_prefix}", "${original_post_hosting_prefix}"),
+                params: {
+                  originalKey: {ref: 'event.Records[0].s3.object.key'},
+                }
+              },
+              ContentType: { value: 'text/markdown' },
+              Body: {ref: 'parsePost.results.parsed.raw' },
+            }
+          },
+        },
         post: {
           action: 'exploranda',
+          condition: {
+            helper: ({draft}) => !draft,
+              params: {
+              draft: {ref: 'parsePost.results.parsed.frontMatter.draft' },
+            }
+          },
           params: {
             accessSchema: {value: 'dataSources.AWS.s3.putObject'},
             explorandaParams: {
               Bucket: {value: '${website_bucket}'},
               Key: {
-                helper: ({originalKey}) => "posts/" + originalKey.split('/').pop(),
+                helper: ({originalKey}) => "${blog_post_hosting_prefix}" + originalKey.split('/').pop(),
                 params: {
                   originalKey: {ref: 'event.Records[0].s3.object.key'},
                 }
@@ -108,7 +125,7 @@ module.exports = {
                 }
               },
               Prefix: {
-                helper: ({imageIds}) => _.map(imageIds, (id) => "${original_image_prefix}" + id),
+                helper: ({imageIds}) => _.map(imageIds, (id) => "${original_image_hosting_prefix}" + id),
                 params: {
                   imageIds: {ref: 'parsePost.results.parsed.frontMatter.meta.imageIds' },
                 }
@@ -142,7 +159,7 @@ module.exports = {
                 }
               },
               Key: {
-                helper: ({imageKeys}) => _.map(imageKeys, (k) => _.replace(k, "${original_image_prefix}", "${public_hosting_image_prefix}")),
+                helper: ({imageKeys}) => _.map(imageKeys, (k) => _.replace(k, "${original_image_hosting_prefix}", "${blog_image_hosting_prefix}")),
                 params: {
                   imageKeys: {ref: 'publish.results.imagesToCopy' },
                 }

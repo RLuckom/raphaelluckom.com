@@ -37,6 +37,11 @@ output plugin_relative_bucket_host_permissions_needed {
       plugin_relative_key = "/img/"
       role_arn = module.post_entry_lambda.role.arn
     },
+    {
+      permission_type = "put_object"
+      plugin_relative_key = "/posts/"
+      role_arn = module.post_entry_lambda.role.arn
+    },
   ]
 }
 

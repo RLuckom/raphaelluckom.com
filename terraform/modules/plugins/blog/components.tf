@@ -3,10 +3,15 @@ module post_entry_lambda {
   config_contents = templatefile("${path.module}/src/backend/post_entry_config.js",
   {
     website_bucket = module.blog_site.website_bucket_name
-    original_image_prefix = "${var.plugin_config.hosting_root}img/"
-    public_hosting_image_prefix = "img/"
+    original_image_hosting_prefix = "${var.plugin_config.hosting_root}img/"
     original_image_hosting_root = "https://${var.plugin_config.domain}/${var.plugin_config.hosting_root}img/"
     blog_image_hosting_root = "/img/"
+    blog_image_hosting_prefix = "img/"
+    blog_post_hosting_root = "/posts/"
+    blog_post_hosting_prefix = "posts/"
+    original_post_hosting_prefix = "${var.plugin_config.hosting_root}posts/"
+    original_post_upload_prefix = "${var.plugin_config.upload_root}posts/"
+    original_post_hosting_root = "https://${var.plugin_config.domain}/${var.plugin_config.hosting_root}posts/"
   })
   logging_config = var.logging_config
   invoking_roles = [
