@@ -115,17 +115,23 @@ function parsePost(s) {
 }
 
 function constructPost({imageIds, postContent, author, date, draft, title, trails}) {
-  const frontMatter = yaml.dump({
-    title,
-    author,
-    date: date || new Date().toISOString(),
-    draft: draft || false,
-    meta: {
-      trails,
-      imageIds
-    }
-  })
-  return `---\n${frontMatter}---\n${postContent}`
+  return {
+    frontMatter: {
+      title,
+      author,
+      date: date || new Date().toISOString(),
+      draft: draft || false,
+      meta: {
+        trails,
+        imageIds
+      }
+    },
+    postContent
+  }
+}
+
+function serializePost({frontMatter, postContent}) {
+  return `---\n${yaml.dump(frontMatter)}---\n${postContent}`
 }
 
 let currentPost
@@ -134,13 +140,12 @@ function onChange({imageIds, postContent}) {
   currentPost = constructPost({
     imageIds,
     postContent,
-    draft: !document.querySelector('#publish').checked,
+    draft: true,
     date: new Date().toISOString(),
     title: document.querySelector('#title').value,
     author: document.querySelector('#author').value,
     trails: _.map(document.querySelector('#trails').value.split(","), _.trim),
   })
-  console.log(currentPost)
 }
 
 // https://gist.github.com/mbrehin/05c0d41a7e50eef7f95711e237502c85
@@ -211,7 +216,17 @@ function initEditors() {
     }
     const { view, plugins } = prosemirrorView(area, container, uploadImage, onChange)
   }
-  document.getElementById('submit').onclick = () => uploadPost(currentPost, 'example')
+  document.getElementById('submit').onclick = () => {
+    const postToPublish = _.cloneDeep(currentPost)
+    postToPublish.frontMatter.draft = false
+    console.log(serializePost(postToPublish))
+    uploadPost(serializePost(postToPublish), 'example')
+  }
+  document.getElementById('unpublish').onclick = () => {
+    const postToUnpublish = _.cloneDeep(currentPost)
+    postToUnpublish.frontMatter.unpublish = true
+    uploadPost(serializePost(postToUnpublish), 'example')
+  }
 }
 
 document.addEventListener('DOMContentLoaded', initEditors)

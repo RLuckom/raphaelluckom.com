@@ -53,7 +53,17 @@ module blog_site {
       arns = [module.post_entry_lambda.role.arn]
     },
     {
+      permission_type = "delete_object"
+      prefix = "posts/"
+      arns = [module.post_entry_lambda.role.arn]
+    },
+    {
       permission_type = "put_object"
+      prefix = "img/"
+      arns = [module.post_entry_lambda.role.arn]
+    },
+    {
+      permission_type = "delete_object"
       prefix = "img/"
       arns = [module.post_entry_lambda.role.arn]
     },
@@ -61,7 +71,10 @@ module blog_site {
   website_bucket_bucket_permissions = [
     {
       permission_type = "list_bucket"
-      arns = [var.plugin_config.authenticated_role.arn]
+      arns = [
+        var.plugin_config.authenticated_role.arn,
+        module.post_entry_lambda.role.arn
+      ]
     }
   ]
   subject_alternative_names = ["www.test.raphaelluckom.com"]
