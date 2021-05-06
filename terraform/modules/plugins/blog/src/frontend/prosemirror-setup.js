@@ -712,7 +712,6 @@ function prosemirrorView(area, container, uploadImage, onChange, state) {
       }
     ),
   ]
-  console.log(state)
   const initState = state ? prosemirror.EditorState.fromJSON(
     {
       schema: prosemirror.schema,

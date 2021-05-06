@@ -38,6 +38,13 @@ goph = buildGopher({
         },
       }
     },
+    listPosts: {
+      accessSchema: exploranda.dataSources.AWS.s3.listObjects,
+      params: {
+        Bucket: {value: CONFIG.private_storage_bucket },
+        Prefix: { value: CONFIG.plugin_post_hosting_path },
+      }
+    },
   },
   otherDependencies: {
     pollImage: {
@@ -142,7 +149,6 @@ let postFilename
 // ( if they have the .prosemirror class ) 
 function initEditors() {
   const savedData = localStorage.getItem('postData')
-  console.log(savedData)
   let initEditorState
   if (savedData) {
     const parsed = JSON.parse(savedData)
@@ -226,6 +232,23 @@ function initEditors() {
     )
   }
 
+  goph.report('listPosts', null, (e, r) => {
+    if (e) {
+      console.log(e)
+      return e
+    }
+    const postListSection = document.getElementById('posts')
+    _.map(r.listPosts[0], ({Key}) => {
+      const postListEntry = document.createElement('div')
+      postListEntry.className = "post-entry"
+      const postName = document.createElement('div')
+      postName.className = "post-name"
+      postName.innerText = _.trimEnd(Key.split('/').pop(), '.md')
+      postListEntry.appendChild(postName)
+      postListSection.appendChild(postListEntry)
+    })
+  })
+
   // Loop over every textareas to replace with dynamic editor
   for (const area of document.querySelectorAll('textarea.prosemirror')) {
     // Hide textarea
@@ -238,7 +261,6 @@ function initEditors() {
     } else {
       area.parentElement.appendChild(container)
     }
-    console.log(initEditorState)
     const { view, plugins } = prosemirrorView(area, container, uploadImage, onChange, initEditorState)
   }
   document.getElementById('submit').onclick = () => {

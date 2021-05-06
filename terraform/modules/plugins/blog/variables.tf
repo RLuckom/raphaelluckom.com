@@ -157,6 +157,7 @@ locals {
     private_storage_image_upload_path = "${trimsuffix(var.plugin_config.upload_root, "/")}/img/"
     private_storage_post_upload_path = "${trimsuffix(var.plugin_config.upload_root, "/")}/posts/"
     plugin_image_hosting_path = "${trimsuffix(var.plugin_config.hosting_root, "/")}/img/"
+    plugin_post_hosting_path = "${trimsuffix(var.plugin_config.hosting_root, "/")}/posts"
   }
   files = [
     {
