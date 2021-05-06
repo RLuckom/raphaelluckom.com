@@ -579,11 +579,13 @@ function buildInputRules(schema) {
 //
 //     menuContent:: [[MenuItem]]
 //     Can be used to override the menu content.
-function prosemirrorView(area, container, uploadImage, onChange) {
+function prosemirrorView(area, container, uploadImage, onChange, state) {
   const imageIdPlugin = new prosemirror.Plugin({
     key: 'imageIds',
     state: {
       init() { return [] },
+      toJSON(val) { return JSON.stringify(val) },
+      fromJSON(conf, val, edState) { return JSON.parse(val) },
       apply(tr,val, state) {
         let action = tr.getMeta(this)
         if (action && action.add) {
@@ -595,6 +597,10 @@ function prosemirrorView(area, container, uploadImage, onChange) {
       }
     }
   })
+
+  const statePluginFields = {
+    imageIds: imageIdPlugin
+  }
 
   const placeholderPlugin = new prosemirror.Plugin({
     state: {
@@ -706,13 +712,20 @@ function prosemirrorView(area, container, uploadImage, onChange) {
       }
     ),
   ]
+  console.log(state)
+  const initState = state ? prosemirror.EditorState.fromJSON(
+    {
+      schema: prosemirror.schema,
+      plugins
+    }, _.isString(state) ? JSON.parse(state) : state, statePluginFields
+  ) : prosemirror.EditorState.create({
+    doc: prosemirror.defaultMarkdownParser.parse(area.value),
+    plugins,
+  })
   // Load editor view
   const view = new prosemirror.EditorView(container, {
     // Set initial state
-    state: prosemirror.EditorState.create({
-      doc: prosemirror.defaultMarkdownParser.parse(area.value),
-      plugins,
-    }),
+    state: initState,
     dispatchTransaction(tr) {
       const { state } = view.state.applyTransaction(tr)
       view.updateState(state)
@@ -720,12 +733,17 @@ function prosemirrorView(area, container, uploadImage, onChange) {
       if (tr.docChanged) {
         onChange({
           imageIds: imageIdPlugin.getState(state),
+          state: serializeState(),
           postContent: prosemirror.defaultMarkdownSerializer.serialize(tr.doc),
         })
         area.value = prosemirror.defaultMarkdownSerializer.serialize(tr.doc)
       }
     },
   })
+
+  function serializeState() {
+    return view.state.toJSON(statePluginFields)
+  }
 
   return {
     view,

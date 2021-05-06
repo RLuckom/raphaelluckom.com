@@ -267,7 +267,7 @@ module.exports = {
             }
           },
         },
-        unPublish: {
+        unpublish: {
           action: 'exploranda',
           condition: {ref: 'publish.results.imagesToDelete.length' },
           params: {

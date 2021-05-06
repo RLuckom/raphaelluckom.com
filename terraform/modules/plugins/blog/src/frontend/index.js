@@ -75,7 +75,7 @@ goph = buildGopher({
           }
         }
       }
-    }
+    },
   },
 })
 
@@ -135,23 +135,22 @@ function serializePost({frontMatter, postContent}) {
 }
 
 let currentPost
-
-function onChange({imageIds, postContent}) {
-  currentPost = constructPost({
-    imageIds,
-    postContent,
-    draft: true,
-    date: new Date().toISOString(),
-    title: document.querySelector('#title').value,
-    author: document.querySelector('#author').value,
-    trails: _.map(document.querySelector('#trails').value.split(","), _.trim),
-  })
-}
+let postFilename
 
 // https://gist.github.com/mbrehin/05c0d41a7e50eef7f95711e237502c85
 // script to replace <textarea> elements in forms with prosemirror editors 
 // ( if they have the .prosemirror class ) 
 function initEditors() {
+  const savedData = localStorage.getItem('postData')
+  console.log(savedData)
+  let initEditorState
+  if (savedData) {
+    const parsed = JSON.parse(savedData)
+    currentPost = parsed.currentPost
+    postFilename = parsed.postFilename
+    initEditorState = parsed.editorState
+  }
+
   const canonicalImageTypes = {
     png: 'png', 
     jpg: 'jpg',
@@ -188,8 +187,32 @@ function initEditors() {
     )
   }
 
+  const autosave = _.debounce((currentPost, state) => {
+    localStorage.setItem('postData', JSON.stringify({
+      currentPost, postFilename, editorState: state,
+    }))
+    uploadPost(serializePost(currentPost), postFilename)
+  }, 5000)
+
+  function onChange({imageIds, postContent, state}) {
+    const titleInput = document.querySelector('#title').value
+    const postId = titleInput.replace(/ /g, "_")
+    postFilename = encodeURIComponent(`${postId}.md`)
+    document.getElementById('post-title-filename').innerText = postFilename
+    currentPost = constructPost({
+      imageIds,
+      postContent,
+      draft: true,
+      date: new Date().toISOString(),
+      title: document.querySelector('#title').value,
+      author: document.querySelector('#author').value,
+      trails: _.map(document.querySelector('#trails').value.split(","), _.trim),
+    })
+    autosave(currentPost, state)
+  }
+
   function uploadPost(post, name) {
-    const postKey = `${CONFIG.private_storage_post_upload_path}${name}.md`
+    const postKey = `${CONFIG.private_storage_post_upload_path}${name}`
     goph.report(
       'putPost',
       {
@@ -202,6 +225,7 @@ function initEditors() {
       }
     )
   }
+
   // Loop over every textareas to replace with dynamic editor
   for (const area of document.querySelectorAll('textarea.prosemirror')) {
     // Hide textarea
@@ -214,18 +238,18 @@ function initEditors() {
     } else {
       area.parentElement.appendChild(container)
     }
-    const { view, plugins } = prosemirrorView(area, container, uploadImage, onChange)
+    console.log(initEditorState)
+    const { view, plugins } = prosemirrorView(area, container, uploadImage, onChange, initEditorState)
   }
   document.getElementById('submit').onclick = () => {
     const postToPublish = _.cloneDeep(currentPost)
     postToPublish.frontMatter.draft = false
-    console.log(serializePost(postToPublish))
-    uploadPost(serializePost(postToPublish), 'example')
+    uploadPost(serializePost(postToPublish), postFilename)
   }
   document.getElementById('unpublish').onclick = () => {
     const postToUnpublish = _.cloneDeep(currentPost)
     postToUnpublish.frontMatter.unpublish = true
-    uploadPost(serializePost(postToUnpublish), 'example')
+    uploadPost(serializePost(postToUnpublish), postFilename)
   }
 }
 
