@@ -197,8 +197,7 @@ function initEditors() {
     localStorage.setItem('postData', JSON.stringify({
       currentPost, postFilename, editorState: state,
     }))
-    uploadPost(serializePost(currentPost), postFilename)
-  }, 5000)
+  }, 2000)
 
   function onChange({imageIds, postContent, state}) {
     const titleInput = document.querySelector('#title').value
@@ -263,7 +262,11 @@ function initEditors() {
     }
     const { view, plugins } = prosemirrorView(area, container, uploadImage, onChange, initEditorState)
   }
-  document.getElementById('submit').onclick = () => {
+  document.getElementById('save').onclick = () => {
+    const postToSave = _.cloneDeep(currentPost)
+    uploadPost(serializePost(postToSave), postFilename)
+  }
+  document.getElementById('publish').onclick = () => {
     const postToPublish = _.cloneDeep(currentPost)
     postToPublish.frontMatter.draft = false
     uploadPost(serializePost(postToPublish), postFilename)
