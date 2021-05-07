@@ -49,10 +49,18 @@ left to do, the effect it will have on the system as a whole, and what the path 
    at this point the templates are deployed by terraform and not easily configurable. So for the alpha release, all the blogs
    will look like this blog.
 
-4. **Trail link bugs**: I've noticed some bugs in the way the trail links at the bottom of each post are generated. I haven't
+4. **Trail link bugs and blog inefficiencies**: I've noticed some bugs in the way the trail links at the bottom of each post are generated. I haven't
    made it a priority to fix them yet because I'm not sure how valuable those links are--in the logs, I don't see a lot
    of evidence that people are using them. But maybe people aren't using them because they're broken. In any case, that's
    more of a superficial thing, and I'm still focusing on foundations.
+
+   There's also still an efficiency issue where the blog stores the full text of entries in a dynamo database. I did this
+   because I wanted to enable RSS and Atom feeds quickly, but it really feels wrong to duplicate all that content in such a
+   user-opaque way--ideally, I want a non-practitioner to be able to use just the S3 UI to know everything they need to know
+   about the system, and letting dynamo have such a significant role interferes with that goal. I think the solution to this
+   will be to reduce the amount of content shown in the RSS and Atom feeds so that full text isn't needed in the database. I
+   may even need some convincing on the long-term usefulness of Atom and RSS under the assumtion that operator-controlled systems
+   ought to be the norm[^1].
 
 5. **Autosave, Archiving, and Plugin Boundaries**: One of the highest priorities of this system is to _preserve artifacts of human attention_.
    That means that when the system owner does something that reflects a moment of their attention, such as starting to write a post
@@ -90,11 +98,18 @@ left to do, the effect it will have on the system as a whole, and what the path 
    When it needs to decrypt local storage data, it can call the decrypt endpoint with the ciphertext to get the plaintext. The encryption / decryption
    endpoints are restricted to a single plugin using the plugin isolation strategy described in the previous post.
 
-[^1]: The archive system is _global_--it's intended to support everything that this system does. The autosave feature I'm discussing is _local_--it's
+[^1]: RSS and Atom are _feed_ formats--they're techniques for publishing a list of posts, articles, etc. that a website has made available. Their design
+      includes the assumption that a _reader_ program wants to get the full of items, and that the publisher has a plan for managing the list of items
+      so that it doesn't get too long. That seems like _underspecification_ to me--there are enough unanswered questions about how things should work
+      that different programs that follow all the rules might be making different and contradictory assumptions about the questions that the rules
+      don't answer. For now I'm reserving judgment on whether these technologies are useful in this personal-social-media contexr or if different
+      solutions might be more appropriate.
+
+[^2]: The archive system is _global_--it's intended to support everything that this system does. The autosave feature I'm discussing is _local_--it's
       a feature of a single plugin (the blog) to the overall system. When I'm considering changes to a global system, I want to see a global
       reason for the changes--I want to see multiple plugins all "agree" on what the change should be. Here the situation is that _one_ plugin
       is interacting badly with the archive system. If I change the archive system now, I run the risk of specializing it in a way that makes sense
       for the blog plugin, but causes problems for other plugins I want to implement in the future. 
 
-[^2]: That is, one [origin](https://developer.mozilla.org/en-US/docs/Glossary/Origin) can't see the local storage from a different origin, but all the pages
+[^3]: That is, one [origin](https://developer.mozilla.org/en-US/docs/Glossary/Origin) can't see the local storage from a different origin, but all the pages
       from a given origin share a local storage namespace.
