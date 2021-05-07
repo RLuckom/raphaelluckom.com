@@ -57,7 +57,7 @@ module.exports = {
         previous: {
           action: 'exploranda',
           formatter: ({previous}) => {
-            if (previous) {
+            if (previous.length) {
               return parsePost(previous[0].Body.toString('utf8'))
             }
             return null
@@ -66,13 +66,16 @@ module.exports = {
             accessSchema: {value: 'dataSources.AWS.s3.getObject'},
             behaviors: { value: {
               onError: (e, r) => {
-                return
+                return {
+                  err: null,
+                  res: []
+                }
               }
             }},
             explorandaParams: {
-              Bucket: {ref: 'event.Records[0].s3.bucket.name'},
+              Bucket: {value: '${website_bucket}'},
               Key: {
-                helper: ({originalKey}) => _.replace(originalKey, "${original_post_upload_prefix}", "${original_post_hosting_prefix}"),
+                helper: ({originalKey}) => "${blog_post_hosting_prefix}" + originalKey.split('/').pop(),
                   params: {
                   originalKey: {ref: 'event.Records[0].s3.object.key'},
                 }

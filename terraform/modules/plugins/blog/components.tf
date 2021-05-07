@@ -53,6 +53,11 @@ module blog_site {
       arns = [module.post_entry_lambda.role.arn]
     },
     {
+      permission_type = "read_and_tag_known"
+      prefix = "posts/"
+      arns = [module.post_entry_lambda.role.arn]
+    },
+    {
       permission_type = "delete_object"
       prefix = "posts/"
       arns = [module.post_entry_lambda.role.arn]
