@@ -143,10 +143,10 @@ locals {
   exploranda_script_path = "${local.file_prefix}/assets/js/exploranda-browser.js"
   config_path = "${local.file_prefix}/assets/js/config.js"
   aws_script_path = "${local.file_prefix}/assets/js/aws-sdk-2.868.0.min.js"
-  index_js_path = "${local.file_prefix}/assets/js/index-${filemd5("${path.module}/src/frontend/index.js")}.js"
-  utils_js_path = "${local.file_prefix}/assets/js/utils-${filemd5("${path.module}/src/frontend/utils.js")}.js"
-  libs_js_path = "${local.file_prefix}/assets/js/pkg-${filemd5("${path.module}/src/frontend/libs.js")}.js"
-  prosemirror_setup_js_path = "${local.file_prefix}/assets/js/prosemirror-setup-${filemd5("${path.module}/src/frontend/prosemirror-setup.js")}.js"
+  index_js_path = "${local.file_prefix}/assets/js/index-${filemd5("${path.module}/src/frontend/libs/index.js")}.js"
+  utils_js_path = "${local.file_prefix}/assets/js/utils-${filemd5("${path.module}/src/frontend/libs/utils.js")}.js"
+  libs_js_path = "${local.file_prefix}/assets/js/pkg-${filemd5("${path.module}/src/frontend/libs/libs.js")}.js"
+  prosemirror_setup_js_path = "${local.file_prefix}/assets/js/prosemirror-setup-${filemd5("${path.module}/src/frontend/libs/prosemirror-setup.js")}.js"
   plugin_config = {
     domain = var.plugin_config.domain
     private_storage_bucket = var.plugin_config.bucket_name
@@ -189,43 +189,43 @@ EOF
     {
       key = local.libs_js_path
       file_contents = null
-      file_path = "${path.module}/src/frontend/pkg.js"
+      file_path = "${path.module}/src/frontend/libs/pkg.js"
       content_type = "application/javascript"
     },
     {
       key = local.prosemirror_setup_js_path
       file_contents = null
-      file_path = "${path.module}/src/frontend/prosemirror-setup.js"
+      file_path = "${path.module}/src/frontend/libs/prosemirror-setup.js"
       content_type = "application/javascript"
     },
     {
       key = local.index_js_path
       file_contents = null
-      file_path = "${path.module}/src/frontend/index.js"
+      file_path = "${path.module}/src/frontend/libs/index.js"
       content_type = "application/javascript"
     },
     {
       key = local.utils_js_path
       file_contents = null
-      file_path = "${path.module}/src/frontend/utils.js"
+      file_path = "${path.module}/src/frontend/libs/utils.js"
       content_type = "application/javascript"
     },
     {
       key = local.editor_styles_path
       file_path = ""
-      file_contents = file("${path.module}/src/frontend/editor.css")
+      file_contents = file("${path.module}/src/frontend/styles/editor.css")
       content_type = "text/css"
     },
     {
       key = local.exploranda_script_path
       file_contents = null
-      file_path = "${path.module}/src/frontend/exploranda-browser.js"
+      file_path = "${path.module}/src/frontend/libs/exploranda-browser.js"
       content_type = "application/javascript"
     },
     {
       key = local.aws_script_path
       file_contents = null
-      file_path = "${path.module}/src/frontend/aws-sdk-2.868.0.min.js"
+      file_path = "${path.module}/src/frontend/libs/aws-sdk-2.868.0.min.js"
       content_type = "application/javascript"
     },
   ]
