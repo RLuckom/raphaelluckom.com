@@ -1,9 +1,13 @@
 function getPostUploadKey({postId}) {
-    return `${CONFIG.private_storage_post_upload_path}${postId}.md`
+    return `${CONFIG.plugin_post_upload_path}${postId}.md`
+}
+
+function getPostHostingKey({postId}) {
+    return `${CONFIG.plugin_post_hosting_path}${postId}.md`
 }
 
 function getImageUploadKey({postId, imageId, ext}) {
-  return `${CONFIG.private_storage_image_upload_path}${postId}/${imageId}.${ext}`
+  return `${CONFIG.plugin_image_upload_path}${postId}/${imageId}.${ext}`
 }
 
 const canonicalImageTypes = {
@@ -48,12 +52,13 @@ function parsePost(s) {
       }
     }
     try {
-      const fm = yaml.safeLoad(frontMatter)
+      const fm = yaml.load(frontMatter)
       if (fm.date) {
         fm.date = moment(fm.date)
       }
       return { frontMatter: fm, content, raw:s }
     } catch(e) {
+      console.log(e)
       return { raw: s} 
     }
   } else {
@@ -97,6 +102,23 @@ goph = buildGopher({
           input: ['imageExt', 'postId', 'imageId'],
           formatter: ({imageExt, postId, imageId}) => {
             return getImageUploadKey({postId, imageId, imageExt})
+          }
+        },
+      }
+    },
+    getPost: {
+      accessSchema: exploranda.dataSources.AWS.s3.getObject,
+      formatter: (post) => {
+        console.log(post[0].Body.toString('utf8'))
+        return parsePost(post[0].Body.toString('utf8'))
+      },
+      params: {
+        Bucket: {value: CONFIG.private_storage_bucket },
+        Key: { 
+          input: 'postId',
+          formatter: ({postId}) => {
+            console.log(getPostHostingKey({postId}))
+            return getPostHostingKey({postId})
           }
         },
       }

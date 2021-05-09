@@ -107,14 +107,10 @@ function initEditors() {
     goph.report('savePostWithoutPublishing', {post: currentPost, postId})
   }
   document.getElementById('publish').onclick = () => {
-    const postToPublish = _.cloneDeep(currentPost)
-    postToPublish.frontMatter.draft = false
-    uploadPost(serializePost(postToPublish), postId)
+    goph.report('saveAndPublishPost', {post: currentPost, postId})
   }
   document.getElementById('unpublish').onclick = () => {
-    const postToUnpublish = _.cloneDeep(currentPost)
-    postToUnpublish.frontMatter.unpublish = true
-    uploadPost(serializePost(postToUnpublish), postId)
+    goph.report('unpublishPost', {post: currentPost, postId})
   }
 }
 

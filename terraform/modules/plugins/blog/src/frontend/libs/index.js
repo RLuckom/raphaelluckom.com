@@ -25,7 +25,11 @@ const defaultButton = {
 }
 
 function init() {
-  goph.report('listPosts', null, (e, r) => {
+  goph.report('getPost', {postId: 'example'}, (e, r) => {
+    console.log(e)
+    console.log(r)
+  })
+  goph.report('listPosts', {}, (e, r) => {
     if (e) {
       console.log(e)
       return e

@@ -156,10 +156,10 @@ locals {
     aws_credentials_endpoint = var.plugin_config.aws_credentials_endpoint
     api_root = "${trimsuffix(var.plugin_config.api_root, "/")}/"
     hosting_root = "${trimsuffix(var.plugin_config.hosting_root, "/")}/"
-    private_storage_image_upload_path = "${trimsuffix(var.plugin_config.upload_root, "/")}/img/"
-    private_storage_post_upload_path = "${trimsuffix(var.plugin_config.upload_root, "/")}/posts/"
+    plugin_image_upload_path = "${trimsuffix(var.plugin_config.upload_root, "/")}/img/"
+    plugin_post_upload_path = "${trimsuffix(var.plugin_config.upload_root, "/")}/posts/"
     plugin_image_hosting_path = "${trimsuffix(var.plugin_config.hosting_root, "/")}/img/"
-    plugin_post_hosting_path = "${trimsuffix(var.plugin_config.hosting_root, "/")}/posts"
+    plugin_post_hosting_path = "${trimsuffix(var.plugin_config.hosting_root, "/")}/posts/"
   }
   files = [
     {
