@@ -9,7 +9,7 @@
     <script src="/${trimprefix(libs_js_path, "/")}"></script>
     <script src="/${trimprefix(config_path, "/")}"></script>
     <script src="/${trimprefix(utils_js_path, "/")}"></script>
-    <script src="/${trimprefix(prosemirror_setup_js_path, "/")}"></script>
+    <script src="/${trimprefix(post_utils_js_path, "/")}"></script>
     <script src="/${trimprefix(index_js_path, "/")}" defer></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Private Site</title>
@@ -21,31 +21,6 @@
     </header>
     <main>
       <section id="posts">
-      </section>
-      <section class="cards">
-        <div>
-            <label for="tite">Title: <span id="post-title-filename"></span>
-              <input type="text" name="title" id="title" required>
-            </label>
-            <label for="Author">Author: 
-              <input type="text" name="author" id="author" required value="${operator}">
-            </label>
-            <label for="trails">Trails (comma-separated): 
-              <input type="text" name="trails" id="trails" required>
-            </label>
-          <div>
-            <label for="main">write the post: 
-              <textarea form="postitem" name="main" id="text" class="prosemirror editor">
-              </textarea>
-            </label>
-              <input type="button" name="save" id="save" value="Save Without Publishing">
-              <input type="button" name="publish" id="publish" value="Publish To Blog">
-              <input type="button" name="unpublish" id="unpublish" value="Remove from Blog">
-          </div>
-          <h1 class="tool-title">
-            post a blog entry
-          </h1>
-        </div>
       </section>
     </main>
     <footer>

@@ -143,8 +143,10 @@ locals {
   exploranda_script_path = "${local.file_prefix}/assets/js/exploranda-browser.js"
   config_path = "${local.file_prefix}/assets/js/config.js"
   aws_script_path = "${local.file_prefix}/assets/js/aws-sdk-2.868.0.min.js"
+  edit_js_path = "${local.file_prefix}/assets/js/index-${filemd5("${path.module}/src/frontend/libs/edit.js")}.js"
   index_js_path = "${local.file_prefix}/assets/js/index-${filemd5("${path.module}/src/frontend/libs/index.js")}.js"
   utils_js_path = "${local.file_prefix}/assets/js/utils-${filemd5("${path.module}/src/frontend/libs/utils.js")}.js"
+  post_utils_js_path = "${local.file_prefix}/assets/js/utils-${filemd5("${path.module}/src/frontend/libs/post_utils.js")}.js"
   libs_js_path = "${local.file_prefix}/assets/js/pkg-${filemd5("${path.module}/src/frontend/libs/libs.js")}.js"
   prosemirror_setup_js_path = "${local.file_prefix}/assets/js/prosemirror-setup-${filemd5("${path.module}/src/frontend/libs/prosemirror-setup.js")}.js"
   plugin_config = {
@@ -179,6 +181,25 @@ EOF
       aws_script_path = local.aws_script_path
       index_js_path = local.index_js_path
       utils_js_path = local.utils_js_path
+      post_utils_js_path = local.post_utils_js_path
+      libs_js_path = local.libs_js_path
+      prosemirror_setup_js_path = local.prosemirror_setup_js_path
+      config_path = local.config_path
+    })
+      content_type = "text/html"
+      file_path = ""
+    },
+    {
+      key = "${local.file_prefix}/edit.html"
+      file_contents = templatefile("${path.module}/src/frontend/edit.html", {
+      operator = var.maintainer.name
+      editor_styles_path = local.editor_styles_path
+      default_styles_path = var.default_styles_path
+      exploranda_script_path = local.exploranda_script_path
+      aws_script_path = local.aws_script_path
+      edit_js_path = local.edit_js_path
+      utils_js_path = local.utils_js_path
+      post_utils_js_path = local.post_utils_js_path
       libs_js_path = local.libs_js_path
       prosemirror_setup_js_path = local.prosemirror_setup_js_path
       config_path = local.config_path
@@ -199,9 +220,21 @@ EOF
       content_type = "application/javascript"
     },
     {
+      key = local.edit_js_path
+      file_contents = null
+      file_path = "${path.module}/src/frontend/libs/edit.js"
+      content_type = "application/javascript"
+    },
+    {
       key = local.index_js_path
       file_contents = null
       file_path = "${path.module}/src/frontend/libs/index.js"
+      content_type = "application/javascript"
+    },
+    {
+      key = local.post_utils_js_path
+      file_contents = null
+      file_path = "${path.module}/src/frontend/libs/post_utils.js"
       content_type = "application/javascript"
     },
     {
