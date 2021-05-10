@@ -1,9 +1,9 @@
 function getPostUploadKey({postId}) {
-    return `${CONFIG.plugin_post_upload_path}${postId}.md`
+  return `${CONFIG.plugin_post_upload_path}${postId}.md`
 }
 
 function getPostHostingKey({postId}) {
-    return `${CONFIG.plugin_post_hosting_path}${postId}.md`
+  return `${CONFIG.plugin_post_hosting_path}${postId}.md`
 }
 
 function getImageUploadKey({postId, imageId, ext}) {
