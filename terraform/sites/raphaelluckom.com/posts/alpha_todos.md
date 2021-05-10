@@ -92,7 +92,7 @@ left to do, the effect it will have on the system as a whole, and what the path 
    archive system is designed to back up _everything_ that lands in the system's storage. When combined with autosave, this means that each
    version of a document that's being edited ends up being saved forever. When autosave runs every five seconds or so during editing, this
    could mean saving hundreds of not-very-useful intermediate copies of a document. I think it's _likely_ that the archive system needs
-   to change somewhat, but I don't want to change it now[^1]. So I can either accept this issue or I can try to work around it within the blog system
+   to change somewhat, but I don't want to change it now[^2]. So I can either accept this issue or I can try to work around it within the blog system
    itself. I decided on the latter.
 
    It turns out that there _is_ a pretty straightforward solution to session timeouts happening on the browser. Browsers have a feature called [local storage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage)
@@ -100,7 +100,7 @@ left to do, the effect it will have on the system as a whole, and what the path 
    be there. I experimented with this a bit and found a way to use it to preserve data even through session timeouts. This means that autosave could
    mean "save to local storage," and run every few seconds without misusing archive storage space. But then _another_ problem arises. My [security model for plugins](https://raphaelluckom.com/posts/isolation_proposal_001.html)
    requires a boundary between the data from one plugin and the data from another. Local storage doesn't have a built-in way to enforce that kind of
-   boundary between different pages on a single website[^2].
+   boundary between different pages on a single website[^3].
 
    So again, we can accept the problem or we can try to solve it. This time, I'm going to accept the problem for now. In the future, I propose
    that each plugin will be able to create a lambda function for encryption and decryption. This lambda function can be the sole keeper of a 
