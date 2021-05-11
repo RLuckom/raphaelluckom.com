@@ -2,17 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <link rel="stylesheet" href="/${trimprefix(editor_styles_path, "/")}">
-    <link rel="stylesheet" href="/${trimprefix(default_styles_path, "/")}">
-    <script src="/${trimprefix(aws_script_path, "/")}"></script>
-    <script src="/${trimprefix(exploranda_script_path, "/")}"></script>
-    <script src="/${trimprefix(libs_js_path, "/")}"></script>
-    <script src="/${trimprefix(config_path, "/")}"></script>
-    <script src="/${trimprefix(utils_js_path, "/")}"></script>
-    <script src="/${trimprefix(post_utils_js_path, "/")}"></script>
-    <script src="/${trimprefix(index_js_path, "/")}" defer></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Private Site</title>
+    ${join("\n", [ for p in css_paths : "<link rel=\"stylesheet\" href=\"/${trimprefix(p, "/")}\">"])}
+    ${join("\n", [ for p in script_paths : "<script src=\"/${trimprefix(p, "/")}\"></script>"])}
     <meta name="description" content="This is the private part of the site">
   </head>
   <body>

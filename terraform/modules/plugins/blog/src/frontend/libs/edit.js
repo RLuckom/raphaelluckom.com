@@ -1,16 +1,16 @@
 let currentPost
-let postId
+const postId = new URLSearchParams(window.location.search).get('postId')
+const postDataKey = `postData?postId=${postId}`
 
 // https://gist.github.com/mbrehin/05c0d41a7e50eef7f95711e237502c85
 // script to replace <textarea> elements in forms with prosemirror editors 
 // ( if they have the .prosemirror class ) 
 function initEditors() {
-  const savedData = localStorage.getItem('postData')
+  const savedData = localStorage.getItem(postDataKey)
   let initEditorState
   if (savedData) {
     const parsed = JSON.parse(savedData)
     currentPost = parsed.currentPost
-    postId = parsed.postId
     initEditorState = parsed.editorState
   }
 
@@ -36,7 +36,7 @@ function initEditors() {
   }
 
   const autosave = _.debounce((currentPost, state) => {
-    localStorage.setItem('postData', JSON.stringify({
+    localStorage.setItem(postDataKey, JSON.stringify({
       currentPost, postId, editorState: state,
     }))
   }, 2000)
@@ -71,23 +71,6 @@ function initEditors() {
       }
     )
   }
-
-  goph.report('listPosts', null, (e, r) => {
-    if (e) {
-      console.log(e)
-      return e
-    }
-    const postListSection = document.getElementById('posts')
-    _.map(r.listPosts[0], ({Key}) => {
-      const postListEntry = document.createElement('div')
-      postListEntry.className = "post-entry"
-      const postName = document.createElement('div')
-      postName.className = "post-name"
-      postName.innerText = _.trimEnd(Key.split('/').pop(), '.md')
-      postListEntry.appendChild(postName)
-      postListSection.appendChild(postListEntry)
-    })
-  })
 
   // Loop over every textareas to replace with dynamic editor
   for (const area of document.querySelectorAll('textarea.prosemirror')) {

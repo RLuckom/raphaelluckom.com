@@ -1,3 +1,47 @@
+const defaultButton = {
+  tagName: 'button',
+  classNames: 'standard-button',
+}
+
+function domNode(el) {
+  if (_.isString(el)) {
+    return document.createTextNode(el)
+  }
+  const {innerText, tagName, type, isFor, name, classNames, href, onClick, children} = el
+  const newElement = document.createElement(tagName)
+  if (_.isArray(classNames)) {
+    newElement.className = ' '.join(classNames)
+  }
+  if (_.isString(classNames)) {
+    newElement.className = classNames
+  }
+  if (tagName === 'label') {
+    if (_.isString(isFor)) {
+      newElement.for = isFor
+    }
+  }
+  if (tagName === 'input') {
+    if (_.isString(type)) {
+      newElement.type = type
+    }
+    if (_.isString(name)) {
+      newElement.name = name
+    }
+  }
+  if (tagName === 'a') {
+    if (_.isString(href)) {
+      newElement.href = href
+    }
+  }
+  if (_.isString(innerText) && !children) {
+    newElement.innerText = innerText
+  }
+  if (_.isFunction(onClick)) {
+    newElement.onclick = onClick
+  }
+  _.each(children, (c) => newElement.appendChild(domNode(c)))
+  return newElement
+}
 
 function buildGopher({awsDependencies, otherDependencies, defaultInputs}) {
   const tokenRefreshLifetime = 30 * 60 * 1000
