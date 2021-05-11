@@ -44,7 +44,7 @@ for one to get hired; what a project manager will measure; or what technologies 
 things are necessarily accountable to any notion of value that can be understood outside the domain.
 
 When we see this dynamic in history, we aren't exactly impressed. In [Secrets of the Castle](https://en.wikipedia.org/wiki/Secrets_of_the_Castle),
-an experimental-archaeology documentary about midieval French and English castles, arbalist Robin Knight observes while assembling
+an experimental-archaeology documentary about medieval French and English castles, arbalist Robin Knight observes while assembling
 a crossbow:
 
 >  There was no such thing as a crossbow-maker. One man made the tiller, the blacksmith made all of the ironwork, another man made the string--that's
@@ -54,11 +54,11 @@ a crossbow:
 
 When I encounter the word "guild" in that context, and then "mystery," the associations that arise are not positive ones. These are,
 _precisely_, the original "masonic societies"--mason's communities--which guarded, kept secret, and restricted the use of technologies
-required by midieval lifeways, for the benefit of members of the community against the wider world. With our historical perspective
-we tend to understand these restraints on _who_ may do _which things_ as basically corrupt, unfair, and oppressive[^3].
+required by medieval lifeways, for the benefit of members of the community against the wider world. With our historical perspective
+we tend to understand these restraints on _who may do which crafts_ as basically corrupt, unfair, and oppressive[^3].
 
-Now, the comparison between software domains and midieval mysteries only goes so far. I feel in significantly less danger of being
-chiseled to death by an aggrieved React developer for doing UI development without their approval than I would if I was trying
+Now, the comparison between software domains and medieval mysteries only goes so far. I feel in significantly less danger of being
+chiseled to death by an aggrieved React developer, for doing UI development without their approval, than I would if I was trying
 to do masonry work on a castle site without belonging to the local guild. On the other hand, to ask "why" too loudly and too often
 in response to decisions made on the basis of factional or prestige politics is still a fireable offense in most software settings,
 making obedience to these norms a de-facto requirement for employment.
@@ -76,9 +76,13 @@ over the values that one finds espoused within the domain in which one is workin
       This is because size is one of the factors that affects interaction speed; it affects how long a library takes to download
       and, in some cases, how quickly it runs.
 
-[^2]: Within "standards for the metric," I include an agreement about how the metric is to be measured, a logic justifying the
-      method of measurement and value scale, and an empirically-minded community committed to revising and improving the accuracy
-      and applicability of the measurements for the benefit of humanity. [Exhibit A](https://en.wikipedia.org/wiki/Seismic_magnitude_scales).
+[^2]: Within "standards for the metric," I include:
+
+      1. An agreement about how the metric is to be measured
+      2. a logic justifying the method of measurement and value scale
+      3. an empirically-minded community committed to revising and improving the accuracy and applicability of the measurements for the benefit of humanity. 
+
+      [This](https://en.wikipedia.org/wiki/Seismic_magnitude_scales) is my Exhibit A for a metric that meets all of those qualifications.
 
 [^3]: Once, at a company where I worked, we all got an email from one of the heads of marketing. She said that they were trying to get rid
       of some standing desks, and did we know of any organizations that would accept them as a donation and pay for their removal. After a few
@@ -98,7 +102,7 @@ over the values that one finds espoused within the domain in which one is workin
       _paying less_ and _getting better performance_ and _experiencing less maintenance burden_ because you're using kubernetes compared to
       something else--don't materialize until you're operating at a larger scale than most products ever acheive. But because kubernetes
       conveys prestige, you can expect people with "software engineer" in their title to use it sort of aspirationally--to add "-and also
-      we'll deploy it on kubernetes" to the slide deck for a new project as a way of getting buy-in from industry higher-ups who associate
+      we'll deploy it on kubernetes" to the slide deck for a new project as a way of getting buy-in from higher-ups who associate
       that brand with google. It is this kind of self-sustaining dynamic--something that appears externally as inefficiency, because the projects
       end up costing more than they otherwise would, but which is efficient internally, because it is profitable in prestige within the domain--that
       solo practitioners are uniquely positioned to escape. And for the record, I don't think that venture-capital-funded startups are very
