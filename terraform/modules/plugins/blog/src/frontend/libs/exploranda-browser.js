@@ -26,14 +26,15 @@ module.exports = {
   asyncLib
 };
 
-},{"./lib/browserRecordCollectors":2,"./lib/dataSources":3,"./lib/dataSources/kubernetes/accessSchemaBuilder":31,"./lib/gopher":38,"./lib/recordCollectors/baseRecordCollector.js":40,"./lib/recordCollectors/genericFunctionRecordCollector.js":43,"async":44,"lodash":57}],2:[function(require,module,exports){
+},{"./lib/browserRecordCollectors":2,"./lib/dataSources":3,"./lib/dataSources/kubernetes/accessSchemaBuilder":31,"./lib/gopher":38,"./lib/recordCollectors/baseRecordCollector.js":40,"./lib/recordCollectors/genericFunctionRecordCollector.js":43,"async":45,"lodash":58}],2:[function(require,module,exports){
 module.exports = {
   GENERIC_API: require('./recordCollectors/fetchRecordCollector').lookUpRecords,
+  SYNTHETIC: require('./recordCollectors/syntheticRecordCollector').transform,
   FILE_TYPE: require('./recordCollectors/filetypeRecordCollector').transform,
   AWS: require('./recordCollectors/awsRecordCollector').lookUpRecords
 };
 
-},{"./recordCollectors/awsRecordCollector":39,"./recordCollectors/fetchRecordCollector":41,"./recordCollectors/filetypeRecordCollector":42}],3:[function(require,module,exports){
+},{"./recordCollectors/awsRecordCollector":39,"./recordCollectors/fetchRecordCollector":41,"./recordCollectors/filetypeRecordCollector":42,"./recordCollectors/syntheticRecordCollector":44}],3:[function(require,module,exports){
 const {readListAccessSchemas, nonNamespacedReadListAccessSchemas} = require('./dataSources/kubernetes/accessSchemaBuilder');
 
 module.exports = {
@@ -160,7 +161,7 @@ module.exports = {
   postToConnection
 };
 
-},{"lodash":57}],5:[function(require,module,exports){
+},{"lodash":58}],5:[function(require,module,exports){
 const _ = require('lodash');
 
 const namespaceDetails = {
@@ -218,7 +219,7 @@ module.exports = {
   startQueryExecution, getQueryExecution, getQueryResults
 }
 
-},{"lodash":57}],6:[function(require,module,exports){
+},{"lodash":58}],6:[function(require,module,exports){
 
 const cloudWatchNamespaceDetails = {
   name: 'CloudWatch',
@@ -389,7 +390,7 @@ module.exports = {
   mostRecentEventsInLogStream
 };
 
-},{"lodash":57}],8:[function(require,module,exports){
+},{"lodash":58}],8:[function(require,module,exports){
 const _ = require('lodash');
 let converter = _.identity
 try {
@@ -556,7 +557,7 @@ module.exports = {
   getItem, putItem, scan, query, deleteItem,
 };
 
-},{"aws-sdk":undefined,"lodash":57}],9:[function(require,module,exports){
+},{"aws-sdk":undefined,"lodash":58}],9:[function(require,module,exports){
 const _ = require('lodash');
 const {cloudWatchNamespaceDetails} = require('./cloudwatch');
 
@@ -612,7 +613,7 @@ module.exports = {
   ebsMetrics, ebsMetricsBuilder
 };
 
-},{"./cloudwatch":6,"lodash":57}],10:[function(require,module,exports){
+},{"./cloudwatch":6,"lodash":58}],10:[function(require,module,exports){
 const _ = require('lodash');
 const {cloudWatchNamespaceDetails} = require('./cloudwatch');
 
@@ -763,7 +764,7 @@ module.exports = {
   ec2Metrics, ec2MetricsBuilder
 };
 
-},{"./cloudwatch":6,"lodash":57}],11:[function(require,module,exports){
+},{"./cloudwatch":6,"lodash":58}],11:[function(require,module,exports){
 const _ = require('lodash');
 const {cloudWatchNamespaceDetails} = require('./cloudwatch');
 
@@ -1108,7 +1109,7 @@ module.exports = {
   servicesByClusterAndArnArray
 };
 
-},{"./cloudwatch":6,"lodash":57}],12:[function(require,module,exports){
+},{"./cloudwatch":6,"lodash":58}],12:[function(require,module,exports){
 const _ = require('lodash');
 
 const IAMNamespaceDetails = {
@@ -1511,7 +1512,7 @@ module.exports = {
   instanceProfileList, listInstanceProfileBuilder,
 };
 
-},{"lodash":57}],13:[function(require,module,exports){
+},{"lodash":58}],13:[function(require,module,exports){
 const _ = require('lodash');
 const {cloudWatchNamespaceDetails} = require('./cloudwatch');
 // namespaceDetails is what I'm calling the arguments to identify and initialize 
@@ -1631,7 +1632,7 @@ module.exports = {
   kinesisStreams
 };
 
-},{"./cloudwatch":6,"lodash":57}],14:[function(require,module,exports){
+},{"./cloudwatch":6,"lodash":58}],14:[function(require,module,exports){
 const _ = require('lodash');
 
 const namespaceDetails = {
@@ -1660,7 +1661,7 @@ const invoke = {
 
 module.exports = {invoke}
 
-},{"lodash":57}],15:[function(require,module,exports){
+},{"lodash":58}],15:[function(require,module,exports){
 const _ = require('lodash');
 
 const namespaceDetails = {
@@ -1688,7 +1689,7 @@ module.exports = {
   getParameter
 };
 
-},{"lodash":57}],16:[function(require,module,exports){
+},{"lodash":58}],16:[function(require,module,exports){
 const _ = require('lodash');
 
 const namespaceDetails = {
@@ -1746,7 +1747,7 @@ module.exports = {
   detectFaces,
 };
 
-},{"lodash":57}],17:[function(require,module,exports){
+},{"lodash":58}],17:[function(require,module,exports){
 const _ = require('lodash');
 
 const namespaceDetails = {
@@ -1991,7 +1992,7 @@ module.exports = {
   copyObject, deleteObject, getObject, putObject, putObjectTagging, getObjectTagging
 };
 
-},{"lodash":57}],18:[function(require,module,exports){
+},{"lodash":58}],18:[function(require,module,exports){
 const _ = require('lodash');
 const sqsNamespaceDetails = {
   name: 'SQS',
@@ -2037,7 +2038,7 @@ module.exports = {
   sendMessage, sendMessageBatch
 }
 
-},{"lodash":57}],19:[function(require,module,exports){
+},{"lodash":58}],19:[function(require,module,exports){
 const _ = require('lodash');
 
 function dockerApiAccessSchemaBuilderGenerator(name, required, pathParamKeys, queryParamKeys, defaults) {
@@ -2065,7 +2066,7 @@ module.exports = {
   tagsBuilder: dockerApiAccessSchemaBuilderGenerator('dockerTags', ['apiConfig'], [], [])
 };
 
-},{"lodash":57}],20:[function(require,module,exports){
+},{"lodash":58}],20:[function(require,module,exports){
 const _ = require('lodash');
 
 const search = {
@@ -2147,7 +2148,7 @@ module.exports = {
   clusterHealth,
 };
 
-},{"lodash":57}],21:[function(require,module,exports){
+},{"lodash":58}],21:[function(require,module,exports){
 const _ = require('lodash')
 const namespaceDetails = {
   name: 'Filetype',
@@ -2169,7 +2170,7 @@ module.exports = {
   fromBuffer
 };
 
-},{"lodash":57}],22:[function(require,module,exports){
+},{"lodash":58}],22:[function(require,module,exports){
 const _ = require('lodash'); // I know I'm going to need it
 
 const repoAccessSchema = {
@@ -2232,7 +2233,7 @@ module.exports = {
   commits: {accessSchema: commitsAccessSchema},
 };
 
-},{"lodash":57}],23:[function(require,module,exports){
+},{"lodash":58}],23:[function(require,module,exports){
 const _ = require('lodash');
 
 const alphaNamespaceDetails = {
@@ -2709,7 +2710,7 @@ module.exports = {
   networkIpOwners, networkIpOwnersBuilder,
 };
 
-},{"lodash":57}],24:[function(require,module,exports){
+},{"lodash":58}],24:[function(require,module,exports){
 const _ = require('lodash');
 
 const namespaceDetails = {
@@ -2790,7 +2791,7 @@ module.exports = {
   zones, zonesBuilder, recordSets
 };
 
-},{"lodash":57}],25:[function(require,module,exports){
+},{"lodash":58}],25:[function(require,module,exports){
 const _ = require('lodash');
 
 const namespaceDetails = {
@@ -2933,7 +2934,7 @@ module.exports = {
   serviceAccountKey, serviceAccountKeyBuilder, serviceAccountKeys, serviceAccountKeysBuilder
 };
 
-},{"lodash":57}],26:[function(require,module,exports){
+},{"lodash":58}],26:[function(require,module,exports){
 const _ = require('lodash');
 
 const namespaceDetails = {
@@ -3140,7 +3141,7 @@ module.exports = {
   nodePools, nodePoolsBuilder, operation, operationBuilder, operations, operationsBuilder,
 };
 
-},{"lodash":57}],27:[function(require,module,exports){
+},{"lodash":58}],27:[function(require,module,exports){
 const _ = require('lodash');
 
 const namespaceDetails = {
@@ -3184,7 +3185,7 @@ module.exports = {
   projects, projectsBuilder
 };
 
-},{"lodash":57}],28:[function(require,module,exports){
+},{"lodash":58}],28:[function(require,module,exports){
 const _ = require('lodash');
 
 const namespaceDetails = {
@@ -3230,7 +3231,7 @@ module.exports = {
   sqlInstances, sqlInstancesBuilder,
 };
 
-},{"lodash":57}],29:[function(require,module,exports){
+},{"lodash":58}],29:[function(require,module,exports){
 const _ = require('lodash');
 
 const namespaceDetails = {
@@ -3290,7 +3291,7 @@ module.exports = {
   logEntries, logEntriesBuilder
 };
 
-},{"lodash":57}],30:[function(require,module,exports){
+},{"lodash":58}],30:[function(require,module,exports){
 const _ = require('lodash');
 
 const namespaceDetails = {
@@ -3343,7 +3344,7 @@ module.exports = {
   timeSeries, timeSeriesBuilder
 };
 
-},{"lodash":57}],31:[function(require,module,exports){
+},{"lodash":58}],31:[function(require,module,exports){
 const _ = require('lodash');
 
 function kubernetesAccessSchemaBuilder({name, valuePath, path, requiredParams, pathParamKeys}) {
@@ -3428,7 +3429,7 @@ function nonNamespacedReadListAccessSchemas(pathPrefix, resourceType) {
 
 module.exports = {kubernetesAccessSchemaBuilder, readListAccessSchemas, nonNamespacedReadListAccessSchemas};
 
-},{"lodash":57}],32:[function(require,module,exports){
+},{"lodash":58}],32:[function(require,module,exports){
 const npmReleasesAccessSchema = {
   name: 'npmPackage',
   dataSource: 'GENERIC_API',
@@ -3474,7 +3475,7 @@ function simpleRequestDependencyBuilder(requestParams, ignoreErrors, defaultResp
 
 module.exports = {simpleRequestDependencyBuilder};
 
-},{"lodash":57}],34:[function(require,module,exports){
+},{"lodash":58}],34:[function(require,module,exports){
 const _ = require('lodash')
 
 const resizeOne = {
@@ -3505,7 +3506,7 @@ module.exports = {
   resizeOne
 };
 
-},{"lodash":57}],35:[function(require,module,exports){
+},{"lodash":58}],35:[function(require,module,exports){
 const _ = require('lodash')
 const namespaceDetails = {
   name: 'Sharp',
@@ -3534,7 +3535,7 @@ module.exports = {
   rotateOne
 };
 
-},{"lodash":57}],36:[function(require,module,exports){
+},{"lodash":58}],36:[function(require,module,exports){
 const _ = require('lodash');
 
 const read = {
@@ -3577,7 +3578,7 @@ const list = {
 
 module.exports = {list, read};
 
-},{"lodash":57}],37:[function(require,module,exports){
+},{"lodash":58}],37:[function(require,module,exports){
 const _ = require('lodash');
 
 function secretReducer(v, k) {
@@ -3696,7 +3697,7 @@ const flattenTree = {
 
 module.exports = {tree, list, read, flattenTree};
 
-},{"lodash":57}],38:[function(require,module,exports){
+},{"lodash":58}],38:[function(require,module,exports){
 (function (process){(function (){
 const _ = require('lodash');
 const asyncLib = require('async');
@@ -3953,9 +3954,10 @@ function Gopher(defaultRecordCollectors, dataDependencies, initialInputs) {
   }
 
   function report(...selfArgs) {
-    const inputOverrides = selfArgs.length > 2 ? selfArgs[1] : null;
-    const target = selfArgs.length > 1 ? selfArgs[0] : null;
-    const callback = selfArgs[selfArgs.length - 1] || display;
+    const hasCallback = _.isFunction(selfArgs[selfArgs.length - 1])
+    const inputOverrides = selfArgs[1] && !_.isFunction(selfArgs[1]) ? selfArgs[1] : null;
+    const target = _.isString(selfArgs[0]) || _.isArray(selfArgs[0]) ? selfArgs[0] : null;
+    const callback = hasCallback ? selfArgs[selfArgs.length - 1] : display;
     try {
       validate(dataDependencies, _.merge({}, inputOverrides, getInputs()), target);
     } catch(e) {
@@ -4003,7 +4005,7 @@ module.exports = {
 };
 
 }).call(this)}).call(this,require('_process'))
-},{"_process":60,"async":44,"lodash":57}],39:[function(require,module,exports){
+},{"_process":61,"async":45,"lodash":58}],39:[function(require,module,exports){
 const _ = require('lodash');
 const {buildSDKCollector} = require('./baseRecordCollector.js');
 
@@ -4021,7 +4023,7 @@ module.exports = {
   lookUpRecords: buildSDKCollector({getApi, dependencyMap: {AWS: 'aws-sdk'}})
 };
 
-},{"./baseRecordCollector.js":40,"lodash":57}],40:[function(require,module,exports){
+},{"./baseRecordCollector.js":40,"lodash":58}],40:[function(require,module,exports){
 (function (process){(function (){
 const _ = require('lodash');
 const asyncLib = require('async');
@@ -4572,7 +4574,7 @@ module.exports = {
 };
 
 }).call(this)}).call(this,require('_process'))
-},{"_process":60,"async":44,"lodash":57}],41:[function(require,module,exports){
+},{"_process":61,"async":45,"lodash":58}],41:[function(require,module,exports){
 const _ = require('lodash');
 const {buildSDKCollector} = require('./baseRecordCollector.js');
 const url = require('url');
@@ -4789,7 +4791,7 @@ module.exports = {
   )
 };
 
-},{"./baseRecordCollector.js":40,"lodash":57,"parse-link-header":59,"qs":62,"url":47}],42:[function(require,module,exports){
+},{"./baseRecordCollector.js":40,"lodash":58,"parse-link-header":60,"qs":63,"url":48}],42:[function(require,module,exports){
 const _ = require('lodash');
 const {buildSDKCollector} = require('./baseRecordCollector');
 
@@ -4805,7 +4807,7 @@ module.exports = {
   transform: buildSDKCollector({getApi: transform, dependencyMap: {"file-type": 'file-type/browser'}})
 }
 
-},{"./baseRecordCollector":40,"lodash":57}],43:[function(require,module,exports){
+},{"./baseRecordCollector":40,"lodash":58}],43:[function(require,module,exports){
 const _ = require('lodash')
 const { createBoundApi } = require('./baseRecordCollector')
 
@@ -4884,7 +4886,23 @@ module.exports = {
   genericFunctionRecordCollector: getApi
 }
 
-},{"./baseRecordCollector":40,"lodash":57}],44:[function(require,module,exports){
+},{"./baseRecordCollector":40,"lodash":58}],44:[function(require,module,exports){
+const _ = require('lodash');
+const {buildSDKCollector} = require('./baseRecordCollector');
+
+function transform(dependencies, {transformation}) {
+  return (params, callback) => {
+    return setTimeout(() => {
+      callback(null, transformation(params));
+    }, 0);
+  };
+}
+
+module.exports = {
+  transform: buildSDKCollector({getApi: transform}),
+};
+
+},{"./baseRecordCollector":40,"lodash":58}],45:[function(require,module,exports){
 (function (process,global,setImmediate){(function (){
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
@@ -10497,9 +10515,9 @@ Object.defineProperty(exports, '__esModule', { value: true });
 })));
 
 }).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("timers").setImmediate)
-},{"_process":60,"timers":70}],45:[function(require,module,exports){
+},{"_process":61,"timers":71}],46:[function(require,module,exports){
 
-},{}],46:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 (function (global){(function (){
 /*! https://mths.be/punycode v1.3.2 by @mathias */
 ;(function(root) {
@@ -11033,7 +11051,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 }(this));
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],47:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -11767,7 +11785,7 @@ Url.prototype.parseHost = function() {
   if (host) this.hostname = host;
 };
 
-},{"./util":48,"punycode":46,"querystring":68}],48:[function(require,module,exports){
+},{"./util":49,"punycode":47,"querystring":69}],49:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -11785,7 +11803,7 @@ module.exports = {
   }
 };
 
-},{}],49:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 'use strict';
 
 var GetIntrinsic = require('get-intrinsic');
@@ -11802,7 +11820,7 @@ module.exports = function callBoundIntrinsic(name, allowMissing) {
 	return intrinsic;
 };
 
-},{"./":50,"get-intrinsic":53}],50:[function(require,module,exports){
+},{"./":51,"get-intrinsic":54}],51:[function(require,module,exports){
 'use strict';
 
 var bind = require('function-bind');
@@ -11851,7 +11869,7 @@ if ($defineProperty) {
 	module.exports.apply = applyBind;
 }
 
-},{"function-bind":52,"get-intrinsic":53}],51:[function(require,module,exports){
+},{"function-bind":53,"get-intrinsic":54}],52:[function(require,module,exports){
 'use strict';
 
 /* eslint no-invalid-this: 1 */
@@ -11905,14 +11923,14 @@ module.exports = function bind(that) {
     return bound;
 };
 
-},{}],52:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 'use strict';
 
 var implementation = require('./implementation');
 
 module.exports = Function.prototype.bind || implementation;
 
-},{"./implementation":51}],53:[function(require,module,exports){
+},{"./implementation":52}],54:[function(require,module,exports){
 'use strict';
 
 var undefined;
@@ -12244,7 +12262,7 @@ module.exports = function GetIntrinsic(name, allowMissing) {
 	return value;
 };
 
-},{"function-bind":52,"has":56,"has-symbols":54}],54:[function(require,module,exports){
+},{"function-bind":53,"has":57,"has-symbols":55}],55:[function(require,module,exports){
 'use strict';
 
 var origSymbol = typeof Symbol !== 'undefined' && Symbol;
@@ -12259,7 +12277,7 @@ module.exports = function hasNativeSymbols() {
 	return hasSymbolSham();
 };
 
-},{"./shams":55}],55:[function(require,module,exports){
+},{"./shams":56}],56:[function(require,module,exports){
 'use strict';
 
 /* eslint complexity: [2, 18], max-statements: [2, 33] */
@@ -12303,14 +12321,14 @@ module.exports = function hasSymbols() {
 	return true;
 };
 
-},{}],56:[function(require,module,exports){
+},{}],57:[function(require,module,exports){
 'use strict';
 
 var bind = require('function-bind');
 
 module.exports = bind.call(Function.call, Object.prototype.hasOwnProperty);
 
-},{"function-bind":52}],57:[function(require,module,exports){
+},{"function-bind":53}],58:[function(require,module,exports){
 (function (global){(function (){
 /**
  * @license
@@ -29523,7 +29541,7 @@ module.exports = bind.call(Function.call, Object.prototype.hasOwnProperty);
 }.call(this));
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],58:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 var hasMap = typeof Map === 'function' && Map.prototype;
 var mapSizeDescriptor = Object.getOwnPropertyDescriptor && hasMap ? Object.getOwnPropertyDescriptor(Map.prototype, 'size') : null;
 var mapSize = hasMap && mapSizeDescriptor && typeof mapSizeDescriptor.get === 'function' ? mapSizeDescriptor.get : null;
@@ -29924,7 +29942,7 @@ function arrObjKeys(obj, inspect) {
     return xs;
 }
 
-},{"./util.inspect":45}],59:[function(require,module,exports){
+},{"./util.inspect":46}],60:[function(require,module,exports){
 'use strict';
 
 var qs = require('querystring')
@@ -29982,7 +30000,7 @@ module.exports = function (linkHeader) {
    .reduce(intoRels, {});
 };
 
-},{"querystring":68,"url":47,"xtend":71}],60:[function(require,module,exports){
+},{"querystring":69,"url":48,"xtend":72}],61:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -30168,7 +30186,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],61:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
 'use strict';
 
 var replace = String.prototype.replace;
@@ -30193,7 +30211,7 @@ module.exports = {
     RFC3986: Format.RFC3986
 };
 
-},{}],62:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 'use strict';
 
 var stringify = require('./stringify');
@@ -30206,7 +30224,7 @@ module.exports = {
     stringify: stringify
 };
 
-},{"./formats":61,"./parse":63,"./stringify":64}],63:[function(require,module,exports){
+},{"./formats":62,"./parse":64,"./stringify":65}],64:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -30471,7 +30489,7 @@ module.exports = function (str, opts) {
     return utils.compact(obj);
 };
 
-},{"./utils":65}],64:[function(require,module,exports){
+},{"./utils":66}],65:[function(require,module,exports){
 'use strict';
 
 var getSideChannel = require('side-channel');
@@ -30763,7 +30781,7 @@ module.exports = function (object, opts) {
     return joined.length > 0 ? prefix + joined : '';
 };
 
-},{"./formats":61,"./utils":65,"side-channel":69}],65:[function(require,module,exports){
+},{"./formats":62,"./utils":66,"side-channel":70}],66:[function(require,module,exports){
 'use strict';
 
 var formats = require('./formats');
@@ -31016,7 +31034,7 @@ module.exports = {
     merge: merge
 };
 
-},{"./formats":61}],66:[function(require,module,exports){
+},{"./formats":62}],67:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -31102,7 +31120,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],67:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -31189,13 +31207,13 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],68:[function(require,module,exports){
+},{}],69:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":66,"./encode":67}],69:[function(require,module,exports){
+},{"./decode":67,"./encode":68}],70:[function(require,module,exports){
 'use strict';
 
 var GetIntrinsic = require('get-intrinsic');
@@ -31321,7 +31339,7 @@ module.exports = function getSideChannel() {
 	return channel;
 };
 
-},{"call-bind/callBound":49,"get-intrinsic":53,"object-inspect":58}],70:[function(require,module,exports){
+},{"call-bind/callBound":50,"get-intrinsic":54,"object-inspect":59}],71:[function(require,module,exports){
 (function (setImmediate,clearImmediate){(function (){
 var nextTick = require('process/browser.js').nextTick;
 var apply = Function.prototype.apply;
@@ -31400,7 +31418,7 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
   delete immediateIds[id];
 };
 }).call(this)}).call(this,require("timers").setImmediate,require("timers").clearImmediate)
-},{"process/browser.js":60,"timers":70}],71:[function(require,module,exports){
+},{"process/browser.js":61,"timers":71}],72:[function(require,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;

@@ -1,17 +1,9 @@
-function init() {
-  goph.report('getPost', {postId: 'example'}, (e, r) => {
-    console.log(e)
-    console.log(r)
-  })
-  goph.report('listPosts', {}, (e, r) => {
-    if (e) {
-      console.log(e)
-      return e
-    }
-    const postListSection = document.getElementById('posts')
-    _.map(r.listPosts[0], ({Key}) => {
+window.RENDER_CONFIG = {
+  init: ({postKeys}) => {
+    const mainSection = document.querySelector('main')
+    _.map(postKeys, (Key) => {
       const postId = _.trimEnd(Key.split('/').pop(), '.md')
-      postListSection.appendChild(domNode({
+      mainSection.appendChild(domNode({
         tagName: 'div',
         classNames: 'post-list-entry',
         children: [
@@ -29,7 +21,13 @@ function init() {
         ]
       }))
     })
-  })
+  },
+  params: {
+    postKeys: {
+      source: 'listPosts',
+      formatter: ({listPosts}) => {
+        return _.map(listPosts[0], 'Key')
+      }
+    }
+  },
 }
-
-document.addEventListener('DOMContentLoaded', init)

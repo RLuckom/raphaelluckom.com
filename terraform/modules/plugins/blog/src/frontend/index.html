@@ -2,21 +2,19 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Private Site</title>
+    <title>${running_material.site_title}</title>
+    <meta name="description" content="${replace(running_material.site_description, "\"", "\\\"")}">
     ${join("\n", [ for p in css_paths : "<link rel=\"stylesheet\" href=\"/${trimprefix(p, "/")}\">"])}
     ${join("\n", [ for p in script_paths : "<script src=\"/${trimprefix(p, "/")}\"></script>"])}
-    <meta name="description" content="This is the private part of the site">
   </head>
   <body>
     <header>
-      <div class="header-block"><h1 class="heading">Private Site</h1></div>
+      ${running_material.header_contents}
     </header>
     <main>
-      <section id="posts">
-      </section>
     </main>
     <footer>
-      this is the footer text
+      ${running_material.footer_contents}
     </footer>
   </body>
 </html>

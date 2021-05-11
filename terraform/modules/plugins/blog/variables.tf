@@ -30,6 +30,21 @@ variable site_title {
   default = "Test Site"
 }
 
+variable admin_running_material {
+  type = object({
+    header_contents = string
+    footer_contents = string
+    site_title = string
+    site_description = string
+  })
+  default = {
+    header_contents = "<div class=\"header-block\"><h1 class=\"heading\">Private Site</h1></div>"
+    footer_contents = "<div class=\"footer-block\"><h1 class=\"footing\">Private Site</h1></div>"
+    site_title = "running_material.site_title"
+    site_description = "running_material.site_description"
+  }
+}
+
 variable plugin_config {
   type = object({
     domain = string
@@ -146,6 +161,7 @@ locals {
   edit_js_path = "${local.file_prefix}/assets/js/index-${filemd5("${path.module}/src/frontend/libs/edit.js")}.js"
   index_js_path = "${local.file_prefix}/assets/js/index-${filemd5("${path.module}/src/frontend/libs/index.js")}.js"
   utils_js_path = "${local.file_prefix}/assets/js/utils-${filemd5("${path.module}/src/frontend/libs/utils.js")}.js"
+  gopher_config_js_path = "${local.file_prefix}/assets/js/gopher_config-${filemd5("${path.module}/src/frontend/libs/gopher_config.js")}.js"
   post_utils_js_path = "${local.file_prefix}/assets/js/post-utils-${filemd5("${path.module}/src/frontend/libs/post_utils.js")}.js"
   libs_js_path = "${local.file_prefix}/assets/js/pkg-${filemd5("${path.module}/src/frontend/libs/libs.js")}.js"
   prosemirror_setup_js_path = "${local.file_prefix}/assets/js/prosemirror-setup-${filemd5("${path.module}/src/frontend/libs/prosemirror-setup.js")}.js"
@@ -174,6 +190,7 @@ locals {
     local.libs_js_path,
     local.exploranda_script_path,
     local.config_path,
+    local.gopher_config_js_path,
     local.utils_js_path,
     local.post_utils_js_path,
   ]
@@ -198,6 +215,7 @@ EOF
       key = "${local.file_prefix}index.html"
       file_contents = templatefile("${path.module}/src/frontend/index.html", {
       operator = var.maintainer.name
+      running_material = var.admin_running_material
       css_paths = concat(
         local.default_css_paths,
         local.index_css_paths
@@ -213,6 +231,7 @@ EOF
     {
       key = "${local.file_prefix}edit.html"
       file_contents = templatefile("${path.module}/src/frontend/edit.html", {
+      running_material = var.admin_running_material
       operator = var.maintainer.name
       css_paths = concat(
         local.default_css_paths,
@@ -254,6 +273,12 @@ EOF
       key = local.post_utils_js_path
       file_contents = null
       file_path = "${path.module}/src/frontend/libs/post_utils.js"
+      content_type = "application/javascript"
+    },
+    {
+      key = local.gopher_config_js_path
+      file_contents = null
+      file_path = "${path.module}/src/frontend/libs/gopher_config.js"
       content_type = "application/javascript"
     },
     {
