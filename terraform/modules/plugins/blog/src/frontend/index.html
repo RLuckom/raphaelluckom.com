@@ -6,6 +6,7 @@
     <meta name="description" content="${replace(running_material.site_description, "\"", "\\\"")}">
     ${join("\n", [ for p in css_paths : "<link rel=\"stylesheet\" href=\"/${trimprefix(p, "/")}\">"])}
     ${join("\n", [ for p in script_paths : "<script src=\"/${trimprefix(p, "/")}\"></script>"])}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
   <body>
     <header>

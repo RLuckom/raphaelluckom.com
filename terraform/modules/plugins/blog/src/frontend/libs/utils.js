@@ -1,23 +1,28 @@
-const defaultButton = {
-  tagName: 'button',
-  classNames: 'standard-button',
-}
-
 function domNode(el) {
   if (_.isString(el)) {
     return document.createTextNode(el)
+  } else if (_.isArray(el)) {
+    return _.map(el, domNode)
   }
-  const {innerText, tagName, type, isFor, name, classNames, href, onClick, children} = el
+  const {id, value, innerText, tagName, type, isFor, name, classNames, href, onClick, children} = el
   const newElement = document.createElement(tagName)
   if (_.isArray(classNames)) {
-    newElement.className = ' '.join(classNames)
+    newElement.className = classNames.join(' ')
   }
   if (_.isString(classNames)) {
     newElement.className = classNames
   }
+  if (_.isString(id)) {
+    newElement.id = id
+  }
   if (tagName === 'label') {
     if (_.isString(isFor)) {
       newElement.for = isFor
+    }
+  }
+  if (tagName === "button") {
+    if (_.isString(name)) {
+      newElement.name = name
     }
   }
   if (tagName === 'input') {
@@ -26,6 +31,9 @@ function domNode(el) {
     }
     if (_.isString(name)) {
       newElement.name = name
+    }
+    if (value) {
+      newElement.value = value
     }
   }
   if (tagName === 'a') {
@@ -85,7 +93,7 @@ function buildGopher({awsDependencies, otherDependencies, defaultInputs, render}
 
   if (_.isFunction(_.get(render, 'init'))) {
     const renderAccessSchema = _.cloneDeep(renderDomAccessSchema)
-    renderAccessSchema.requiredParams = _.reduce(render.params, (acc, v, k) => {
+    renderAccessSchema.optionalParams = _.reduce(render.params, (acc, v, k) => {
       acc[k] = {
         detectArray: _.get(v, 'detectArray') || _.constant(false)
       }

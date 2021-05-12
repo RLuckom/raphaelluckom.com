@@ -230,7 +230,7 @@ EOF
     },
     {
       key = "${local.file_prefix}edit.html"
-      file_contents = templatefile("${path.module}/src/frontend/edit.html", {
+      file_contents = templatefile("${path.module}/src/frontend/index.html", {
       running_material = var.admin_running_material
       operator = var.maintainer.name
       css_paths = concat(
