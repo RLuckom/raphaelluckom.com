@@ -23,7 +23,7 @@ function parsePost(s) {
       }
     }
     try {
-      const fm = yaml.safeLoad(frontMatter)
+      const fm = yaml.load(frontMatter)
       if (fm.date) {
         fm.date = moment(fm.date)
       }
@@ -36,8 +36,8 @@ function parsePost(s) {
   }
 }
 
-const blogImageKeyRegExp = new RegExp('${blog_image_hosting_prefix}([^/]*)/([^\.]*)/([0-9])\.(.*)')
-const originalImageKeyRegExp = new RegExp('${blog_image_hosting_prefix}([^/]*)/([^\.]*)/([0-9])\.(.*)')
+const blogImageKeyRegExp = new RegExp('${blog_image_hosting_prefix}([^/]*)/([^\.]*)/([0-9]*)\.(.*)')
+const originalImageKeyRegExp = new RegExp('${blog_image_hosting_prefix}([^/]*)/([^\.]*)/([0-9]*)\.(.*)')
 
 module.exports = {
   stages: {
@@ -98,8 +98,8 @@ module.exports = {
           action: 'exploranda',
           formatter: ({availableImages}) => {
             return _.map(_.flatten(availableImages), ({Key}) => {
-              const [key, postId, imageId, size, ext] = originalImageKeyRegExp.exec(Key)
-              return {key, postId, imageId, size, ext}
+              const [match, postId, imageId, size, ext] = originalImageKeyRegExp.exec(Key)
+              return {key: Key, postId, imageId, size, ext}
             })
           },
           params: {
@@ -143,9 +143,9 @@ module.exports = {
       index: 1,
       transformers: {
         publish: {
-          helper: ({draft, unpublish}) => !draft && !unpublish,
+          helper: ({publish, unpublish}) => publish && !unpublish,
           params: {
-            draft: {ref: 'parsePost.results.current.frontMatter.draft' },
+            publish: {ref: 'parsePost.results.current.frontMatter.publish' },
             unpublish: {ref: 'parsePost.results.current.frontMatter.unpublish' },
           }
         },
@@ -165,15 +165,15 @@ module.exports = {
           }
         },
         imagesToPublish: {
-          helper: ({unpublish, draft, currentImageIds, availableImages}) => {
-            if (unpublish || draft) {
+          helper: ({unpublish, publish, currentImageIds, availableImages}) => {
+            if (unpublish || !publish) {
               return []
             } else {
               return _.filter(availableImages, ({imageId}) => currentImageIds.indexOf(imageId) !== -1)
             }
           },
           params: {
-            draft: {ref: 'parsePost.results.current.frontMatter.draft' },
+            publish: {ref: 'parsePost.results.current.frontMatter.publish' },
             unpublish: {ref: 'parsePost.results.current.frontMatter.unpublish' },
             availableImages: {ref: 'parsePost.results.availableImages' },
             currentImageIds: {ref: 'parsePost.results.current.frontMatter.meta.imageIds' },
@@ -183,7 +183,6 @@ module.exports = {
       dependencies: {
         savePost: {
           action: 'exploranda',
-          condition: { ref: 'stage.publish' },
           params: {
             accessSchema: {value: 'dataSources.AWS.s3.putObject'},
             explorandaParams: {

@@ -1,4 +1,7 @@
 function domNode(el) {
+  if (_.isElement(el)) {
+    return el
+  }
   if (_.isString(el)) {
     return document.createTextNode(el)
   } else if (_.isArray(el)) {
@@ -117,7 +120,7 @@ function buildGopher({awsDependencies, otherDependencies, defaultInputs, render}
 
   const goph = exploranda.Gopher(dependencies, defaultInputs)
   if (defaultDependencies.initialRender) {
-    goph.report('initialRender')
+    goph.report('initialRender', _.get(render, 'inputs'))
   }
   return goph
 }

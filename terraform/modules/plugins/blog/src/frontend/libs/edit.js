@@ -1,5 +1,5 @@
 window.RENDER_CONFIG = {
-  init: (params, gopher) => {
+  init: ({post}, gopher) => {
     let currentPost
     const postId = new URLSearchParams(window.location.search).get('postId')
     const postDataKey = `postData?postId=${postId}`
@@ -14,12 +14,13 @@ window.RENDER_CONFIG = {
             'Title:',
             {
               tagName: 'span',
-              id: 'post-title',
+              id: 'post-id',
             },
             {
               tagName: 'input',
               type: 'text',
               name: 'title',
+              value: post.frontMatter.title,
               id: 'title',
             }
           ]
@@ -95,6 +96,7 @@ window.RENDER_CONFIG = {
 
     function uploadImage(buffer, ext, callback) {
       const imageId = uuid.v4()
+      const canonicalExt = canonicalImageTypes[_.toLower(ext)]
       const privateImageUrl = getImagePrivateUrl({postId, imageId, ext: canonicalExt, size: 500})
       goph.report(
         'pollImage',
@@ -122,18 +124,17 @@ window.RENDER_CONFIG = {
 
     function onChange({imageIds, postContent, state}) {
       const titleInput = document.querySelector('#title').value
-      postId = titleInput.replace(/[. ]/g, "_")
       document.getElementById('post-id').innerText = postId
       currentPost = constructPost({
         imageIds,
         postContent,
-        draft: true,
         date: new Date().toISOString(),
         title: document.querySelector('#title').value,
         author: document.querySelector('#author').value,
         trails: _.map(document.querySelector('#trails').value.split(","), _.trim),
       })
       autosave(currentPost, state)
+      console.log(currentPost)
     }
 
     function uploadPost(post, postId) {
@@ -176,11 +177,14 @@ window.RENDER_CONFIG = {
     }
   },
   params: {
-    postKeys: {
-      source: 'listPosts',
-      formatter: ({listPosts}) => {
-        return _.map(listPosts[0], 'Key')
+    post: {
+      source: 'getPost',
+      formatter: ({getPost}) => {
+        return getPost
       }
     }
   },
+  inputs: {
+    postId: new URLSearchParams(window.location.search).get('postId')
+  }
 }

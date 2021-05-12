@@ -74,8 +74,8 @@ function constructPost({imageIds, postContent, author, date, draft, title, trail
       date: date || new Date().toISOString(),
       draft: draft || false,
       meta: {
-        trails,
-        imageIds
+        trails: trails || [],
+        imageIds: imageIds || []
       }
     },
     postContent

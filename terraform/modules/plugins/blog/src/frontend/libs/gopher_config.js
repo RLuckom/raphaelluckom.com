@@ -21,15 +21,14 @@ window.GOPHER_CONFIG = {
     getPost: {
       accessSchema: exploranda.dataSources.AWS.s3.getObject,
       formatter: (post) => {
-        console.log(post[0].Body.toString('utf8'))
         return parsePost(post[0].Body.toString('utf8'))
       },
       params: {
         Bucket: {value: CONFIG.private_storage_bucket },
+        ResponseCacheControl: { value: 'no-cache' },
         Key: { 
           input: 'postId',
           formatter: ({postId}) => {
-            console.log(getPostHostingKey({postId}))
             return getPostHostingKey({postId})
           }
         },
@@ -42,8 +41,8 @@ window.GOPHER_CONFIG = {
           input: 'post',
           formatter: ({post}) => {
             const postToSend = _.cloneDeep(post)
-            delete postToSend.publish
-            delete postToSend.unpublish
+            delete postToSend.frontMatter.publish
+            delete postToSend.frontMatter.unpublish
             delete postToSend.frontMatter.delete
             return serializePost(postToSend)
           }

@@ -167,6 +167,7 @@ locals {
   prosemirror_setup_js_path = "${local.file_prefix}/assets/js/prosemirror-setup-${filemd5("${path.module}/src/frontend/libs/prosemirror-setup.js")}.js"
   plugin_config = {
     domain = var.plugin_config.domain
+    operator_name = var.maintainer.name
     private_storage_bucket = var.plugin_config.bucket_name
     upload_root = "${trimsuffix(var.plugin_config.upload_root, "/")}/"
     aws_credentials_endpoint = var.plugin_config.aws_credentials_endpoint
@@ -232,7 +233,6 @@ EOF
       key = "${local.file_prefix}edit.html"
       file_contents = templatefile("${path.module}/src/frontend/index.html", {
       running_material = var.admin_running_material
-      operator = var.maintainer.name
       css_paths = concat(
         local.default_css_paths,
         local.edit_css_paths
