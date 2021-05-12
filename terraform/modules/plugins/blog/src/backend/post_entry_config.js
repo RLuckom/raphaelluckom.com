@@ -23,7 +23,7 @@ function parsePost(s) {
       }
     }
     try {
-      const fm = yaml.safeLoad(frontMatter)
+      const fm = yaml.load(frontMatter)
       if (fm.date) {
         fm.date = moment(fm.date)
       }
@@ -36,10 +36,21 @@ function parsePost(s) {
   }
 }
 
+const blogImageKeyRegExp = new RegExp('${blog_image_hosting_prefix}([^/]*)/([^\.]*)/([0-9]*)\.(.*)')
+const originalImageKeyRegExp = new RegExp('${blog_image_hosting_prefix}([^/]*)/([^\.]*)/([0-9]*)\.(.*)')
+
 module.exports = {
   stages: {
     parsePost: {
       index: 0,
+      transformers: {
+        postId: {
+          helper: ({originalKey}) => originalKey.split('/').pop().split('.')[0],
+          params: {
+            originalKey: {ref: 'event.Records[0].s3.object.key'},
+          }
+        }
+      },
       dependencies: {
         current: {
           action: 'exploranda',
@@ -75,11 +86,54 @@ module.exports = {
             explorandaParams: {
               Bucket: {value: '${website_bucket}'},
               Key: {
-                helper: ({originalKey}) => "${blog_post_hosting_prefix}" + originalKey.split('/').pop(),
-                  params: {
-                  originalKey: {ref: 'event.Records[0].s3.object.key'},
+                helper: ({postId}) => "${blog_post_hosting_prefix}" + postId + '.md',
+                params: {
+                  postId: {ref: 'stage.postId'},
                 }
               },
+            }
+          },
+        },
+        availableImages: {
+          action: 'exploranda',
+          formatter: ({availableImages}) => {
+            return _.map(_.flatten(availableImages), ({Key}) => {
+              const [match, postId, imageId, size, ext] = originalImageKeyRegExp.exec(Key)
+              return {key: Key, postId, imageId, size, ext}
+            })
+          },
+          params: {
+            accessSchema: {value: 'dataSources.AWS.s3.listObjects'},
+            explorandaParams: {
+              Bucket: {ref: 'event.Records[0].s3.bucket.name'},
+              Prefix: {
+                helper: ({postId}) => "${original_image_hosting_prefix}" + postId,
+                params: {
+                  postId: {ref: 'stage.postId'},
+                }
+              }
+            }
+          },
+        },
+        publishedImages: {
+          action: 'exploranda',
+          formatter: ({publishedImages}) => {
+            return _.map(_.flatten(publishedImages), ({Key}) => {
+
+              const [key, postId, imageId, size, ext] = blogImageKeyRegExp.exec(Key) 
+              return {key, postId, imageId, size, ext}
+            })
+          },
+          params: {
+            accessSchema: {value: 'dataSources.AWS.s3.listObjects'},
+            explorandaParams: {
+              Bucket: {value: '${website_bucket}'},
+              Prefix: {
+                helper: ({postId}) => "${blog_image_hosting_prefix}" + postId,
+                params: {
+                  postId: {ref: 'stage.postId'},
+                }
+              }
             }
           },
         },
@@ -89,38 +143,39 @@ module.exports = {
       index: 1,
       transformers: {
         publish: {
-          helper: ({draft, unpublish}) => !draft && !unpublish,
+          helper: ({publish, unpublish}) => publish && !unpublish,
           params: {
-            draft: {ref: 'parsePost.results.current.frontMatter.draft' },
+            publish: {ref: 'parsePost.results.current.frontMatter.publish' },
             unpublish: {ref: 'parsePost.results.current.frontMatter.unpublish' },
           }
         },
         unpublish: {ref: 'parsePost.results.current.frontMatter.unpublish' },
-        imageIdsToUnpublish: {
-          helper: ({unpublish, previousImageIds, currentImageIds}) => {
+        imagesToUnpublish: {
+          helper: ({publishedImages, unpublish, currentImageIds}) => {
             if (unpublish) {
-              return _.union(previousImageIds || [], currentImageIds)
+              return publishedImages
             } else {
-              return _.difference(previousImageIds || [], currentImageIds)
+              return _.filter(publishedImages, ({imageId}) => currentImageIds.indexOf(imageId) === -1)
             }
           },
           params: {
             unpublish: {ref: 'parsePost.results.current.frontMatter.unpublish' },
-            previousImageIds: {ref: 'parsePost.results.previous.frontMatter.meta.imageIds' },
             currentImageIds: {ref: 'parsePost.results.current.frontMatter.meta.imageIds' },
+            publishedImages: {ref: 'parsePost.results.publishedImages' },
           }
         },
-        imageIdsToPublish: {
-          helper: ({unpublish, draft, currentImageIds}) => {
-            if (unpublish || draft) {
+        imagesToPublish: {
+          helper: ({unpublish, publish, currentImageIds, availableImages}) => {
+            if (unpublish || !publish) {
               return []
             } else {
-              return currentImageIds
+              return _.filter(availableImages, ({imageId}) => currentImageIds.indexOf(imageId) !== -1)
             }
           },
           params: {
-            draft: {ref: 'parsePost.results.current.frontMatter.draft' },
+            publish: {ref: 'parsePost.results.current.frontMatter.publish' },
             unpublish: {ref: 'parsePost.results.current.frontMatter.unpublish' },
+            availableImages: {ref: 'parsePost.results.availableImages' },
             currentImageIds: {ref: 'parsePost.results.current.frontMatter.meta.imageIds' },
           }
         },
@@ -166,7 +221,7 @@ module.exports = {
             }
           },
         },
-        unPublishPost: {
+        unpublishPost: {
           action: 'exploranda',
           condition: { ref: 'stage.unpublish' },
           params: {
@@ -182,66 +237,6 @@ module.exports = {
             }
           },
         },
-        imagesToCopy: {
-          action: 'exploranda',
-          condition: { ref: 'stage.publish' },
-          formatter: ({imagesToCopy}) => {
-            console.log(imagesToCopy)
-            return _.map(_.flatten(imagesToCopy), 'Key')
-          },
-          params: {
-            accessSchema: {value: 'dataSources.AWS.s3.listObjects'},
-            explorandaParams: {
-              Bucket: {
-                helper: ({imageIds, bucket}) => {
-                  const n = _.map(imageIds, (id) => bucket)
-                  console.log(n)
-                  return n
-                },
-                params: {
-                  imageIds: {ref: 'stage.imageIdsToPublish' },
-                  bucket: {ref: 'event.Records[0].s3.bucket.name'},
-                }
-              },
-              Prefix: {
-                helper: ({imageIds}) => _.map(imageIds, (id) => "${original_image_hosting_prefix}" + id),
-                  params: {
-                  imageIds: {ref: 'stage.imageIdsToPublish' },
-                }
-              }
-            }
-          },
-        },
-        imagesToDelete: {
-          action: 'exploranda',
-          condition: { ref: 'stage.unpublish' },
-          formatter: ({imagesToDelete}) => {
-            console.log(imagesToDelete)
-            return _.map(_.flatten(imagesToDelete), 'Key')
-          },
-          params: {
-            accessSchema: {value: 'dataSources.AWS.s3.listObjects'},
-            explorandaParams: {
-              Bucket: {
-                helper: ({imageIds, bucket}) => {
-                  const n = _.map(imageIds, (id) => bucket)
-                  console.log(n)
-                  return n
-                },
-                params: {
-                  imageIds: {ref: 'stage.imageIdsToUnpublish' },
-                  bucket: {value: '${website_bucket}'},
-                }
-              },
-              Prefix: {
-                helper: ({imageIds}) => _.map(imageIds, (id) => "${blog_image_hosting_prefix}" + id),
-                  params: {
-                  imageIds: {ref: 'stage.imageIdsToUnpublish' },
-                }
-              }
-            }
-          },
-        },
       }
     },
     manageImages: {
@@ -249,22 +244,22 @@ module.exports = {
       dependencies: {
         publish: {
           action: 'exploranda',
-          condition: {ref: 'publish.results.imagesToCopy.length' },
+          condition: {ref: 'publish.vars.imagesToPublish.length' },
           params: {
             accessSchema: {value: 'dataSources.AWS.s3.copyObject'},
             explorandaParams: {
               Bucket: {value: '${website_bucket}'},
               CopySource: {
-                helper: ({imageKeys, bucket}) => _.map(imageKeys, (k) => "/" + bucket + "/" + k),
-                  params: {
-                  imageKeys: {ref: 'publish.results.imagesToCopy' },
+                helper: ({images, bucket}) => _.map(images, ({key}) => "/" + bucket + "/" + key),
+                params: {
+                  images: {ref: 'publish.vars.imagesToPublish' },
                   bucket: {ref: 'event.Records[0].s3.bucket.name'},
                 }
               },
               Key: {
-                helper: ({imageKeys}) => _.map(imageKeys, (k) => _.replace(k, "${original_image_hosting_prefix}", "${blog_image_hosting_prefix}")),
+                helper: ({images}) => _.map(images, ({key}) => _.replace(key, "${original_image_hosting_prefix}", "${blog_image_hosting_prefix}")),
                   params: {
-                  imageKeys: {ref: 'publish.results.imagesToCopy' },
+                  images: {ref: 'publish.vars.imagesToPublish' },
                 }
               }
             }
@@ -272,22 +267,30 @@ module.exports = {
         },
         unpublish: {
           action: 'exploranda',
-          condition: {ref: 'publish.results.imagesToDelete.length' },
+          condition: {ref: 'publish.vars.imagesToUnpublish.length' },
           params: {
             accessSchema: {value: 'dataSources.AWS.s3.deleteObject'},
             explorandaParams: {
               Bucket: {
-                helper: ({imageKeys, bucket}) => {
-                  const n = _.map(imageKeys, (id) => bucket)
-                  console.log(n)
+                helper: ({images, bucket}) => {
+                  const n = _.map(images, (id) => bucket)
                   return n
                 },
                 params: {
-                  imageKeys: {ref: 'publish.results.imagesToDelete' },
+                  images: {ref: 'publish.vars.imagesToUnpublish' },
                   bucket: {value: '${website_bucket}'},
                 }
               },
-              Key: {ref: 'publish.results.imagesToDelete' },
+              Key: {
+                helper: ({images, bucket}) => {
+                  const n = _.map(images, 'key')
+                  return n
+                },
+                params: {
+                  images: {ref: 'publish.vars.imagesToUnpublish' },
+                  bucket: {value: '${website_bucket}'},
+                }
+              }
             }
           },
         },

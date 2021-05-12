@@ -30,6 +30,21 @@ variable site_title {
   default = "Test Site"
 }
 
+variable admin_running_material {
+  type = object({
+    header_contents = string
+    footer_contents = string
+    site_title = string
+    site_description = string
+  })
+  default = {
+    header_contents = "<div class=\"header-block\"><h1 class=\"heading\">Private Site</h1></div>"
+    footer_contents = "<div class=\"footer-block\"><h1 class=\"footing\">Private Site</h1></div>"
+    site_title = "running_material.site_title"
+    site_description = "running_material.site_description"
+  }
+}
+
 variable plugin_config {
   type = object({
     domain = string
@@ -139,26 +154,54 @@ variable library_const_names {
 
 locals {
   file_prefix = trim(var.plugin_config.source_root, "/")
-  editor_styles_path = "${local.file_prefix}/assets/styles/editor.css"
+  edit_styles_path = "${local.file_prefix}/assets/styles/editor.css"
   exploranda_script_path = "${local.file_prefix}/assets/js/exploranda-browser.js"
   config_path = "${local.file_prefix}/assets/js/config.js"
   aws_script_path = "${local.file_prefix}/assets/js/aws-sdk-2.868.0.min.js"
+  edit_js_path = "${local.file_prefix}/assets/js/index-${filemd5("${path.module}/src/frontend/libs/edit.js")}.js"
   index_js_path = "${local.file_prefix}/assets/js/index-${filemd5("${path.module}/src/frontend/libs/index.js")}.js"
   utils_js_path = "${local.file_prefix}/assets/js/utils-${filemd5("${path.module}/src/frontend/libs/utils.js")}.js"
+  gopher_config_js_path = "${local.file_prefix}/assets/js/gopher_config-${filemd5("${path.module}/src/frontend/libs/gopher_config.js")}.js"
+  post_utils_js_path = "${local.file_prefix}/assets/js/post-utils-${filemd5("${path.module}/src/frontend/libs/post_utils.js")}.js"
   libs_js_path = "${local.file_prefix}/assets/js/pkg-${filemd5("${path.module}/src/frontend/libs/libs.js")}.js"
   prosemirror_setup_js_path = "${local.file_prefix}/assets/js/prosemirror-setup-${filemd5("${path.module}/src/frontend/libs/prosemirror-setup.js")}.js"
   plugin_config = {
     domain = var.plugin_config.domain
+    operator_name = var.maintainer.name
     private_storage_bucket = var.plugin_config.bucket_name
     upload_root = "${trimsuffix(var.plugin_config.upload_root, "/")}/"
     aws_credentials_endpoint = var.plugin_config.aws_credentials_endpoint
+    plugin_root = "${trimsuffix(var.plugin_config.source_root, "/")}/"
     api_root = "${trimsuffix(var.plugin_config.api_root, "/")}/"
     hosting_root = "${trimsuffix(var.plugin_config.hosting_root, "/")}/"
-    private_storage_image_upload_path = "${trimsuffix(var.plugin_config.upload_root, "/")}/img/"
-    private_storage_post_upload_path = "${trimsuffix(var.plugin_config.upload_root, "/")}/posts/"
+    plugin_image_upload_path = "${trimsuffix(var.plugin_config.upload_root, "/")}/img/"
+    plugin_post_upload_path = "${trimsuffix(var.plugin_config.upload_root, "/")}/posts/"
     plugin_image_hosting_path = "${trimsuffix(var.plugin_config.hosting_root, "/")}/img/"
-    plugin_post_hosting_path = "${trimsuffix(var.plugin_config.hosting_root, "/")}/posts"
+    plugin_post_hosting_path = "${trimsuffix(var.plugin_config.hosting_root, "/")}/posts/"
   }
+  default_css_paths = [
+    var.default_styles_path
+  ]
+  index_css_paths = []
+  edit_css_paths = [
+    local.edit_styles_path
+  ]
+  default_script_paths = [
+    local.aws_script_path,
+    local.libs_js_path,
+    local.exploranda_script_path,
+    local.config_path,
+    local.gopher_config_js_path,
+    local.utils_js_path,
+    local.post_utils_js_path,
+  ]
+  index_script_paths = [
+    local.index_js_path
+  ]
+  edit_script_paths = [
+    local.prosemirror_setup_js_path,
+    local.edit_js_path
+  ]
   files = [
     {
       key = local.config_path
@@ -170,18 +213,34 @@ EOF
       content_type = "application/javascript"
     },
     {
-      key = "${local.file_prefix}/index.html"
+      key = "${local.file_prefix}index.html"
       file_contents = templatefile("${path.module}/src/frontend/index.html", {
       operator = var.maintainer.name
-      editor_styles_path = local.editor_styles_path
-      default_styles_path = var.default_styles_path
-      exploranda_script_path = local.exploranda_script_path
-      aws_script_path = local.aws_script_path
-      index_js_path = local.index_js_path
-      utils_js_path = local.utils_js_path
-      libs_js_path = local.libs_js_path
-      prosemirror_setup_js_path = local.prosemirror_setup_js_path
-      config_path = local.config_path
+      running_material = var.admin_running_material
+      css_paths = concat(
+        local.default_css_paths,
+        local.index_css_paths
+      )
+      script_paths = concat(
+        local.default_script_paths,
+        local.index_script_paths
+      )
+    })
+      content_type = "text/html"
+      file_path = ""
+    },
+    {
+      key = "${local.file_prefix}edit.html"
+      file_contents = templatefile("${path.module}/src/frontend/index.html", {
+      running_material = var.admin_running_material
+      css_paths = concat(
+        local.default_css_paths,
+        local.edit_css_paths
+      )
+      script_paths = concat(
+        local.default_script_paths,
+        local.edit_script_paths
+      )
     })
       content_type = "text/html"
       file_path = ""
@@ -199,9 +258,27 @@ EOF
       content_type = "application/javascript"
     },
     {
+      key = local.edit_js_path
+      file_contents = null
+      file_path = "${path.module}/src/frontend/libs/edit.js"
+      content_type = "application/javascript"
+    },
+    {
       key = local.index_js_path
       file_contents = null
       file_path = "${path.module}/src/frontend/libs/index.js"
+      content_type = "application/javascript"
+    },
+    {
+      key = local.post_utils_js_path
+      file_contents = null
+      file_path = "${path.module}/src/frontend/libs/post_utils.js"
+      content_type = "application/javascript"
+    },
+    {
+      key = local.gopher_config_js_path
+      file_contents = null
+      file_path = "${path.module}/src/frontend/libs/gopher_config.js"
       content_type = "application/javascript"
     },
     {
@@ -211,7 +288,7 @@ EOF
       content_type = "application/javascript"
     },
     {
-      key = local.editor_styles_path
+      key = local.edit_styles_path
       file_path = ""
       file_contents = file("${path.module}/src/frontend/styles/editor.css")
       content_type = "text/css"

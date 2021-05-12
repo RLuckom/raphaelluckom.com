@@ -1,6 +1,69 @@
+function domNode(el) {
+  if (_.isElement(el)) {
+    return el
+  }
+  if (_.isString(el)) {
+    return document.createTextNode(el)
+  } else if (_.isArray(el)) {
+    return _.map(el, domNode)
+  }
+  const {id, value, innerText, tagName, type, isFor, name, classNames, href, onClick, children} = el
+  const newElement = document.createElement(tagName)
+  if (_.isArray(classNames)) {
+    newElement.className = classNames.join(' ')
+  }
+  if (_.isString(classNames)) {
+    newElement.className = classNames
+  }
+  if (_.isString(id)) {
+    newElement.id = id
+  }
+  if (tagName === 'label') {
+    if (_.isString(isFor)) {
+      newElement.for = isFor
+    }
+  }
+  if (tagName === "button") {
+    if (_.isString(name)) {
+      newElement.name = name
+    }
+  }
+  if (tagName === 'input') {
+    if (_.isString(type)) {
+      newElement.type = type
+    }
+    if (_.isString(name)) {
+      newElement.name = name
+    }
+    if (value) {
+      newElement.value = value
+    }
+  }
+  if (tagName === 'a') {
+    if (_.isString(href)) {
+      newElement.href = href
+    }
+  }
+  if (_.isString(innerText) && !children) {
+    newElement.innerText = innerText
+  }
+  if (_.isFunction(onClick)) {
+    newElement.onclick = onClick
+  }
+  _.each(children, (c) => newElement.appendChild(domNode(c)))
+  return newElement
+}
 
-function buildGopher({awsDependencies, otherDependencies, defaultInputs}) {
+function buildGopher({awsDependencies, otherDependencies, defaultInputs, render}) {
   const tokenRefreshLifetime = 30 * 60 * 1000
+  const renderDomAccessSchema = {
+    name: "render dom",
+    value: { path: _.constant(1)},
+    dataSource: 'SYNTHETIC',
+    transformation: (params) => {
+      render.init(params, goph)
+    }
+  }
 
   const credentialsAccessSchema = {
     name: 'site AWS credentials',
@@ -25,12 +88,28 @@ function buildGopher({awsDependencies, otherDependencies, defaultInputs}) {
     }
   }
 
-  const dependencies = _.merge(
-    {
-      credentials: {
-        accessSchema: credentialsAccessSchema,
+  const defaultDependencies = {
+    credentials: {
+      accessSchema: credentialsAccessSchema,
+    }
+  }
+
+  if (_.isFunction(_.get(render, 'init'))) {
+    const renderAccessSchema = _.cloneDeep(renderDomAccessSchema)
+    renderAccessSchema.optionalParams = _.reduce(render.params, (acc, v, k) => {
+      acc[k] = {
+        detectArray: _.get(v, 'detectArray') || _.constant(false)
       }
-    },
+      return acc
+    }, {})
+    defaultDependencies.initialRender = {
+      accessSchema: renderAccessSchema,
+      params: render.params 
+    }
+  }
+
+  const dependencies = _.merge(
+    defaultDependencies,
     _.reduce(awsDependencies, (acc, v, k) => {
       v.params.apiConfig = apiConfigSelector
       acc[k] = v
@@ -39,7 +118,11 @@ function buildGopher({awsDependencies, otherDependencies, defaultInputs}) {
     otherDependencies || {}
   )
 
-  return exploranda.Gopher(dependencies, defaultInputs)
+  const goph = exploranda.Gopher(dependencies, defaultInputs)
+  if (defaultDependencies.initialRender) {
+    goph.report('initialRender', _.get(render, 'inputs'))
+  }
+  return goph
 }
 
 function pluginRelativeApiDependency(pluginRelativePath) {
@@ -61,3 +144,7 @@ const listHostingRootDependency = {
     Prefix: {value: CONFIG.hosting_root },
   }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  window.goph = buildGopher(_.merge(window.GOPHER_CONFIG, window.RENDER_CONFIG ? {render: window.RENDER_CONFIG} : {}))
+})
