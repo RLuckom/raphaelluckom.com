@@ -40,7 +40,7 @@ window.RENDER_CONFIG = {
               tagName: 'input',
               type: 'text',
               name: 'title',
-              value: post.frontMatter.title,
+              value: currentPost.frontMatter.title,
               id: 'title',
             }
           ]

@@ -23,7 +23,7 @@ window.GOPHER_CONFIG = {
       formatter: ([post]) => {
         let parsed
         if (post) {
-          const parsed = parsePost(post.Body.toString('utf8'))
+          parsed = parsePost(post.Body.toString('utf8'))
           parsed.etag = post.ETag
         }
         return parsed
@@ -57,6 +57,9 @@ window.GOPHER_CONFIG = {
           input: 'post',
           formatter: ({post}) => {
             const postToSend = _.cloneDeep(post)
+            postToSend.frontMatter.updateDate = new Date().toISOString(),
+            postToSend.frontMatter.date = new Date().toISOString(),
+            postToSend.frontMatter.createDate = postToSend.frontMatter.createDat || new Date().toISOString(),
             delete postToSend.frontMatter.publish
             delete postToSend.frontMatter.unpublish
             delete postToSend.frontMatter.delete
@@ -80,6 +83,9 @@ window.GOPHER_CONFIG = {
           input: 'post',
           formatter: ({post}) => {
             const postToSend = _.cloneDeep(post)
+            postToSend.frontMatter.updateDate = new Date().toISOString(),
+            postToSend.frontMatter.date = new Date().toISOString(),
+            postToSend.frontMatter.createDate = postToSend.frontMatter.createDat || new Date().toISOString(),
             delete postToSend.frontMatter.unpublish
             delete postToSend.frontMatter.delete
             postToSend.frontMatter.publish = true
@@ -103,6 +109,9 @@ window.GOPHER_CONFIG = {
           input: 'post',
           formatter: ({post}) => {
             const postToSend = _.cloneDeep(post)
+            postToSend.frontMatter.updateDate = new Date().toISOString(),
+            postToSend.frontMatter.date = new Date().toISOString(),
+            postToSend.frontMatter.createDate = postToSend.frontMatter.createDat || new Date().toISOString(),
             delete postToSend.frontMatter.publish
             delete postToSend.frontMatter.delete
             postToSend.frontMatter.unpublish = true

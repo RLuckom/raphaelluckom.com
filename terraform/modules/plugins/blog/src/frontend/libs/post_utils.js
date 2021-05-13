@@ -53,9 +53,6 @@ function parsePost(s) {
     }
     try {
       const fm = yaml.load(frontMatter)
-      if (fm.createDate) {
-        fm.createDate = moment(fm.createDate)
-      }
       return { frontMatter: fm, content, raw:s }
     } catch(e) {
       console.error(e)
@@ -71,7 +68,6 @@ function newPost() {
     frontMatter: {
       title: '',
       author: CONFIG.operator_name,
-      createDate: new Date().toISOString(),
       meta: {
         trails: [],
         imageIds: [],
