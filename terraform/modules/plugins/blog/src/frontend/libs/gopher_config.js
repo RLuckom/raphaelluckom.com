@@ -21,7 +21,9 @@ window.GOPHER_CONFIG = {
     getPost: {
       accessSchema: exploranda.dataSources.AWS.s3.getObject,
       formatter: (post) => {
-        return parsePost(post[0].Body.toString('utf8'))
+        const parsed = parsePost(post[0].Body.toString('utf8'))
+        parsed.etag = post[0].ETag
+        return parsed
       },
       params: {
         Bucket: {value: CONFIG.private_storage_bucket },

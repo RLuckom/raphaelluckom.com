@@ -58,7 +58,7 @@ function parsePost(s) {
       }
       return { frontMatter: fm, content, raw:s }
     } catch(e) {
-      console.log(e)
+      console.error(e)
       return { raw: s} 
     }
   } else {
@@ -66,7 +66,7 @@ function parsePost(s) {
   }
 }
 
-function constructPost({imageIds, postContent, author, date, draft, title, trails}) {
+function constructPost({etag, imageIds, content, author, date, draft, title, trails}) {
   return {
     frontMatter: {
       title,
@@ -78,10 +78,11 @@ function constructPost({imageIds, postContent, author, date, draft, title, trail
         imageIds: imageIds || []
       }
     },
-    postContent
+    content: content,
+    etag,
   }
 }
 
-function serializePost({frontMatter, postContent}) {
-  return `---\n${yaml.dump(frontMatter)}---\n${postContent}`
+function serializePost({frontMatter, content}) {
+  return `---\n${yaml.dump(frontMatter)}---\n${content}`
 }

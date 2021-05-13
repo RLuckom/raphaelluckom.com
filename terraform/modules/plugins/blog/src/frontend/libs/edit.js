@@ -1,8 +1,25 @@
 window.RENDER_CONFIG = {
   init: ({post}, gopher) => {
+    let currentEtag = _.get(post, 'etag')
     let currentPost
     const postId = new URLSearchParams(window.location.search).get('postId')
     const postDataKey = `postData?postId=${postId}`
+    const savedData = localStorage.getItem(postDataKey)
+    let parsedSavedData
+    if (savedData) {
+      try {
+        parsedSavedData = JSON.parse(savedData)
+      } catch(e) {
+        console.error(e)
+      }
+    }
+    let initEditorState
+    if (_.get(parsedSavedData, 'currentPost.etag') === post.etag) {
+        currentPost = parsedSavedData.currentPost
+        initEditorState = parsedSavedData.editorState
+    } else {
+      currentPost = post
+    }
     const mainSection = document.querySelector('main')
     mainSection.appendChild(domNode({
       tagName: 'div',
@@ -49,6 +66,7 @@ window.RENDER_CONFIG = {
               type: 'text',
               name: 'trails',
               id: 'trails',
+              value: (_.get(post, 'frontMatter.meta.trails') || []).join(', '),
             }
           ]
         },
@@ -70,21 +88,42 @@ window.RENDER_CONFIG = {
           name: 'save',
           id: 'save',
           innerText: 'Save Without Publishing',
-          onClick: () => goph.report('savePostWithoutPublishing', {post: currentPost, postId}),
+          onClick: () => {
+            goph.report('savePostWithoutPublishing', {post: currentPost, postId}, (e, r) => {
+              const changedEtag = _.get(r, 'savePostWithoutPublishing[0].ETag')
+              if (changedEtag) {
+                currentEtag = changedEtag
+              }
+            })
+          }
         },
         {
           tagName: 'button',
           name: 'publish',
           id: 'publish',
           innerText: 'Publish to Blog',
-          onClick: () => goph.report('saveAndPublishPost', {post: currentPost, postId}),
+          onClick: () => {
+            goph.report('saveAndPublishPost', {post: currentPost, postId}, (e, r) => {
+              const changedEtag = _.get(r, 'saveAndPublishPost[0].ETag')
+              if (changedEtag) {
+                currentEtag = changedEtag
+              }
+            })
+          }
         },
         {
           tagName: 'button',
           name: 'unpublish',
           id: 'unpublish',
           innerText: 'Remove from Blog',
-          onClick: () => goph.report('unpublishPost', {post: currentPost, postId})
+          onClick: () => {
+            goph.report('unpublishPost', {post: currentPost, postId}, (e, r) => {
+              const changedEtag = _.get(r, 'unpublishPost[0].ETag')
+              if (changedEtag) {
+                currentEtag = changedEtag
+              }
+            })
+          },
         },
         {
           tagName: 'div',
@@ -92,14 +131,6 @@ window.RENDER_CONFIG = {
         },
       ]
     }))
-
-    const savedData = localStorage.getItem(postDataKey)
-    let initEditorState
-    if (savedData) {
-      const parsed = JSON.parse(savedData)
-      currentPost = parsed.currentPost
-      initEditorState = parsed.editorState
-    }
 
     function uploadImage(buffer, ext, callback) {
       const imageId = uuid.v4()
@@ -127,21 +158,21 @@ window.RENDER_CONFIG = {
       localStorage.setItem(postDataKey, JSON.stringify({
         currentPost, postId, editorState: state,
       }))
-    }, 2000)
+    }, 1000)
 
-    function onChange({imageIds, postContent, state}) {
+    function onChange({imageIds, content, state}) {
       const titleInput = document.querySelector('#title').value
       document.getElementById('post-id').innerText = postId
       currentPost = constructPost({
+        etag: currentEtag,
         imageIds,
-        postContent,
+        content,
         date: new Date().toISOString(),
         title: document.querySelector('#title').value,
         author: document.querySelector('#author').value,
         trails: _.map(document.querySelector('#trails').value.split(","), _.trim),
       })
       autosave(currentPost, state)
-      console.log(currentPost)
     }
 
     // Loop over every textareas to replace with dynamic editor
@@ -156,7 +187,7 @@ window.RENDER_CONFIG = {
       } else {
         area.parentElement.appendChild(container)
       }
-      const { view, plugins } = prosemirrorView(area, container, uploadImage, onChange, initEditorState)
+      const { view, plugins } = prosemirrorView(area, container, uploadImage, onChange, initEditorState, currentPost.content)
     }
   },
   params: {

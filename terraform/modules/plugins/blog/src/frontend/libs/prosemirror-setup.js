@@ -579,7 +579,7 @@ function buildInputRules(schema) {
 //
 //     menuContent:: [[MenuItem]]
 //     Can be used to override the menu content.
-function prosemirrorView(area, container, uploadImage, onChange, state) {
+function prosemirrorView(area, container, uploadImage, onChange, initialState, initialMarkdownText) {
   const imageIdPlugin = new prosemirror.Plugin({
     key: 'imageIds',
     state: {
@@ -712,13 +712,13 @@ function prosemirrorView(area, container, uploadImage, onChange, state) {
       }
     ),
   ]
-  const initState = state ? prosemirror.EditorState.fromJSON(
+  const initState = initialState ? prosemirror.EditorState.fromJSON(
     {
       schema: prosemirror.schema,
       plugins
-    }, _.isString(state) ? JSON.parse(state) : state, statePluginFields
+    }, _.isString(initialState) ? JSON.parse(initialState) : initialState, statePluginFields
   ) : prosemirror.EditorState.create({
-    doc: prosemirror.defaultMarkdownParser.parse(area.value),
+    doc: prosemirror.defaultMarkdownParser.parse(initialMarkdownText),
     plugins,
   })
   // Load editor view
@@ -733,7 +733,7 @@ function prosemirrorView(area, container, uploadImage, onChange, state) {
         onChange({
           imageIds: imageIdPlugin.getState(state),
           state: serializeState(),
-          postContent: prosemirror.defaultMarkdownSerializer.serialize(tr.doc),
+          content: prosemirror.defaultMarkdownSerializer.serialize(tr.doc),
         })
         area.value = prosemirror.defaultMarkdownSerializer.serialize(tr.doc)
       }
