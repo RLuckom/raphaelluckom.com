@@ -1,5 +1,8 @@
 window.RENDER_CONFIG = {
   init: ({post}, gopher) => {
+    if (!post) {
+      post = newPost()
+    }
     let currentEtag = _.get(post, 'etag')
     let currentPost
     const postId = new URLSearchParams(window.location.search).get('postId')
@@ -167,7 +170,7 @@ window.RENDER_CONFIG = {
         etag: currentEtag,
         imageIds,
         content,
-        date: new Date().toISOString(),
+        createDate: _.get(currentPost, 'createDate') || new Date().toISOString(),
         title: document.querySelector('#title').value,
         author: document.querySelector('#author').value,
         trails: _.map(document.querySelector('#trails').value.split(","), _.trim),

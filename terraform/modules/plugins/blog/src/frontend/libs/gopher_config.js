@@ -20,9 +20,12 @@ window.GOPHER_CONFIG = {
     },
     getPost: {
       accessSchema: exploranda.dataSources.AWS.s3.getObject,
-      formatter: (post) => {
-        const parsed = parsePost(post[0].Body.toString('utf8'))
-        parsed.etag = post[0].ETag
+      formatter: ([post]) => {
+        let parsed
+        if (post) {
+          const parsed = parsePost(post.Body.toString('utf8'))
+          parsed.etag = post.ETag
+        }
         return parsed
       },
       params: {
@@ -34,6 +37,17 @@ window.GOPHER_CONFIG = {
             return getPostHostingKey({postId})
           }
         },
+      },
+      behaviors: {
+        maybeNull: true,
+        detectErrors: (err, res) => {
+          if (err && err.name === "NoSuchKey") {
+            return
+          }
+          if (err || !res) {
+            return err
+          }
+        }
       }
     },
     savePostWithoutPublishing: {

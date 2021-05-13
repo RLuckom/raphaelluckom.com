@@ -53,8 +53,8 @@ function parsePost(s) {
     }
     try {
       const fm = yaml.load(frontMatter)
-      if (fm.date) {
-        fm.date = moment(fm.date)
+      if (fm.createDate) {
+        fm.createDate = moment(fm.createDate)
       }
       return { frontMatter: fm, content, raw:s }
     } catch(e) {
@@ -66,13 +66,28 @@ function parsePost(s) {
   }
 }
 
-function constructPost({etag, imageIds, content, author, date, draft, title, trails}) {
+function newPost() {
+  return {
+    frontMatter: {
+      title: '',
+      author: CONFIG.operator_name,
+      createDate: new Date().toISOString(),
+      meta: {
+        trails: [],
+        imageIds: [],
+      },
+    },
+    content: '',
+    etag: ''
+  }
+}
+
+function constructPost({etag, imageIds, content, author, createDate, title, trails}) {
   return {
     frontMatter: {
       title,
       author,
-      date: date || new Date().toISOString(),
-      draft: draft || false,
+      createDate: createDate || new Date().toISOString(),
       meta: {
         trails: trails || [],
         imageIds: imageIds || []
