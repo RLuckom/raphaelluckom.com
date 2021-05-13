@@ -4722,7 +4722,7 @@ function needleStyleFetch(method, requestUrl, data, options, callback) {
     const contentType = headers['content-type']
     if (!response.ok) {
       // TODO probably not clear enough
-      return callback(response.statusText)
+      return callback(response.status)
     }
     if (contentType) {
       if (contentType === 'application/json') {
@@ -4762,7 +4762,9 @@ function needleStyleFetch(method, requestUrl, data, options, callback) {
         statusCode: response.status
       })
     })
-  }).catch((err) => callback(err))
+  }).catch((err) => {
+    callback(err)
+  })
 }
 
 function detectErrors(e, res, params) {
@@ -4772,7 +4774,7 @@ function detectErrors(e, res, params) {
   const body = _.get(res, 'body')
   const headers = _.get(res, 'headers')
   const statusCode = _.get(res, 'statusCode')
-  const statusCodeFailure = (200 > statusCode) || (300 <= statusCode);
+  const statusCodeFailure = !((statusCode >= 200) && (statusCode < 300))
   if (statusCodeFailure) {
     if (window.EXPLORANDA_DEBUG) {
       return e || `Status code ${statusCode} received for request ${JSON.stringify(params)} with responseBody ${JSON.stringify(body)} and error ${e}`
@@ -4780,6 +4782,7 @@ function detectErrors(e, res, params) {
       return e || `Status code ${statusCode} received for request. To see more detail re-run with EXPLORANDA_DEBUG=true in the environment.`
     }
   }
+  return e
 }
 
 module.exports = {

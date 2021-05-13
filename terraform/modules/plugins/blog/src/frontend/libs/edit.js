@@ -70,18 +70,25 @@ window.RENDER_CONFIG = {
           name: 'save',
           id: 'save',
           innerText: 'Save Without Publishing',
+          onClick: () => goph.report('savePostWithoutPublishing', {post: currentPost, postId}),
         },
         {
           tagName: 'button',
           name: 'publish',
           id: 'publish',
           innerText: 'Publish to Blog',
+          onClick: () => goph.report('saveAndPublishPost', {post: currentPost, postId}),
         },
         {
           tagName: 'button',
           name: 'unpublish',
           id: 'unpublish',
           innerText: 'Remove from Blog',
+          onClick: () => goph.report('unpublishPost', {post: currentPost, postId})
+        },
+        {
+          tagName: 'div',
+          id: 'error',
         },
       ]
     }))
@@ -137,21 +144,6 @@ window.RENDER_CONFIG = {
       console.log(currentPost)
     }
 
-    function uploadPost(post, postId) {
-      const postKey = getPostUploadKey(postId)
-      goph.report(
-        'putPost',
-        {
-          postKey,
-          post,
-        },
-        (e, r) => {
-          console.log(e)
-          console.log(r)
-        }
-      )
-    }
-
     // Loop over every textareas to replace with dynamic editor
     for (const area of document.querySelectorAll('textarea.prosemirror')) {
       // Hide textarea
@@ -165,15 +157,6 @@ window.RENDER_CONFIG = {
         area.parentElement.appendChild(container)
       }
       const { view, plugins } = prosemirrorView(area, container, uploadImage, onChange, initEditorState)
-    }
-    document.getElementById('save').onclick = () => {
-      goph.report('savePostWithoutPublishing', {post: currentPost, postId})
-    }
-    document.getElementById('publish').onclick = () => {
-      goph.report('saveAndPublishPost', {post: currentPost, postId})
-    }
-    document.getElementById('unpublish').onclick = () => {
-      goph.report('unpublishPost', {post: currentPost, postId})
     }
   },
   params: {

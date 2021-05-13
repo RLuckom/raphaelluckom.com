@@ -165,8 +165,8 @@ window.GOPHER_CONFIG = {
           interval: (n) => n * 1000
         },
         detectErrors: (err, res) => {
-          if (err) {
-            return 404
+          if (err || !res) {
+            return err
           }
         }
       }
