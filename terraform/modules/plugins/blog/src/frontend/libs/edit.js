@@ -19,7 +19,6 @@ window.RENDER_CONFIG = {
     let initEditorState
     if (_.get(parsedSavedData, 'currentPost.etag') === post.etag) {
         currentPost = parsedSavedData.currentPost
-        console.log(currentPost)
         initEditorState = parsedSavedData.editorState
     } else {
       currentPost = post
@@ -29,15 +28,21 @@ window.RENDER_CONFIG = {
       tagName: 'div',
       children: [
         {
-          tagName: 'label',
-          isFor: 'title',
+          tagName: 'div',
+          id: 'post-id',
+          children: [
+            "Editing ",
+            {
+              tagName: 'a',
+              href: `/${CONFIG.plugin_post_hosting_path}${postId}.md`,
+              children: [`${postId}.md`],
+            }
+          ]
+        },
+        {
+          tagName: 'div',
           children: [
             'Title:',
-            {
-              tagName: 'span',
-              id: 'post-id',
-              innerText: postId,
-            },
             {
               tagName: 'input',
               type: 'text',
@@ -49,8 +54,7 @@ window.RENDER_CONFIG = {
           ]
         },
         {
-          tagName: 'label',
-          isFor: 'author',
+          tagName: 'div',
           children: [
             'Author:',
             {
@@ -64,8 +68,7 @@ window.RENDER_CONFIG = {
           ]
         },
         {
-          tagName: 'label',
-          isFor: 'trails',
+          tagName: 'div',
           children: [
             'Trails (comma-separated):',
             {
@@ -79,17 +82,10 @@ window.RENDER_CONFIG = {
           ]
         },
         {
-          tagName: 'label',
-          isFor: 'main',
-          children: [
-            'Write the post:',
-            {
-              tagName: 'textarea',
-              classNames: ['prosemirror', 'editor'],
-              name: 'main',
-              id: 'text',
-            }
-          ]
+          tagName: 'div',
+          id: 'post-editor',
+          classNames: ['prosemirror', 'editor'],
+          name: 'main',
         },
         {
           tagName: 'button',
@@ -166,8 +162,8 @@ window.RENDER_CONFIG = {
     function autosave({title, author, trails, editorState, imageIds, content}) {
       currentEditorState = editorState || currentEditorState
       currentPost = constructPost({
-        etag: currentEtag,
-        imageIds: imageIds || currentPost.frontMatter.meta.imageIds,
+        etag: currentEtag || '',
+        imageIds: imageIds || currentPost.frontMatter.meta.imageIds || [],
         content: content || currentPost.content || '',
         title: title || currentPost.frontMatter.title || '',
         author: author || currentPost.frontMatter.author || '',
@@ -177,21 +173,7 @@ window.RENDER_CONFIG = {
         currentPost, postId, currentEditorState,
       }))
     }
-
-    // Loop over every textareas to replace with dynamic editor
-    for (const area of document.querySelectorAll('textarea.prosemirror')) {
-      // Hide textarea
-      area.style.display = 'none'
-      // Create container zone
-      const container = document.createElement('div')
-      container.classList = area.classList
-      if (area.nextSibling) {
-        area.parentElement.insertBefore(container, area.nextSibling)
-      } else {
-        area.parentElement.appendChild(container)
-      }
-      const { view, plugins } = prosemirrorView(area, container, uploadImage, autosave, initEditorState, currentPost.content)
-    }
+    prosemirrorView(document.getElementById('post-editor'), uploadImage, _.debounce(autosave, 2000), initEditorState, currentPost.content)
   },
   params: {
     post: {
