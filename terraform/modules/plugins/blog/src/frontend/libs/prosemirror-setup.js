@@ -732,7 +732,7 @@ function prosemirrorView(area, container, uploadImage, onChange, initialState, i
       if (tr.docChanged) {
         onChange({
           imageIds: imageIdPlugin.getState(state),
-          state: serializeState(),
+          editorState: serializeState(),
           content: prosemirror.defaultMarkdownSerializer.serialize(tr.doc),
         })
         area.value = prosemirror.defaultMarkdownSerializer.serialize(tr.doc)

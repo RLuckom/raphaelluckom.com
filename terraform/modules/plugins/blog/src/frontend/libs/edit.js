@@ -19,6 +19,7 @@ window.RENDER_CONFIG = {
     let initEditorState
     if (_.get(parsedSavedData, 'currentPost.etag') === post.etag) {
         currentPost = parsedSavedData.currentPost
+        console.log(currentPost)
         initEditorState = parsedSavedData.editorState
     } else {
       currentPost = post
@@ -35,6 +36,7 @@ window.RENDER_CONFIG = {
             {
               tagName: 'span',
               id: 'post-id',
+              innerText: postId,
             },
             {
               tagName: 'input',
@@ -42,6 +44,7 @@ window.RENDER_CONFIG = {
               name: 'title',
               value: currentPost.frontMatter.title,
               id: 'title',
+              onChange: (e) => autosave({title: e.target.value})
             }
           ]
         },
@@ -55,7 +58,8 @@ window.RENDER_CONFIG = {
               type: 'text',
               name: 'author',
               id: 'author',
-              value: CONFIG.operator_name
+              value: CONFIG.operator_name,
+              onChange: (e) => autosave({author: e.target.value})
             }
           ]
         },
@@ -70,6 +74,7 @@ window.RENDER_CONFIG = {
               name: 'trails',
               id: 'trails',
               value: (_.get(post, 'frontMatter.meta.trails') || []).join(', '),
+              onChange: (e) => autosave({trails: _.map((e.target.value || '').split(','), _.trim)})
             }
           ]
         },
@@ -157,25 +162,20 @@ window.RENDER_CONFIG = {
       )
     }
 
-    const autosave = _.debounce((currentPost, state) => {
-      localStorage.setItem(postDataKey, JSON.stringify({
-        currentPost, postId, editorState: state,
-      }))
-    }, 1000)
-
-    function onChange({imageIds, content, state}) {
-      const titleInput = document.querySelector('#title').value
-      document.getElementById('post-id').innerText = postId
+    let currentEditorState
+    function autosave({title, author, trails, editorState, imageIds, content}) {
+      currentEditorState = editorState || currentEditorState
       currentPost = constructPost({
         etag: currentEtag,
-        imageIds,
-        content,
-        createDate: _.get(currentPost, 'createDate') || new Date().toISOString(),
-        title: document.querySelector('#title').value,
-        author: document.querySelector('#author').value,
-        trails: _.map(document.querySelector('#trails').value.split(","), _.trim),
+        imageIds: imageIds || currentPost.frontMatter.meta.imageIds,
+        content: content || currentPost.content || '',
+        title: title || currentPost.frontMatter.title || '',
+        author: author || currentPost.frontMatter.author || '',
+        trails: trails || currentPost.frontMatter.meta.trails || [],
       })
-      autosave(currentPost, state)
+      localStorage.setItem(postDataKey, JSON.stringify({
+        currentPost, postId, currentEditorState,
+      }))
     }
 
     // Loop over every textareas to replace with dynamic editor
@@ -190,7 +190,7 @@ window.RENDER_CONFIG = {
       } else {
         area.parentElement.appendChild(container)
       }
-      const { view, plugins } = prosemirrorView(area, container, uploadImage, onChange, initEditorState, currentPost.content)
+      const { view, plugins } = prosemirrorView(area, container, uploadImage, autosave, initEditorState, currentPost.content)
     }
   },
   params: {

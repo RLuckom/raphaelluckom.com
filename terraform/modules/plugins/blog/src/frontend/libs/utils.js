@@ -7,7 +7,7 @@ function domNode(el) {
   } else if (_.isArray(el)) {
     return _.map(el, domNode)
   }
-  const {id, value, innerText, tagName, type, isFor, name, classNames, href, onClick, children} = el
+  const {id, value, innerText, onChange, tagName, type, isFor, name, classNames, href, onClick, children} = el
   const newElement = document.createElement(tagName)
   if (_.isArray(classNames)) {
     newElement.className = classNames.join(' ')
@@ -37,6 +37,9 @@ function domNode(el) {
     }
     if (value) {
       newElement.value = value
+    }
+    if (_.isFunction(onChange)) {
+      newElement.addEventListener('change', onChange);
     }
   }
   if (tagName === 'a') {
