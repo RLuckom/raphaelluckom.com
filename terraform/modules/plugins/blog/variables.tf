@@ -1,4 +1,4 @@
-variable default_styles_path {
+variable admin_site_default_styles_path {
   type = string
 }
 
@@ -155,6 +155,7 @@ variable library_const_names {
 locals {
   file_prefix = trim(var.plugin_config.source_root, "/")
   edit_styles_path = "${local.file_prefix}/assets/styles/editor.css"
+  plugin_default_styles_path = "${local.file_prefix}/assets/styles/default.css"
   exploranda_script_path = "${local.file_prefix}/assets/js/exploranda-browser.js"
   config_path = "${local.file_prefix}/assets/js/config.js"
   aws_script_path = "${local.file_prefix}/assets/js/aws-sdk-2.868.0.min.js"
@@ -180,7 +181,8 @@ locals {
     plugin_post_hosting_path = "${trimsuffix(var.plugin_config.hosting_root, "/")}/posts/"
   }
   default_css_paths = [
-    var.default_styles_path
+    var.admin_site_default_styles_path,
+    local.plugin_default_styles_path,
   ]
   index_css_paths = []
   edit_css_paths = [
@@ -286,6 +288,12 @@ EOF
       file_contents = null
       file_path = "${path.module}/src/frontend/libs/utils.js"
       content_type = "application/javascript"
+    },
+    {
+      key = local.plugin_default_styles_path
+      file_path = ""
+      file_contents = file("${path.module}/src/frontend/styles/default.css")
+      content_type = "text/css"
     },
     {
       key = local.edit_styles_path

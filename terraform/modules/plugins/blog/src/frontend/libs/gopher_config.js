@@ -30,7 +30,6 @@ window.GOPHER_CONFIG = {
       },
       params: {
         Bucket: {value: CONFIG.private_storage_bucket },
-        ResponseCacheControl: { value: 'no-cache' },
         Key: { 
           input: 'postId',
           formatter: ({postId}) => {

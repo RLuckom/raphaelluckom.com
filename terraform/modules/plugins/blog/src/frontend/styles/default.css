@@ -1,0 +1,20 @@
+input[type=text] {
+  padding:10px;
+  margin:10px 0;
+  border:0;
+  box-shadow:0 0 15px 4px rgba(0,0,0,0.06);
+}
+
+main {
+  margin: 0 10%;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+img.placeholder {
+  opacity: 0.4;
+  max-width: 500px;
+}

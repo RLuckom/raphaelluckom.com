@@ -42,11 +42,11 @@ window.RENDER_CONFIG = {
         {
           tagName: 'div',
           children: [
-            'Title:',
             {
               tagName: 'input',
               type: 'text',
               name: 'title',
+              placeholder: 'Title',
               value: currentPost.frontMatter.title,
               id: 'title',
               onChange: (e) => autosave({title: e.target.value})
@@ -56,11 +56,10 @@ window.RENDER_CONFIG = {
         {
           tagName: 'div',
           children: [
-            'Author:',
             {
               tagName: 'input',
               type: 'text',
-              name: 'author',
+              placeholder: 'Author',
               id: 'author',
               value: CONFIG.operator_name,
               onChange: (e) => autosave({author: e.target.value})
@@ -70,9 +69,9 @@ window.RENDER_CONFIG = {
         {
           tagName: 'div',
           children: [
-            'Trails (comma-separated):',
             {
               tagName: 'input',
+              placeholder: 'Trails (comma-separated)',
               type: 'text',
               name: 'trails',
               id: 'trails',

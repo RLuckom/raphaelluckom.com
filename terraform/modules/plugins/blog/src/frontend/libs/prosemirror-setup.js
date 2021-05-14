@@ -610,8 +610,14 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
         set = set.map(tr.mapping, tr.doc)
         // See if the transaction adds or removes any placeholders
         let action = tr.getMeta(this)
+        console.log(action)
         if (action && action.add) {
-          let widget = document.createElement("placeholder")
+          let widget = domNode({
+            tagName: 'img',
+            src: URL.createObjectURL(_.get(action, 'add.file')),
+            classNames: ['placeholder'],
+          })
+          console.log(widget)
           let deco = prosemirror.Decoration.widget(action.add.pos, widget, {id: action.add.id})
           set = set.add(tr.doc, [deco])
         } else if (action && action.remove) {
@@ -662,7 +668,7 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
     if (!tr.selection.empty) {
       tr.deleteSelection()
     }
-    tr.setMeta(placeholderPlugin, {add: {id, pos: tr.selection.from}})
+    tr.setMeta(placeholderPlugin, {add: {id, pos: tr.selection.from, file}})
     view.dispatch(tr)
 
     file.arrayBuffer().then((buffer) => {

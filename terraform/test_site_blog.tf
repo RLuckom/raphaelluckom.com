@@ -1,6 +1,6 @@
 module admin_site_blog_plugin {
   source = "./modules/plugins/blog"
-  default_styles_path = module.admin_interface.default_styles_path
+  admin_site_default_styles_path = module.admin_interface.default_styles_path
   name = "blog"
   maintainer = var.maintainer
   nav_links = var.nav_links

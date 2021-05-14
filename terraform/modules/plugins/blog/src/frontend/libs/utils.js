@@ -7,7 +7,7 @@ function domNode(el) {
   } else if (_.isArray(el)) {
     return _.map(el, domNode)
   }
-  const {id, value, innerText, onChange, tagName, type, isFor, name, classNames, href, onClick, children} = el
+  const {id, src, width, height, value, innerText, placeholder, onChange, tagName, type, isFor, name, classNames, href, onClick, children} = el
   const newElement = document.createElement(tagName)
   if (_.isArray(classNames)) {
     newElement.className = classNames.join(' ')
@@ -17,6 +17,17 @@ function domNode(el) {
   }
   if (_.isString(id)) {
     newElement.id = id
+  }
+  if (tagName === 'img') {
+    if (_.isString(src)) {
+      newElement.src = src
+    }
+    if (_.isString(width)) {
+      newElement.width = width
+    }
+    if (_.isString(height)) {
+      newElement.height = height
+    }
   }
   if (tagName === 'label') {
     if (_.isString(isFor)) {
@@ -31,6 +42,9 @@ function domNode(el) {
   if (tagName === 'input') {
     if (_.isString(type)) {
       newElement.type = type
+    }
+    if (_.isString(placeholder)) {
+      newElement.placeholder = placeholder
     }
     if (_.isString(name)) {
       newElement.name = name
@@ -72,9 +86,6 @@ function buildGopher({awsDependencies, otherDependencies, defaultInputs, render}
     name: 'site AWS credentials',
     value: {path: 'body'},
     dataSource: 'GENERIC_API',
-    behaviors: {
-      cacheLifetime: tokenRefreshLifetime,
-    },
     host: window.location.hostname,
     path: CONFIG.aws_credentials_endpoint
   }
@@ -94,6 +105,9 @@ function buildGopher({awsDependencies, otherDependencies, defaultInputs, render}
   const defaultDependencies = {
     credentials: {
       accessSchema: credentialsAccessSchema,
+      behaviors: {
+        cacheLifetime: tokenRefreshLifetime,
+      },
     }
   }
 
