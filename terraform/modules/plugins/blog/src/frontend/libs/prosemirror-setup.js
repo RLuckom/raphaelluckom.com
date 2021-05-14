@@ -692,6 +692,7 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
           .setMeta(placeholderPlugin, {remove: {id}})
           .setMeta(imageIdPlugin, {add: {imageId}})
         )
+        view.focus()
       })
     })
   }

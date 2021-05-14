@@ -6,7 +6,7 @@ const {undoInputRule, inputRules, wrappingInputRule, textblockTypeInputRule, sma
 const {keymap} = require("prosemirror-keymap")
 const {menuBar, wrapItem, blockTypeItem, Dropdown, DropdownSubmenu, joinUpItem, liftItem, selectParentNodeItem, undoItem, redoItem, icons, MenuItem} = require("prosemirror-menu")
 const {wrapInList, splitListItem, liftListItem, sinkListItem} = require("prosemirror-schema-list")
-const { EditorState, Plugin, NodeSelection } = require("prosemirror-state")
+const { TextSelection, EditorState, Plugin, NodeSelection } = require("prosemirror-state")
 const {EditorView, Decoration, DecorationSet} = require("prosemirror-view")
 const {defaultMarkdownParser, defaultMarkdownSerializer, schema} = require('prosemirror-markdown')
 
@@ -19,7 +19,7 @@ module.exports = {
   yaml, moment, uuid,
   prosemirror: {
     EditorState, Plugin, NodeSelection,
-    EditorView, Decoration, DecorationSet,
+    EditorView, Decoration, DecorationSet, TextSelection,
     wrapInList, splitListItem, liftListItem, sinkListItem,
     menuBar, wrapItem, blockTypeItem, Dropdown, DropdownSubmenu, joinUpItem, liftItem, selectParentNodeItem, undoItem, redoItem, icons, MenuItem,
     keymap,
