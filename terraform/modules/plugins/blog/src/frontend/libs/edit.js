@@ -142,7 +142,7 @@ window.RENDER_CONFIG = {
       goph.report(
         'pollImage',
         {
-          imageExt: ext,
+          imageExt: canonicalExt,
           postId: postId,
           imageId: imageId,
           imageSize: 500,

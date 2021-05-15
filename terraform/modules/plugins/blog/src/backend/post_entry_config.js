@@ -167,8 +167,8 @@ module.exports = {
           }
         },
         imagesToPublish: {
-          helper: ({unpublish, publish, currentImageIds, availableImages}) => {
-            if (unpublish || !publish) {
+          helper: ({unpublish, del, publish, currentImageIds, availableImages}) => {
+            if (unpublish || !publish || del) {
               return []
             } else {
               return _.filter(availableImages, ({imageId}) => currentImageIds.indexOf(imageId) !== -1)
@@ -177,6 +177,7 @@ module.exports = {
           params: {
             publish: {ref: 'parsePost.results.current.frontMatter.publish' },
             unpublish: {ref: 'parsePost.results.current.frontMatter.unpublish' },
+            del: {ref: 'parsePost.results.current.frontMatter.delete' },
             availableImages: {ref: 'parsePost.results.availableImages' },
             currentImageIds: {ref: 'parsePost.results.current.frontMatter.meta.imageIds' },
           }

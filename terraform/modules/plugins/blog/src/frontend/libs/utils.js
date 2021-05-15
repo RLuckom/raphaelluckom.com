@@ -137,7 +137,11 @@ function buildGopher({awsDependencies, otherDependencies, defaultInputs, render}
 
   const goph = exploranda.Gopher(dependencies, defaultInputs)
   if (defaultDependencies.initialRender) {
-    goph.report('initialRender', _.get(render, 'inputs'))
+    goph.report('initialRender', _.get(render, 'inputs'), (e) => {
+      if (e) {
+        console.log(e)
+      }
+    })
   }
   return goph
 }

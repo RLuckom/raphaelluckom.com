@@ -6,8 +6,8 @@ function getPostHostingKey({postId}) {
   return `${CONFIG.plugin_post_hosting_path}${postId}.md`
 }
 
-function getImageUploadKey({postId, imageId, ext}) {
-  return `${CONFIG.plugin_image_upload_path}${postId}/${imageId}.${ext}`
+function getImageUploadKey({postId, imageId, imageExt}) {
+  return `${CONFIG.plugin_image_upload_path}${postId}/${imageId}.${imageExt}`
 }
 
 const canonicalImageTypes = {
