@@ -33,6 +33,11 @@ output plugin_relative_bucket_host_permissions_needed {
       role_arn = module.process_image_uploads.lambda_role.arn
     },
     {
+      permission_type = "delete_object"
+      plugin_relative_key = "/img/"
+      role_arn = module.post_entry_lambda.role.arn
+    },
+    {
       permission_type = "read_and_tag_known"
       plugin_relative_key = "/img/"
       role_arn = module.post_entry_lambda.role.arn
@@ -49,6 +54,11 @@ output plugin_relative_bucket_host_permissions_needed {
     },
     {
       permission_type = "put_object"
+      plugin_relative_key = "/posts/"
+      role_arn = module.post_entry_lambda.role.arn
+    },
+    {
+      permission_type = "delete_object"
       plugin_relative_key = "/posts/"
       role_arn = module.post_entry_lambda.role.arn
     },

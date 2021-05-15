@@ -149,10 +149,11 @@ module.exports = {
             unpublish: {ref: 'parsePost.results.current.frontMatter.unpublish' },
           }
         },
+        delete: {ref: 'parsePost.results.current.frontMatter.delete' },
         unpublish: {ref: 'parsePost.results.current.frontMatter.unpublish' },
         imagesToUnpublish: {
-          helper: ({publishedImages, unpublish, currentImageIds}) => {
-            if (unpublish) {
+          helper: ({publishedImages, unpublish, del, currentImageIds}) => {
+            if (unpublish || del) {
               return publishedImages
             } else {
               return _.filter(publishedImages, ({imageId}) => currentImageIds.indexOf(imageId) === -1)
@@ -160,6 +161,7 @@ module.exports = {
           },
           params: {
             unpublish: {ref: 'parsePost.results.current.frontMatter.unpublish' },
+            del: {ref: 'parsePost.results.current.frontMatter.delete' },
             currentImageIds: {ref: 'parsePost.results.current.frontMatter.meta.imageIds' },
             publishedImages: {ref: 'parsePost.results.publishedImages' },
           }
@@ -183,6 +185,7 @@ module.exports = {
       dependencies: {
         savePost: {
           action: 'exploranda',
+          condition: {not: { ref: 'stage.delete' }},
           params: {
             accessSchema: {value: 'dataSources.AWS.s3.putObject'},
             explorandaParams: {
@@ -195,6 +198,22 @@ module.exports = {
               },
               ContentType: { value: 'text/markdown' },
               Body: {ref: 'parsePost.results.current.raw' },
+            }
+          },
+        },
+        deletePost: {
+          action: 'exploranda',
+          condition: { ref: 'stage.delete' },
+          params: {
+            accessSchema: {value: 'dataSources.AWS.s3.deleteObject'},
+            explorandaParams: {
+              Bucket: {ref: 'event.Records[0].s3.bucket.name'},
+              Key: {
+                helper: ({originalKey}) => _.replace(originalKey, "${original_post_upload_prefix}", "${original_post_hosting_prefix}"),
+                params: {
+                  originalKey: {ref: 'event.Records[0].s3.object.key'},
+                }
+              },
             }
           },
         },
@@ -223,7 +242,10 @@ module.exports = {
         },
         unpublishPost: {
           action: 'exploranda',
-          condition: { ref: 'stage.unpublish' },
+          condition: {or: [
+            { ref: 'stage.unpublish' },
+            { ref: 'stage.delete' },
+          ]},
           params: {
             accessSchema: {value: 'dataSources.AWS.s3.deleteObject'},
             explorandaParams: {
@@ -282,13 +304,40 @@ module.exports = {
                 }
               },
               Key: {
-                helper: ({images, bucket}) => {
+                helper: ({images}) => {
                   const n = _.map(images, 'key')
                   return n
                 },
                 params: {
                   images: {ref: 'publish.vars.imagesToUnpublish' },
-                  bucket: {value: '${website_bucket}'},
+                }
+              }
+            }
+          },
+        },
+        delete: {
+          action: 'exploranda',
+          condition: {ref: 'publish.vars.delete'},
+          params: {
+            accessSchema: {value: 'dataSources.AWS.s3.deleteObject'},
+            explorandaParams: {
+              Bucket: {
+                helper: ({images, bucket}) => {
+                  const n = _.map(images, (id) => bucket)
+                  return n
+                },
+                params: {
+                  images: {ref: 'parsePost.results.availableImages' },
+                  bucket: {ref: 'event.Records[0].s3.bucket.name'},
+                }
+              },
+              Key: {
+                helper: ({images}) => {
+                  const n = _.map(images, 'key')
+                  return n
+                },
+                params: {
+                  images: {ref: 'parsePost.results.availableImages' },
                 }
               }
             }

@@ -49,6 +49,75 @@ window.GOPHER_CONFIG = {
         }
       }
     },
+    saveAndPublishPostWithoutInput: {
+      accessSchema: exploranda.dataSources.AWS.s3.putObject,
+      params: {
+        Body: {
+          source: 'getPost',
+          formatter: ({getPost}) => {
+            const postToSend = _.cloneDeep(getPost)
+            delete postToSend.frontMatter.unpublish
+            delete postToSend.frontMatter.delete
+            postToSend.frontMatter.publish = true
+            return serializePost(postToSend)
+          }
+        },
+        Bucket: {value: CONFIG.private_storage_bucket },
+        ContentType: { value: 'text/markdown' },
+        Key: { 
+          input: 'postId',
+          formatter: ({postId}) => {
+            return getPostUploadKey({postId})
+          }
+        },
+      }
+    },
+    unpublishPostWithoutInput: {
+      accessSchema: exploranda.dataSources.AWS.s3.putObject,
+      params: {
+        Body: {
+          source: 'getPost',
+          formatter: ({getPost}) => {
+            const postToSend = _.cloneDeep(getPost)
+            delete postToSend.frontMatter.publish
+            delete postToSend.frontMatter.delete
+            postToSend.frontMatter.unpublish = true
+            return serializePost(postToSend)
+          }
+        },
+        Bucket: {value: CONFIG.private_storage_bucket },
+        ContentType: { value: 'text/markdown' },
+        Key: { 
+          input: 'postId',
+          formatter: ({postId}) => {
+            return getPostUploadKey({postId})
+          }
+        },
+      }
+    },
+    deletePostWithoutInput: {
+      accessSchema: exploranda.dataSources.AWS.s3.putObject,
+      params: {
+        Body: {
+          source: 'getPost',
+          formatter: ({getPost}) => {
+            const postToSend = _.cloneDeep(getPost)
+            delete postToSend.frontMatter.publish
+            delete postToSend.frontMatter.unpublish
+            postToSend.frontMatter.delete = true
+            return serializePost(postToSend)
+          }
+        },
+        Bucket: {value: CONFIG.private_storage_bucket },
+        ContentType: { value: 'text/markdown' },
+        Key: { 
+          input: 'postId',
+          formatter: ({postId}) => {
+            return getPostUploadKey({postId})
+          }
+        },
+      }
+    },
     savePostWithoutPublishing: {
       accessSchema: exploranda.dataSources.AWS.s3.putObject,
       params: {
