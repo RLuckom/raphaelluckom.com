@@ -7,13 +7,20 @@ function domNode(el) {
   } else if (_.isArray(el)) {
     return _.map(el, domNode)
   }
-  const {id, src, width, height, value, innerText, onKeyDown, onInput, placeholder, onChange, tagName, type, isFor, name, classNames, href, onClick, children} = el
+  const {id, dataset, src, width, height, value, innerText, onKeyDown, onInput, placeholder, onChange, tagName, type, isFor, name, classNames, href, onClick, children} = el
   const newElement = document.createElement(tagName)
   if (_.isArray(classNames)) {
     newElement.className = classNames.join(' ')
   }
   if (_.isString(classNames)) {
     newElement.className = classNames
+  }
+  if (dataset) {
+    if (_.isPlainObject(dataset)) {
+      _.each(dataset, (v, k) => {
+        newElement.dataset[k] = v
+      })
+    }
   }
   if (_.isString(id)) {
     newElement.id = id

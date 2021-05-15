@@ -1,5 +1,7 @@
 .post-list-entry {
-  display: flex; /* or inline-flex */
+  display: flex;
 }
 
-
+.post-list-header {
+  display: flex;
+}
