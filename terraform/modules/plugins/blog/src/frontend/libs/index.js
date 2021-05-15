@@ -1,8 +1,54 @@
 window.RENDER_CONFIG = {
   init: ({postKeys}, gopher) => {
     const mainSection = document.querySelector('main')
+    mainSection.appendChild(domNode({
+      tagName: 'div',
+      children: [
+        {
+          tagName: 'ul',
+          classNames: [],
+          children: [
+            {
+              tagName: 'li',
+              children: [
+                {
+                  tagName: 'a',
+                  href: '#',
+                  onClick: () => document.getElementById('new-post').classList.toggle('expanded'),
+                  innerText: 'X',
+                }
+              ]
+            }
+          ]
+        },
+        {
+          tagName: 'div',
+          children: [
+            {
+              tagName: 'input',
+              type: 'text',
+              id: 'new-post',
+              classNames: ['new-post'],
+              placeholder: 'enter a new post id, then press Enter',
+              onInput: (evt) => {
+                document.getElementById('post-url-display').innerText = `Post ID will be: ${encodeURIComponent(evt.target.value)}`
+              },
+              onKeyDown: (evt) => {
+                if (evt.which === 13 && evt.target.value) {
+                  window.location.href = `./edit.html?postId=${encodeURIComponent(evt.target.value)}`
+                }
+              }
+            },
+            {
+              tagName: 'span',
+              id: 'post-url-display'
+            }
+          ]
+        }
+      ]
+    }))
     _.map(postKeys, (Key) => {
-      const postId = _.trimEnd(Key.split('/').pop(), '.md')
+      const postId = Key.split('/').pop().split('.')[0]
       mainSection.appendChild(domNode({
         tagName: 'div',
         classNames: 'post-list-entry',

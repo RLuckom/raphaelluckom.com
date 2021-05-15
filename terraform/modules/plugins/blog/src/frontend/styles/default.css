@@ -18,3 +18,20 @@ img.placeholder {
   opacity: 0.4;
   max-width: 500px;
 }
+
+.new-post {
+  opacity: 0;
+  -webkit-transition: all 0.5s ease;
+  -moz-transition: all 0.5s ease;
+  transition: all 0.5s ease;
+  width:0px;
+}
+
+input.new-post.expanded {
+  border-radius: 0;
+  width: 300px;
+}
+
+.new-post.expanded {
+  opacity: 1;
+}

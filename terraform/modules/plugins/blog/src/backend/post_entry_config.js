@@ -47,7 +47,7 @@ module.exports = {
         postId: {
           helper: ({originalKey}) => originalKey.split('/').pop().split('.')[0],
           params: {
-            originalKey: {ref: 'event.Records[0].s3.object.key'},
+            originalKey: {ref: 'event.Records[0].s3.object.decodedKey'},
           }
         }
       },
@@ -61,7 +61,7 @@ module.exports = {
             accessSchema: {value: 'dataSources.AWS.s3.getObject'},
             explorandaParams: {
               Bucket: {ref: 'event.Records[0].s3.bucket.name'},
-              Key: {ref: 'event.Records[0].s3.object.key'},
+              Key: {ref: 'event.Records[0].s3.object.decodedKey'},
             }
           },
         },
@@ -194,7 +194,7 @@ module.exports = {
               Key: {
                 helper: ({originalKey}) => _.replace(originalKey, "${original_post_upload_prefix}", "${original_post_hosting_prefix}"),
                   params: {
-                  originalKey: {ref: 'event.Records[0].s3.object.key'},
+                  originalKey: {ref: 'event.Records[0].s3.object.decodedKey'},
                 }
               },
               ContentType: { value: 'text/markdown' },
@@ -212,7 +212,7 @@ module.exports = {
               Key: {
                 helper: ({originalKey}) => _.replace(originalKey, "${original_post_upload_prefix}", "${original_post_hosting_prefix}"),
                 params: {
-                  originalKey: {ref: 'event.Records[0].s3.object.key'},
+                  originalKey: {ref: 'event.Records[0].s3.object.decodedKey'},
                 }
               },
             }
@@ -228,7 +228,7 @@ module.exports = {
               Key: {
                 helper: ({originalKey}) => "${blog_post_hosting_prefix}" + originalKey.split('/').pop(),
                   params: {
-                  originalKey: {ref: 'event.Records[0].s3.object.key'},
+                  originalKey: {ref: 'event.Records[0].s3.object.decodedKey'},
                 }
               },
               ContentType: { value: 'text/markdown' },
@@ -254,7 +254,7 @@ module.exports = {
               Key: {
                 helper: ({originalKey}) => "${blog_post_hosting_prefix}" + originalKey.split('/').pop(),
                   params: {
-                  originalKey: {ref: 'event.Records[0].s3.object.key'},
+                  originalKey: {ref: 'event.Records[0].s3.object.decodedKey'},
                 }
               },
             }

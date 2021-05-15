@@ -7,7 +7,7 @@ function domNode(el) {
   } else if (_.isArray(el)) {
     return _.map(el, domNode)
   }
-  const {id, src, width, height, value, innerText, placeholder, onChange, tagName, type, isFor, name, classNames, href, onClick, children} = el
+  const {id, src, width, height, value, innerText, onKeyDown, onInput, placeholder, onChange, tagName, type, isFor, name, classNames, href, onClick, children} = el
   const newElement = document.createElement(tagName)
   if (_.isArray(classNames)) {
     newElement.className = classNames.join(' ')
@@ -40,6 +40,12 @@ function domNode(el) {
     }
   }
   if (tagName === 'input') {
+    if (_.isFunction(onKeyDown)) {
+      newElement.addEventListener('keydown', onKeyDown)
+    }
+    if (_.isFunction(onInput)) {
+      newElement.addEventListener('input', onInput)
+    }
     if (_.isString(type)) {
       newElement.type = type
     }

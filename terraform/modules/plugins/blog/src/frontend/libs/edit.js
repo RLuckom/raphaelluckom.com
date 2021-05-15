@@ -35,7 +35,7 @@ window.RENDER_CONFIG = {
             {
               tagName: 'a',
               href: `/${CONFIG.plugin_post_hosting_path}${postId}.md`,
-              children: [`${postId}.md`],
+              children: [`${encodeURIComponent(postId)}.md`],
             }
           ]
         },
