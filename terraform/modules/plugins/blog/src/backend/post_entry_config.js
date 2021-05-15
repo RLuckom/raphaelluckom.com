@@ -253,7 +253,7 @@ module.exports = {
               Bucket: {value: '${website_bucket}'},
               Key: {
                 helper: ({originalKey}) => "${blog_post_hosting_prefix}" + originalKey.split('/').pop(),
-                  params: {
+                params: {
                   originalKey: {ref: 'event.Records[0].s3.object.decodedKey'},
                 }
               },

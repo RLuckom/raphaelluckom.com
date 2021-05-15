@@ -55,12 +55,12 @@ window.RENDER_CONFIG = {
         children: [
           {
             tagName: 'div',
-            className: 'post-name',
+            classNames: 'post-name',
             children: [postId]
           },
           {
             tagName: 'a',
-            className: 'post-edit',
+            classNames: 'post-edit',
             href: `/${CONFIG.plugin_root}edit.html?postId=${postId}`,
             children: ["Edit Post"],
           },
