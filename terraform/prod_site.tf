@@ -1,6 +1,8 @@
 module prod_site {
   source = "github.com/RLuckom/terraform_modules//aws/serverless_site/tetrapod"
   maintainer = var.maintainer
+  account_id = local.account_id
+  region = local.region
   nav_links = var.nav_links
   site_title = var.prod_site_title
   coordinator_data = module.visibility_system.serverless_site_configs["raphaelluckom_com"]

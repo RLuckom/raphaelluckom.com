@@ -1,5 +1,7 @@
 module visibility_system {
   source = "github.com/RLuckom/terraform_modules//aws/visibility/aurochs"
+  account_id = local.account_id
+  region = local.region
   cloudfront_delivery_bucket = "${var.bucket_prefix}-cloudfront-delivery"
   visibility_data_bucket = "${var.bucket_prefix}-visibility-data"
   donut_days_layer = module.donut_days.layer_config

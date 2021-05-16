@@ -1,6 +1,8 @@
 module "slack_event_relay" {
   source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   timeout_secs = 2
+  account_id = local.account_id
+  region = local.region
   mem_mb = 128
   environment_var_map = {
     SLACK_CREDENTIAL_PARAM = var.slack_credentials_parameterstore_key

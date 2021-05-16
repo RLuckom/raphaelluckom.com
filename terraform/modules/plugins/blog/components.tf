@@ -1,5 +1,7 @@
 module post_entry_lambda {
   source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
+  account_id = var.account_id
+  region = var.region
   config_contents = templatefile("${path.module}/src/backend/post_entry_config.js",
   {
     website_bucket = module.blog_site.website_bucket_name
@@ -26,6 +28,8 @@ module post_entry_lambda {
 
 module process_image_uploads {
   source = "github.com/RLuckom/terraform_modules//aws/utility_functions/image_upload_processor"
+  account_id = var.account_id
+  region = var.region
   logging_config = var.logging_config
   lambda_event_configs = var.lambda_event_configs
   security_scope = var.coordinator_data.system_id.security_scope
@@ -43,6 +47,8 @@ module process_image_uploads {
 
 module blog_site {
   source = "github.com/RLuckom/terraform_modules//aws/serverless_site/tetrapod"
+  account_id = var.account_id
+  region = var.region
   maintainer = var.maintainer
   nav_links = var.nav_links
   site_title = var.site_title

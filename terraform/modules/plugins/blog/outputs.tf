@@ -107,6 +107,7 @@ output static_config {
     slug = "blog"
   }
 }
+
 output blog_site_bucket_name {
   value = module.blog_site.website_bucket_name
 }

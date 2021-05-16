@@ -1,6 +1,8 @@
 module admin_site_blog_plugin {
   source = "./modules/plugins/blog"
   admin_site_default_styles_path = module.admin_interface.default_styles_path
+  account_id = local.account_id
+  region = local.region
   name = "blog"
   maintainer = var.maintainer
   nav_links = var.nav_links

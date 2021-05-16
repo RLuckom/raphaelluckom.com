@@ -6,6 +6,14 @@ variable name {
   type = string
 }
 
+variable region {
+  type = string
+}
+
+variable account_id {
+  type = string
+}
+
 variable maintainer {
   type = object({
     name = string
