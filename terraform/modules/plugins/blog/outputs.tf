@@ -107,6 +107,9 @@ output static_config {
     slug = "blog"
   }
 }
+output blog_site {
+  value = module.blog_site
+}
 
 output lambda_logging_arns {
   value = [

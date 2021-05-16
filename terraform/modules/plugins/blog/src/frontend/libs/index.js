@@ -3,14 +3,13 @@ window.RENDER_CONFIG = {
     const mainSection = document.querySelector('main')
     const writePostButtonText = 'Write new post'
     const closeInputButtonText = 'Close input'
-    function expectChange(change) {
-      setTimeout(() => {
-        goph.report('listPosts', (e, {listPosts}) => {
-          const postKeys = _.map(listPosts[0], 'Key')
-          updatePostKeys(postKeys)
-        })
-      }, 500)
-    }
+    window.addEventListener('pageshow', () => {
+      goph.report('listPosts', (e, {listPosts}) => {
+        const postKeys = _.map(listPosts[0], 'Key')
+        updatePostKeys(postKeys)
+      })
+    })
+
     mainSection.appendChild(domNode({
       tagName: 'div',
       children: [
@@ -40,7 +39,7 @@ window.RENDER_CONFIG = {
               placeholder: 'enter a new post id, then press Enter',
               onKeyDown: (evt) => {
                 if (evt.which === 13 && evt.target.value) {
-                  window.location.href = `./edit.html?postId=${encodeURIComponent(evt.target.value)}`
+                  window.location.href = `./edit.html?postId=${evt.target.value}`
                 }
               }
             },
@@ -76,7 +75,13 @@ window.RENDER_CONFIG = {
               id: 'publish',
               innerText: 'Publish to Blog',
               onClick: () => {
-                goph.report('saveAndPublishPostWithoutInput', {postId}, _.noop)
+                goph.report(['saveAndPublishPostWithoutInput', 'confirmPostPublished'], {postId}, (e, r) => {
+                  if (e) {
+                    console.log(e)
+                    return
+                  }
+                  console.log('published')
+                })
               }
             },
             {
@@ -85,7 +90,13 @@ window.RENDER_CONFIG = {
               id: 'unpublish',
               innerText: 'Remove from Blog',
               onClick: () => {
-                goph.report('unpublishPostWithoutInput', {postId}, _.noop)
+                goph.report(['unpublishPostWithoutInput', 'confirmPostUnpublished'], {postId}, (e, r) => {
+                  if (e) {
+                    console.log(e)
+                    return
+                  }
+                  console.log('unpublished')
+                })
               },
             },
             {
@@ -97,7 +108,11 @@ window.RENDER_CONFIG = {
               },
               innerText: 'Delete Post',
               onClick: (evt) => {
-                goph.report('deletePostWithoutInput', {postId}, (e, r) => {
+                goph.report(['deletePostWithoutInput', 'confirmPostDeleted'], {postId}, (e, r) => {
+                  if (e) {
+                    console.log(e)
+                    return
+                  }
                   const entry = evt.target.closest('.post-list-entry')
                   if (entry && !e) {
                     entry.remove()

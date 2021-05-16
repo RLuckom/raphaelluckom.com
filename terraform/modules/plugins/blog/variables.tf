@@ -153,6 +153,12 @@ variable library_const_names {
 }
 
 locals {
+  blog_image_hosting_root = "/img/"
+  blog_image_hosting_prefix = "img/"
+  blog_post_hosting_root = "/posts/"
+  blog_post_hosting_prefix = "posts/"
+  plugin_image_hosting_prefix = "${var.plugin_config.hosting_root}img/"
+  plugin_post_hosting_prefix = "${var.plugin_config.hosting_root}posts/"
   file_prefix = trim(var.plugin_config.source_root, "/")
   edit_styles_path = "${local.file_prefix}/assets/styles/editor.css"
   plugin_default_styles_path = "${local.file_prefix}/assets/styles/default.css"
@@ -168,6 +174,11 @@ locals {
   libs_js_path = "${local.file_prefix}/assets/js/pkg-${filemd5("${path.module}/src/frontend/libs/libs.js")}.js"
   prosemirror_setup_js_path = "${local.file_prefix}/assets/js/prosemirror-setup-${filemd5("${path.module}/src/frontend/libs/prosemirror-setup.js")}.js"
   plugin_config = {
+    website_bucket = module.blog_site.website_bucket_name
+    blog_image_hosting_root = local.blog_image_hosting_root
+    blog_image_hosting_prefix = local.blog_image_hosting_prefix
+    blog_post_hosting_root = local.blog_post_hosting_root
+    blog_post_hosting_prefix = local.blog_post_hosting_prefix
     domain = var.plugin_config.domain
     operator_name = var.maintainer.name
     private_storage_bucket = var.plugin_config.bucket_name
@@ -180,6 +191,8 @@ locals {
     plugin_post_upload_path = "${trimsuffix(var.plugin_config.upload_root, "/")}/posts/"
     plugin_image_hosting_path = "${trimsuffix(var.plugin_config.hosting_root, "/")}/img/"
     plugin_post_hosting_path = "${trimsuffix(var.plugin_config.hosting_root, "/")}/posts/"
+    plugin_image_hosting_prefix = local.plugin_image_hosting_prefix
+    plugin_post_hosting_prefix = local.plugin_post_hosting_prefix 
   }
   default_css_paths = [
     var.admin_site_default_styles_path,

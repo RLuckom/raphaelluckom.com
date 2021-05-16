@@ -99,7 +99,7 @@ window.GOPHER_CONFIG = {
       accessSchema: exploranda.dataSources.AWS.s3.putObject,
       params: {
         Body: {
-          source: 'getPost',
+          source: ['getPost', 'unpublishPostWithoutInput', 'confirmPostUnpublished'],
           formatter: ({getPost}) => {
             const postToSend = _.cloneDeep(getPost)
             delete postToSend.frontMatter.publish
@@ -170,6 +170,70 @@ window.GOPHER_CONFIG = {
         },
       }
     },
+    postImageList: {
+      accessSchema: exploranda.dataSources.AWS.s3.listObjects,
+      params: {
+        Bucket: {value: [CONFIG.private_storage_bucket]},
+        Prefix: {
+          input: 'postId', 
+          formatter: ({postId}) => {
+            return CONFIG.plugin_image_hosting_prefix + postId
+          }
+        },
+      },
+    },
+    confirmImagesPublished: {
+      accessSchema: exploranda.dataSources.AWS.s3.listObjects,
+      params: {
+        Bucket: {value: [CONFIG.website_bucket]},
+        Prefix: {
+          input: 'postId', 
+          formatter: ({postId}) => {
+            return CONFIG.blog_image_hosting_prefix + postId
+          }
+        },
+        MaxKeys: {
+          source: 'postImageList',
+          formatter: ({postImageList}) => {
+            console.log(postImageList)
+            return (_.flatten(postImageList).length + 1) * 10
+          }
+        }
+      },
+      behaviors: {
+        retryParams: {
+          times: 10,
+          interval: (n) => n * 1000
+        },
+        detectErrors: (err, res, {MaxKeys}) => {
+          return res.Contents.length !== ((MaxKeys / 10) - 1)
+        }
+      }
+    },
+    confirmPostPublished: {
+      accessSchema: exploranda.dataSources.AWS.s3.listObjects,
+      params: {
+        Bucket: {
+          source: 'confirmImagesPublished',
+          formatter: () => [CONFIG.website_bucket],
+        },
+        Prefix: {
+          input: 'postId', 
+          formatter: ({postId}) => {
+            return CONFIG.blog_post_hosting_prefix + postId
+          }
+        },
+      },
+      behaviors: {
+        retryParams: {
+          times: 10,
+          interval: (n) => n * 1000
+        },
+        detectErrors: (err, res) => {
+          return res.Contents.length !== 2
+        }
+      }
+    },
     unpublishPost: {
       accessSchema: exploranda.dataSources.AWS.s3.putObject,
       params: {
@@ -224,6 +288,54 @@ window.GOPHER_CONFIG = {
       params: {
         Bucket: {value: CONFIG.private_storage_bucket },
         Prefix: { value: CONFIG.plugin_post_hosting_path },
+      }
+    },
+    confirmPostUnpublished: {
+      accessSchema: exploranda.dataSources.AWS.s3.listObjects,
+      params: {
+        Bucket: {value: [CONFIG.website_bucket, CONFIG.website_bucket]},
+        Prefix: {
+          input: 'postId', 
+          formatter: ({postId}) => {
+            return [
+              CONFIG.blog_image_hosting_prefix + postId,
+              CONFIG.blog_post_hosting_prefix + postId,
+            ]
+          }
+        },
+      },
+      behaviors: {
+        retryParams: {
+          times: 10,
+          interval: (n) => n * 1000
+        },
+        detectErrors: (err, res) => {
+          return res.Contents.length
+        }
+      }
+    },
+    confirmPostDeleted: {
+      accessSchema: exploranda.dataSources.AWS.s3.listObjects,
+      params: {
+        Bucket: {value: [CONFIG.private_storage_bucket, CONFIG.private_storage_bucket]},
+        Prefix: {
+          input: ['postId'],
+          formatter: ({postId}) => {
+            return [
+              CONFIG.plugin_image_hosting_prefix + postId,
+              CONFIG.plugin_post_hosting_prefix + postId,
+            ]
+          }
+        },
+      },
+      behaviors: {
+        retryParams: {
+          times: 10,
+          interval: (n) => n * 1000
+        },
+        detectErrors: (err, res) => {
+          return res.Contents.length
+        }
       }
     },
   },

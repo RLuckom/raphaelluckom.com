@@ -35,7 +35,7 @@ window.RENDER_CONFIG = {
             {
               tagName: 'a',
               href: `/${CONFIG.plugin_post_hosting_path}${postId}.md`,
-              children: [`${encodeURIComponent(postId)}.md`],
+              children: [`${postId}.md`],
             }
           ]
         },
@@ -106,7 +106,12 @@ window.RENDER_CONFIG = {
           id: 'publish',
           innerText: 'Publish to Blog',
           onClick: () => {
-            goph.report('saveAndPublishPost', {post: currentPost, postId}, (e, r) => {
+            goph.report(['saveAndPublishPost', 'confirmPostPublished'], {post: currentPost, postId}, (e, r) => {
+              if (e) {
+                console.error(e)
+                return
+              }
+              console.log('published')
               const changedEtag = _.get(r, 'saveAndPublishPost[0].ETag')
               if (changedEtag) {
                 currentEtag = changedEtag
@@ -120,7 +125,12 @@ window.RENDER_CONFIG = {
           id: 'unpublish',
           innerText: 'Remove from Blog',
           onClick: () => {
-            goph.report('unpublishPost', {post: currentPost, postId}, (e, r) => {
+            goph.report(['unpublishPost', 'confirmPostUnpublished'], {post: currentPost, postId}, (e, r) => {
+              if (e) {
+                console.error(e)
+                return
+              }
+              console.log('unpublished')
               const changedEtag = _.get(r, 'unpublishPost[0].ETag')
               if (changedEtag) {
                 currentEtag = changedEtag
@@ -172,7 +182,10 @@ window.RENDER_CONFIG = {
         currentPost, postId, currentEditorState,
       }))
     }
-    prosemirrorView(document.getElementById('post-editor'), uploadImage, _.debounce(autosave, 2000), initEditorState, currentPost.content)
+
+    const postContentForProsemirror = currentPost.content.replace(new RegExp("\\((https:\/\/.*)" + postId + '([^\\)]*)\\)', 'g'), (match, g1, g2) => "(" + g1 + encodeURIComponent(postId) + g2 + ')').replace(
+      new RegExp("]\\(/(.*)" + postId + '([^\\)]*)\\)', 'g'), (match, g1, g2) => "](/" + g1 + encodeURIComponent(postId) + g2 + ')')
+    prosemirrorView(document.getElementById('post-editor'), uploadImage, _.debounce(autosave, 2000), initEditorState, postContentForProsemirror)
   },
   params: {
     post: {

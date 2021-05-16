@@ -37,7 +37,7 @@ function parsePost(s) {
 }
 
 const blogImageKeyRegExp = new RegExp('${blog_image_hosting_prefix}([^/]*)/([^\.]*)/([0-9]*)\.(.*)')
-const originalImageKeyRegExp = new RegExp('${blog_image_hosting_prefix}([^/]*)/([^\.]*)/([0-9]*)\.(.*)')
+const pluginImageKeyRegExp = new RegExp('${blog_image_hosting_prefix}([^/]*)/([^\.]*)/([0-9]*)\.(.*)')
 
 module.exports = {
   stages: {
@@ -45,9 +45,9 @@ module.exports = {
       index: 0,
       transformers: {
         postId: {
-          helper: ({originalKey}) => originalKey.split('/').pop().split('.')[0],
+          helper: ({pluginKey}) => pluginKey.split('/').pop().split('.')[0],
           params: {
-            originalKey: {ref: 'event.Records[0].s3.object.decodedKey'},
+            pluginKey: {ref: 'event.Records[0].s3.object.decodedKey'},
           }
         }
       },
@@ -98,7 +98,7 @@ module.exports = {
           action: 'exploranda',
           formatter: ({availableImages}) => {
             return _.map(_.flatten(availableImages), ({Key}) => {
-              const [match, postId, imageId, size, ext] = originalImageKeyRegExp.exec(Key)
+              const [match, postId, imageId, size, ext] = pluginImageKeyRegExp.exec(Key)
               return {key: Key, postId, imageId, size, ext}
             })
           },
@@ -107,7 +107,7 @@ module.exports = {
             explorandaParams: {
               Bucket: {ref: 'event.Records[0].s3.bucket.name'},
               Prefix: {
-                helper: ({postId}) => "${original_image_hosting_prefix}" + postId,
+                helper: ({postId}) => "${plugin_image_hosting_prefix}" + postId,
                 params: {
                   postId: {ref: 'stage.postId'},
                 }
@@ -192,9 +192,9 @@ module.exports = {
             explorandaParams: {
               Bucket: {ref: 'event.Records[0].s3.bucket.name'},
               Key: {
-                helper: ({originalKey}) => _.replace(originalKey, "${original_post_upload_prefix}", "${original_post_hosting_prefix}"),
+                helper: ({pluginKey}) => _.replace(pluginKey, "${plugin_post_upload_prefix}", "${plugin_post_hosting_prefix}"),
                   params: {
-                  originalKey: {ref: 'event.Records[0].s3.object.decodedKey'},
+                  pluginKey: {ref: 'event.Records[0].s3.object.decodedKey'},
                 }
               },
               ContentType: { value: 'text/markdown' },
@@ -210,9 +210,9 @@ module.exports = {
             explorandaParams: {
               Bucket: {ref: 'event.Records[0].s3.bucket.name'},
               Key: {
-                helper: ({originalKey}) => _.replace(originalKey, "${original_post_upload_prefix}", "${original_post_hosting_prefix}"),
+                helper: ({pluginKey}) => _.replace(pluginKey, "${plugin_post_upload_prefix}", "${plugin_post_hosting_prefix}"),
                 params: {
-                  originalKey: {ref: 'event.Records[0].s3.object.decodedKey'},
+                  pluginKey: {ref: 'event.Records[0].s3.object.decodedKey'},
                 }
               },
             }
@@ -226,15 +226,20 @@ module.exports = {
             explorandaParams: {
               Bucket: {value: '${website_bucket}'},
               Key: {
-                helper: ({originalKey}) => "${blog_post_hosting_prefix}" + originalKey.split('/').pop(),
+                helper: ({pluginKey}) => "${blog_post_hosting_prefix}" + pluginKey.split('/').pop(),
                   params: {
-                  originalKey: {ref: 'event.Records[0].s3.object.decodedKey'},
+                  pluginKey: {ref: 'event.Records[0].s3.object.decodedKey'},
                 }
               },
               ContentType: { value: 'text/markdown' },
               Body: {
-                helper: ({postString}) => _.replace(postString, "${original_image_hosting_root}", "${blog_image_hosting_root}"),
-                  params: {
+                helper: ({postString, postId}) => {
+                  return _.replace(postString, "${plugin_image_hosting_root}", "${blog_image_hosting_root}")
+                  .replace(new RegExp("\\((https:\/\/.*)" + postId + '([^\\)]*)\\)', 'g'), (match, g1, g2) => "(" + g1 + encodeURIComponent(postId) + g2 + ')')
+                  .replace(new RegExp("]\\(/(.*)" + postId + '([^\\)]*)\\)', 'g'), (match, g1, g2) => "](/" + g1 + encodeURIComponent(postId) + g2 + ')')
+                },
+                params: {
+                  postId: {ref: 'parsePost.vars.postId'},
                   postString: {ref: 'parsePost.results.current.raw' },
                 }
               }
@@ -252,9 +257,9 @@ module.exports = {
             explorandaParams: {
               Bucket: {value: '${website_bucket}'},
               Key: {
-                helper: ({originalKey}) => "${blog_post_hosting_prefix}" + originalKey.split('/').pop(),
+                helper: ({pluginKey}) => "${blog_post_hosting_prefix}" + pluginKey.split('/').pop(),
                 params: {
-                  originalKey: {ref: 'event.Records[0].s3.object.decodedKey'},
+                  pluginKey: {ref: 'event.Records[0].s3.object.decodedKey'},
                 }
               },
             }
@@ -280,7 +285,7 @@ module.exports = {
                 }
               },
               Key: {
-                helper: ({images}) => _.map(images, ({key}) => _.replace(key, "${original_image_hosting_prefix}", "${blog_image_hosting_prefix}")),
+                helper: ({images}) => _.map(images, ({key}) => _.replace(key, "${plugin_image_hosting_prefix}", "${blog_image_hosting_prefix}")),
                   params: {
                   images: {ref: 'publish.vars.imagesToPublish' },
                 }

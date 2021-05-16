@@ -3,15 +3,15 @@ module post_entry_lambda {
   config_contents = templatefile("${path.module}/src/backend/post_entry_config.js",
   {
     website_bucket = module.blog_site.website_bucket_name
-    original_image_hosting_prefix = "${var.plugin_config.hosting_root}img/"
-    original_image_hosting_root = "https://${var.plugin_config.domain}/${var.plugin_config.hosting_root}img/"
-    blog_image_hosting_root = "/img/"
-    blog_image_hosting_prefix = "img/"
-    blog_post_hosting_root = "/posts/"
-    blog_post_hosting_prefix = "posts/"
-    original_post_hosting_prefix = "${var.plugin_config.hosting_root}posts/"
-    original_post_upload_prefix = "${var.plugin_config.upload_root}posts/"
-    original_post_hosting_root = "https://${var.plugin_config.domain}/${var.plugin_config.hosting_root}posts/"
+    plugin_image_hosting_prefix = local.plugin_image_hosting_prefix
+    plugin_post_hosting_prefix = local.plugin_post_hosting_prefix 
+    plugin_image_hosting_root = "https://${var.plugin_config.domain}/${var.plugin_config.hosting_root}img/"
+    blog_image_hosting_root = local.blog_image_hosting_root
+    blog_image_hosting_prefix = local.blog_image_hosting_prefix
+    blog_post_hosting_root = local.blog_post_hosting_root
+    blog_post_hosting_prefix = local.blog_post_hosting_prefix
+    plugin_post_upload_prefix = "${var.plugin_config.upload_root}posts/"
+    plugin_post_hosting_root = "https://${var.plugin_config.domain}/${var.plugin_config.hosting_root}posts/"
   })
   logging_config = var.logging_config
   invoking_roles = [
@@ -47,6 +47,13 @@ module blog_site {
   nav_links = var.nav_links
   site_title = var.site_title
   coordinator_data = var.coordinator_data
+  website_bucket_cors_rules = [{
+    allowed_headers = ["authorization", "content-md5", "content-type", "cache-control", "x-amz-content-sha256", "x-amz-date", "x-amz-security-token", "x-amz-user-agent"]
+    allowed_methods = ["GET"]
+    allowed_origins = ["https://${var.plugin_config.domain}"]
+    expose_headers = ["ETag"]
+    max_age_seconds = 3000
+  }]
   website_bucket_prefix_object_permissions = [
     {
       permission_type = "put_object"
