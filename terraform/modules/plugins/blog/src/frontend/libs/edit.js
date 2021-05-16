@@ -97,6 +97,8 @@ window.RENDER_CONFIG = {
               if (changedEtag) {
                 currentEtag = changedEtag
               }
+              console.log('saved')
+              autosave({})
             })
           }
         },
@@ -116,6 +118,7 @@ window.RENDER_CONFIG = {
               if (changedEtag) {
                 currentEtag = changedEtag
               }
+              autosave({})
             })
           }
         },
@@ -135,6 +138,7 @@ window.RENDER_CONFIG = {
               if (changedEtag) {
                 currentEtag = changedEtag
               }
+              autosave({})
             })
           },
         },
@@ -185,7 +189,7 @@ window.RENDER_CONFIG = {
 
     const postContentForProsemirror = currentPost.content.replace(new RegExp("\\((https:\/\/.*)" + postId + '([^\\)]*)\\)', 'g'), (match, g1, g2) => "(" + g1 + encodeURIComponent(postId) + g2 + ')').replace(
       new RegExp("]\\(/(.*)" + postId + '([^\\)]*)\\)', 'g'), (match, g1, g2) => "](/" + g1 + encodeURIComponent(postId) + g2 + ')')
-    prosemirrorView(document.getElementById('post-editor'), uploadImage, _.debounce(autosave, 2000), initEditorState, postContentForProsemirror)
+    prosemirrorView(document.getElementById('post-editor'), uploadImage, _.debounce(autosave, 2000), initEditorState, postContentForProsemirror, _.get(currentPost, 'frontMatter.meta.imageIds'))
   },
   params: {
     post: {

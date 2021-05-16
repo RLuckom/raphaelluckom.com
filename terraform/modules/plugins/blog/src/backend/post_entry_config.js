@@ -170,6 +170,21 @@ module.exports = {
             publishedImages: {ref: 'parsePost.results.publishedImages' },
           }
         },
+        imagesToDelete: {
+          helper: ({availableImages, currentImageIds, del}) => {
+            if (del) {
+              return availableImages
+            }
+            return _.filter(availableImages, ({imageId}) => {
+              return currentImageIds.indexOf(imageId) === -1
+            })
+          },
+          params: {
+            currentImageIds: {ref: 'parsePost.results.current.frontMatter.meta.imageIds' },
+            availableImages: {ref: 'parsePost.results.availableImages' },
+            del: {ref: 'parsePost.results.current.frontMatter.delete' },
+          }
+        },
         imagesToPublish: {
           helper: ({unpublish, del, publish, currentImageIds, availableImages}) => {
             if (unpublish || !publish || del) {
@@ -327,7 +342,7 @@ module.exports = {
         },
         delete: {
           action: 'exploranda',
-          condition: {ref: 'publish.vars.delete'},
+          condition: {ref: 'publish.vars.imagesToDelete.length'},
           params: {
             accessSchema: {value: 'dataSources.AWS.s3.deleteObject'},
             explorandaParams: {
@@ -337,7 +352,7 @@ module.exports = {
                   return n
                 },
                 params: {
-                  images: {ref: 'parsePost.results.availableImages' },
+                  images: {ref: 'publish.vars.imagesToDelete' },
                   bucket: {ref: 'event.Records[0].s3.bucket.name'},
                 }
               },
@@ -347,7 +362,7 @@ module.exports = {
                   return n
                 },
                 params: {
-                  images: {ref: 'parsePost.results.availableImages' },
+                  images: {ref: 'publish.vars.imagesToDelete' },
                 }
               }
             }

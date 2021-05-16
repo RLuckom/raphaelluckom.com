@@ -579,18 +579,26 @@ function buildInputRules(schema) {
 //
 //     menuContent:: [[MenuItem]]
 //     Can be used to override the menu content.
-function prosemirrorView(container, uploadImage, onChange, initialState, initialMarkdownText) {
+function prosemirrorView(container, uploadImage, onChange, initialState, initialMarkdownText, imageIds) {
+  const startingImageIds = _.cloneDeep(imageIds) || []
   const imageIdPlugin = new prosemirror.Plugin({
     key: 'imageIds',
     state: {
-      init() { return [] },
+      init() { return startingImageIds },
       toJSON(val) { return JSON.stringify(val) },
       fromJSON(conf, val, edState) { return JSON.parse(val) },
-      apply(tr,val, state) {
+      apply(tr, val, state) {
+				changedDescendants(tr.doc, tr.before, 0, (node, pos) => {
+          if (node.attrs.src) {
+            const imageId = _.find(val, (imageId) => node.attrs.src.indexOf(imageId) !== -1)
+            if (imageId) {
+              val.splice(val.indexOf(imageId), 1)
+            }
+          }
+        })
         let action = tr.getMeta(this)
         if (action && action.add) {
-          const currentState = this.getState(state)
-          const ids =  _.concat(currentState, [action.add.imageId])
+          const ids =  _.concat(val, [action.add.imageId])
           return ids
         }
         return val
@@ -610,14 +618,12 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
         set = set.map(tr.mapping, tr.doc)
         // See if the transaction adds or removes any placeholders
         let action = tr.getMeta(this)
-        console.log(action)
         if (action && action.add) {
           let widget = domNode({
             tagName: 'img',
             src: URL.createObjectURL(_.get(action, 'add.file')),
             classNames: ['placeholder'],
           })
-          console.log(widget)
           let deco = prosemirror.Decoration.widget(action.add.pos, widget, {id: action.add.id})
           set = set.add(tr.doc, [deco])
         } else if (action && action.remove) {
@@ -752,5 +758,29 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
   return {
     view,
     plugins,
+  }
+}
+
+
+// Helper for iterating through the nodes in a document that changed
+// compared to the given previous document. Useful for avoiding
+// duplicate work on each transaction.
+function changedDescendants(old, cur, offset, f) {
+  let oldSize = old.childCount, curSize = cur.childCount
+  outer: for (let i = 0, j = 0; i < curSize; i++) {
+    let child = cur.child(i)
+    for (let scan = j, e = Math.min(oldSize, i + 3); scan < e; scan++) {
+      if (old.child(scan) == child) {
+        j = scan + 1
+        offset += child.nodeSize
+        continue outer
+      }
+    }
+    f(child, offset)
+    if (j < oldSize && old.child(j).sameMarkup(child))
+      changedDescendants(old.child(j), child, offset + 1, f)
+    else
+      child.nodesBetween(0, child.content.size, f, offset + 1)
+    offset += child.nodeSize
   }
 }
