@@ -5,7 +5,7 @@ window.RENDER_CONFIG = {
     }
     let currentEtag = _.get(post, 'etag')
     let currentPost
-    const postId = new URLSearchParams(window.location.search).get('postId')
+    const postId = new URLSearchParams(window.location.search).get('postId').replace(/\//g, '-')
     const postDataKey = `postData?postId=${postId}`
     const savedData = localStorage.getItem(postDataKey)
     let parsedSavedData
@@ -196,6 +196,6 @@ window.RENDER_CONFIG = {
     }
   },
   inputs: {
-    postId: new URLSearchParams(window.location.search).get('postId')
+    postId: new URLSearchParams(window.location.search).get('postId').replace(/\//g, '-'),
   }
 }

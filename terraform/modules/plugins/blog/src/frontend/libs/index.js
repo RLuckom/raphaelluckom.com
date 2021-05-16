@@ -9,6 +9,7 @@ window.RENDER_CONFIG = {
         updatePostKeys(postKeys)
       })
     })
+    const slashReplacement = '-'
 
     mainSection.appendChild(domNode({
       tagName: 'div',
@@ -39,7 +40,7 @@ window.RENDER_CONFIG = {
               placeholder: 'enter a new post id, then press Enter',
               onKeyDown: (evt) => {
                 if (evt.which === 13 && evt.target.value) {
-                  window.location.href = `./edit.html?postId=${evt.target.value}`
+                  window.location.href = `./edit.html?postId=${evt.target.value.replace(/\//g, slashReplacement}`
                 }
               }
             },

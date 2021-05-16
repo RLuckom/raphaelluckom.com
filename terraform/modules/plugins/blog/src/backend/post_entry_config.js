@@ -45,7 +45,11 @@ module.exports = {
       index: 0,
       transformers: {
         postId: {
-          helper: ({pluginKey}) => pluginKey.split('/').pop().split('.')[0],
+          helper: ({pluginKey}) => {
+            const parts = pluginKey.split('/').pop().split('.')
+            parts.pop()
+            return parts.join('.')
+          },
           params: {
             pluginKey: {ref: 'event.Records[0].s3.object.decodedKey'},
           }
