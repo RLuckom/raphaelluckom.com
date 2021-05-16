@@ -14,7 +14,8 @@ module admin_interface {
   }
   plugin_configs = {
     blog = {
-      additional_connect_sources = ["https://s3.amazonaws.com", "https://${module.admin_site_blog_plugin.blog_site.website_bucket_name}.s3.amazonaws.com", "https://${module.admin_interface.website_config.bucket_name}.s3.amazonaws.com"]
+      additional_connect_sources = ["https://s3.amazonaws.com", "https://${module.admin_site_blog_plugin.blog_site_bucket_name}.s3.amazonaws.com", "https://${module.admin_interface.website_config.bucket_name}.s3.amazonaws.com"]
+      #additional_connect_sources = ["https://s3.amazonaws.com", "https://test-raphaelluckom-com.s3.amazonaws.com", "https://admin-raphaelluckom-com.s3.amazonaws.com"]
       policy_statements = []
       plugin_relative_lambda_origins = module.admin_site_blog_plugin.plugin_relative_lambda_origins
       plugin_relative_bucket_upload_permissions_needed = module.admin_site_blog_plugin.plugin_relative_bucket_upload_permissions_needed
