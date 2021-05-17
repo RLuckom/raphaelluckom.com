@@ -8,6 +8,10 @@ meta:
     - practitioner-journey
 ---
 
+__NOTE May 16, 2021: Some of the changes I made this morning broke the code for this exercise. I hope to release
+a working alpha version of my completed system within the next month or so, including a more robust mechanism for 
+preserving exercise snapshots. Once I have that method in place I'll repair this example.__
+
 In this exercise, we're going to deploy the blogging system I use on this site. To follow along, you'll
 need to have already completed the [first exercise](https://raphaelluckom.com/posts/practitioner_journey.html)
 and [gotten a domain name](https://raphaelluckom.com/posts/practitioner_journey_003.html). We'll delete the whole 
