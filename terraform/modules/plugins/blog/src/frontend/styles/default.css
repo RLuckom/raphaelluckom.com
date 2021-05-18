@@ -5,10 +5,6 @@ input[type=text] {
   box-shadow:0 0 15px 4px rgba(0,0,0,0.06);
 }
 
-main {
-  margin: 0 10%;
-}
-
 img {
   max-width: 100%;
   display: block;
@@ -16,7 +12,7 @@ img {
 
 img.placeholder {
   opacity: 0.4;
-  max-width: 500px;
+  max-width: 100%;
 }
 
 .new-post {

@@ -14,6 +14,55 @@ function getImageUploadKey({postId, imageId, imageExt}) {
   return `${CONFIG.plugin_image_upload_path}${postId}/${imageId}.${imageExt}`
 }
 
+function getPostDataKey(postId) {
+  return `postData?postId=${postId}`
+}
+
+function loadAutosave(postId) {
+  const postDataKey = getPostDataKey(postId)
+  const savedData = localStorage.getItem(postDataKey)
+  if (savedData) {
+    const parsed = JSON.parse(savedData)
+    console.log(parsed)
+    return parsed
+  }
+  return {}
+}
+
+function autosave({postId, currentEditorState, postAsSaved, currentSavedETag, currentPublishedETag, currentPost}, {title, author, trails, editorState, imageIds, content}) {
+  const postDataKey = getPostDataKey(postId)
+  const editorStateToSave = editorState || currentEditorState
+  let saveState, publishState
+  const postToSave = constructPost({
+    etag: currentSavedETag || '',
+    imageIds: imageIds || _.get(currentPost, 'frontMatter.meta.imageIds') || [],
+    content: content || _.get(currentPost, 'content') || '',
+    title: title || _.get(currentPost, 'frontMatter.title') || '',
+    author: author || _.get(currentPost, 'frontMatter.author') || CONFIG.operator_name,
+    trails: trails || _.get(currentPost, 'frontMatter.meta.trails') || [],
+    createDate: _.get(currentPost, 'frontMatter.createDate'),
+    date: _.get(currentPost, 'frontMatter.date'),
+    updateDate: _.get(currentPost, 'frontMatter.updateDate'),
+  })
+  if (!postsEqual(postToSave, postAsSaved)) {
+    saveState = translatableText.saveState.modified
+  } else {
+    saveState = translatableText.saveState.unmodified
+  }
+  if (currentSavedETag === currentPublishedETag) {
+    publishState =translatableText.publishState.mostRecent
+  } else if (!currentPublishedETag) {
+    publishState = translatableText.publishState.unpublished
+  } else {
+    publishState = translatableText.publishState.modified
+  }
+  const saveData = {
+    post: postToSave, postId, publishedETag: currentPublishedETag, savedEditorState: currentEditorState, saveState, publishState
+  }
+  localStorage.setItem(postDataKey, JSON.stringify(saveData))
+  return saveData
+}
+
 const canonicalImageTypes = {
   png: 'png', 
   jpg: 'jpg',
@@ -37,12 +86,14 @@ const translatableText = {
   },
   saveState: {
     unmodified: 'Unmodified',
+    unsaved: 'Not saved',
     modified: 'Changed locally',
   },
   publishState: {
     mostRecent: 'Published matches most recent saved version',
     unpublished: 'Unpublished',
-    modified: 'Saved version differs from published version'
+    modified: 'Saved version differs from published version',
+    unknown: 'Unknown',
   },
   postActions: {
     unpublish: 'Remove from Blog',

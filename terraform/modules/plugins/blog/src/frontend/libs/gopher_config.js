@@ -368,7 +368,7 @@ window.GOPHER_CONFIG = {
           input: ['imageExt', 'postId', 'imageId', 'imageSize'],
           formatter: ({imageExt, postId, imageId, imageSize}) => {
             return {
-              method: 'HEAD',
+              method: 'GET',
               url: getImagePrivateUrl({postId, imageId, ext: imageExt, size: imageSize})
             }
           },

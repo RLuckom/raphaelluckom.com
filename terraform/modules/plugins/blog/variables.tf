@@ -174,7 +174,7 @@ locals {
   exploranda_script_path = "${local.file_prefix}/assets/js/exploranda-browser.js"
   config_path = "${local.file_prefix}/assets/js/config.js"
   aws_script_path = "${local.file_prefix}/assets/js/aws-sdk-2.868.0.min.js"
-  edit_js_path = "${local.file_prefix}/assets/js/index-${filemd5("${path.module}/src/frontend/libs/edit.js")}.js"
+  edit_js_path = "${local.file_prefix}/assets/js/edit-${filemd5("${path.module}/src/frontend/libs/edit.js")}.js"
   index_js_path = "${local.file_prefix}/assets/js/index-${filemd5("${path.module}/src/frontend/libs/index.js")}.js"
   utils_js_path = "${local.file_prefix}/assets/js/utils-${filemd5("${path.module}/src/frontend/libs/utils.js")}.js"
   gopher_config_js_path = "${local.file_prefix}/assets/js/gopher_config-${filemd5("${path.module}/src/frontend/libs/gopher_config.js")}.js"
