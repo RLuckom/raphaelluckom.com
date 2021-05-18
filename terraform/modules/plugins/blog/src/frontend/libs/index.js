@@ -40,7 +40,7 @@ window.RENDER_CONFIG = {
               placeholder: 'enter a new post id, then press Enter',
               onKeyDown: (evt) => {
                 if (evt.which === 13 && evt.target.value) {
-                  window.location.href = `./edit.html?postId=${evt.target.value.replace(/\//g, slashReplacement}`
+                  window.location.href = `./edit.html?postId=${evt.target.value.replace(/\//g, slashReplacement)}`
                 }
               }
             },
@@ -54,7 +54,9 @@ window.RENDER_CONFIG = {
     }))
     function updatePostKeys(postKeys) {
         document.getElementById('post-list').replaceChildren(..._.map(postKeys, (Key) => {
-        const postId = Key.split('/').pop().split('.')[0]
+        const postIdParts = Key.split('/').pop().split('.')
+        postIdParts.pop()
+        const postId = postIdParts.join('.')
         return domNode({
           tagName: 'div',
           classNames: 'post-list-entry',

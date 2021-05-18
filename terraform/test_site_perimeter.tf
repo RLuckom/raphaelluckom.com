@@ -11,7 +11,8 @@ module admin_interface {
     blog = module.admin_site_blog_plugin.static_config
     visibility = {
       role_name_stem = "athena"
-      slug = "visibility"
+      api_name = "visibility"
+      display_name = "visibility"
     }
   }
   plugin_configs = {

@@ -57,5 +57,5 @@ module visibility_system {
 
 module admin_site_visibility_plugin {
   source = "./modules/plugins/visibility"
-  default_styles_path = module.admin_interface.default_styles_path
+  default_styles_path = module.admin_interface.site_resources.default_styles_path
 }

@@ -1,7 +1,3 @@
-variable admin_site_default_styles_path {
-  type = string
-}
-
 variable name {
   type = string
 }
@@ -38,14 +34,18 @@ variable site_title {
   default = "Test Site"
 }
 
-variable admin_running_material {
+variable admin_site_resources {
   type = object({
+    default_styles_path = string
+    default_scripts_path = string
     header_contents = string
     footer_contents = string
     site_title = string
     site_description = string
   })
   default = {
+    default_styles_path = ""
+    default_scripts_path = ""
     header_contents = "<div class=\"header-block\"><h1 class=\"heading\">Private Site</h1></div>"
     footer_contents = "<div class=\"footer-block\"><h1 class=\"footing\">Private Site</h1></div>"
     site_title = "running_material.site_title"
@@ -203,7 +203,7 @@ locals {
     plugin_post_hosting_prefix = local.plugin_post_hosting_prefix 
   }
   default_css_paths = [
-    var.admin_site_default_styles_path,
+    var.admin_site_resources.default_styles_path,
     local.plugin_default_styles_path,
   ]
   index_css_paths = [
@@ -211,6 +211,9 @@ locals {
   ]
   edit_css_paths = [
     local.edit_styles_path
+  ]
+  default_deferred_script_paths = [
+    var.admin_site_resources.default_scripts_path,
   ]
   default_script_paths = [
     local.aws_script_path,
@@ -242,7 +245,7 @@ EOF
       key = "${local.file_prefix}index.html"
       file_contents = templatefile("${path.module}/src/frontend/index.html", {
       operator = var.maintainer.name
-      running_material = var.admin_running_material
+      running_material = var.admin_site_resources
       css_paths = concat(
         local.default_css_paths,
         local.index_css_paths
@@ -251,6 +254,7 @@ EOF
         local.default_script_paths,
         local.index_script_paths
       )
+      deferred_script_paths = local.default_deferred_script_paths
     })
       content_type = "text/html"
       file_path = ""
@@ -258,7 +262,7 @@ EOF
     {
       key = "${local.file_prefix}edit.html"
       file_contents = templatefile("${path.module}/src/frontend/index.html", {
-      running_material = var.admin_running_material
+      running_material = var.admin_site_resources
       css_paths = concat(
         local.default_css_paths,
         local.edit_css_paths
@@ -267,6 +271,7 @@ EOF
         local.default_script_paths,
         local.edit_script_paths
       )
+      deferred_script_paths = local.default_deferred_script_paths
     })
       content_type = "text/html"
       file_path = ""

@@ -195,7 +195,6 @@ window.GOPHER_CONFIG = {
         MaxKeys: {
           source: 'postImageList',
           formatter: ({postImageList}) => {
-            console.log(postImageList)
             return (_.flatten(postImageList).length + 1) * 10
           }
         }
@@ -208,6 +207,24 @@ window.GOPHER_CONFIG = {
         detectErrors: (err, res, {MaxKeys}) => {
           return res.Contents.length !== ((MaxKeys / 10) - 1)
         }
+      }
+    },
+    getPublishedPostETag: {
+      accessSchema: exploranda.dataSources.AWS.s3.listObjects,
+      formatter: ([postRecord]) => {
+        return _.get(postRecord, '[0].ETag')
+      },
+      params: {
+        Bucket: { value: [CONFIG.website_bucket]},
+        Prefix: {
+          input: 'postId', 
+          formatter: ({postId}) => {
+            return getPostPublicKey({postId})
+          }
+        },
+      },
+      behaviors: {
+        maybeNull: true,
       }
     },
     confirmPostPublished: {

@@ -1,6 +1,6 @@
 module admin_site_blog_plugin {
   source = "./modules/plugins/blog"
-  admin_site_default_styles_path = module.admin_interface.default_styles_path
+  admin_site_resources = module.admin_interface.site_resources
   account_id = local.account_id
   region = local.region
   name = "blog"

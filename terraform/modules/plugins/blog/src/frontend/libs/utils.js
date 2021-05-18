@@ -152,6 +152,26 @@ function buildGopher({awsDependencies, otherDependencies, defaultInputs, render}
   )
 
   const goph = exploranda.Gopher(dependencies, defaultInputs)
+  const originalReport = _.bind(goph.report, goph)
+  const errHandler = _.isFunction(_.get(render, 'onAPIError')) ? _.get(render, 'onAPIError') : (e, r, originalCallback) => {
+    console.error(e)
+  }
+  goph.report = (...args) => {
+    const originalCallback = _.isFunction(args[args.length - 1]) ? args[args.length - 1] : null
+    if (originalCallback) {
+      const newCallback = (e, r) => {
+        if (e) {
+          errHandler(e, r, originalCallback)
+        } else {
+          originalCallback(e, r)
+        }
+      }
+      args.splice(args.length - 1, 1, newCallback)
+      return originalReport(...args)
+    } else {
+      return originalReport(...args)
+    }
+  }
   if (defaultDependencies.initialRender) {
     goph.report('initialRender', _.get(render, 'inputs'), (e) => {
       if (e) {

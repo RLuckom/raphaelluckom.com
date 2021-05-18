@@ -6,6 +6,10 @@ function getPostHostingKey({postId}) {
   return `${CONFIG.plugin_post_hosting_path}${postId}.md`
 }
 
+function getPostPublicKey({postId}) {
+  return `${CONFIG.blog_post_hosting_prefix}${postId}.md`
+}
+
 function getImageUploadKey({postId, imageId, imageExt}) {
   return `${CONFIG.plugin_image_upload_path}${postId}/${imageId}.${imageExt}`
 }
@@ -78,20 +82,46 @@ function newPost() {
   }
 }
 
-function constructPost({etag, imageIds, content, author, createDate, title, trails}) {
+function constructPost({etag, updateDate, date, imageIds, content, author, createDate, title, trails}) {
   return {
     frontMatter: {
       title,
       author,
       createDate: createDate || new Date().toISOString(),
-      meta: {
+      updateDate: updateDate || new Date().toISOString(),
+      date: updateDate || new Date().toISOString(),
+      meta: _.cloneDeep({
         trails: trails || [],
         imageIds: imageIds || []
-      }
+      })
     },
     content: content,
     etag,
   }
+}
+
+function postsEqual(p1, p2) {
+  const cleanP1 = constructPost({
+    imageIds: _.get(p1, 'frontMatter.meta.imageIds'),
+    trails: _.get(p1, 'frontMatter.meta.trails'),
+    content: _.get(p1, 'content'),
+    author: _.get(p1, 'frontMatter.author'),
+    title: _.get(p1, 'frontMatter.title'),
+    createDate: _.get(p1, 'frontMatter.createDate'),
+    updateDate: _.get(p1, 'frontMatter.updateDate'),
+    date: _.get(p1, 'frontMatter.date'),
+  })
+  const cleanP2 = constructPost({
+    imageIds: _.get(p2, 'frontMatter.meta.imageIds'),
+    trails: _.get(p2, 'frontMatter.meta.trails'),
+    content: _.get(p2, 'content'),
+    author: _.get(p2, 'frontMatter.author'),
+    title: _.get(p2, 'frontMatter.title'),
+    createDate: _.get(p2, 'frontMatter.createDate'),
+    updateDate: _.get(p2, 'frontMatter.updateDate'),
+    date: _.get(p2, 'frontMatter.date'),
+  })
+  return _.isEqual(cleanP1, cleanP2)
 }
 
 function serializePost({frontMatter, content}) {

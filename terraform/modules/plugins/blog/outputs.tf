@@ -103,8 +103,9 @@ output plugin_relative_bucket_list_permissions_needed {
 
 output static_config {
   value = {
+    api_name = "blog"
+    display_name = "blog"
     role_name_stem = "blog"
-    slug = "blog"
   }
 }
 
