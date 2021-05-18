@@ -1,27 +1,3 @@
-const translatableText = {
-  postMetadata: {
-    placeholders: {
-      trails: 'Trails (comma-separated)',
-      author: 'Author',
-      title: 'Title',
-    }
-  },
-  saveState: {
-    unmodified: 'Unmodified',
-    modified: 'Changed locally',
-  },
-  publishState: {
-    mostRecent: 'Published matches most recent saved version',
-    unpublished: 'Unpublished',
-    modified: 'Saved version differs from published version'
-  },
-  postActions: {
-    unpublish: 'Remove from Blog',
-    publish: 'Publish to Blog',
-    save: 'Save Without Publishing',
-  },
-  editing: 'Editing',
-}
 
 window.RENDER_CONFIG = {
   init: ({post, publishedETag}, gopher) => {

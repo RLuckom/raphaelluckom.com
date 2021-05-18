@@ -1,7 +1,6 @@
 window.RENDER_CONFIG = {
   init: ({postKeys}, gopher) => {
     const mainSection = document.querySelector('main')
-    const writePostButtonText = 'Write new post'
     const closeInputButtonText = 'Close input'
     window.addEventListener('pageshow', () => {
       goph.report('listPosts', (e, {listPosts}) => {
@@ -24,20 +23,20 @@ window.RENDER_CONFIG = {
               onClick: () => {
                 document.getElementById('new-post').classList.toggle('expanded')
                 const innerText = document.getElementById('new-post-button').innerText
-                if (innerText === writePostButtonText) {
+                if (innerText === translatableText.postActions.new) {
                   document.getElementById('new-post-button').innerText = closeInputButtonText
                 } else {
-                  document.getElementById('new-post-button').innerText = writePostButtonText
+                  document.getElementById('new-post-button').innerText = translatableText.postActions.new
                 }
               },
-              innerText: writePostButtonText,
+              innerText: translatableText.postActions.new,
             },
             {
               tagName: 'input',
               type: 'text',
               id: 'new-post',
               classNames: ['new-post'],
-              placeholder: 'enter a new post id, then press Enter',
+              placeholder: translatableText.postMetadata.placeholders.id,
               onKeyDown: (evt) => {
                 if (evt.which === 13 && evt.target.value) {
                   window.location.href = `./edit.html?postId=${evt.target.value.replace(/\//g, slashReplacement)}`
@@ -70,13 +69,15 @@ window.RENDER_CONFIG = {
               tagName: 'a',
               classNames: 'post-edit',
               href: `/${CONFIG.plugin_root}edit.html?postId=${postId}`,
-                children: ["Edit Post"],
+                children: [
+                translatableText.postActions.edit,
+              ],
             },
             {
               tagName: 'button',
               name: 'publish',
               id: 'publish',
-              innerText: 'Publish to Blog',
+              innerText: translatableText.postActions.publish,
               onClick: () => {
                 goph.report(['saveAndPublishPostWithoutInput', 'confirmPostPublished'], {postId}, (e, r) => {
                   if (e) {
@@ -91,7 +92,7 @@ window.RENDER_CONFIG = {
               tagName: 'button',
               name: 'unpublish',
               id: 'unpublish',
-              innerText: 'Remove from Blog',
+              innerText: translatableText.postActions.unpublish,
               onClick: () => {
                 goph.report(['unpublishPostWithoutInput', 'confirmPostUnpublished'], {postId}, (e, r) => {
                   if (e) {
@@ -109,7 +110,7 @@ window.RENDER_CONFIG = {
               dataset: {
                 postId
               },
-              innerText: 'Delete Post',
+              innerText: translatableText.postActions.delete,
               onClick: (evt) => {
                 goph.report(['deletePostWithoutInput', 'confirmPostDeleted'], {postId}, (e, r) => {
                   if (e) {

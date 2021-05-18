@@ -26,6 +26,35 @@ const canonicalImageTypes = {
   gif: 'gif',
 }
 
+const translatableText = {
+  postMetadata: {
+    placeholders: {
+      trails: 'Trails (comma-separated)',
+      author: 'Author',
+      title: 'Title',
+      id: "Type a new post id, then press Enter",
+    }
+  },
+  saveState: {
+    unmodified: 'Unmodified',
+    modified: 'Changed locally',
+  },
+  publishState: {
+    mostRecent: 'Published matches most recent saved version',
+    unpublished: 'Unpublished',
+    modified: 'Saved version differs from published version'
+  },
+  postActions: {
+    unpublish: 'Remove from Blog',
+    publish: 'Publish to Blog',
+    save: 'Save Without Publishing',
+    edit: 'Edit Post',
+    delete: 'Delete Post',
+    new: 'Write new post'
+  },
+  editing: 'Editing',
+}
+
 function getImagePrivateUrl({postId, imageId, size, ext}) {
   const canonicalExt = canonicalImageTypes[_.toLower(ext)]
   if (!canonicalExt) {
