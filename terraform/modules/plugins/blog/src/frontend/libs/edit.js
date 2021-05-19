@@ -54,39 +54,33 @@ window.RENDER_CONFIG = {
         },
         {
           tagName: 'div',
+          classNames: 'authoring-inputs',
           children: [
             {
               tagName: 'input',
               type: 'text',
               name: 'title',
+              classNames: 'authoring-input',
               placeholder: translatableText.postMetadata.placeholders.title,
               value: currentPost.frontMatter.title,
               id: 'title',
               onChange: (e) => updatePost({title: e.target.value})
-            }
-          ]
-        },
-        {
-          tagName: 'div',
-          children: [
+            },
             {
               tagName: 'input',
               type: 'text',
+              classNames: 'authoring-input',
               placeholder: translatableText.postMetadata.placeholders.author,
               id: 'author',
               value: CONFIG.operator_name,
               onChange: (e) => updatePost({author: e.target.value})
-            }
-          ]
-        },
-        {
-          tagName: 'div',
-          children: [
+            },
             {
               tagName: 'input',
               placeholder: translatableText.postMetadata.placeholders.trails,
               type: 'text',
               name: 'trails',
+              classNames: 'authoring-input',
               id: 'trails',
               value: (_.get(post, 'frontMatter.meta.trails') || []).join(', '),
               onChange: (e) => updatePost({trails: _.map((e.target.value || '').split(','), _.trim)})

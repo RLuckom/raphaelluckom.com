@@ -689,7 +689,6 @@ function buildInputRules(schema) {
   return prosemirror.inputRules({rules})
 }
 
-
 //EXAMPLESETUP
 //
 //

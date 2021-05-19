@@ -18,6 +18,7 @@ module admin_interface {
   plugin_configs = {
     blog = {
       additional_connect_sources = ["https://s3.amazonaws.com", "https://${module.admin_site_blog_plugin.blog_site_bucket_name}.s3.amazonaws.com", "https://${module.admin_interface.website_config.bucket_name}.s3.amazonaws.com"]
+      additional_style_sources = []
       policy_statements = []
       plugin_relative_lambda_origins = module.admin_site_blog_plugin.plugin_relative_lambda_origins
       plugin_relative_bucket_upload_permissions_needed = module.admin_site_blog_plugin.plugin_relative_bucket_upload_permissions_needed
@@ -30,6 +31,7 @@ module admin_interface {
     visibility = {
       policy_statements = []
       additional_connect_sources = ["https://athena.us-east-1.amazonaws.com", "https://s3.amazonaws.com", "https://${module.admin_interface.website_config.bucket_name}.s3.amazonaws.com"] 
+      additional_style_sources = []
       plugin_relative_lambda_origins = []
       storage_path_lambda_notifications = []
       upload_path_lambda_notifications = []

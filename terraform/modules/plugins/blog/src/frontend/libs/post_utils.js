@@ -86,22 +86,22 @@ const translatableText = {
   },
   saveState: {
     unmodified: 'Unmodified',
-    unsaved: 'Not saved',
-    modified: 'Changed locally',
+    unsaved: 'Unsaved',
+    modified: 'Changed',
   },
   publishState: {
-    mostRecent: 'Published matches most recent saved version',
+    mostRecent: 'Published',
     unpublished: 'Unpublished',
-    modified: 'Saved version differs from published version',
+    modified: 'Changed',
     unknown: 'Unknown',
   },
   postActions: {
-    unpublish: 'Remove from Blog',
-    publish: 'Publish to Blog',
-    save: 'Save Without Publishing',
-    edit: 'Edit Post',
-    delete: 'Delete Post',
-    new: 'Write new post'
+    unpublish: 'Unpublish',
+    publish: 'Publish',
+    save: 'Save',
+    edit: 'Edit',
+    delete: 'Delete',
+    new: 'New Post'
   },
   editing: 'Editing',
 }

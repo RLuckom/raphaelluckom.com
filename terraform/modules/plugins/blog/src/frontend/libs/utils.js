@@ -7,7 +7,7 @@ function domNode(el) {
   } else if (_.isArray(el)) {
     return _.map(el, domNode)
   }
-  const {id, onKeyUp, dataset, src, width, height, value, innerText, onKeyDown, onInput, placeholder, onChange, tagName, type, isFor, name, classNames, href, onClick, children} = el
+  const {id, span, onKeyUp, dataset, src, width, height, value, innerText, onKeyDown, onInput, placeholder, onChange, tagName, type, isFor, name, classNames, href, onClick, children} = el
   const newElement = document.createElement(tagName)
   if (_.isArray(classNames)) {
     newElement.className = classNames.join(' ')
@@ -24,6 +24,11 @@ function domNode(el) {
   }
   if (_.isString(id)) {
     newElement.id = id
+  }
+  if (tagName === "col") {
+    if (span) {
+      newElement.span = span
+    }
   }
   if (tagName === 'img') {
     if (_.isString(src)) {

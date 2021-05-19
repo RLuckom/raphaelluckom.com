@@ -1,7 +1,103 @@
-.post-list-entry {
+#post-list-header {
   display: flex;
 }
 
-.post-list-header {
+main {
+  flex: 1;
   display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+#new-post-container {
+  width: 100%;
+}
+
+#post-list-header {
+  width: 100%;
+  border-bottom: 2px solid gray;
+  margin-bottom: 1em;
+}
+
+#post-list {
+  width: 100%;
+  font-size: 0.8em;
+}
+
+.post-list-entry {
+  display: flex;
+  width: 100%;
+  margin-bottom: 0.5em;
+  border: 1px solid black;
+  border-radius: 3px;
+  height: 4em;
+}
+
+.post-status {
+  display: flex;
+  width: 60%;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.post-actions {
+  display: flex;
+  width: calc(40% - 2em);
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.post-id {
+  padding-left: 2em;
+  display: inline-block;
+  flex: 0 1 46%;
+}
+
+.save-status, .publish-status {
+  display: inline-block;
+  flex: 0 1 27%;
+}
+
+.post-edit, .post-publish, .post-unpublish, .post-delete {
+  display: inline-block;
+  flex: 0 1 33%;
+}
+
+@media screen and (max-width: 767px) {
+  main {
+    padding-left: 1em;
+    padding-right: 1em;
+  }
+  .post-list-entry {
+    display: relative;
+  }
+  .post-status {
+    width: 100%;
+    z-index: 3;
+    height: 100%;
+    background-color: white;
+  }
+  .post-actions {
+    position: fixed;
+    z-index: 2;
+  }
+  .open {
+    position: relative;
+  }
+  .closed {
+    position: relative;
+    left: 0;
+  }
+
+  .post-id {
+    margin: auto;
+  }
+
+  .save-status, .publish-status {
+    margin: auto;
+  }
+
+  .post-edit, .post-publish, .post-unpublish, .post-delete {
+    margin: auto;
+  }
 }

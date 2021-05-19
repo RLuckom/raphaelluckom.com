@@ -31,3 +31,16 @@ input.new-post.expanded {
 .new-post.expanded {
   opacity: 1;
 }
+
+@media screen and (max-width: 767px) {
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"] {
+    border: 2px solid gray;
+    font-size: 16px;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+}
