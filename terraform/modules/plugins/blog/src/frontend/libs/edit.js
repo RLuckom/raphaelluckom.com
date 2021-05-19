@@ -1,4 +1,3 @@
-
 window.RENDER_CONFIG = {
   init: ({post, publishedETag}, gopher) => {
     let postAsSaved = _.cloneDeep(post)
@@ -20,7 +19,7 @@ window.RENDER_CONFIG = {
     function setPublishedState(text) {
       document.getElementById('post-publish-state').innerText = text
     }
-    const {savedPost, savedEditorState, saveState} = loadAutosave(postId)
+    const {post: savedPost, savedEditorState, saveState} = loadAutosave(postId)
     if (_.get(savedPost, 'etag') && _.get(savedPost, 'etag') === post.etag) {
       currentPost = savedPost
       initEditorState = savedEditorState
@@ -31,6 +30,7 @@ window.RENDER_CONFIG = {
     }
     mainSection.appendChild(domNode({
       tagName: 'div',
+      classNames: ['post-authoring'],
       children: [
         {
           tagName: 'div',

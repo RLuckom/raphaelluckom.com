@@ -1,5 +1,35 @@
+main {
+  flex: 1;
+  display: flex;
+  width: 100%;
+}
+
+.post-authoring {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  width: 100%;
+}
+
+#post-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+#post-actions {
+  margin-bottom: 3vh;
+}
+
+.ProseMirror-menubar-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
 .ProseMirror {
   position: relative;
+  flex: 1;
 }
 
 .ProseMirror {

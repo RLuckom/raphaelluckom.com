@@ -2,6 +2,7 @@
 const { baseKeymap, wrapIn, setBlockType, chainCommands, toggleMark, exitCode, joinUp, joinDown, lift, selectParentNode} = require("prosemirror-commands")
 const {dropCursor} = require("prosemirror-dropcursor")
 const {gapCursor} = require("prosemirror-gapcursor")
+const { Schema } = require("prosemirror-model")
 const {history, undo, redo} = require("prosemirror-history")
 const {undoInputRule, inputRules, wrappingInputRule, textblockTypeInputRule, smartQuotes, emDash, ellipsis} = require("prosemirror-inputrules")
 const {keymap} = require("prosemirror-keymap")
@@ -19,7 +20,7 @@ const moment = require('moment')
 module.exports = {
   yaml, moment, uuid,
   prosemirror: {
-    EditorState, Plugin, NodeSelection,
+    EditorState, Plugin, NodeSelection, Schema,
     EditorView, Decoration, DecorationSet, TextSelection,
     wrapInList, splitListItem, liftListItem, sinkListItem,
     menuBar, wrapItem, blockTypeItem, Dropdown, DropdownSubmenu, joinUpItem, liftItem, selectParentNodeItem, undoItem, redoItem, icons, MenuItem,
@@ -33,7 +34,7 @@ module.exports = {
   }
 }
 
-},{"js-yaml":4,"moment":88,"prosemirror-commands":90,"prosemirror-dropcursor":91,"prosemirror-gapcursor":92,"prosemirror-history":93,"prosemirror-inputrules":94,"prosemirror-keymap":95,"prosemirror-markdown":96,"prosemirror-menu":97,"prosemirror-schema-list":99,"prosemirror-state":100,"prosemirror-view":102,"uuid":111}],2:[function(require,module,exports){
+},{"js-yaml":4,"moment":88,"prosemirror-commands":90,"prosemirror-dropcursor":91,"prosemirror-gapcursor":92,"prosemirror-history":93,"prosemirror-inputrules":94,"prosemirror-keymap":95,"prosemirror-markdown":96,"prosemirror-menu":97,"prosemirror-model":98,"prosemirror-schema-list":99,"prosemirror-state":100,"prosemirror-view":102,"uuid":111}],2:[function(require,module,exports){
 'use strict';
 
 function crelt() {
