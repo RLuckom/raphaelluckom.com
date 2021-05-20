@@ -48,21 +48,21 @@ window.RENDER_CONFIG = {
       children: [
         {
           tagName: 'div',
-          classNames: 'post-status',
+          classNames: 'post-status-headers',
           children: [
             {
               tagName: 'div',
-              classNames: 'post-id',
+              classNames: 'post-id-header',
               children: ["Post ID"]
             },
             {
               tagName: 'div',
-              classNames: 'save-status',
+              classNames: 'save-status-header',
               children: ["Save Status"]
             },
             {
               tagName: 'div',
-              classNames: 'publish-status',
+              classNames: 'publish-status-header',
               children: ["Publish Status"]
             },
           ]
@@ -85,17 +85,22 @@ window.RENDER_CONFIG = {
         const { post, publishedETag, saveState, publishState } =  loadAutosave(postId)
         return domNode({
           tagName: 'div',
-          classNames: 'post-list-entry open',
+          classNames: 'post-list-entry closed',
           children: [
             {
-              tagName: 'a',
-              href: `./edit.html?postId=${postId}`,
+              tagName: 'div',
               classNames: 'post-status',
               children: [
                 {
-                  tagName: 'div',
+                  tagName: 'a',
                   classNames: 'post-id',
-                  children: [postId]
+                  href: `./edit.html?postId=${postId}`,
+                    children: [
+                    {
+                      tagName: 'div',
+                      children: [postId]
+                    },
+                  ]
                 },
                 {
                   tagName: 'div',

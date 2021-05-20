@@ -1,12 +1,8 @@
-main {
-  flex: 1;
-  display: flex;
-  width: 100%;
+.post-status {
+  background-color: lavender;
 }
 
 .post-authoring {
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
   font-size: 1rem;
   display: flex;
   flex-direction: column;
@@ -339,6 +335,7 @@ li.ProseMirror-selectednode:after {
   margin-top: 5px;
   display: none;
 }
+
 #editor, .editor {
   background: white;
   color: black;

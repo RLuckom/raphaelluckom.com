@@ -2,7 +2,7 @@ input[type=text] {
   padding:10px;
   margin:10px 0;
   border:0;
-  box-shadow:0 0 15px 4px rgba(0,0,0,0.06);
+  border: 2px solid rgba(0, 0, 0, 0.2);
 }
 
 img {
@@ -23,6 +23,13 @@ img.placeholder {
   width:0px;
 }
 
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
 input.new-post.expanded {
   border-radius: 0;
   width: 300px;
@@ -32,15 +39,96 @@ input.new-post.expanded {
   opacity: 1;
 }
 
+.post-status {
+  background-color: white;
+}
+
+.post-status, .post-status-headers {
+  display: flex;
+  width: 55%;
+  margin-top: auto;
+  margin-bottom: auto;
+  text-align: center;
+}
+
+.save-status, .publish-status, .save-status-header, .publish-status-header {
+  display: inline-block;
+  flex: 0 1 27%;
+}
+
+.post-id, .post-id-header {
+  padding-left: 2em;
+  display: inline-block;
+  flex: 0 1 46%;
+}
+
+.post-id-header, .save-status-header, .publish-status-header {
+  border-bottom: 1px solid gray;
+}
+
+#post-list-header {
+  display: flex;
+  width: 100%;
+  margin-bottom: 0.5em;
+  font-size: 0.9em;
+  font-weight: bold;
+  text-align: center;
+}
+
 @media screen and (max-width: 767px) {
   input[type="text"],
   input[type="number"],
   input[type="email"],
   input[type="tel"],
   input[type="password"] {
-    border: 2px solid gray;
+    border: 2px solid rgba(0, 0, 0, 0.2);
     font-size: 16px;
     margin-top: 1rem;
-    margin-bottom: 1rem;
+  }
+
+  .post-status, .post-status-headers {
+    width: 100%;
+    z-index: 3;
+    height: 100%;
+  }
+
+  .post-actions {
+    position: absolute;
+    display: flex;
+    z-index: 2;
+    padding-right: 20%;
+    height: 100%;
+  }
+
+  .post-id {
+    margin: auto;
+  }
+
+  .save-status, .publish-status, .save-status-header, .publish-status-headers {
+    margin: auto;
+  }
+
+  .post-edit, .post-publish, .post-unpublish, .post-delete {
+    margin: auto;
+    flex: 1;
+    height: 100%;
+  }
+
+  .post-publish {
+    background-color: lightblue;
+  }
+
+  .post-unpublish {
+    background-color: lightgray;
+  }
+
+  .post-delete {
+    background-color: #ff6666;
+  }
+
+  .post-actions  button {
+    width: 100%;
+    height: 100%;
+    border: none;
   }
 }

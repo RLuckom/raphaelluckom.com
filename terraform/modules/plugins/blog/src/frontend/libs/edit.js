@@ -14,10 +14,10 @@ window.RENDER_CONFIG = {
     let initPublishedState = currentPublishedETag ? currentPublishedETag === currentSavedETag ? translatableText.publishState.mostRecent : translatableText.publishState.modified : translatableText.publishState.unpublished
     const mainSection = document.querySelector('main')
     function setSaveState(text) {
-      document.getElementById('post-state').innerText = text
+      document.getElementById('save-status').innerText = text
     }
     function setPublishedState(text) {
-      document.getElementById('post-publish-state').innerText = text
+      document.getElementById('publish-status').innerText = text
     }
     const {post: savedPost, savedEditorState, saveState} = loadAutosave(postId)
     if (_.get(savedPost, 'etag') && _.get(savedPost, 'etag') === post.etag) {
@@ -34,23 +34,52 @@ window.RENDER_CONFIG = {
       children: [
         {
           tagName: 'div',
-          id: 'post-id',
+          id: 'post-list-header',
           children: [
-            translatableText.editing + ' ',
             {
-              tagName: 'a',
-              href: `/${CONFIG.plugin_post_hosting_path}${postId}.md`,
-              children: [`${postId}.md`],
-            }
+              tagName: 'div',
+              classNames: 'post-status-headers',
+              children: [
+                {
+                  tagName: 'div',
+                  classNames: 'post-id-header',
+                  children: ["Post ID"]
+                },
+                {
+                  tagName: 'div',
+                  classNames: 'save-status-header',
+                  children: ["Save Status"]
+                },
+                {
+                  tagName: 'div',
+                  classNames: 'publish-status-header',
+                  children: ["Publish Status"]
+                },
+              ]
+            },
           ]
         },
         {
           tagName: 'div',
-          id: 'post-state',
-        },
-        {
-          tagName: 'div',
-          id: 'post-publish-state',
+          classNames: 'post-status',
+          children: [
+            {
+              tagName: 'div',
+              id: 'post-id',
+              classNames: 'post-id',
+              children: [postId]
+            },
+            {
+              tagName: 'div',
+              id: 'save-status',
+              classNames: 'save-status',
+            },
+            {
+              tagName: 'div',
+              id: 'publish-status',
+              classNames: 'publish-status',
+            },
+          ]
         },
         {
           tagName: 'div',
