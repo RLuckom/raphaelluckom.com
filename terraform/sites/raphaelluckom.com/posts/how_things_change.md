@@ -22,7 +22,7 @@ go to work.
 
 It all comes to a head later that week, when the quarterly earnings call for a major
 corporation is interrupted by a skateboarder gliding across the boardroom window in a
-stately arc, making only a quiet _click click click_ going over the gaps between the big
+stately arc, making only a quiet _clickCLICKclickCLICK_ going over the gaps between the big
 panes. This event comes to be described as a "security incident."
 
 The problem is, it's _useful_ space, you know? And it doesn't _exactly_ belong to anyone.

@@ -78,7 +78,7 @@ interact with the system. But that's for another day.
       in the model imbues it with value independent of whether it's _accurate_ or not. It defines the rules of the game. Attacks on the model--what
       an outsider might call "pointing out that people are not generalizable that way"--appear as attacks on the legitimacy and safety of the community.
 
-[^4]: For a representative example, see James Mickens' essay [To Wash It All Away](https://scholar.harvard.edu/files/mickens/files/towashitallaway.pdf), of which
+[^4]: For an example, see James Mickens' essay [To Wash It All Away](https://scholar.harvard.edu/files/mickens/files/towashitallaway.pdf), of which
       a representative sample reads:
 
       >  Given the unbearable proliferation of Web standards, and the comically ill-expressed semantics of those standards, browser vendors should just 
