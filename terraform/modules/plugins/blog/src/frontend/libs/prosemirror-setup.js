@@ -30,12 +30,11 @@ const schema = new prosemirror.Schema({
       content: "(text | image)*",
       group: "block",
       defining: true,
-      parseDOM: [{tag: "h1", attrs: {level: 1}},
-                 {tag: "h2", attrs: {level: 2}},
-                 {tag: "h3", attrs: {level: 3}},
-                 {tag: "h4", attrs: {level: 4}},
-                 {tag: "h5", attrs: {level: 5}},
-                 {tag: "h6", attrs: {level: 6}}],
+      parseDOM: [
+                 {tag: "h2", attrs: {level: 1}},
+                 {tag: "h3", attrs: {level: 2}},
+                 {tag: "h4", attrs: {level: 3}},
+                ],
       toDOM(node) { return ["h" + node.attrs.level, 0] }
     },
 
@@ -500,7 +499,7 @@ function buildMenuItems({schema, insertImageItem}) {
       label: "Code"
     })
   if (type = schema.nodes.heading)
-    for (let i = 1; i <= 10; i++)
+    for (let i = 1; i <= 3; i++)
       r["makeHead" + i] = prosemirror.blockTypeItem(type, {
         title: "Change to heading " + i,
         label: "Level " + i,
@@ -519,7 +518,7 @@ function buildMenuItems({schema, insertImageItem}) {
   let cut = arr => arr.filter(x => x)
   r.insertMenu = new prosemirror.Dropdown(cut([r.insertImage, r.insertHorizontalRule]), {label: "Insert"})
   r.typeMenu = new prosemirror.Dropdown(cut([r.makeParagraph, r.makeCodeBlock, r.makeHead1 && new prosemirror.DropdownSubmenu(cut([
-    r.makeHead1, r.makeHead2, r.makeHead3, r.makeHead4, r.makeHead5, r.makeHead6
+    r.makeHead1, r.makeHead2, r.makeHead3,
   ]), {label: "Heading"})]), {label: "Type..."})
 
   r.inlineMenu = [cut([r.toggleStrong, r.toggleEm, r.toggleCode, r.toggleLink])]

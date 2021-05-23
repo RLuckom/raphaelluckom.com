@@ -32,7 +32,7 @@
     position: relative;
   }
 
-  .post-list-entry.open .post-id::before {
+  .post-list-entry.open .publish-status::after {
     display: inline-block;
     content: '';
     width: 15px;
@@ -42,11 +42,11 @@
     border-bottom: 0;
     transform: rotate(45deg);
     position: absolute;
-    left: 12px;
+    right: 12px;
     top: 16px;
   }
 
-  .post-list-entry.closed .post-id::before {
+  .post-list-entry.closed .publish-status::after {
     display: inline-block;
     content: '';
     width: 15px;
@@ -56,7 +56,7 @@
     border-bottom: 0;
     transform: scaleX(0.6) rotate(135deg);
     position: absolute;
-    left: 0px;
+    right: 0px;
     top: 1.4em;
   }
 }

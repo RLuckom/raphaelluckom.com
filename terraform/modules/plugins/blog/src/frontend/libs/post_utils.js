@@ -101,6 +101,7 @@ const translatableText = {
     save: 'Save',
     edit: 'Edit',
     delete: 'Delete',
+    toIndex: 'Back',
     new: 'New Post'
   },
   editing: 'Editing',

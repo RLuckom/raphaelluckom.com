@@ -1,8 +1,26 @@
+:root {
+  --background: #fff;
+  --encourage: lightgreen;
+  --encourage-neutral: lightblue;
+  --neutral: rgba(0, 0, 0, 0.2);
+  --hazard: #ff6666;
+  --default-border-width: 2px;
+}
+
 input[type=text] {
-  padding:10px;
+  padding-top: 7px;
+  padding-right: 7px;
+  padding-left: 7px;
+  padding-bottom: 3px;
   margin:10px 0;
-  border:0;
-  border: 2px solid rgba(0, 0, 0, 0.2);
+  font-family: inherit;
+  outline: none;
+  border-color: var(--neutral);
+  border-style: solid;
+  border-top-width: 0;
+  border-left-width: 0;
+  border-right-width: 0;
+  border-bottom-width: var(--default-border-width);
 }
 
 img {
@@ -28,6 +46,7 @@ main {
   display: flex;
   flex-direction: column;
   width: 100%;
+  padding-bottom: 2.1em;
 }
 
 input.new-post.expanded {
@@ -43,12 +62,16 @@ input.new-post.expanded {
   background-color: white;
 }
 
+.post-status-headers {
+  border-bottom: 1px solid gray;
+}
+
 .post-status, .post-status-headers {
   display: flex;
-  width: 55%;
+  width: 100%;
   margin-top: auto;
   margin-bottom: auto;
-  text-align: center;
+  text-align: left;
 }
 
 .save-status, .publish-status, .save-status-header, .publish-status-header {
@@ -56,14 +79,73 @@ input.new-post.expanded {
   flex: 0 1 27%;
 }
 
-.post-id, .post-id-header {
-  padding-left: 2em;
+.post-id {
+  display: inline-block;
+  flex: 25;
+}
+
+.post-id-header {
   display: inline-block;
   flex: 0 1 46%;
 }
 
-.post-id-header, .save-status-header, .publish-status-header {
-  border-bottom: 1px solid gray;
+#info-toolbar {
+  width: 100%;
+  display: flex;
+}
+
+#post-running-material {
+  display: inline-block;
+  flex: 30;
+  font-size: 0.9em;
+  font-weight: bold;
+  text-align: center;
+}
+
+#post-actions {
+  display: inline-block;
+  flex: 45;
+}
+
+.button-container {
+  display: flex;
+  padding: 0 0.2em;
+  height: 100%;
+}
+
+.button-container button {
+  flex: auto;
+  height: 100%;
+  margin: 0 0.1em;
+  font-family: inherit;
+  font-weight: bold;
+  border-radius: 7px;
+  border-width: var(--default-border-width);
+  border-style: solid;
+}
+
+.button-container button:first-child {
+  margin-left: 0;
+}
+
+.button-container button:last-child {
+  margin-right: 0;
+}
+
+.save {
+  border-color: var(--encourage);
+}
+
+.publish {
+  border-color: var(--encourage-neutral);
+}
+
+.unpublish {
+  border-color: var(--neutral);
+}
+
+.delete {
+  border-color: var(--hazard);
 }
 
 #post-list-header {
@@ -81,9 +163,16 @@ input.new-post.expanded {
   input[type="email"],
   input[type="tel"],
   input[type="password"] {
-    border: 2px solid rgba(0, 0, 0, 0.2);
+    outline: none;
     font-size: 16px;
     margin-top: 1rem;
+    font-family: inherit;
+    border-color: var(--neutral);
+    border-style: solid;
+    border-top-width: 0;
+    border-left-width: 0;
+    border-right-width: 0;
+    border-bottom-width: var(--default-border-width);
   }
 
   .post-status, .post-status-headers {
@@ -100,30 +189,24 @@ input.new-post.expanded {
     height: 100%;
   }
 
-  .post-id {
-    margin: auto;
+  .post-id, .post-id-header {
+    flex: 0 1 42%;
+    margin: auto 0;
   }
 
-  .save-status, .publish-status, .save-status-header, .publish-status-headers {
-    margin: auto;
+  .save-status, .save-status-header {
+    margin: auto 0;
+  }
+
+  .publish-status, .publish-status-header {
+    flex: 0 1 31%;
+    margin: auto 0;
   }
 
   .post-edit, .post-publish, .post-unpublish, .post-delete {
     margin: auto;
     flex: 1;
     height: 100%;
-  }
-
-  .post-publish {
-    background-color: lightblue;
-  }
-
-  .post-unpublish {
-    background-color: lightgray;
-  }
-
-  .post-delete {
-    background-color: #ff6666;
   }
 
   .post-actions  button {

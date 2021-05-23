@@ -1,3 +1,162 @@
+const geometryElements = ['rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon']
+
+function svgNode(el) {
+  if (_.isString(el)) {
+    return document.createTextNode(el)
+  }
+  function setIfDefined(attr, node, objName, val, dflt) {
+    const toApply = val || el[attr] || el[objName] || dflt
+    if (!_.isUndefined(toApply) && !_.isNull(toApply)) {
+      node.setAttribute(attr, toApply)
+    }
+  }
+  const tagName = el.tagName
+  let newElement
+  if (tagName === 'svg') {
+    newElement = applyDefaultAttrs(document.createElementNS("http://www.w3.org/2000/svg", tagName), el)
+    if (el.viewBox) {
+      if (_.isString(el.viewBox)) {
+        setIfDefined('viewbox', newElement, 'viewBox')
+      } else if (_.isArray(el.viewBox)) {
+        setIfDefined('viewbox', newElement, 'viewBox', el.viewBox.join(' '))
+      }
+    } else {
+      newElement.setAttribute('viewbox', '0 0 100 100')
+    }
+    setIfDefined('height', newElement, 'height', el.height, 100)
+    setIfDefined('width', newElement, 'width', el.width, 100)
+  } else {
+    newElement = applyDefaultAttrs(document.createElementNS("http://www.w3.org/2000/svg", tagName), el)
+    setIfDefined('transform', newElement, 'transform')
+    setIfDefined('fill', newElement, 'fill', el.fill, 'none')
+    setIfDefined('fill-rule', newElement, 'fillRule')
+    setIfDefined('fill-opacity', newElement, 'fillOpacity')
+    setIfDefined('stroke', newElement, 'stroke')
+    setIfDefined('stroke-opacity', newElement, 'strokeOpacity')
+    setIfDefined('stroke-width', newElement, 'strokeWidth')
+    setIfDefined('stroke-linecap', newElement, 'strokeLinecap')
+    setIfDefined('stroke-linejoin', newElement, 'strokeLinejoin')
+  }
+  if (tagName === 'rect') {
+    setIfDefined('x', newElement, 'x')
+    setIfDefined('y', newElement, 'y')
+    setIfDefined('rx', newElement, 'rx')
+    setIfDefined('ry', newElement, 'ry')
+  }
+  if (tagName === 'circle') {
+    setIfDefined('cx', newElement, 'cx')
+    setIfDefined('cy', newElement, 'cy')
+    setIfDefined('r', newElement, 'r')
+  }
+  if (tagName === 'ellipse') {
+    setIfDefined('cx', newElement, 'cx')
+    setIfDefined('cy', newElement, 'cy')
+    setIfDefined('rx', newElement, 'rx')
+    setIfDefined('ry', newElement, 'ry')
+  }
+  if (tagName === 'line') {
+    setIfDefined('x1', newElement, 'x1')
+    setIfDefined('y1', newElement, 'y1')
+    setIfDefined('x2', newElement, 'x2')
+    setIfDefined('y2', newElement, 'y2')
+  }
+  if (tagName === 'polyline') {
+    setIfDefined('pathLength', newElement, 'pathLength')
+    setIfDefined('points', newElement, 'points', serializePoints(el.points))
+  }
+  if (tagName === 'polygon') {
+    setIfDefined('pathLength', newElement, 'pathLength')
+    setIfDefined('points', newElement, 'points', serializePoints(el.points))
+  }
+  if (tagName === 'path') {
+    setIfDefined('d', newElement, 'd')
+  }
+  if (tagName === 'text') {
+    setIfDefined('x', newElement, 'x')
+    setIfDefined('y', newElement, 'y')
+    setIfDefined('dx', newElement, 'dx')
+    setIfDefined('dy', newElement, 'dy')
+    setIfDefined('rotate', newElement, 'rotate')
+    setIfDefined('textLength', newElement, 'textLength')
+  }
+  if (tagName === 'tspan') {
+    setIfDefined('x', newElement, 'x')
+    setIfDefined('y', newElement, 'y')
+    setIfDefined('dx', newElement, 'dx')
+    setIfDefined('dy', newElement, 'dy')
+    setIfDefined('rotate', newElement, 'rotate')
+    setIfDefined('textLength', newElement, 'textLength')
+    setIfDefined('lengthAdjust', newElement, 'textLength')
+  }
+  if (tagName === 'textPath') {
+    setIfDefined('lengthAdjust', newElement, 'lengthAdjust')
+    setIfDefined('textLength', newElement, 'textLength')
+    setIfDefined('path', newElement, 'path')
+    setIfDefined('href', newElement, 'href')
+    setIfDefined('startOffset', newElement, 'startOffset')
+    setIfDefined('method', newElement, 'method')
+    setIfDefined('spacing', newElement, 'spacing')
+    setIfDefined('side', newElement, 'side')
+  }
+  _.each(el.children, (c) => newElement.appendChild(svgNode(c)))
+  return newElement
+}
+
+function serializePoints(points) {
+  if (!points || _.isString(points)) {
+    return points
+  }
+  if (_.isArray(points) && points.length > 0) {
+    if (_.isArray(points[0])) {
+      return _.reduce(points, (acc, [x, y]) => {
+        return acc + ` ${x},${y} `
+      }, '')
+    } else if (_.isNumber(points[0])) {
+      let acc = ''
+      while (points.length) {
+        const x = points.shift()
+        const y = points.shift()
+        acc += ` ${x},${y} `
+      }
+      return acc
+    } else if (_.isPlainObject(points[0])) {
+      let acc = ''
+      while (points.length) {
+        const {x , y} = points.shift()
+        acc += ` ${x},${y} `
+      }
+      return acc
+    }
+  }
+}
+
+function applyDefaultAttrs(node, el) {
+  const {onClick, id, style, dataset, width, height, classNames} = el
+  if (_.isArray(classNames)) {
+    node.className = classNames.join(' ')
+  }
+  if (_.isString(classNames)) {
+    node.className = classNames
+  }
+  if (dataset) {
+    if (_.isPlainObject(dataset)) {
+      _.each(dataset, (v, k) => {
+        node.dataset[k] = v
+      })
+    }
+  }
+  if (_.isString(id)) {
+    node.id = id
+  }
+  if (_.isFunction(onClick)) {
+    node.onclick = onClick
+  }
+  _.each(style, (v, k) => {
+    node.style[k] = v
+  })
+  return node
+} 
+
 function domNode(el) {
   if (_.isElement(el)) {
     return el
@@ -7,24 +166,11 @@ function domNode(el) {
   } else if (_.isArray(el)) {
     return _.map(el, domNode)
   }
-  const {id, span, onKeyUp, dataset, src, width, height, value, innerText, onKeyDown, onInput, placeholder, onChange, tagName, type, isFor, name, classNames, href, onClick, children} = el
-  const newElement = document.createElement(tagName)
-  if (_.isArray(classNames)) {
-    newElement.className = classNames.join(' ')
+  const {span, onKeyUp, src, value, innerText, onKeyDown, onInput, placeholder, onChange, tagName, type, isFor, name, href, onClick, children} = el
+  if (tagName === 'svg') {
+    return svgNode(el)
   }
-  if (_.isString(classNames)) {
-    newElement.className = classNames
-  }
-  if (dataset) {
-    if (_.isPlainObject(dataset)) {
-      _.each(dataset, (v, k) => {
-        newElement.dataset[k] = v
-      })
-    }
-  }
-  if (_.isString(id)) {
-    newElement.id = id
-  }
+  const newElement = applyDefaultAttrs(document.createElement(tagName), el)
   if (tagName === "col") {
     if (span) {
       newElement.span = span
@@ -85,11 +231,12 @@ function domNode(el) {
   if (_.isString(innerText) && !children) {
     newElement.innerText = innerText
   }
-  if (_.isFunction(onClick)) {
-    newElement.onclick = onClick
-  }
   _.each(children, (c) => newElement.appendChild(domNode(c)))
   return newElement
+}
+
+function domNodes(...args) {
+  return _.map(args, domNode)
 }
 
 function buildGopher({awsDependencies, otherDependencies, defaultInputs, render}) {

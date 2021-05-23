@@ -25,8 +25,21 @@
   flex-direction: column;
 }
 
-#post-actions {
-  margin-bottom: 3vh;
+#post-editor em {
+  font-style: italic;
+}
+
+#post-editor h2 {
+  font-size: 1.6em;
+}
+
+#post-editor h3 {
+  font-size: 1.4em;
+}
+
+#post-editor h4 {
+  font-size: 1.1em;
+  font-weight: 400;
 }
 
 .ProseMirror-menubar-wrapper {
@@ -79,6 +92,7 @@ li.ProseMirror-selectednode:after {
   border: 2px solid #8cf;
   pointer-events: none;
 }
+
 .ProseMirror-textblock-dropdown {
   min-width: 3em;
 }
@@ -343,7 +357,6 @@ li.ProseMirror-selectednode:after {
   border-radius: 4px;
   border: 2px solid rgba(0, 0, 0, 0.2);
   padding: 5px 0;
-  margin-bottom: 23px;
 }
 
 .ProseMirror p:first-child,

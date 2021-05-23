@@ -42,43 +42,51 @@ window.RENDER_CONFIG = {
         },
       ]
     }))
-    mainSection.appendChild(domNode({
-      tagName: 'div',
-      id: 'post-list-header',
-      children: [
-        {
-          tagName: 'div',
-          classNames: 'post-status-headers',
-          children: [
-            {
-              tagName: 'div',
-              classNames: 'post-id-header',
-              children: ["Post ID"]
-            },
-            {
-              tagName: 'div',
-              classNames: 'save-status-header',
-              children: ["Save Status"]
-            },
-            {
-              tagName: 'div',
-              classNames: 'publish-status-header',
-              children: ["Publish Status"]
-            },
-          ]
-        },
-        {
-          tagName: 'div',
-          classNames: 'post-actions',
-        },
-      ]
-    }))
+    mainSection.appendChild(domNode(
+      {
+        tagName: 'div',
+        id: 'post-running-material',
+        children: [
+          {
+            tagName: 'div',
+            id: 'post-list-header',
+            children: [
+              {
+                tagName: 'div',
+                classNames: 'post-status-headers',
+                children: [
+                  {
+                    tagName: 'div',
+                    classNames: 'post-id-header',
+                    children: ["Post ID"]
+                  },
+                  {
+                    tagName: 'div',
+                    classNames: 'save-status-header',
+                    children: ["Save Status"]
+                  },
+                  {
+                    tagName: 'div',
+                    classNames: 'publish-status-header',
+                    children: ["Publish Status"]
+                  },
+                ]
+              },
+              {
+                tagName: 'div',
+                classNames: 'post-actions',
+              },
+            ]
+          }
+        ]
+      }
+    ))
     mainSection.appendChild(domNode({
       tagName: 'div',
       id: 'post-list'
     }))
     function updatePostKeys(postKeys) {
-        document.getElementById('post-list').replaceChildren(..._.map(postKeys, (Key) => {
+      document.getElementById('post-list').replaceChildren(..._.map(postKeys, (Key) => {
         const postIdParts = Key.split('/').pop().split('.')
         postIdParts.pop()
         const postId = postIdParts.join('.')
@@ -89,28 +97,34 @@ window.RENDER_CONFIG = {
           children: [
             {
               tagName: 'div',
-              classNames: 'post-status',
+              id: 'post-running-material',
               children: [
                 {
-                  tagName: 'a',
-                  classNames: 'post-id',
-                  href: `./edit.html?postId=${postId}`,
-                    children: [
+                  tagName: 'div',
+                  classNames: 'post-status',
+                  children: [
+                    {
+                      tagName: 'a',
+                      classNames: 'post-id',
+                      href: `./edit.html?postId=${postId}`,
+                        children: [
+                        {
+                          tagName: 'div',
+                          children: [postId]
+                        },
+                      ]
+                    },
                     {
                       tagName: 'div',
-                      children: [postId]
+                      classNames: 'save-status',
+                      children: [saveState || translatableText.saveState.unmodified]
+                    },
+                    {
+                      tagName: 'div',
+                      classNames: 'publish-status',
+                      children: [publishState || translatableText.publishState.unknown]
                     },
                   ]
-                },
-                {
-                  tagName: 'div',
-                  classNames: 'save-status',
-                  children: [saveState || translatableText.saveState.unmodified]
-                },
-                {
-                  tagName: 'div',
-                  classNames: 'publish-status',
-                  children: [publishState || translatableText.publishState.unknown]
                 },
               ]
             },
@@ -119,70 +133,55 @@ window.RENDER_CONFIG = {
               classNames: 'post-actions',
               children: [
                 {
-                  tagName: 'div',
-                  classNames: 'post-publish',
-                  children: [
-                    {
-                      tagName: 'button',
-                      name: 'publish',
-                      innerText: translatableText.postActions.publish,
-                      onClick: () => {
-                        goph.report(['saveAndPublishPostWithoutInput', 'confirmPostPublished'], {postId}, (e, r) => {
-                          if (e) {
-                            console.log(e)
-                            return
-                          }
-                          console.log('published')
-                        })
+                  tagName: 'button',
+                  name: 'publish',
+                  classNames: 'publish',
+                  innerText: translatableText.postActions.publish,
+                  onClick: () => {
+                    goph.report(['saveAndPublishPostWithoutInput', 'confirmPostPublished'], {postId}, (e, r) => {
+                      if (e) {
+                        console.log(e)
+                        return
                       }
-                    },
-                  ]
+                      console.log('published')
+                    })
+                  }
                 },
                 {
-                  tagName: 'div',
-                  classNames: 'post-unpublish',
-                  children: [
-                    {
-                      tagName: 'button',
-                      name: 'unpublish',
-                      innerText: translatableText.postActions.unpublish,
-                      onClick: () => {
-                        goph.report(['unpublishPostWithoutInput', 'confirmPostUnpublished'], {postId}, (e, r) => {
-                          if (e) {
-                            console.log(e)
-                            return
-                          }
-                          console.log('unpublished')
-                        })
-                      },
-                    },
-                  ]
+                  tagName: 'button',
+                  name: 'unpublish',
+                  classNames: 'unpublish',
+                  innerText: translatableText.postActions.unpublish,
+                  onClick: () => {
+                    goph.report(['unpublishPostWithoutInput', 'confirmPostUnpublished'], {postId}, (e, r) => {
+                      if (e) {
+                        console.log(e)
+                        return
+                      }
+                      console.log('unpublished')
+                    })
+                  },
                 },
                 {
-                  tagName: 'div',
-                  classNames: 'post-delete',
-                  children: [
-                    {
-                      tagName: 'button',
-                      name: 'delete',
-                      dataset: {
-                        postId
-                      },
-                      innerText: translatableText.postActions.delete,
-                      onClick: (evt) => {
-                        goph.report(['deletePostWithoutInput', 'confirmPostDeleted'], {postId}, (e, r) => {
-                          if (e) {
-                            console.log(e)
-                            return
-                          }
-                          const entry = evt.target.closest('.post-list-entry')
-                          if (entry && !e) {
-                            entry.remove()
-                          }
-                        })
-                      },
-                    },
-                  ]
+                  tagName: 'button',
+                  name: 'delete',
+                  classNames: 'delete',
+                  dataset: {
+                    postId
+                  },
+                  innerText: translatableText.postActions.delete,
+                  onClick: (evt) => {
+                    goph.report(['deletePostWithoutInput', 'confirmPostDeleted'], {postId}, (e, r) => {
+                      if (e) {
+                        console.log(e)
+                        return
+                      }
+                      const entry = evt.target.closest('.post-list-entry')
+                      if (entry && !e) {
+                        entry.remove()
+                      }
+                    })
+                  },
                 },
               ]
             },
