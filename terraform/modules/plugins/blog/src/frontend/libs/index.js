@@ -45,39 +45,33 @@ window.RENDER_CONFIG = {
     mainSection.appendChild(domNode(
       {
         tagName: 'div',
-        id: 'post-running-material',
+        id: 'post-list-header',
         children: [
           {
             tagName: 'div',
-            id: 'post-list-header',
+            classNames: 'post-status-headers',
             children: [
               {
                 tagName: 'div',
-                classNames: 'post-status-headers',
-                children: [
-                  {
-                    tagName: 'div',
-                    classNames: 'post-id-header',
-                    children: ["Post ID"]
-                  },
-                  {
-                    tagName: 'div',
-                    classNames: 'save-status-header',
-                    children: ["Save Status"]
-                  },
-                  {
-                    tagName: 'div',
-                    classNames: 'publish-status-header',
-                    children: ["Publish Status"]
-                  },
-                ]
+                classNames: 'post-id-header',
+                children: ["Post ID"]
               },
               {
                 tagName: 'div',
-                classNames: 'post-actions',
+                classNames: 'save-status-header',
+                children: ["Save Status"]
+              },
+              {
+                tagName: 'div',
+                classNames: 'publish-status-header',
+                children: ["Publish Status"]
               },
             ]
-          }
+          },
+          {
+            tagName: 'div',
+            classNames: 'post-actions',
+          },
         ]
       }
     ))

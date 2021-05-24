@@ -46,7 +46,6 @@ main {
   display: flex;
   flex-direction: column;
   width: 100%;
-  padding-bottom: 2.1em;
 }
 
 input.new-post.expanded {
@@ -56,10 +55,6 @@ input.new-post.expanded {
 
 .new-post.expanded {
   opacity: 1;
-}
-
-.post-status-headers {
-  border-bottom: 1px solid gray;
 }
 
 .save-status, .publish-status {
@@ -72,6 +67,12 @@ input.new-post.expanded {
   margin-top: auto;
   margin-bottom: auto;
   text-align: left;
+  flex: 2;
+  height: 100%;
+}
+
+.post-status.edit, .post-status-headers.edit {
+  height: unset;
 }
 
 .save-status, .publish-status, .save-status-header, .publish-status-header {
@@ -80,14 +81,22 @@ input.new-post.expanded {
   margin: auto 0;
 }
 
-.post-id {
+.post-id.edit {
+  flex: 0 1 100%;
+  margin: auto 0;
+}
+
+.post-id div {
   display: inline-block;
-  margin: auto 0; 
-  flex: 50;
 }
 
 .title-post-id {
   font-size: 1.3em;
+}
+
+.post-id {
+  flex: 0 1 46%;
+  margin: auto 0;
 }
 
 .post-id-header {
@@ -116,7 +125,31 @@ input.new-post.expanded {
   font-size: 0.9em;
   font-weight: bold;
   text-align: center;
-  flex: 45;
+  z-index: 50;
+  background-color: white;
+  height: 100%;
+}
+
+#post-running-material.edit {
+  width: 100%;
+}
+
+.post-list-entry #post-running-material {
+  flex: 2;
+}
+
+.post-actions {
+  flex: 1;
+  display: flex;
+  margin: 0 auto;
+}
+
+.post-actions button {
+  flex: 1;
+  height: 100%;
+  border-style: solid;
+  border-radius: 7px;
+  margin: 0 0.2em;
 }
 
 #post-actions {
@@ -172,6 +205,7 @@ input.new-post.expanded {
   font-size: 0.9em;
   font-weight: bold;
   text-align: center;
+  border-bottom: 1px solid gray;
 }
 
 @media screen and (max-width: 767px) {
@@ -191,8 +225,15 @@ input.new-post.expanded {
     border-bottom-width: 0;
   }
 
+  .post-list-entry.open #post-running-material {
+    position: absolute;
+    left: 250px;
+    width: 100vw;
+  }
+
   .post-status, .post-status-headers {
     width: 100%;
+    height: 100%;
     z-index: 3;
   }
 
@@ -200,18 +241,17 @@ input.new-post.expanded {
     position: absolute;
     display: flex;
     z-index: 2;
-    padding-right: 20%;
     height: 100%;
-  }
-
-  .post-id, .post-id-header {
-    flex: 0 1 42%;
-    margin: auto 0;
+    border-radius: 7px;
   }
 
   .post-info {
     flex: none;
     width: 100%;
+  }
+
+  .post-list-entry.open {
+    overflow: hidden;
   }
 
   .post-edit, .post-publish, .post-unpublish, .post-delete {
@@ -223,6 +263,13 @@ input.new-post.expanded {
   .post-actions  button {
     width: 100%;
     height: 100%;
-    border: none;
+    margin: 0 0.2em;
+    font-family: inherit;
+    border-radius: 7px;
+    border-style: solid;
+  }
+
+  .post-actions  button:first-child {
+
   }
 }

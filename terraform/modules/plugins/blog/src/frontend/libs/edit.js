@@ -80,7 +80,7 @@ window.RENDER_CONFIG = {
               {
                 tagName: 'div',
                 id: 'post-id',
-                classNames: 'post-id',
+                classNames: 'post-id edit',
                 children: [{
                   tagName: 'span',
                   classNames: 'title-post-id',
@@ -90,6 +90,7 @@ window.RENDER_CONFIG = {
               {
                 tagName: 'div',
                 id: 'post-running-material',
+                classNames: 'edit',
                 children: [
                   {
                     tagName: 'div',
@@ -115,7 +116,7 @@ window.RENDER_CONFIG = {
                   },
                   {
                     tagName: 'div',
-                    classNames: 'post-status',
+                    classNames: 'post-status edit',
                     children: [
                       {
                         tagName: 'div',

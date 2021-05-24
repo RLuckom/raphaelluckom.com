@@ -12,7 +12,7 @@
   display: flex;
   width: 100%;
   margin-bottom: 0.5em;
-  height: 4em;
+  height: 2.6em;
 }
 
 .post-actions, {
@@ -32,20 +32,6 @@
     position: relative;
   }
 
-  .post-list-entry.open .publish-status::after {
-    display: inline-block;
-    content: '';
-    width: 15px;
-    height: 15px;
-    border: 1px solid gray;
-    border-right: 0;
-    border-bottom: 0;
-    transform: rotate(45deg);
-    position: absolute;
-    right: 12px;
-    top: 16px;
-  }
-
   .post-list-entry.closed .publish-status::after {
     display: inline-block;
     content: '';
@@ -57,6 +43,5 @@
     transform: scaleX(0.6) rotate(135deg);
     position: absolute;
     right: 0px;
-    top: 1.4em;
   }
 }
