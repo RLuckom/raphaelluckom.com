@@ -34,159 +34,101 @@ window.RENDER_CONFIG = {
         id: 'info-toolbar',
         children: [
           {
-            tagName: 'a',
-            classNames: 'to-index',
-            href: './index.html',
-            children: [
-              {
-                tagName: 'svg',
-                children: [
-                  {
-                    tagName: 'polyline',
-                    points: [{
-                      y: 0,
-                      x: 100,
-                    },
-                    {
-                      y: 50,
-                      x: 0,
-                    }, 
-                    {
-                      y: 100,
-                      x: 100,
-                    },
-                    ],
-                    strokeWidth: '0.2em',
-                    stroke: '#000',
-                    strokeLinecap: 'round',
-                    strokeLinejoin: 'round',
-                  }
-                ]
-              }
-            ]
-          },
-          {
             tagName: 'div',
-            id: 'post-id',
-            classNames: 'post-id',
-            children: [postId]
-          },
-          {
-            tagName: 'div',
-            id: 'post-running-material',
+            classNames: 'post-info',
             children: [
               {
                 tagName: 'div',
-                id: 'post-list-header',
+                classNames: 'to-index',
                 children: [
                   {
-                    tagName: 'div',
-                    classNames: 'post-status-headers',
+                    tagName: 'a',
+                    href: './index.html',
                     children: [
                       {
-                        tagName: 'div',
-                        classNames: 'save-status-header',
-                        children: ["Save Status"]
-                      },
-                      {
-                        tagName: 'div',
-                        classNames: 'publish-status-header',
-                        children: ["Publish Status"]
-                      },
+                        tagName: 'svg',
+                        width: '1em',
+                        height: '2em',
+                        viewBox: '0 0 50 100',
+                        children: [
+                          {
+                            tagName: 'polyline',
+                            points: [{
+                              y: 10,
+                              x: 40,
+                            },
+                            {
+                              y: 50,
+                              x: 10,
+                            }, 
+                            {
+                              y: 90,
+                              x: 40,
+                            },
+                            ],
+                            strokeWidth: '0.4em',
+                            stroke: '#000',
+                            strokeLinecap: 'round',
+                            strokeLinejoin: 'round',
+                          }
+                        ]
+                      }
                     ]
                   },
                 ]
               },
               {
                 tagName: 'div',
-                classNames: 'post-status',
-                children: [
-                  {
-                    tagName: 'div',
-                    id: 'save-status',
-                    classNames: 'save-status',
-                  },
-                  {
-                    tagName: 'div',
-                    id: 'publish-status',
-                    classNames: 'publish-status',
-                  },
-                ]
+                id: 'post-id',
+                classNames: 'post-id',
+                children: [{
+                  tagName: 'span',
+                  classNames: 'title-post-id',
+                  children: [postId],
+                }]
               },
-            ]
-          },
-          {
-            tagName: 'div',
-            id: 'post-actions',
-            children: [
               {
                 tagName: 'div',
-                classNames: 'button-container',
+                id: 'post-running-material',
                 children: [
                   {
-                    tagName: 'button',
-                    name: 'save',
-                    classNames: 'save',
-                    innerText: translatableText.postActions.save,
-                    onClick: function() {
-                      goph.report('savePostWithoutPublishing', {post: currentPost, postId}, (e, r) => {
-                        const changedEtag = _.get(r, 'savePostWithoutPublishing[0].ETag')
-                        if (changedEtag) {
-                          currentSavedETag = changedEtag
-                          currentPost.etag = changedEtag
-                          postAsSaved = _.cloneDeep(currentPost)
-                        }
-                        console.log('saved')
-                        updatePost({})
-                      })
-                    }
+                    tagName: 'div',
+                    id: 'post-list-header',
+                    children: [
+                      {
+                        tagName: 'div',
+                        classNames: 'post-status-headers',
+                        children: [
+                          {
+                            tagName: 'div',
+                            classNames: 'save-status-header',
+                            children: ["Save Status"]
+                          },
+                          {
+                            tagName: 'div',
+                            classNames: 'publish-status-header',
+                            children: ["Publish Status"]
+                          },
+                        ]
+                      },
+                    ]
                   },
                   {
-                    tagName: 'button',
-                    name: 'publish',
-                    classNames: 'publish',
-                    innerText: translatableText.postActions.publish,
-                    onClick: function() {
-                      goph.report(['saveAndPublishPost', 'confirmPostPublished'], {post: currentPost, postId}, (e, r) => {
-                        if (e) {
-                          console.error(e)
-                          return
-                        }
-                        console.log('published')
-                        const changedEtag = _.get(r, 'saveAndPublishPost[0].ETag')
-                        if (changedEtag) {
-                          currentSavedETag = changedEtag
-                          currentPost.etag = changedEtag
-                          currentPublishedETag = changedEtag
-                          postAsSaved = _.cloneDeep(currentPost)
-                        }
-                        updatePost({})
-                      })
-                    }
+                    tagName: 'div',
+                    classNames: 'post-status',
+                    children: [
+                      {
+                        tagName: 'div',
+                        id: 'save-status',
+                        classNames: 'save-status',
+                      },
+                      {
+                        tagName: 'div',
+                        id: 'publish-status',
+                        classNames: 'publish-status',
+                      },
+                    ]
                   },
-                  {
-                    tagName: 'button',
-                    name: 'unpublish',
-                    classNames: 'unpublish',
-                    innerText: translatableText.postActions.unpublish,
-                    onClick: function() {
-                      goph.report(['unpublishPost', 'confirmPostUnpublished'], {post: currentPost, postId}, (e, r) => {
-                        if (e) {
-                          console.error(e)
-                          return
-                        }
-                        console.log('unpublished')
-                        const changedEtag = _.get(r, 'unpublishPost[0].ETag')
-                        if (changedEtag) {
-                          currentSavedETag = changedEtag
-                          currentPost.etag = changedEtag
-                          currentPublishedETag = null
-                          postAsSaved = _.cloneDeep(currentPost)
-                        }
-                        updatePost({})
-                      })
-                    },
-                  }
                 ]
               },
             ]
@@ -194,45 +136,106 @@ window.RENDER_CONFIG = {
         ]
       },
       {
-        tagName: 'div',
-        classNames: 'authoring-inputs',
-        children: [
-          {
-            tagName: 'input',
-            type: 'text',
-            name: 'title',
-            classNames: 'authoring-input',
-            placeholder: translatableText.postMetadata.placeholders.title,
-            value: currentPost.frontMatter.title,
-            id: 'title',
-            onChange: (e) => updatePost({title: e.target.value})
-          },
-          {
-            tagName: 'input',
-            type: 'text',
-            classNames: 'authoring-input',
-            placeholder: translatableText.postMetadata.placeholders.author,
-            id: 'author',
-            value: CONFIG.operator_name,
-            onChange: (e) => updatePost({author: e.target.value})
-          },
-          {
-            tagName: 'input',
-            placeholder: translatableText.postMetadata.placeholders.trails,
-            type: 'text',
-            name: 'trails',
-            classNames: 'authoring-input',
-            id: 'trails',
-            value: (_.get(post, 'frontMatter.meta.trails') || []).join(', '),
-            onChange: (e) => updatePost({trails: _.map((e.target.value || '').split(','), _.trim)})
-          }
-        ]
+        tagName: 'input',
+        type: 'text',
+        name: 'title',
+        classNames: 'authoring-input',
+        placeholder: translatableText.postMetadata.placeholders.title,
+        value: currentPost.frontMatter.title,
+        id: 'title',
+        onChange: (e) => updatePost({title: e.target.value})
       },
       {
         tagName: 'div',
         id: 'post-editor',
         classNames: ['prosemirror', 'editor'],
         name: 'main',
+      },
+      {
+        tagName: 'div',
+        id: 'post-actions',
+        children: [
+          {
+            tagName: 'div',
+            classNames: 'button-container',
+            children: [
+              {
+                tagName: 'button',
+                name: 'save',
+                classNames: 'save',
+                innerText: translatableText.postActions.save,
+                onClick: function() {
+                  goph.report('savePostWithoutPublishing', {post: currentPost, postId}, (e, r) => {
+                    const changedEtag = _.get(r, 'savePostWithoutPublishing[0].ETag')
+                    if (changedEtag) {
+                      currentSavedETag = changedEtag
+                      currentPost.etag = changedEtag
+                      postAsSaved = _.cloneDeep(currentPost)
+                    }
+                    console.log('saved')
+                    updatePost({})
+                  })
+                }
+              },
+              {
+                tagName: 'button',
+                name: 'publish',
+                classNames: 'publish',
+                innerText: translatableText.postActions.publish,
+                onClick: function() {
+                  goph.report(['saveAndPublishPost', 'confirmPostPublished'], {post: currentPost, postId}, (e, r) => {
+                    if (e) {
+                      console.error(e)
+                      return
+                    }
+                    console.log('published')
+                    const changedEtag = _.get(r, 'saveAndPublishPost[0].ETag')
+                    if (changedEtag) {
+                      currentSavedETag = changedEtag
+                      currentPost.etag = changedEtag
+                      currentPublishedETag = changedEtag
+                      postAsSaved = _.cloneDeep(currentPost)
+                    }
+                    updatePost({})
+                  })
+                }
+              },
+              {
+                tagName: 'button',
+                name: 'unpublish',
+                classNames: 'unpublish',
+                innerText: translatableText.postActions.unpublish,
+                onClick: function() {
+                  goph.report(['unpublishPost', 'confirmPostUnpublished'], {post: currentPost, postId}, (e, r) => {
+                    if (e) {
+                      console.error(e)
+                      return
+                    }
+                    console.log('unpublished')
+                    const changedEtag = _.get(r, 'unpublishPost[0].ETag')
+                    if (changedEtag) {
+                      currentSavedETag = changedEtag
+                      currentPost.etag = changedEtag
+                      currentPublishedETag = null
+                      postAsSaved = _.cloneDeep(currentPost)
+                    }
+                    updatePost({})
+                  })
+                },
+              }
+            ]
+          },
+        ]
+      },
+      {
+        tagName: 'input',
+        placeholder: translatableText.postMetadata.placeholders.trails,
+        type: 'text',
+        name: 'trails',
+        classNames: 'authoring-input',
+        id: 'trails',
+        value: (_.get(post, 'frontMatter.meta.trails') || []).join(', '),
+        onChange: (e) => updatePost({trails: _.map((e.target.value || '').split(','), _.trim)})
       },
       {
         tagName: 'div',

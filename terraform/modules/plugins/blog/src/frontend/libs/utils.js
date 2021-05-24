@@ -16,15 +16,15 @@ function svgNode(el) {
     newElement = applyDefaultAttrs(document.createElementNS("http://www.w3.org/2000/svg", tagName), el)
     if (el.viewBox) {
       if (_.isString(el.viewBox)) {
-        setIfDefined('viewbox', newElement, 'viewBox')
+        setIfDefined('viewBox', newElement, 'viewBox')
       } else if (_.isArray(el.viewBox)) {
-        setIfDefined('viewbox', newElement, 'viewBox', el.viewBox.join(' '))
+        setIfDefined('viewBox', newElement, 'viewBox', el.viewBox.join(' '))
       }
     } else {
-      newElement.setAttribute('viewbox', '0 0 100 100')
+      newElement.setAttribute('viewBox', '0 0 100 100')
     }
-    setIfDefined('height', newElement, 'height', el.height, 100)
-    setIfDefined('width', newElement, 'width', el.width, 100)
+    setIfDefined('height', newElement, 'height', el.height, '100%')
+    setIfDefined('width', newElement, 'width', el.width, '100%')
   } else {
     newElement = applyDefaultAttrs(document.createElementNS("http://www.w3.org/2000/svg", tagName), el)
     setIfDefined('transform', newElement, 'transform')

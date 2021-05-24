@@ -20,7 +20,7 @@ input[type=text] {
   border-top-width: 0;
   border-left-width: 0;
   border-right-width: 0;
-  border-bottom-width: var(--default-border-width);
+  border-bottom-width: 0;
 }
 
 img {
@@ -58,12 +58,12 @@ input.new-post.expanded {
   opacity: 1;
 }
 
-.post-status {
-  background-color: white;
-}
-
 .post-status-headers {
   border-bottom: 1px solid gray;
+}
+
+.save-status, .publish-status {
+  font-weight: 400;
 }
 
 .post-status, .post-status-headers {
@@ -76,12 +76,18 @@ input.new-post.expanded {
 
 .save-status, .publish-status, .save-status-header, .publish-status-header {
   display: inline-block;
-  flex: 0 1 27%;
+  flex: 1;
+  margin: auto 0;
 }
 
 .post-id {
   display: inline-block;
-  flex: 25;
+  margin: auto 0; 
+  flex: 50;
+}
+
+.title-post-id {
+  font-size: 1.3em;
 }
 
 .post-id-header {
@@ -92,19 +98,29 @@ input.new-post.expanded {
 #info-toolbar {
   width: 100%;
   display: flex;
+  flex-wrap: wrap;
+}
+
+.post-info {
+  flex: 55;
+  display: flex;
+}
+
+.to-index {
+  display: inline-block;
+  margin-right: 1em;
 }
 
 #post-running-material {
   display: inline-block;
-  flex: 30;
   font-size: 0.9em;
   font-weight: bold;
   text-align: center;
+  flex: 45;
 }
 
 #post-actions {
   display: inline-block;
-  flex: 45;
 }
 
 .button-container {
@@ -116,7 +132,8 @@ input.new-post.expanded {
 .button-container button {
   flex: auto;
   height: 100%;
-  margin: 0 0.1em;
+  min-height: 2em;
+  margin: 0.4em 0.1em;
   font-family: inherit;
   font-weight: bold;
   border-radius: 7px;
@@ -165,20 +182,18 @@ input.new-post.expanded {
   input[type="password"] {
     outline: none;
     font-size: 16px;
-    margin-top: 1rem;
     font-family: inherit;
     border-color: var(--neutral);
     border-style: solid;
     border-top-width: 0;
     border-left-width: 0;
     border-right-width: 0;
-    border-bottom-width: var(--default-border-width);
+    border-bottom-width: 0;
   }
 
   .post-status, .post-status-headers {
     width: 100%;
     z-index: 3;
-    height: 100%;
   }
 
   .post-actions {
@@ -194,13 +209,9 @@ input.new-post.expanded {
     margin: auto 0;
   }
 
-  .save-status, .save-status-header {
-    margin: auto 0;
-  }
-
-  .publish-status, .publish-status-header {
-    flex: 0 1 31%;
-    margin: auto 0;
+  .post-info {
+    flex: none;
+    width: 100%;
   }
 
   .post-edit, .post-publish, .post-unpublish, .post-delete {
