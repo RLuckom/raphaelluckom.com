@@ -2,6 +2,34 @@ window.RENDER_CONFIG = {
   init: ({postKeys}, gopher) => {
     const mainSection = document.querySelector('main')
     const closeInputButtonText = 'X'
+    let isNarrowScreen
+    function toggleTray (evt) {
+      console.log('toggle')
+      evt.target.closest('.post-list-entry').classList.toggle('open')
+    }
+    function smallScreenHandlers() {
+      const mq = window.matchMedia('(max-width: 767px)')
+      if (!mq.matches) {
+        if (isNarrowScreen) {
+          _.map(
+            document.querySelectorAll('.post-list-entry'),
+            (el) => {
+              el.removeEventListener('click', toggleTray)
+            }
+          )
+          isNarrowScreen = false
+          return
+        } 
+      } else if (!isNarrowScreen) {
+        isNarrowScreen = true
+        _.map(
+          document.querySelectorAll('.post-list-entry'),
+          (el) => {
+            el.addEventListener('click', toggleTray)
+          }
+        )
+      }
+    }
     window.addEventListener('pageshow', () => {
       goph.report('listPosts', (e, {listPosts}) => {
         const postKeys = _.map(listPosts[0], 'Key')
@@ -70,7 +98,7 @@ window.RENDER_CONFIG = {
           },
           {
             tagName: 'div',
-            classNames: 'post-actions',
+            classNames: 'post-actions-header',
           },
         ]
       }
@@ -87,7 +115,7 @@ window.RENDER_CONFIG = {
         const { post, publishedETag, saveState, publishState } =  loadAutosave(postId)
         return domNode({
           tagName: 'div',
-          classNames: 'post-list-entry closed',
+          classNames: 'post-list-entry',
           children: [
             {
               tagName: 'div',
@@ -98,15 +126,9 @@ window.RENDER_CONFIG = {
                   classNames: 'post-status',
                   children: [
                     {
-                      tagName: 'a',
+                      tagName: 'div',
                       classNames: 'post-id',
-                      href: `./edit.html?postId=${postId}`,
-                        children: [
-                        {
-                          tagName: 'div',
-                          children: [postId]
-                        },
-                      ]
+                      children: [postId]
                     },
                     {
                       tagName: 'div',
@@ -126,6 +148,15 @@ window.RENDER_CONFIG = {
               tagName: 'div',
               classNames: 'post-actions',
               children: [
+                {
+                  tagName: 'button',
+                  name: 'edit',
+                  classNames: 'edit',
+                  innerText: translatableText.postActions.edit,
+                  onClick: () => {
+                      window.location.href = `./edit.html?postId=${postId}`
+                  }
+                },
                 {
                   tagName: 'button',
                   name: 'publish',
@@ -184,6 +215,8 @@ window.RENDER_CONFIG = {
       }))
     }
     updatePostKeys(postKeys)
+    smallScreenHandlers()
+    window.onresize = smallScreenHandlers
   },
   params: {
     postKeys: {

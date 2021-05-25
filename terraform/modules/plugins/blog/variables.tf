@@ -153,7 +153,6 @@ variable library_const_names {
   type = list(string)
   default = [
     "yaml",
-    "moment",
     "hljs", 
     "prosemirror",
     "uuid"

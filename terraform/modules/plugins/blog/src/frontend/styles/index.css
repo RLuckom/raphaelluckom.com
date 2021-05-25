@@ -12,7 +12,7 @@
   display: flex;
   width: 100%;
   margin-bottom: 0.5em;
-  height: 2.6em;
+  flex-wrap: wrap;
 }
 
 .post-actions, {
@@ -25,23 +25,4 @@
 .post-edit, .post-publish, .post-unpublish, .post-delete {
   display: inline-block;
   flex: 0 1 33%;
-}
-
-@media screen and (max-width: 767px) {
-  .post-list-entry {
-    position: relative;
-  }
-
-  .post-list-entry.closed .publish-status::after {
-    display: inline-block;
-    content: '';
-    width: 15px;
-    height: 15px;
-    border: 2px solid gray;
-    border-right: 0;
-    border-bottom: 0;
-    transform: scaleX(0.6) rotate(135deg);
-    position: absolute;
-    right: 0px;
-  }
 }

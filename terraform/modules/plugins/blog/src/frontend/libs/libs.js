@@ -9,17 +9,15 @@ const {menuBar, wrapItem, blockTypeItem, Dropdown, DropdownSubmenu, joinUpItem, 
 const {wrapInList, splitListItem, liftListItem, sinkListItem} = require("prosemirror-schema-list")
 const { TextSelection, EditorState, Plugin, NodeSelection } = require("prosemirror-state")
 const {EditorView, Decoration, DecorationSet} = require("prosemirror-view")
-const {defaultMarkdownParser, defaultMarkdownSerializer} = require('prosemirror-markdown')
+const {schema, defaultMarkdownParser, defaultMarkdownSerializer} = require('prosemirror-markdown')
 
 const uuid = require('uuid')
 const yaml = require('js-yaml')
-const moment = require('moment')
-
 
 module.exports = {
-  yaml, moment, uuid,
+  yaml, uuid,
   prosemirror: {
-    EditorState, Plugin, NodeSelection, Schema,
+    EditorState, Plugin, NodeSelection, Schema, schema,
     EditorView, Decoration, DecorationSet, TextSelection,
     wrapInList, splitListItem, liftListItem, sinkListItem,
     menuBar, wrapItem, blockTypeItem, Dropdown, DropdownSubmenu, joinUpItem, liftItem, selectParentNodeItem, undoItem, redoItem, icons, MenuItem,

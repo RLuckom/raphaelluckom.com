@@ -68,11 +68,10 @@ input.new-post.expanded {
   margin-bottom: auto;
   text-align: left;
   flex: 2;
-  height: 100%;
 }
 
-.post-status.edit, .post-status-headers.edit {
-  height: unset;
+.post-list-entry .post-status, .post-list-entry .post-actions {
+  height: 2.6em;
 }
 
 .save-status, .publish-status, .save-status-header, .publish-status-header {
@@ -88,6 +87,7 @@ input.new-post.expanded {
 
 .post-id div {
   display: inline-block;
+  min-width: 5em;
 }
 
 .title-post-id {
@@ -125,9 +125,7 @@ input.new-post.expanded {
   font-size: 0.9em;
   font-weight: bold;
   text-align: center;
-  z-index: 50;
   background-color: white;
-  height: 100%;
 }
 
 #post-running-material.edit {
@@ -138,7 +136,7 @@ input.new-post.expanded {
   flex: 2;
 }
 
-.post-actions {
+.post-actions, .post-actions-header {
   flex: 1;
   display: flex;
   margin: 0 auto;
@@ -225,33 +223,35 @@ input.new-post.expanded {
     border-bottom-width: 0;
   }
 
-  .post-list-entry.open #post-running-material {
-    position: absolute;
-    left: 250px;
-    width: 100vw;
+  .post-list-entry #post-running-material {
+    min-width: 100%;
   }
 
   .post-status, .post-status-headers {
     width: 100%;
-    height: 100%;
-    z-index: 3;
   }
 
   .post-actions {
-    position: absolute;
     display: flex;
-    z-index: 2;
-    height: 100%;
-    border-radius: 7px;
+  }
+
+  .post-actions-header {
+    flex: 0;
+  }
+
+  .post-list-entry .post-actions {
+    height: 0;
+    overflow: hidden;
+  }
+
+  .post-list-entry.open .post-actions {
+    height: 2.6em;
+    overflow: visible;
   }
 
   .post-info {
     flex: none;
     width: 100%;
-  }
-
-  .post-list-entry.open {
-    overflow: hidden;
   }
 
   .post-edit, .post-publish, .post-unpublish, .post-delete {
