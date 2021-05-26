@@ -1,3 +1,7 @@
+#post-editor {
+  display: flex;
+}
+
 #post-editor em {
   font-style: italic;
 }

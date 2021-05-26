@@ -40,11 +40,10 @@ window.RENDER_CONFIG = {
     function mergeEditorStateToPost() {
       const mergedPost = _.cloneDeep(getPostAsSaved(postId) || newPost())
       const editorState = getPostEditorState(postId)
-      mergedPost.frontMatter.imageIds = _.cloneDeep(editorState.imageIds)
-      mergedPost.frontMatter.trails = _.cloneDeep(editorState.trails)
+      mergedPost.frontMatter.meta.imageIds = _.cloneDeep(editorState.imageIds)
+      mergedPost.frontMatter.meta.trails = _.cloneDeep(editorState.trails)
       mergedPost.frontMatter.title = _.cloneDeep(editorState.title)
       mergedPost.content = _.cloneDeep(editorState.content)
-      console.log(mergedPost)
       return mergedPost
     }
     function setSaveState(text) {
@@ -254,7 +253,6 @@ window.RENDER_CONFIG = {
                       console.error(e)
                       return
                     }
-                    console.log('unpublished')
                     const changedETag = _.get(r, 'unpublishPost[0].ETag')
                     if (changedETag) {
                       postToSave.etag = changedETag
@@ -313,8 +311,6 @@ window.RENDER_CONFIG = {
 
       function updateEditorState(updates) {
         const postAsSaved = getPostAsSaved(postId)
-        console.log(updates)
-        console.log(postAsSaved)
         let isModified = false
         if (updates.title && !_.isEqual(updates.title, _.get(postAsSaved, 'frontMatter.title'))) {
           isModified = true
@@ -330,8 +326,6 @@ window.RENDER_CONFIG = {
         }
         editorState = updatePostEditorState(postId, updates)
         const s = updatePostSaveState(postId, {label: isModified ? translatableText.saveState.modified : translatableText.saveState.unmodified})
-        console.log(editorState)
-        console.log(s)
         setSaveState(s.label)
       }
 

@@ -54,8 +54,6 @@ function getParsedLocalStorageData(key) {
 
 function updateLocalStorageData(key, updates) {
   const updatedRecord = _.merge({}, getParsedLocalStorageData(key), updates)
-  console.log(key)
-  console.log(updatedRecord)
   localStorage.setItem(key, JSON.stringify(updatedRecord))
   return updatedRecord
 }

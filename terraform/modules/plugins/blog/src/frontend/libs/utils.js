@@ -334,7 +334,7 @@ function domNode(el) {
   } else if (_.isArray(el)) {
     return _.map(el, domNode)
   }
-  const {accept, span, onKeyUp, src, value, innerText, onKeyDown, onInput, placeholder, onChange, tagName, type, isFor, name, href, onClick, children} = el
+  const {accept, width, height, span, onKeyUp, src, value, innerText, onKeyDown, onInput, placeholder, onChange, tagName, type, isFor, name, href, onClick, children} = el
   if (tagName === 'svg') {
     return svgNode(el)
   }
