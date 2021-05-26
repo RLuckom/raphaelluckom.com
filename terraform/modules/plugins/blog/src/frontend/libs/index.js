@@ -1,35 +1,29 @@
 window.RENDER_CONFIG = {
-  init: ({postKeys}, gopher) => {
-    const mainSection = document.querySelector('main')
-    const closeInputButtonText = 'X'
-    let isNarrowScreen
-    function toggleTray (evt) {
-      console.log('toggle')
-      evt.target.closest('.post-list-entry').classList.toggle('open')
-    }
-    function smallScreenHandlers() {
-      const mq = window.matchMedia('(max-width: 767px)')
-      if (!mq.matches) {
-        if (isNarrowScreen) {
-          _.map(
-            document.querySelectorAll('.post-list-entry'),
-            (el) => {
-              el.removeEventListener('click', toggleTray)
-            }
-          )
-          isNarrowScreen = false
-          return
-        } 
-      } else if (!isNarrowScreen) {
-        isNarrowScreen = true
+  smallScreenFormatters: {
+    toggleTray: () => {
+      function toggleTray (evt) {
+        evt.target.closest('.post-list-entry').classList.toggle('open')
+      }
+      function revert() {
         _.map(
           document.querySelectorAll('.post-list-entry'),
           (el) => {
-            el.addEventListener('click', toggleTray)
+            el.removeEventListener('click', toggleTray)
           }
         )
       }
+      _.map(
+        document.querySelectorAll('.post-list-entry'),
+        (el) => {
+          el.addEventListener('click', toggleTray)
+        }
+      )
+      return revert
     }
+  },
+  init: ({postKeys}, gopher) => {
+    const mainSection = document.querySelector('main')
+    const closeInputButtonText = 'X'
     window.addEventListener('pageshow', () => {
       goph.report('listPosts', (e, {listPosts}) => {
         const postKeys = _.map(listPosts[0], 'Key')
@@ -47,14 +41,52 @@ window.RENDER_CONFIG = {
           id: 'new-post-button',
           onClick: () => {
             document.getElementById('new-post').classList.toggle('expanded')
-            const innerText = document.getElementById('new-post-button').innerText
-            if (innerText === translatableText.postActions.new) {
-              document.getElementById('new-post-button').innerText = closeInputButtonText
+            const icon = document.getElementById('new-post-icon')
+            const rotation = 'rotate(45, 50, 50)'
+            if (icon.getAttribute('transform') === rotation) {
+              icon.setAttribute('transform', '')
             } else {
-              document.getElementById('new-post-button').innerText = translatableText.postActions.new
+              icon.setAttribute('transform', rotation)
             }
           },
-          innerText: translatableText.postActions.new,
+          children: [
+            {
+              tagName: 'svg',
+              width: '1.5em',
+              height: '1.5em',
+              viewBox: '0 0 100 100',
+              children: [
+                {
+                  tagName: 'g',
+                  id: 'new-post-icon',
+                  children: [
+                    {
+                      tagName: 'line',
+                      x1: 15,
+                      y1: 50,
+                      x2: 85,
+                      y2: 50,
+                      strokeWidth: '0.4em',
+                      stroke: '#000',
+                      strokeLinecap: 'round',
+                      strokeLinejoin: 'round',
+                    },
+                    {
+                      tagName: 'line',
+                      y1: 15,
+                      x1: 50,
+                      y2: 85,
+                      x2: 50,
+                      strokeWidth: '0.4em',
+                      stroke: '#000',
+                      strokeLinecap: 'round',
+                      strokeLinejoin: 'round',
+                    },
+                  ]
+                }
+              ]
+            },
+          ]
         },
         {
           tagName: 'input',
@@ -161,14 +193,16 @@ window.RENDER_CONFIG = {
                   tagName: 'button',
                   name: 'publish',
                   classNames: 'publish',
+                  spin: true,
                   innerText: translatableText.postActions.publish,
-                  onClick: () => {
+                  onClick: function(evt, stopSpin) {
+                    evt.stopPropagation()
                     goph.report(['saveAndPublishPostWithoutInput', 'confirmPostPublished'], {postId}, (e, r) => {
                       if (e) {
                         console.log(e)
                         return
                       }
-                      console.log('published')
+                      stopSpin()
                     })
                   }
                 },
@@ -176,14 +210,16 @@ window.RENDER_CONFIG = {
                   tagName: 'button',
                   name: 'unpublish',
                   classNames: 'unpublish',
+                  spin: true,
                   innerText: translatableText.postActions.unpublish,
-                  onClick: () => {
+                  onClick: function(evt, stopSpin) {
+                    evt.stopPropagation()
                     goph.report(['unpublishPostWithoutInput', 'confirmPostUnpublished'], {postId}, (e, r) => {
                       if (e) {
                         console.log(e)
                         return
                       }
-                      console.log('unpublished')
+                      stopSpin()
                     })
                   },
                 },
@@ -191,11 +227,13 @@ window.RENDER_CONFIG = {
                   tagName: 'button',
                   name: 'delete',
                   classNames: 'delete',
+                  spin: true,
                   dataset: {
                     postId
                   },
                   innerText: translatableText.postActions.delete,
-                  onClick: (evt) => {
+                  onClick: function(evt, stopSpin) {
+                    evt.stopPropagation()
                     goph.report(['deletePostWithoutInput', 'confirmPostDeleted'], {postId}, (e, r) => {
                       if (e) {
                         console.log(e)
@@ -205,6 +243,7 @@ window.RENDER_CONFIG = {
                       if (entry && !e) {
                         entry.remove()
                       }
+                      stopSpin()
                     })
                   },
                 },
@@ -215,8 +254,6 @@ window.RENDER_CONFIG = {
       }))
     }
     updatePostKeys(postKeys)
-    smallScreenHandlers()
-    window.onresize = smallScreenHandlers
   },
   params: {
     postKeys: {

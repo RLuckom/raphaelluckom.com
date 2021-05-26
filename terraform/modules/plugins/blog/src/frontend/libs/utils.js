@@ -1,5 +1,66 @@
 const geometryElements = ['rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon']
 
+const svgs = {
+  spinna: {
+    tagName: 'svg',
+    className: 'spinna',
+    width: '34px',
+    height: '34px',
+    viewBox: '0 0 100 100',
+    children: [
+      {
+        tagName: 'g',
+        className: 'spinna-g',
+        children: [
+          {
+            tagName: 'polygon',
+            points: [
+              {
+                x: 73,
+                y: 11,
+              },
+              {
+                x: 27,
+                y: 11,
+              },
+              {
+                x: 5,
+                y: 50,
+              },
+              {
+                x: 28,
+                y: 89,
+              },
+              {
+                x: 72,
+                y: 89,
+              },
+              {
+                x: 95,
+                y: 50,
+              }
+            ],
+            strokeWidth: '0.4em',
+            stroke: '#000',
+            children: [
+              {
+                tagName: 'animateTransform',
+                attributeName: 'transform',
+                attributeType: 'XML',
+                type: 'rotate',
+                from: '0 50 50',
+                to: '360 50 50',
+                dur: '1s',
+                repeatCount: 'indefinite',
+              }
+            ]
+          },
+        ]
+      }
+    ]
+  },
+}
+
 function svgNode(el) {
   if (_.isString(el)) {
     return document.createTextNode(el)
@@ -98,6 +159,35 @@ function svgNode(el) {
     setIfDefined('spacing', newElement, 'spacing')
     setIfDefined('side', newElement, 'side')
   }
+  if (tagName === 'animateTransform' || tagName === 'animate') {
+    setIfDefined('attributeName', newElement, 'attributeName')
+    setIfDefined('attributeType', newElement, 'attributeType')
+    setIfDefined('type', newElement, 'type')
+    setIfDefined('from', newElement, 'from')
+    setIfDefined('to', newElement, 'to')
+    setIfDefined('dur', newElement, 'dur')
+    setIfDefined('onbegin', newElement, 'onbegin')
+    setIfDefined('onend', newElement, 'onend')
+    setIfDefined('onrepeat', newElement, 'onrepeat')
+    setIfDefined('begin', newElement, 'begin')
+    setIfDefined('end', newElement, 'end')
+    setIfDefined('min', newElement, 'min')
+    setIfDefined('max', newElement, 'max')
+    setIfDefined('restart', newElement, 'restart')
+    setIfDefined('repeatCount', newElement, 'repeatCount')
+    setIfDefined('repeatDur', newElement, 'repeatDur')
+    setIfDefined('fill', newElement, 'fill')
+    setIfDefined('calcMode', newElement, 'calcMode')
+    setIfDefined('values', newElement, 'values')
+    setIfDefined('keyTimes', newElement, 'keyTimes')
+    setIfDefined('keySplines', newElement, 'keySplines')
+    setIfDefined('by', newElement, 'by')
+    setIfDefined('autoReverse', newElement, 'autoReverse')
+    setIfDefined('accelerate', newElement, 'accelerate')
+    setIfDefined('decelerate', newElement, 'decelerate')
+    setIfDefined('additive', newElement, 'additive')
+    setIfDefined('accumulate', newElement, 'accumulate')
+  }
   _.each(el.children, (c) => newElement.appendChild(svgNode(c)))
   return newElement
 }
@@ -131,7 +221,7 @@ function serializePoints(points) {
 }
 
 function applyDefaultAttrs(node, el) {
-  const {onClick, id, style, dataset, width, height, classNames} = el
+  const {spin, onClick, id, style, dataset, width, height, classNames} = el
   if (_.isArray(classNames)) {
     node.className = classNames.join(' ')
   }
@@ -149,7 +239,16 @@ function applyDefaultAttrs(node, el) {
     node.id = id
   }
   if (_.isFunction(onClick)) {
-    node.onclick = onClick
+    if (!spin) {
+      node.onclick = onClick
+    } else {
+      function manageSpinner(evt) {
+        const spinnaNode = domNode(svgs.spinna)
+        evt.target.appendChild(spinnaNode)
+        onClick(evt, () => evt.target.removeChild(spinnaNode))
+      }
+      node.onclick = manageSpinner
+    }
   }
   _.each(style, (v, k) => {
     node.style[k] = v
@@ -250,6 +349,41 @@ function buildGopher({awsDependencies, otherDependencies, defaultInputs, render}
     }
   }
 
+  let isNarrowScreen
+  const resetFunctions = []
+  function smallScreenHandlers() {
+    const mq = window.matchMedia('(max-width: 767px)')
+    if (!mq.matches) {
+      if (isNarrowScreen) {
+        let currentReverter
+        while (resetFunctions.length) {
+          currentReverter = resetFunctions.pop()
+          try {
+            currentReverter()
+          } catch(e) {
+            console.log(e)
+          }
+        }
+        isNarrowScreen = false
+        return
+      }
+    } else if (!isNarrowScreen) {
+      _.each(render.smallScreenFormatters, (form) => {
+        let revertFunction
+        try {
+          revertFunction = form()
+        } catch(e) {
+          console.log(e)
+          return
+        }
+        if (_.isFunction(revertFunction)) {
+          resetFunctions.push(revertFunction)
+        }
+      })
+      isNarrowScreen = true
+    }
+  }
+
   const credentialsAccessSchema = {
     name: 'site AWS credentials',
     value: {path: 'body'},
@@ -329,6 +463,8 @@ function buildGopher({awsDependencies, otherDependencies, defaultInputs, render}
       if (e) {
         console.log(e)
       }
+      smallScreenHandlers()
+      window.onresize = smallScreenHandlers
     })
   }
   return goph

@@ -164,8 +164,10 @@ window.RENDER_CONFIG = {
                 tagName: 'button',
                 name: 'save',
                 classNames: 'save',
+                spin: true,
                 innerText: translatableText.postActions.save,
-                onClick: function() {
+                onClick: function(evt, stopSpin) {
+                  evt.stopPropagation()
                   goph.report('savePostWithoutPublishing', {post: currentPost, postId}, (e, r) => {
                     const changedEtag = _.get(r, 'savePostWithoutPublishing[0].ETag')
                     if (changedEtag) {
@@ -175,6 +177,7 @@ window.RENDER_CONFIG = {
                     }
                     console.log('saved')
                     updatePost({})
+                    stopSpin()
                   })
                 }
               },
@@ -182,14 +185,15 @@ window.RENDER_CONFIG = {
                 tagName: 'button',
                 name: 'publish',
                 classNames: 'publish',
+                spin: true,
                 innerText: translatableText.postActions.publish,
-                onClick: function() {
+                onClick: function(evt, stopSpin) {
+                  evt.stopPropagation()
                   goph.report(['saveAndPublishPost', 'confirmPostPublished'], {post: currentPost, postId}, (e, r) => {
                     if (e) {
                       console.error(e)
                       return
                     }
-                    console.log('published')
                     const changedEtag = _.get(r, 'saveAndPublishPost[0].ETag')
                     if (changedEtag) {
                       currentSavedETag = changedEtag
@@ -198,6 +202,7 @@ window.RENDER_CONFIG = {
                       postAsSaved = _.cloneDeep(currentPost)
                     }
                     updatePost({})
+                    stopSpin()
                   })
                 }
               },
@@ -205,8 +210,10 @@ window.RENDER_CONFIG = {
                 tagName: 'button',
                 name: 'unpublish',
                 classNames: 'unpublish',
+                spin: true,
                 innerText: translatableText.postActions.unpublish,
-                onClick: function() {
+                onClick: function(evt, stopSpin) {
+                  evt.stopPropagation()
                   goph.report(['unpublishPost', 'confirmPostUnpublished'], {post: currentPost, postId}, (e, r) => {
                     if (e) {
                       console.error(e)
@@ -221,6 +228,7 @@ window.RENDER_CONFIG = {
                       postAsSaved = _.cloneDeep(currentPost)
                     }
                     updatePost({})
+                    stopSpin()
                   })
                 },
               }
