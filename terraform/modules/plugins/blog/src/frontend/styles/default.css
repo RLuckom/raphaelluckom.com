@@ -23,6 +23,22 @@ input[type=text] {
   border-bottom-width: 0;
 }
 
+.icon {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 0.7em;
+}
+
+button {
+  min-height: 2.5em;
+  font-weight: bold;
+  font-family: inherit;
+  border-radius: 7px;
+  border-width: var(--default-border-width);
+  border-color: var(--encourage-neutral);
+  border-style: solid;
+}
+
 img {
   max-width: 100%;
   display: block;
@@ -77,7 +93,7 @@ input.new-post.expanded {
   margin-top: auto;
   margin-bottom: auto;
   text-align: left;
-  flex: 2;
+  flex: 1;
 }
 
 .post-list-entry .post-status, .post-list-entry .post-actions {
@@ -173,13 +189,7 @@ input.new-post.expanded {
 .button-container button {
   flex: auto;
   height: 100%;
-  min-height: 2em;
   margin: 0.4em 0.1em;
-  font-family: inherit;
-  font-weight: bold;
-  border-radius: 7px;
-  border-width: var(--default-border-width);
-  border-style: solid;
 }
 
 .button-container button:first-child {

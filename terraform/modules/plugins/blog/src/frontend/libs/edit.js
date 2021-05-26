@@ -1,32 +1,57 @@
 window.RENDER_CONFIG = {
   init: ({post, publishedETag}, gopher) => {
-    let postAsSaved = _.cloneDeep(post)
-    let currentPublishedETag = publishedETag
-    let initSaveState
-    if (!post) {
-      post = newPost()
-      initSaveState = translatableText.saveState.unsaved
-    }
-    let currentSavedETag = _.get(post, 'etag')
-    let currentPost
     const postId = new URLSearchParams(window.location.search).get('postId').replace(/\//g, '-')
-    let initEditorState
-    let initPublishedState = currentPublishedETag ? currentPublishedETag === currentSavedETag ? translatableText.publishState.mostRecent : translatableText.publishState.modified : translatableText.publishState.unpublished
+    if (post) {
+      setPostAsSaved(postId, post)
+    }
+    let publishedState = getPostPublishState(postId)
+    if (publishedETag && publishedETag !== _.get(publishedState, 'etag')) {
+      if (publishedETag === _.get(post, 'etag')) {
+        publishedState = setPostPublishState(postId, {etag: publishedETag, label: translatableText.publishState.mostRecent})
+      } else {
+        publishedState = setPostPublishState(postId, {etag: publishedETag, label: translatableText.publishState.modified})
+      }
+    } else if (!publishedETag) {
+        publishedState = setPostPublishState(postId, {etag: null, label: translatableText.publishState.unpublished})
+    } 
+    let saveState = getPostSaveState(postId)
+    let editorState = getPostEditorState(postId)
+    if (!editorState || _.get(editorState, 'editingETag') !== _.get(post, 'etag')) {
+      if (!post) {
+        editorState = setPostEditorState(postId, {
+          title: '',
+          trails: [],
+          content: '',
+          imageIds: []
+        })
+        saveState = setPostSaveState(postId, {etag: null, label: translatableText.saveState.unsaved})
+      } else {
+        editorState = setPostEditorState(postId, {
+          title: post.frontMatter.title,
+          trails: post.frontMatter.meta.trails,
+          content: post.content,
+          imageIds: post.frontMatter.meta.imageIds,
+          editingETag: post.etag,
+        })
+        saveState = setPostSaveState(postId, {etag: post.etag, label: translatableText.saveState.unmodified})
+      }
+    }
     const mainSection = document.querySelector('main')
+    function mergeEditorStateToPost() {
+      const mergedPost = _.cloneDeep(getPostAsSaved(postId) || newPost())
+      const editorState = getPostEditorState(postId)
+      mergedPost.frontMatter.imageIds = _.cloneDeep(editorState.imageIds)
+      mergedPost.frontMatter.trails = _.cloneDeep(editorState.trails)
+      mergedPost.frontMatter.title = _.cloneDeep(editorState.title)
+      mergedPost.content = _.cloneDeep(editorState.content)
+      console.log(mergedPost)
+      return mergedPost
+    }
     function setSaveState(text) {
       document.getElementById('save-status').innerText = text
     }
-    function setPublishedState(text) {
+    function setPublishState(text) {
       document.getElementById('publish-status').innerText = text
-    }
-    const {post: savedPost, savedEditorState, saveState} = loadAutosave(postId)
-    if (_.get(savedPost, 'etag') && _.get(savedPost, 'etag') === post.etag) {
-      currentPost = savedPost
-      initEditorState = savedEditorState
-      initSaveState = saveState
-    } else {
-      currentPost = post
-      initSaveState = initSaveState || translatableText.saveState.unmodified
     }
     mainSection.append(...domNodes(
       {
@@ -70,6 +95,7 @@ window.RENDER_CONFIG = {
                             stroke: '#000',
                             strokeLinecap: 'round',
                             strokeLinejoin: 'round',
+                            fill: 'transparent',
                           }
                         ]
                       }
@@ -142,9 +168,9 @@ window.RENDER_CONFIG = {
         name: 'title',
         classNames: 'authoring-input',
         placeholder: translatableText.postMetadata.placeholders.title,
-        value: currentPost.frontMatter.title,
+        value: editorState.title,
         id: 'title',
-        onChange: (e) => updatePost({title: e.target.value})
+        onChange: (e) => updateEditorState({title: e.target.value})
       },
       {
         tagName: 'div',
@@ -168,15 +194,20 @@ window.RENDER_CONFIG = {
                 innerText: translatableText.postActions.save,
                 onClick: function(evt, stopSpin) {
                   evt.stopPropagation()
-                  goph.report('savePostWithoutPublishing', {post: currentPost, postId}, (e, r) => {
-                    const changedEtag = _.get(r, 'savePostWithoutPublishing[0].ETag')
-                    if (changedEtag) {
-                      currentSavedETag = changedEtag
-                      currentPost.etag = changedEtag
-                      postAsSaved = _.cloneDeep(currentPost)
+                  const postToSave = mergeEditorStateToPost()
+                  goph.report('savePostWithoutPublishing', {post: postToSave, postId}, (e, r) => {
+                    const changedETag = _.get(r, 'savePostWithoutPublishing[0].ETag')
+                    if (changedETag) {
+                      postToSave.etag = changedETag
+                      updateEditorState({editingETag: changedETag})
+                      setPostAsSaved(postId, postToSave)
+                      setPostSaveState(postId, {etag: changedETag, label: translatableText.saveState.unmodified})
                     }
-                    console.log('saved')
-                    updatePost({})
+                    if (postToSave.etag !== getPostPublishState.etag) {
+                      updatePostPublishState({label: translatableText.publishState.modified})
+                      setPublishState(translatableText.publishState.modified)
+                    }
+                    setSaveState(translatableText.saveState.unmodified)
                     stopSpin()
                   })
                 }
@@ -189,19 +220,22 @@ window.RENDER_CONFIG = {
                 innerText: translatableText.postActions.publish,
                 onClick: function(evt, stopSpin) {
                   evt.stopPropagation()
-                  goph.report(['saveAndPublishPost', 'confirmPostPublished'], {post: currentPost, postId}, (e, r) => {
+                  const postToSave = mergeEditorStateToPost()
+                  goph.report(['saveAndPublishPost', 'confirmPostPublished'], {post: postToSave, postId}, (e, r) => {
                     if (e) {
                       console.error(e)
                       return
                     }
-                    const changedEtag = _.get(r, 'saveAndPublishPost[0].ETag')
-                    if (changedEtag) {
-                      currentSavedETag = changedEtag
-                      currentPost.etag = changedEtag
-                      currentPublishedETag = changedEtag
-                      postAsSaved = _.cloneDeep(currentPost)
+                    const changedETag = _.get(r, 'saveAndPublishPost[0].ETag')
+                    if (changedETag) {
+                      postToSave.etag = changedETag
+                      updateEditorState({editingETag: changedETag})
+                      setPostAsSaved(postId, postToSave)
+                      setPostPublishState(postId, {etag: changedETag, label: translatableText.publishState.mostRecent})
+                      setPostSaveState(postId, {etag: changedETag, label: translatableText.saveState.unmodified})
                     }
-                    updatePost({})
+                    setSaveState(translatableText.saveState.unmodified)
+                    setPublishState(translatableText.publishState.mostRecent)
                     stopSpin()
                   })
                 }
@@ -214,20 +248,22 @@ window.RENDER_CONFIG = {
                 innerText: translatableText.postActions.unpublish,
                 onClick: function(evt, stopSpin) {
                   evt.stopPropagation()
-                  goph.report(['unpublishPost', 'confirmPostUnpublished'], {post: currentPost, postId}, (e, r) => {
+                  const postToSave = mergeEditorStateToPost()
+                  goph.report(['unpublishPost', 'confirmPostUnpublished'], {post: postToSave, postId}, (e, r) => {
                     if (e) {
                       console.error(e)
                       return
                     }
                     console.log('unpublished')
-                    const changedEtag = _.get(r, 'unpublishPost[0].ETag')
-                    if (changedEtag) {
-                      currentSavedETag = changedEtag
-                      currentPost.etag = changedEtag
-                      currentPublishedETag = null
-                      postAsSaved = _.cloneDeep(currentPost)
+                    const changedETag = _.get(r, 'unpublishPost[0].ETag')
+                    if (changedETag) {
+                      postToSave.etag = changedETag
+                      updateEditorState({editingETag: changedETag})
+                      setPostAsSaved(postId, postToSave)
+                      setPostPublishState(postId, {etag: null, label: translatableText.publishState.unpublished})
                     }
-                    updatePost({})
+                    setSaveState(translatableText.saveState.unmodified)
+                    setPublishState(translatableText.publishState.unpublished)
                     stopSpin()
                   })
                 },
@@ -244,14 +280,14 @@ window.RENDER_CONFIG = {
         classNames: 'authoring-input',
         id: 'trails',
         value: (_.get(post, 'frontMatter.meta.trails') || []).join(', '),
-        onChange: (e) => updatePost({trails: _.map((e.target.value || '').split(','), _.trim)})
+        onChange: (e) => updateEditorState({trails: _.map((e.target.value || '').split(','), _.trim)})
       },
       {
         tagName: 'div',
         id: 'error',
       }))
-      setSaveState(initSaveState)
-      setPublishedState(initPublishedState)
+      setSaveState(saveState.label)
+      setPublishState(publishedState.label)
 
       function uploadImage(buffer, ext, callback) {
         const imageId = uuid.v4()
@@ -275,20 +311,35 @@ window.RENDER_CONFIG = {
         )
       }
 
-      function updatePost({title, author, trails, editorState, imageIds, content}) {
-        const {post, saveState, publishState} = autosave({postId, currentEditorState, postAsSaved, currentSavedETag, currentPublishedETag, currentPost}, {title, author, trails, editorState, imageIds, content})
-        setSaveState(saveState)
-        setPublishedState(publishState)
-        currentPost = post
+      function updateEditorState(updates) {
+        const postAsSaved = getPostAsSaved(postId)
+        console.log(updates)
+        console.log(postAsSaved)
+        let isModified = false
+        if (updates.title && !_.isEqual(updates.title, _.get(postAsSaved, 'frontMatter.title'))) {
+          isModified = true
+        }
+        if (updates.imageIds && !_.isEqual(updates.imageIds, _.get(postAsSaved, 'frontMatter.meta.imageIds'))) {
+          isModified = true
+        }
+        if (updates.trails && !_.isEqual(updates.trails, _.get(postAsSaved, 'frontMatter.meta.trails'))) {
+          isModified = true
+        }
+        if (updates.content && !_.isEqual(updates.content, _.get(postAsSaved, 'content'))) {
+          isModified = true
+        }
+        editorState = updatePostEditorState(postId, updates)
+        const s = updatePostSaveState(postId, {label: isModified ? translatableText.saveState.modified : translatableText.saveState.unmodified})
+        console.log(editorState)
+        console.log(s)
+        setSaveState(s.label)
       }
-
-      let currentEditorState
 
       const postIdInLinkRegex = new RegExp("\\((https:\/\/.*)" + postId + '([^\\)]*)\\)', 'g')
       const postIdInRelativeLinkRegex = new RegExp("]\\(/(.*)" + postId + '([^\\)]*)\\)', 'g')
-      const postContentForProsemirror = currentPost.content.replace(postIdInLinkRegex, (match, g1, g2) => "(" + g1 + encodeURIComponent(postId) + g2 + ')').replace(
+      const postContentForProsemirror = editorState.content.replace(postIdInLinkRegex, (match, g1, g2) => "(" + g1 + encodeURIComponent(postId) + g2 + ')').replace(
         postIdInRelativeLinkRegex, (match, g1, g2) => "](/" + g1 + encodeURIComponent(postId) + g2 + ')')
-        prosemirrorView(document.getElementById('post-editor'), uploadImage, _.debounce(updatePost, 2000), initEditorState, postContentForProsemirror, _.get(currentPost, 'frontMatter.meta.imageIds'))
+        prosemirrorView(document.getElementById('post-editor'), uploadImage, _.debounce(_.partial(updateEditorState), 2000), editorState.editorState, postContentForProsemirror, editorState.imageIds)
   },
   params: {
     post: {

@@ -1,3 +1,4 @@
+const POLL_INTERVAL = 2000
 window.GOPHER_CONFIG = {
   awsDependencies: {
     putImage: {
@@ -203,7 +204,7 @@ window.GOPHER_CONFIG = {
       behaviors: {
         retryParams: {
           times: 10,
-          interval: (n) => n * 1000
+          interval: (n) => n * POLL_INTERVAL
         },
         detectErrors: (err, res, {MaxKeys}) => {
           return res.Contents.length !== ((MaxKeys / 10) - 1)
@@ -245,7 +246,7 @@ window.GOPHER_CONFIG = {
       behaviors: {
         retryParams: {
           times: 10,
-          interval: (n) => n * 1000
+          interval: (n) => n * POLL_INTERVAL
         },
         detectErrors: (err, res) => {
           return res.Contents.length !== 2
@@ -325,7 +326,7 @@ window.GOPHER_CONFIG = {
       behaviors: {
         retryParams: {
           times: 10,
-          interval: (n) => n * 1000
+          interval: (n) => n * POLL_INTERVAL
         },
         detectErrors: (err, res) => {
           return res.Contents.length
@@ -349,7 +350,7 @@ window.GOPHER_CONFIG = {
       behaviors: {
         retryParams: {
           times: 10,
-          interval: (n) => n * 1000
+          interval: (n) => n * POLL_INTERVAL
         },
         detectErrors: (err, res) => {
           return res.Contents.length
@@ -385,7 +386,7 @@ window.GOPHER_CONFIG = {
             return err === 404
           },
           times: 10,
-          interval: (n) => n * 1000
+          interval: (n) => n * POLL_INTERVAL
         },
         detectErrors: (err, res) => {
           if (err || !res) {

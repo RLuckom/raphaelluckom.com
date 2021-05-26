@@ -1,16 +1,26 @@
 const geometryElements = ['rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon']
 
 const svgs = {
-  spinna: {
+  spin: {
+    tagName: 'animateTransform',
+    attributeName: 'transform',
+    attributeType: 'XML',
+    type: 'rotate',
+    from: '0 50 50',
+    to: '360 50 50',
+    dur: '1s',
+    repeatCount: 'indefinite',
+  },
+  hex: {
     tagName: 'svg',
-    className: 'spinna',
-    width: '34px',
-    height: '34px',
+    classNames: 'hex icon',
+    width: '25px',
+    height: '25px',
     viewBox: '0 0 100 100',
     children: [
       {
         tagName: 'g',
-        className: 'spinna-g',
+        classNames: 'icon-g spinnable hex-g',
         children: [
           {
             tagName: 'polygon',
@@ -40,8 +50,56 @@ const svgs = {
                 y: 50,
               }
             ],
-            strokeWidth: '0.4em',
+            strokeWidth: '0.2em',
             stroke: '#000',
+            fill: 'transparent',
+          },
+        ]
+      },
+    ]
+  },
+  spinna: {
+    tagName: 'svg',
+    classNames: 'spinna',
+    width: '15px',
+    height: '15px',
+    viewBox: '0 0 100 100',
+    children: [
+      {
+        tagName: 'g',
+        classNames: 'icon spinna-g',
+        children: [
+          {
+            tagName: 'polygon',
+            points: [
+              {
+                x: 73,
+                y: 11,
+              },
+              {
+                x: 27,
+                y: 11,
+              },
+              {
+                x: 5,
+                y: 50,
+              },
+              {
+                x: 28,
+                y: 89,
+              },
+              {
+                x: 72,
+                y: 89,
+              },
+              {
+                x: 95,
+                y: 50,
+              }
+            ],
+            strokeWidth: '2px',
+            stroke: '#000',
+            fill: 'transparent',
             children: [
               {
                 tagName: 'animateTransform',
@@ -89,7 +147,7 @@ function svgNode(el) {
   } else {
     newElement = applyDefaultAttrs(document.createElementNS("http://www.w3.org/2000/svg", tagName), el)
     setIfDefined('transform', newElement, 'transform')
-    setIfDefined('fill', newElement, 'fill', el.fill, 'none')
+    setIfDefined('fill', newElement, 'fill', el.fill)
     setIfDefined('fill-rule', newElement, 'fillRule')
     setIfDefined('fill-opacity', newElement, 'fillOpacity')
     setIfDefined('stroke', newElement, 'stroke')
@@ -192,7 +250,8 @@ function svgNode(el) {
   return newElement
 }
 
-function serializePoints(points) {
+function serializePoints(originalPoints) {
+  const points = _.cloneDeep(originalPoints)
   if (!points || _.isString(points)) {
     return points
   }
@@ -223,10 +282,10 @@ function serializePoints(points) {
 function applyDefaultAttrs(node, el) {
   const {spin, onClick, id, style, dataset, width, height, classNames} = el
   if (_.isArray(classNames)) {
-    node.className = classNames.join(' ')
+    node.setAttribute('class', classNames.join(' '))
   }
   if (_.isString(classNames)) {
-    node.className = classNames
+    node.setAttribute('class', classNames)
   }
   if (dataset) {
     if (_.isPlainObject(dataset)) {
@@ -242,10 +301,20 @@ function applyDefaultAttrs(node, el) {
     if (!spin) {
       node.onclick = onClick
     } else {
+      const spinnaNode = domNode(svgs.hex)
+      const spinAnimation = svgNode(svgs.spin)
+      const spinnable = spinnaNode.querySelector('.spinnable')
       function manageSpinner(evt) {
-        const spinnaNode = domNode(svgs.spinna)
-        evt.target.appendChild(spinnaNode)
-        onClick(evt, () => evt.target.removeChild(spinnaNode))
+        if (spinnable) {
+          spinnable.appendChild(spinAnimation)
+          node.appendChild(spinnaNode)
+        }
+        onClick(evt, () => {
+          if (spinnable) {
+            spinnable.removeChild(spinAnimation)
+            node.removeChild(spinnaNode)
+          }
+        })
       }
       node.onclick = manageSpinner
     }
@@ -265,7 +334,7 @@ function domNode(el) {
   } else if (_.isArray(el)) {
     return _.map(el, domNode)
   }
-  const {span, onKeyUp, src, value, innerText, onKeyDown, onInput, placeholder, onChange, tagName, type, isFor, name, href, onClick, children} = el
+  const {accept, span, onKeyUp, src, value, innerText, onKeyDown, onInput, placeholder, onChange, tagName, type, isFor, name, href, onClick, children} = el
   if (tagName === 'svg') {
     return svgNode(el)
   }
@@ -309,6 +378,9 @@ function domNode(el) {
     if (_.isString(type)) {
       newElement.type = type
     }
+    if (type === 'file' && _.isString(accept)) {
+      newElement.accept = accept
+    }
     if (_.isString(placeholder)) {
       newElement.placeholder = placeholder
     }
@@ -327,8 +399,10 @@ function domNode(el) {
       newElement.href = href
     }
   }
-  if (_.isString(innerText) && !children) {
+  if (_.isString(innerText) && !children && !el.spin) {
     newElement.innerText = innerText
+  } else if (_.isString(innerText)) {
+    newElement.appendChild(domNode(innerText))
   }
   _.each(children, (c) => newElement.appendChild(domNode(c)))
   return newElement

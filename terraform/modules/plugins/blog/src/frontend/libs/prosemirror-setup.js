@@ -307,6 +307,9 @@ class FileField extends Field {
   render() {
     let input = document.createElement("input")
     input.type = "file"
+    if (this.options.accept) {
+      input.accept = this.options.accept
+    }
     input.value = this.options.value || ""
     return input
   }
@@ -799,7 +802,7 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
         openPrompt({
           title: "Insert image",
           fields: {
-            src: new FileField({label: "File", required: true, value: attrs && attrs.src}),
+            src: new FileField({label: "File", required: true, value: attrs && attrs.src, accept: "image/*"}),
             title: new TextField({label: "Title", value: attrs && attrs.title}),
             alt: new TextField({label: "Description",
                                value: attrs ? attrs.alt : state.doc.textBetween(from, to, " ")})

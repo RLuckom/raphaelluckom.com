@@ -52,8 +52,8 @@ window.RENDER_CONFIG = {
           children: [
             {
               tagName: 'svg',
-              width: '1.5em',
-              height: '1.5em',
+              width: '2.5em',
+              height: '2.5em',
               viewBox: '0 0 100 100',
               children: [
                 {
@@ -66,7 +66,7 @@ window.RENDER_CONFIG = {
                       y1: 50,
                       x2: 85,
                       y2: 50,
-                      strokeWidth: '0.4em',
+                      strokeWidth: '5px',
                       stroke: '#000',
                       strokeLinecap: 'round',
                       strokeLinejoin: 'round',
@@ -77,7 +77,7 @@ window.RENDER_CONFIG = {
                       x1: 50,
                       y2: 85,
                       x2: 50,
-                      strokeWidth: '0.4em',
+                      strokeWidth: '5px',
                       stroke: '#000',
                       strokeLinecap: 'round',
                       strokeLinejoin: 'round',
@@ -144,7 +144,8 @@ window.RENDER_CONFIG = {
         const postIdParts = Key.split('/').pop().split('.')
         postIdParts.pop()
         const postId = postIdParts.join('.')
-        const { post, publishedETag, saveState, publishState } =  loadAutosave(postId)
+        let saveState = getPostSaveState(postId)
+        let publishState = getPostPublishState(postId)
         return domNode({
           tagName: 'div',
           classNames: 'post-list-entry',
@@ -165,12 +166,12 @@ window.RENDER_CONFIG = {
                     {
                       tagName: 'div',
                       classNames: 'save-status',
-                      children: [saveState || translatableText.saveState.unmodified]
+                      children: [saveState.label || translatableText.saveState.unmodified]
                     },
                     {
                       tagName: 'div',
                       classNames: 'publish-status',
-                      children: [publishState || translatableText.publishState.unknown]
+                      children: [publishState.label || translatableText.publishState.unknown]
                     },
                   ]
                 },
@@ -202,6 +203,13 @@ window.RENDER_CONFIG = {
                         console.log(e)
                         return
                       }
+                      const changedETag = _.get(r, 'saveAndPublishPostWithoutInput[0].ETag')
+                      if (changedETag) {
+                        setPostPublishState(postId, {etag: changedETag, label: translatableText.publishState.mostRecent})
+                        setPostSaveState(postId, {etag: changedETag, label: translatableText.saveState.unmodified})
+                      }
+                      evt.target.closest('.post-list-entry').querySelector('.save-status').innerText = translatableText.saveState.unmodified
+                      evt.target.closest('.post-list-entry').querySelector('.publish-status').innerText = translatableText.publishState.mostRecent
                       stopSpin()
                     })
                   }
@@ -219,6 +227,13 @@ window.RENDER_CONFIG = {
                         console.log(e)
                         return
                       }
+                      const changedETag = _.get(r, 'unPublishPostWithoutInput[0].ETag')
+                      if (changedETag) {
+                        setPostPublishState(postId, {etag: changedETag, label: translatableText.publishState.mostRecent})
+                        setPostSaveState(postId, {etag: changedETag, label: translatableText.saveState.unmodified})
+                      }
+                      evt.target.closest('.post-list-entry').querySelector('.save-status').innerText = translatableText.saveState.unmodified
+                      evt.target.closest('.post-list-entry').querySelector('.publish-status').innerText = translatableText.publishState.unpublished
                       stopSpin()
                     })
                   },
@@ -243,6 +258,7 @@ window.RENDER_CONFIG = {
                       if (entry && !e) {
                         entry.remove()
                       }
+                      deleteLocalState(postId)
                       stopSpin()
                     })
                   },

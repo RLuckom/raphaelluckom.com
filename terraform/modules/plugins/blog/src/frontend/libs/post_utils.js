@@ -18,49 +18,122 @@ function getPostDataKey(postId) {
   return `postData?postId=${postId}`
 }
 
-function loadAutosave(postId) {
-  const postDataKey = getPostDataKey(postId)
-  const savedData = localStorage.getItem(postDataKey)
-  if (savedData) {
-    const parsed = JSON.parse(savedData)
-    console.log(parsed)
-    return parsed
-  }
-  return {}
+function getPostSaveStateDataKey(postId) {
+  return `postData?postId=${postId}&field=saveState`
 }
 
-function autosave({postId, currentEditorState, postAsSaved, currentSavedETag, currentPublishedETag, currentPost}, {title, author, trails, editorState, imageIds, content}) {
+function getPostAsSavedDataKey(postId) {
+  return `postData?postId=${postId}&field=asSaved`
+}
+
+function getPostPublishStateDataKey(postId) {
+  return `postData?postId=${postId}&field=publishState`
+}
+
+function getPostEditorStateDataKey(postId) {
+  return `postData?postId=${postId}&field=editorState`
+}
+
+function getPostESaveStateDataKey(postId) {
+  return `postData?postId=${postId}&field=saveState`
+}
+
+function loadAutosave(postId) {
   const postDataKey = getPostDataKey(postId)
-  const editorStateToSave = editorState || currentEditorState
-  let saveState, publishState
-  const postToSave = constructPost({
-    etag: currentSavedETag || '',
-    imageIds: imageIds || _.get(currentPost, 'frontMatter.meta.imageIds') || [],
-    content: content || _.get(currentPost, 'content') || '',
-    title: title || _.get(currentPost, 'frontMatter.title') || '',
-    author: author || _.get(currentPost, 'frontMatter.author') || CONFIG.operator_name,
-    trails: trails || _.get(currentPost, 'frontMatter.meta.trails') || [],
-    createDate: _.get(currentPost, 'frontMatter.createDate'),
-    date: _.get(currentPost, 'frontMatter.date'),
-    updateDate: _.get(currentPost, 'frontMatter.updateDate'),
+  return getParsedLocalStorageData(postDataKey)
+}
+
+function getParsedLocalStorageData(key) {
+  const savedData = localStorage.getItem(key)
+  if (savedData) {
+    const parsed = JSON.parse(savedData)
+    return parsed
+  }
+  return null
+}
+
+function updateLocalStorageData(key, updates) {
+  const updatedRecord = _.merge({}, getParsedLocalStorageData(key), updates)
+  console.log(key)
+  console.log(updatedRecord)
+  localStorage.setItem(key, JSON.stringify(updatedRecord))
+  return updatedRecord
+}
+
+function setPostAsSaved(postId, post) {
+  const postDataKey = getPostAsSavedDataKey(postId)
+  localStorage.setItem(postDataKey, JSON.stringify(post || null))
+  return post || null
+}
+
+function setPostEditorState(postId, editorState) {
+  const postDataKey = getPostEditorStateDataKey(postId)
+  localStorage.setItem(postDataKey, JSON.stringify(editorState))
+  return editorState
+}
+
+function setPostPublishState(postId, state) {
+  const postDataKey = getPostPublishStateDataKey(postId)
+  localStorage.setItem(postDataKey, JSON.stringify(state))
+  return state
+}
+
+function setPostSaveState(postId, state) {
+  const postDataKey = getPostSaveStateDataKey(postId)
+  localStorage.setItem(postDataKey, JSON.stringify(state))
+  return state
+}
+
+function updatePostAsSaved(postId, post) {
+  const postDataKey = getPostAsSavedDataKey(postId)
+  return updateLocalStorageData(postDataKey, post)
+}
+
+function updatePostEditorState(postId, editorState) {
+  const postDataKey = getPostEditorStateDataKey(postId)
+  return updateLocalStorageData(postDataKey, editorState)
+}
+
+function updatePostPublishState(postId, state) {
+  const postDataKey = getPostPublishStateDataKey(postId)
+  return updateLocalStorageData(postDataKey, state)
+}
+
+function updatePostSaveState(postId, state) {
+  const postDataKey = getPostSaveStateDataKey(postId)
+  return updateLocalStorageData(postDataKey, state)
+}
+
+function getPostAsSaved(postId) {
+  const postDataKey = getPostAsSavedDataKey(postId)
+  return getParsedLocalStorageData(postDataKey)
+}
+
+function getPostEditorState(postId) {
+  const postDataKey = getPostEditorStateDataKey(postId)
+  return getParsedLocalStorageData(postDataKey)
+}
+
+function getPostPublishState(postId) {
+  const postDataKey = getPostPublishStateDataKey(postId)
+  return getParsedLocalStorageData(postDataKey)
+}
+
+function getPostSaveState(postId) {
+  const postDataKey = getPostSaveStateDataKey(postId)
+  return getParsedLocalStorageData(postDataKey)
+}
+
+function deleteLocalState(postId) {
+  _.each([
+    getPostSaveStateDataKey(postId),
+    getPostPublishStateDataKey(postId),
+    getPostEditorStateDataKey(postId),
+    getPostDataKey(postId),
+    getPostAsSavedDataKey(postId),
+  ], (k) => {
+    localStorage.removeItem(k)
   })
-  if (!postsEqual(postToSave, postAsSaved)) {
-    saveState = translatableText.saveState.modified
-  } else {
-    saveState = translatableText.saveState.unmodified
-  }
-  if (currentSavedETag === currentPublishedETag) {
-    publishState =translatableText.publishState.mostRecent
-  } else if (!currentPublishedETag) {
-    publishState = translatableText.publishState.unpublished
-  } else {
-    publishState = translatableText.publishState.modified
-  }
-  const saveData = {
-    post: postToSave, postId, publishedETag: currentPublishedETag, savedEditorState: currentEditorState, saveState, publishState
-  }
-  localStorage.setItem(postDataKey, JSON.stringify(saveData))
-  return saveData
 }
 
 const canonicalImageTypes = {
@@ -161,48 +234,6 @@ function newPost() {
     content: '',
     etag: ''
   }
-}
-
-function constructPost({etag, updateDate, date, imageIds, content, author, createDate, title, trails}) {
-  return {
-    frontMatter: {
-      title,
-      author,
-      createDate: createDate || new Date().toISOString(),
-      updateDate: updateDate || new Date().toISOString(),
-      date: updateDate || new Date().toISOString(),
-      meta: _.cloneDeep({
-        trails: trails || [],
-        imageIds: imageIds || []
-      })
-    },
-    content: content,
-    etag,
-  }
-}
-
-function postsEqual(p1, p2) {
-  const cleanP1 = constructPost({
-    imageIds: _.get(p1, 'frontMatter.meta.imageIds'),
-    trails: _.get(p1, 'frontMatter.meta.trails'),
-    content: _.get(p1, 'content'),
-    author: _.get(p1, 'frontMatter.author'),
-    title: _.get(p1, 'frontMatter.title'),
-    createDate: _.get(p1, 'frontMatter.createDate'),
-    updateDate: _.get(p1, 'frontMatter.updateDate'),
-    date: _.get(p1, 'frontMatter.date'),
-  })
-  const cleanP2 = constructPost({
-    imageIds: _.get(p2, 'frontMatter.meta.imageIds'),
-    trails: _.get(p2, 'frontMatter.meta.trails'),
-    content: _.get(p2, 'content'),
-    author: _.get(p2, 'frontMatter.author'),
-    title: _.get(p2, 'frontMatter.title'),
-    createDate: _.get(p2, 'frontMatter.createDate'),
-    updateDate: _.get(p2, 'frontMatter.updateDate'),
-    date: _.get(p2, 'frontMatter.date'),
-  })
-  return _.isEqual(cleanP1, cleanP2)
 }
 
 function serializePost({frontMatter, content}) {
