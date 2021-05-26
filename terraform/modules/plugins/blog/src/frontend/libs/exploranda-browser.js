@@ -3799,7 +3799,6 @@ function Gopher(defaultRecordCollectors, dataDependencies, initialInputs) {
     let requirements;
     try {
       requirements = _.reduce(params, function(collector, {source, input, formatter}, paramName) {
-        formatters[paramName] = formatter || _.identity;
         if (source) {
           paramNamesToRequirements[paramName] = source;
           if (_.isString(source) || _.isNumber(source)) {
@@ -3822,6 +3821,29 @@ function Gopher(defaultRecordCollectors, dataDependencies, initialInputs) {
             });
           }
         }
+        let requiredInputs = {}
+        if (input) {
+          if (_.isString(input) || _.isNumber(input)) {
+            const override = _.get(inputOverrides, input);
+            const priorityInput =  _.isUndefined(override) ? getInput(input) : override;
+            requiredInputs[input] = priorityInput
+          } else if (_.isArray(input)) {
+            requiredInputs = _.reduce(
+              input, 
+              (acc, i) => {
+                if (_.isString(i) || _.isNumber(i)) {
+                  const override = _.get(inputOverrides, i);
+                  acc[i] = _.isUndefined(override) ? getInput(i) : override;
+                } else {
+                  throw new Error(`input ${i} has invalid type ${typeof i}`);
+                }
+                return acc;
+              },
+              {}
+            );
+          }
+        }
+        formatters[paramName] = formatter ? _.partialRight(formatter, requiredInputs) : _.identity;
         return collector;
       }, []);
     } catch(err) {
@@ -3837,8 +3859,8 @@ function Gopher(defaultRecordCollectors, dataDependencies, initialInputs) {
       }
       return collector;
     }, {});
-    const inputs = _.reduce(params, function(collector, {input, formatter}, paramName) {
-      if (!_.isUndefined(input)) {
+    const inputs = _.reduce(params, function(collector, {source, input, formatter}, paramName) {
+      if (!_.isUndefined(input) && _.isUndefined(source)) {
         if (_.isString(input) || _.isNumber(input)) {
           const override = _.get(inputOverrides, input);
           const priorityInput =  _.isUndefined(override) ? getInput(input) : override;
@@ -3871,7 +3893,7 @@ function Gopher(defaultRecordCollectors, dataDependencies, initialInputs) {
     function returnValueBookkeeping(cache, name, collectorArgs, callback) {
       return function(e, r) {
         cacheInsert(cache, name, cacheLifetime, collectorArgs, e, r);
-        const formattedResults = formatter ? formatter(r) : r;
+        const formattedResults = formatter ? formatter(r, _.cloneDeep(_.merge({}, getInputs(), inputOverrides))) : r;
         return callback(e, formattedResults);
       };
     }

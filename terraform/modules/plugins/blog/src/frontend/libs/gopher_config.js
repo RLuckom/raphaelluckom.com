@@ -21,11 +21,12 @@ window.GOPHER_CONFIG = {
     },
     getPost: {
       accessSchema: exploranda.dataSources.AWS.s3.getObject,
-      formatter: ([post]) => {
+      formatter: ([post], {postId}) => {
         let parsed
         if (post) {
           parsed = parsePost(post.Body.toString('utf8'))
           parsed.etag = post.ETag
+          setPostAsSaved(postId, parsed)
         }
         return parsed
       },
@@ -56,8 +57,9 @@ window.GOPHER_CONFIG = {
       params: {
         Body: {
           source: 'getPost',
-          formatter: ({getPost}) => {
-            const postToSend = _.cloneDeep(getPost)
+          input: 'postId',
+          formatter: ({getPost}, {postId}) => {
+            const postToSend = _.cloneDeep(latestKnownPostState(postId))
             delete postToSend.frontMatter.unpublish
             delete postToSend.frontMatter.delete
             postToSend.frontMatter.publish = true
@@ -79,8 +81,9 @@ window.GOPHER_CONFIG = {
       params: {
         Body: {
           source: 'getPost',
-          formatter: ({getPost}) => {
-            const postToSend = _.cloneDeep(getPost)
+          input: 'postId',
+          formatter: ({getPost}, {postId}) => {
+            const postToSend = _.cloneDeep(latestKnownPostState(postId))
             delete postToSend.frontMatter.publish
             delete postToSend.frontMatter.delete
             postToSend.frontMatter.unpublish = true

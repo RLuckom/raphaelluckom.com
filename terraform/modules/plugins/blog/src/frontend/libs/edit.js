@@ -1,9 +1,6 @@
 window.RENDER_CONFIG = {
   init: ({post, publishedETag}, gopher) => {
     const postId = new URLSearchParams(window.location.search).get('postId').replace(/\//g, '-')
-    if (post) {
-      setPostAsSaved(postId, post)
-    }
     let publishedState = getPostPublishState(postId)
     if (publishedETag && publishedETag !== _.get(publishedState, 'etag')) {
       if (publishedETag === _.get(post, 'etag')) {
@@ -38,14 +35,9 @@ window.RENDER_CONFIG = {
     }
     const mainSection = document.querySelector('main')
     function mergeEditorStateToPost() {
-      const mergedPost = _.cloneDeep(getPostAsSaved(postId) || newPost())
-      const editorState = getPostEditorState(postId)
-      mergedPost.frontMatter.meta.imageIds = _.cloneDeep(editorState.imageIds)
-      mergedPost.frontMatter.meta.trails = _.cloneDeep(editorState.trails)
-      mergedPost.frontMatter.title = _.cloneDeep(editorState.title)
-      mergedPost.content = _.cloneDeep(editorState.content)
-      return mergedPost
+      return latestKnownPostState(postId)
     }
+      
     function setSaveState(text) {
       document.getElementById('save-status').innerText = text
     }

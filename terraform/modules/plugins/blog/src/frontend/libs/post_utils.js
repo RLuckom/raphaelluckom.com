@@ -234,6 +234,25 @@ function newPost() {
   }
 }
 
+/*
+ * Gets the most recent post as saved. 
+ * if saved doesn't exist, or if there's a pending edit on the same etag as saved,
+ * the edit is merged into the state. Else, the most recent save state is returned.
+ * So if you edit on device A, then edit and save on device B, device A will throw out
+ * your local edits when it detects the new save state.
+ */
+function latestKnownPostState(postId) {
+  const mergedPost = _.cloneDeep(getPostAsSaved(postId) || newPost())
+  const editorState = getPostEditorState(postId)
+  if (!!mergedPost.etag || editorState.etag === mergedPost.etag) {
+    mergedPost.frontMatter.meta.imageIds = _.cloneDeep(editorState.imageIds)
+    mergedPost.frontMatter.meta.trails = _.cloneDeep(editorState.trails)
+    mergedPost.frontMatter.title = _.cloneDeep(editorState.title)
+    mergedPost.content = _.cloneDeep(editorState.content)
+  }
+  return mergedPost
+}
+
 function serializePost({frontMatter, content}) {
   return `---\n${yaml.dump(frontMatter)}---\n${content}`
 }
