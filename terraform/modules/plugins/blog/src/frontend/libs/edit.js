@@ -13,7 +13,7 @@ window.RENDER_CONFIG = {
     } 
     let saveState = getPostSaveState(postId)
     let editorState = getPostEditorState(postId)
-    if (!editorState || _.get(editorState, 'editingETag') !== _.get(post, 'etag')) {
+    if (!editorState || _.get(editorState, 'etag') !== _.get(post, 'etag')) {
       if (!post) {
         editorState = setPostEditorState(postId, {
           title: '',
@@ -29,7 +29,7 @@ window.RENDER_CONFIG = {
           trails: post.frontMatter.meta.trails,
           content: post.content,
           imageIds: post.frontMatter.meta.imageIds,
-          editingETag: post.etag,
+          etag: post.etag,
           footnotes: _.get(post, 'endMatter.footnotes', {}),
         })
         saveState = setPostSaveState(postId, {etag: post.etag, label: translatableText.saveState.unmodified})
@@ -218,7 +218,7 @@ window.RENDER_CONFIG = {
                     const changedETag = _.get(r, 'savePostWithoutPublishing[0].ETag')
                     if (changedETag) {
                       postToSave.etag = changedETag
-                      updateEditorState(postId, {editingETag: changedETag}, updateFootnoteMenu, setSaveState)
+                      updateEditorState(postId, {etag: changedETag}, updateFootnoteMenu, setSaveState)
                       setPostAsSaved(postId, postToSave)
                       setPostSaveState(postId, {etag: changedETag, label: translatableText.saveState.unmodified})
                     }
@@ -248,7 +248,7 @@ window.RENDER_CONFIG = {
                     const changedETag = _.get(r, 'saveAndPublishPost[0].ETag')
                     if (changedETag) {
                       postToSave.etag = changedETag
-                      updateEditorState(postId, {editingETag: changedETag}, updateFootnoteMenu, setSaveState)
+                      updateEditorState(postId, {etag: changedETag}, updateFootnoteMenu, setSaveState)
                       setPostAsSaved(postId, postToSave)
                       setPostPublishState(postId, {etag: changedETag, label: translatableText.publishState.mostRecent})
                       setPostSaveState(postId, {etag: changedETag, label: translatableText.saveState.unmodified})
@@ -276,7 +276,7 @@ window.RENDER_CONFIG = {
                     const changedETag = _.get(r, 'unpublishPost[0].ETag')
                     if (changedETag) {
                       postToSave.etag = changedETag
-                      updateEditorState(postId, {editingETag: changedETag}, updateFootnoteMenu, setSaveState)
+                      updateEditorState(postId, {etag: changedETag}, updateFootnoteMenu, setSaveState)
                       setPostAsSaved(postId, postToSave)
                       setPostPublishState(postId, {etag: null, label: translatableText.publishState.unpublished})
                     }
@@ -330,7 +330,7 @@ window.RENDER_CONFIG = {
       }
 
       const postContentForProsemirror = prepareEditorString(editorState.content, postId)
-      const {updateFootnoteMenu} = prosemirrorView(document.getElementById('post-editor'), uploadImage, _.debounce(_.partialRight(_.partial(updateEditorState, postId), setSaveState), 2000), editorState.editorState, postContentForProsemirror, editorState.imageIds, editorState.footnotes || {})
+      const {updateFootnoteMenu} = prosemirrorView(document.getElementById('post-editor'), uploadImage, _.partialRight(_.partial(updateEditorState, postId), setSaveState), editorState.editorState, postContentForProsemirror, editorState.imageIds, editorState.footnotes || {})
       const latestEditorState = getPostEditorState(postId)
       _.each(latestEditorState.footnotes, (v, k) => {
         document.getElementById('post-footnotes').appendChild(buildFootnoteEditor(postId, k, uploadImage, updateFootnoteMenu))

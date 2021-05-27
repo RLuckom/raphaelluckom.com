@@ -34,19 +34,13 @@ function getPostEditorStateDataKey(postId) {
   return `postData?postId=${postId}&field=editorState`
 }
 
-function getPostESaveStateDataKey(postId) {
-  return `postData?postId=${postId}&field=saveState`
-}
-
-function loadAutosave(postId) {
-  const postDataKey = getPostDataKey(postId)
-  return getParsedLocalStorageData(postDataKey)
-}
-
 function getParsedLocalStorageData(key) {
   const savedData = localStorage.getItem(key)
   if (savedData) {
+    console.log(savedData)
+    console.log(key)
     const parsed = JSON.parse(savedData)
+    console.log(parsed)
     return parsed
   }
   return null
@@ -304,17 +298,45 @@ function buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnote
     tagName: 'div',
     classNames: ['prosemirror', 'editor'],
   })
-  prosemirrorView(editorDiv, uploadImage, _.debounce(_.partial(onStateChange), 2000), latestEditorState.footnoteEditorStates[footnoteNumber], latestEditorState.footnotes[footnoteNumber], [], {})
+  prosemirrorView(editorDiv, uploadImage, onStateChange, latestEditorState.footnoteEditorStates[footnoteNumber], latestEditorState.footnotes[footnoteNumber], [], {})
   return editorDiv
 }
 
+function getImageIds({ content, footnotes, postId}) {
+  const imageIdsRegex = new RegExp(`https://${CONFIG.domain}/${CONFIG.plugin_image_hosting_path}${encodeURIComponent(postId)}/([0-9a-f-]{36})/`, 'g')
+  let imageIds = _.map(_.reduce([content, ..._.values(footnotes)], (acc, v) => {
+    console.log(v)
+    return _.concat(acc, _.filter(Array.from(v.matchAll(imageIdsRegex)), (x) => _.isString(_.get(x, 1))))
+  }, []), (x) => x[1])
+  console.log(imageIds)
+  return imageIds
+}
+
 function updateEditorState(postId, updates, updateFootnoteMenu, setSaveState) {
-  const postAsSaved = getPostAsSaved(postId)
+  const latestEditorState = getPostEditorState(postId)
   let isModified = false
+  let imageIds = getImageIds({
+    content: updates.content || latestEditorState.content || '',
+    footnotes: updates.footnotes || latestEditorState.footnotes || {},
+    postId,
+  })
+  let changedFields = {}
+  if (!_.isEqual(imageIds, latestEditorState.imageIds)) {
+    changedFields.imageIds = imageIds
+  }
+  delete updates.imageIds
+  changedFields = _.reduce(updates, (acc, v, k) => {
+    if (!_.isEqual(v, latestEditorState[k])) {
+      acc[k] = v
+    }
+    return acc
+  }, changedFields)
+
+  const postAsSaved = getPostAsSaved(postId)
   if (updates.title && !_.isEqual(updates.title, _.get(postAsSaved, 'frontMatter.title'))) {
     isModified = true
   }
-  if (updates.imageIds && !_.isEqual(updates.imageIds, _.get(postAsSaved, 'frontMatter.meta.imageIds'))) {
+  if (!_.isEqual(imageIds, _.get(postAsSaved, 'frontMatter.meta.imageIds'))) {
     isModified = true
   }
   if (updates.trails && !_.isEqual(updates.trails, _.get(postAsSaved, 'frontMatter.meta.trails'))) {
@@ -327,7 +349,7 @@ function updateEditorState(postId, updates, updateFootnoteMenu, setSaveState) {
     updateFootnoteMenu(updates.footnotes)
     isModified = true
   }
-  editorState = updatePostEditorState(postId, updates)
+  editorState = updatePostEditorState(postId, changedFields)
   const s = updatePostSaveState(postId, {label: isModified ? translatableText.saveState.modified : translatableText.saveState.unmodified})
   if (_.isFunction(setSaveState)) {
     setSaveState(s.label)
