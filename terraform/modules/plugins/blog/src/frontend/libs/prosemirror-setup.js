@@ -84,6 +84,25 @@ const schema = new prosemirror.Schema({
       group: "inline"
     },
 
+		footnote_ref:{
+			group: "inline",
+			content: "inline*",
+			inline: true,
+			draggable: true,
+			// This makes the view treat the node as a leaf, even though it
+			// technically has content
+			atom: true,
+			attrs: {
+				ref: {},  
+			},
+			toDOM: (node) =>  ['sup'],
+				parseDOM: [{tag: "sup", getAttrs(dom) {
+				return {
+					ref: dom.innerText
+				}
+			}}]
+		}, 
+
     image: {
       inline: true,
       attrs: {
@@ -146,6 +165,193 @@ const schema = new prosemirror.Schema({
       toDOM() { return ["code"] }
     }
   }
+})
+
+function footnote_plugin(md) {
+	// Process footnote references ([^...])
+	function footnote_ref(state, silent) {
+		var label,
+		pos,
+		footnoteId,
+		footnoteSubId,
+		token,
+		max = state.posMax,
+			start = state.pos;
+
+		// should be at least 4 chars - "[^x]"
+		if (start + 3 > max) { return false; }
+
+		if (state.src.charCodeAt(start) !== 0x5B/* [ */) { return false; }
+		if (state.src.charCodeAt(start + 1) !== 0x5E/* ^ */) { return false; }
+
+		for (pos = start + 2; pos < max; pos++) {
+			if (state.src.charCodeAt(pos) === 0x20) { return false; }
+			if (state.src.charCodeAt(pos) === 0x0A) { return false; }
+			if (state.src.charCodeAt(pos) === 0x5D /* ] */) {
+				break;
+			}
+		}
+
+		if (pos === start + 2) { return false; } // no empty footnote labels
+		if (pos >= max) { return false; }
+		pos++;
+
+		label = state.src.slice(start + 2, pos - 1);
+    console.log(label)
+    console.log(state)
+
+
+    token      = state.push('footnote_ref', '', 0);
+    token.meta = { id: label, ref: label, subId: label, label: label };
+
+		state.pos = pos;
+		state.posMax = max;
+		return true;
+	}
+	md.inline.ruler.after('image', 'footnote_ref', footnote_ref);
+}
+
+const footnoteMarkdownParser = new prosemirror.MarkdownParser(schema, markdownit("commonmark", {html: false}).use(footnote_plugin), {
+  blockquote: {block: "blockquote"},
+  paragraph: {block: "paragraph"},
+  list_item: {block: "list_item"},
+  bullet_list: {block: "bullet_list", getAttrs: (_, tokens, i) => ({tight: listIsTight(tokens, i)})},
+  ordered_list: {block: "ordered_list", getAttrs: (tok, tokens, i) => ({
+    order: +tok.attrGet("start") || 1,
+    tight: listIsTight(tokens, i)
+  })},
+  heading: {block: "heading", getAttrs: tok => ({level: +tok.tag.slice(1)})},
+  code_block: {block: "code_block", noCloseToken: true},
+  fence: {block: "code_block", getAttrs: tok => ({params: tok.info || ""}), noCloseToken: true},
+  hr: {node: "horizontal_rule"},
+  footnote_ref: {
+    node: "footnote_ref",
+    getAttrs: (tok) => {
+      console.log(tok)
+      return {ref: tok.meta.ref}
+    }
+  },
+  image: {node: "image", getAttrs: tok => ({
+    src: tok.attrGet("src"),
+    title: tok.attrGet("title") || null,
+    alt: tok.children[0] && tok.children[0].content || null
+  })},
+  hardbreak: {node: "hard_break"},
+
+  em: {mark: "em"},
+  strong: {mark: "strong"},
+  link: {mark: "link", getAttrs: tok => ({
+    href: tok.attrGet("href"),
+    title: tok.attrGet("title") || null
+  })},
+  code_inline: {mark: "code", noCloseToken: true}
+})
+
+class FootnoteView {
+  constructor(node, view, getPos) {
+    // We'll need these later
+    this.node = node
+    this.outerView = view
+
+    // The node's representation in the editor (empty, for now)
+    this.dom = document.createElement("sup")
+    this.dom.innerText = node.attrs.ref
+  }
+
+  selectNode() {
+    this.dom.classList.add("ProseMirror-selectednode")
+  }
+
+  deselectNode() {
+    this.dom.classList.remove("ProseMirror-selectednode")
+  }
+
+  ignoreMutation() { return true }
+}
+
+function isPlainURL(link, parent, index, side) {
+  if (link.attrs.title || !/^\w+:/.test(link.attrs.href)) return false
+    let content = parent.child(index + (side < 0 ? -1 : 0))
+  if (!content.isText || content.text != link.attrs.href || content.marks[content.marks.length - 1] != link) return false
+    if (index == (side < 0 ? 1 : parent.childCount - 1)) return true
+      let next = parent.child(index + (side < 0 ? -2 : 1))
+  return !link.isInSet(next.marks)
+}
+
+const footnoteMarkdownSerializer = new prosemirror.MarkdownSerializer({
+  blockquote(state, node) {
+    state.wrapBlock("> ", null, node, () => state.renderContent(node))
+  },
+  code_block(state, node) {
+    state.write("```" + (node.attrs.params || "") + "\n")
+    state.text(node.textContent, false)
+    state.ensureNewLine()
+    state.write("```")
+    state.closeBlock(node)
+  },
+  heading(state, node) {
+    state.write(state.repeat("#", node.attrs.level) + " ")
+    state.renderInline(node)
+    state.closeBlock(node)
+  },
+  horizontal_rule(state, node) {
+    state.write(node.attrs.markup || "---")
+    state.closeBlock(node)
+  },
+  bullet_list(state, node) {
+    state.renderList(node, "  ", () => (node.attrs.bullet || "*") + " ")
+  },
+  ordered_list(state, node) {
+    let start = node.attrs.order || 1
+    let maxW = String(start + node.childCount - 1).length
+    let space = state.repeat(" ", maxW + 2)
+    state.renderList(node, space, i => {
+      let nStr = String(start + i)
+      return state.repeat(" ", maxW - nStr.length) + nStr + ". "
+    })
+  },
+  list_item(state, node) {
+    state.renderContent(node)
+  },
+  paragraph(state, node) {
+    state.renderInline(node)
+    state.closeBlock(node)
+  },
+
+  image(state, node) {
+    state.write("![" + state.esc(node.attrs.alt || "") + "](" + state.esc(node.attrs.src) +
+                (node.attrs.title ? " " + state.quote(node.attrs.title) : "") + ")")
+  },
+  hard_break(state, node, parent, index) {
+    for (let i = index + 1; i < parent.childCount; i++)
+      if (parent.child(i).type != node.type) {
+        state.write("\\\n")
+        return
+      }
+  },
+  text(state, node) {
+    state.text(node.text)
+  },
+
+  footnote_ref(state, node) {
+    state.write('[^' + node.attrs.ref + ']')
+  }
+
+}, {
+  em: {open: "*", close: "*", mixable: true, expelEnclosingWhitespace: true},
+  strong: {open: "**", close: "**", mixable: true, expelEnclosingWhitespace: true},
+  link: {
+    open(_state, mark, parent, index) {
+      return isPlainURL(mark, parent, index, 1) ? "<" : "["
+    },
+    close(state, mark, parent, index) {
+      return isPlainURL(mark, parent, index, -1) ? ">"
+        : "](" + state.esc(mark.attrs.href) + (mark.attrs.title ? " " + state.quote(mark.attrs.title) : "") + ")"
+    }
+  },
+  code: {open(_state, _mark, parent, index) { return backticksFor(parent.child(index), -1) },
+         close(_state, _mark, parent, index) { return backticksFor(parent.child(index - 1), 1) },
+         escape: false}
 })
 
 // PROMPT
@@ -463,7 +669,7 @@ function wrapListItem(nodeType, options) {
 // **`fullMenu`**`: [[MenuElement]]`
 //   : An array of arrays of menu elements for use as the full menu
 //     for, for example the [menu bar](https://github.com/prosemirror/prosemirror-menu#user-content-menubar).
-function buildMenuItems({schema, insertImageItem}) {
+function buildMenuItems({schema, insertImageItem, footnotes}) {
   let r = {}, type
   if (type = schema.marks.strong)
     r.toggleStrong = markItem(type, {title: "Toggle strong style", icon: prosemirror.icons.strong})
@@ -519,7 +725,19 @@ function buildMenuItems({schema, insertImageItem}) {
   }
 
   let cut = arr => arr.filter(x => x)
-  r.insertMenu = new prosemirror.Dropdown(cut([r.insertImage, r.insertHorizontalRule]), {label: "Insert"})
+  let footnotables = footnoteSubmenuContent(footnotes)
+  function updateFootnotes(footnotes) {
+    while (footnotables.length) {
+      footnotables.pop()
+    }
+    const newFootnotables = footnoteSubmenuContent(footnotes)
+    while(newFootnotables.length) {
+      footnotables.push(newFootnotables.pop())
+    }
+  }
+  r.footnoteMenu = new prosemirror.DropdownSubmenu(footnotables, {label: "Footnotes"})
+  r.footnoteMenu.updateFootnotes = updateFootnotes
+  r.insertMenu = new prosemirror.Dropdown([r.insertImage, r.insertHorizontalRule, r.footnoteMenu], {label: "Insert"})
   r.typeMenu = new prosemirror.Dropdown(cut([r.makeParagraph, r.makeCodeBlock, r.makeHead1 && new prosemirror.DropdownSubmenu(cut([
     r.makeHead1, r.makeHead2, r.makeHead3,
   ]), {label: "Heading"})]), {label: "Type..."})
@@ -532,10 +750,27 @@ function buildMenuItems({schema, insertImageItem}) {
   return r
 }
 
+function footnoteSubmenuContent(footnotes) {
+  return _.map(footnotes, (v, k) => {
+    return new prosemirror.MenuItem({
+      title: "Insert footnote " + k,
+      label: "Footnote " + k,
+      select(state) {
+        return prosemirror.insertPoint(state.doc, state.selection.from, schema.nodes.footnote_ref) != null
+      },
+      run(state, dispatch) {
+        let {empty, $from, $to} = state.selection, content = prosemirror.Fragment.empty
+        if (!empty && $from.sameParent($to) && $from.parent.inlineContent)
+          content = $from.parent.content.cut($from.parentOffset, $to.parentOffset)
+        dispatch(state.tr.replaceSelectionWith(schema.nodes.footnote_ref.create({ref: k}, content)))
+      }
+    })
+  })
+}
+
 
 
 // KEYMAP
-const mac = typeof navigator != "undefined" ? /Mac/.test(navigator.platform) : false
 
 // :: (Schema, ?Object) → Object
 // Inspect the given schema looking for marks and nodes from the
@@ -566,6 +801,7 @@ const mac = typeof navigator != "undefined" ? /Mac/.test(navigator.platform) : f
 // argument, which maps key names (say `"Mod-B"` to either `false`, to
 // remove the binding, or a new key name string.
 function buildKeymap(schema, mapKeys) {
+  const mac = typeof navigator != "undefined" ? /Mac/.test(navigator.platform) : false
   let keys = {}, type
   function bind(key, cmd) {
     if (mapKeys) {
@@ -730,7 +966,7 @@ function buildInputRules(schema) {
 //
 //     menuContent:: [[MenuItem]]
 //     Can be used to override the menu content.
-function prosemirrorView(container, uploadImage, onChange, initialState, initialMarkdownText, imageIds) {
+function prosemirrorView(container, uploadImage, onChange, initialState, initialMarkdownText, imageIds, footnotes) {
   const startingImageIds = _.cloneDeep(imageIds) || []
   const imageIdPlugin = new prosemirror.Plugin({
     key: 'imageIds',
@@ -872,10 +1108,11 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
     }
   }
 
+  let menuItems = buildMenuItems({schema: schema, insertImageItem, footnotes})
   let plugins = [
     placeholderPlugin,
-    buildInputRules(prosemirror.schema),
-    prosemirror.keymap(buildKeymap(prosemirror.schema)),
+    buildInputRules(schema),
+    prosemirror.keymap(buildKeymap(schema)),
     prosemirror.keymap(prosemirror.baseKeymap),
     prosemirror.dropCursor(),
     prosemirror.gapCursor(),
@@ -884,23 +1121,49 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
     prosemirror.menuBar(
       {
         floating: true, 
-        content: buildMenuItems({schema: prosemirror.schema, insertImageItem}).fullMenu
+        content: menuItems.fullMenu
       }
     ),
   ]
+  function updateFootnoteMenu(footnotes) {
+    console.log(footnotes)
+    menuItems = buildMenuItems({schema: schema, insertImageItem, footnotes})
+    plugins = [
+      placeholderPlugin,
+      buildInputRules(schema),
+      prosemirror.keymap(buildKeymap(schema)),
+      prosemirror.keymap(prosemirror.baseKeymap),
+      prosemirror.dropCursor(),
+      prosemirror.gapCursor(),
+      imageIdPlugin,
+      prosemirror.history(),
+      prosemirror.menuBar(
+        {
+          floating: true, 
+          content: menuItems.fullMenu
+        }
+      ),
+    ]
+    view.updateState(view.state.reconfigure({plugins}))
+  }
   const initState = initialState ? prosemirror.EditorState.fromJSON(
     {
-      schema: prosemirror.schema,
+      schema: schema,
       plugins
     }, _.isString(initialState) ? JSON.parse(initialState) : initialState, statePluginFields
   ) : prosemirror.EditorState.create({
-    doc: prosemirror.defaultMarkdownParser.parse(initialMarkdownText),
+    doc: footnoteMarkdownParser.parse(initialMarkdownText),
     plugins,
   })
   // Load editor view
   const view = new prosemirror.EditorView(container, {
     // Set initial state
     state: initState,
+    nodeViews: {
+      footnote_ref(node, view, getPos) {
+        return new FootnoteView(node, view, getPos)
+      }
+    },
     dispatchTransaction(tr) {
       const { state } = view.state.applyTransaction(tr)
       view.updateState(state)
@@ -908,8 +1171,8 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
         onChange({
           imageIds: imageIdPlugin.getState(state),
           editorState: serializeState(),
-          content: prosemirror.defaultMarkdownSerializer.serialize(tr.doc),
-        })
+          content: footnoteMarkdownSerializer.serialize(tr.doc),
+        }, updateFootnoteMenu)
       }
     },
   })
@@ -921,6 +1184,7 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
   return {
     view,
     plugins,
+    updateFootnoteMenu,
   }
 }
 

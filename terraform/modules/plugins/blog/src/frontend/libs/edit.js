@@ -19,7 +19,8 @@ window.RENDER_CONFIG = {
           title: '',
           trails: [],
           content: '',
-          imageIds: []
+          imageIds: [],
+          footnotes: {},
         })
         saveState = setPostSaveState(postId, {etag: null, label: translatableText.saveState.unsaved})
       } else {
@@ -29,6 +30,7 @@ window.RENDER_CONFIG = {
           content: post.content,
           imageIds: post.frontMatter.meta.imageIds,
           editingETag: post.etag,
+          footnotes: _.get(post, 'endMatter.footnotes', {}),
         })
         saveState = setPostSaveState(postId, {etag: post.etag, label: translatableText.saveState.unmodified})
       }
@@ -161,18 +163,44 @@ window.RENDER_CONFIG = {
         placeholder: translatableText.postMetadata.placeholders.title,
         value: editorState.title,
         id: 'title',
-        onChange: (e) => updateEditorState({title: e.target.value})
+        onChange: (e) => updateEditorState(postId, {title: e.target.value}, updateFootnoteMenu, setSaveState)
       },
       {
         tagName: 'div',
-        id: 'post-editor',
-        classNames: ['prosemirror', 'editor'],
-        name: 'main',
+        children: [
+          {
+            tagName: 'div',
+            id: 'post-editor',
+            classNames: ['prosemirror', 'editor'],
+          },
+          {
+            tagName: 'div',
+            id: 'post-footnotes',
+            classNames: ['prosemirror', 'editor'],
+          },
+        ]
       },
       {
         tagName: 'div',
         id: 'post-actions',
         children: [
+          {
+            tagName: 'div',
+            classNames: 'button-container',
+            children: [
+              {
+                tagName: 'button',
+                name: 'addFootnote',
+                classNames: 'addFootnote',
+                innerText: translatableText.postActions.addFootnote,
+                onClick: (evt) => {
+                  const latestEditorState = getPostEditorState(postId)
+                  const footnoteNumber = _.keys(latestEditorState.footnotes || {}).length + 1
+                  document.getElementById('post-footnotes').appendChild(buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnoteMenu))
+                }
+              }
+            ]
+          },
           {
             tagName: 'div',
             classNames: 'button-container',
@@ -190,7 +218,7 @@ window.RENDER_CONFIG = {
                     const changedETag = _.get(r, 'savePostWithoutPublishing[0].ETag')
                     if (changedETag) {
                       postToSave.etag = changedETag
-                      updateEditorState({editingETag: changedETag})
+                      updateEditorState(postId, {editingETag: changedETag}, updateFootnoteMenu, setSaveState)
                       setPostAsSaved(postId, postToSave)
                       setPostSaveState(postId, {etag: changedETag, label: translatableText.saveState.unmodified})
                     }
@@ -220,7 +248,7 @@ window.RENDER_CONFIG = {
                     const changedETag = _.get(r, 'saveAndPublishPost[0].ETag')
                     if (changedETag) {
                       postToSave.etag = changedETag
-                      updateEditorState({editingETag: changedETag})
+                      updateEditorState(postId, {editingETag: changedETag}, updateFootnoteMenu, setSaveState)
                       setPostAsSaved(postId, postToSave)
                       setPostPublishState(postId, {etag: changedETag, label: translatableText.publishState.mostRecent})
                       setPostSaveState(postId, {etag: changedETag, label: translatableText.saveState.unmodified})
@@ -248,7 +276,7 @@ window.RENDER_CONFIG = {
                     const changedETag = _.get(r, 'unpublishPost[0].ETag')
                     if (changedETag) {
                       postToSave.etag = changedETag
-                      updateEditorState({editingETag: changedETag})
+                      updateEditorState(postId, {editingETag: changedETag}, updateFootnoteMenu, setSaveState)
                       setPostAsSaved(postId, postToSave)
                       setPostPublishState(postId, {etag: null, label: translatableText.publishState.unpublished})
                     }
@@ -270,7 +298,7 @@ window.RENDER_CONFIG = {
         classNames: 'authoring-input',
         id: 'trails',
         value: (_.get(post, 'frontMatter.meta.trails') || []).join(', '),
-        onChange: (e) => updateEditorState({trails: _.map((e.target.value || '').split(','), _.trim)})
+        onChange: (e) => updateEditorState(postId, {trails: _.map((e.target.value || '').split(','), _.trim)}, updateFootnoteMenu, setSaveState)
       },
       {
         tagName: 'div',
@@ -301,31 +329,12 @@ window.RENDER_CONFIG = {
         )
       }
 
-      function updateEditorState(updates) {
-        const postAsSaved = getPostAsSaved(postId)
-        let isModified = false
-        if (updates.title && !_.isEqual(updates.title, _.get(postAsSaved, 'frontMatter.title'))) {
-          isModified = true
-        }
-        if (updates.imageIds && !_.isEqual(updates.imageIds, _.get(postAsSaved, 'frontMatter.meta.imageIds'))) {
-          isModified = true
-        }
-        if (updates.trails && !_.isEqual(updates.trails, _.get(postAsSaved, 'frontMatter.meta.trails'))) {
-          isModified = true
-        }
-        if (updates.content && !_.isEqual(updates.content, _.get(postAsSaved, 'content'))) {
-          isModified = true
-        }
-        editorState = updatePostEditorState(postId, updates)
-        const s = updatePostSaveState(postId, {label: isModified ? translatableText.saveState.modified : translatableText.saveState.unmodified})
-        setSaveState(s.label)
-      }
-
-      const postIdInLinkRegex = new RegExp("\\((https:\/\/.*)" + postId + '([^\\)]*)\\)', 'g')
-      const postIdInRelativeLinkRegex = new RegExp("]\\(/(.*)" + postId + '([^\\)]*)\\)', 'g')
-      const postContentForProsemirror = editorState.content.replace(postIdInLinkRegex, (match, g1, g2) => "(" + g1 + encodeURIComponent(postId) + g2 + ')').replace(
-        postIdInRelativeLinkRegex, (match, g1, g2) => "](/" + g1 + encodeURIComponent(postId) + g2 + ')')
-        prosemirrorView(document.getElementById('post-editor'), uploadImage, _.debounce(_.partial(updateEditorState), 2000), editorState.editorState, postContentForProsemirror, editorState.imageIds)
+      const postContentForProsemirror = prepareEditorString(editorState.content, postId)
+      const {updateFootnoteMenu} = prosemirrorView(document.getElementById('post-editor'), uploadImage, _.debounce(_.partialRight(_.partial(updateEditorState, postId), setSaveState), 2000), editorState.editorState, postContentForProsemirror, editorState.imageIds, editorState.footnotes || {})
+      const latestEditorState = getPostEditorState(postId)
+      _.each(latestEditorState.footnotes, (v, k) => {
+        document.getElementById('post-footnotes').appendChild(buildFootnoteEditor(postId, k, uploadImage, updateFootnoteMenu))
+      })
   },
   params: {
     post: {

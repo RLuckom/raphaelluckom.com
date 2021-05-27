@@ -173,7 +173,8 @@ const translatableText = {
     edit: 'Edit',
     delete: 'Delete',
     toIndex: 'Back',
-    new: 'New Post'
+    new: 'New Post',
+    addFootnote: 'Add Footnote',
   },
   editing: 'Editing',
 }
@@ -190,7 +191,9 @@ function parsePost(s) {
   const t = s.split('\n')
   if (_.trim(t[0]) === '---') {
     let started = false
+    let finished = false
     let frontMatter = ''
+    let endMatter = ''
     let content = ''
     for (r of t.slice(1)) {
       if (_.trim(r) === '---') {
@@ -199,17 +202,22 @@ function parsePost(s) {
         } else {
           content += r + "\n"
         }
+      } else if (_.trim(r) === '---END---') {
+        finished = true
       } else {
-        if (started) {
+        if (started && !finished) {
           content += r + "\n"
-        } else {
+        } else if (!started && !finished) {
           frontMatter += r + '\n'
+        } else {
+          endMatter += r + '\n'
         }
       }
     }
     try {
       const fm = yaml.load(frontMatter)
-      return { frontMatter: fm, content, raw:s }
+      const em = endMatter ? yaml.load(endMatter) : {}
+      return { frontMatter: fm, endMatter: em, content, raw:s }
     } catch(e) {
       console.error(e)
       return { raw: s} 
@@ -228,6 +236,9 @@ function newPost() {
         trails: [],
         imageIds: [],
       },
+    },
+    endMatter: {
+      footnotes: {},
     },
     content: '',
     etag: ''
@@ -249,10 +260,76 @@ function latestKnownPostState(postId) {
     mergedPost.frontMatter.meta.trails = _.cloneDeep(editorState.trails)
     mergedPost.frontMatter.title = _.cloneDeep(editorState.title)
     mergedPost.content = _.cloneDeep(editorState.content)
+    mergedPost.endMatter = mergedPost.endMatter || {}
+    mergedPost.endMatter.footnotes = _.cloneDeep(editorState.footnotes || {})
   }
+  mergedPost.endMatter = mergedPost.endMatter || {footnotes: {}}
   return mergedPost
 }
 
-function serializePost({frontMatter, content}) {
-  return `---\n${yaml.dump(frontMatter)}---\n${content}`
+function serializePostToMarkdown({frontMatter, content, endMatter}) {
+  let text = `---\n${yaml.dump(frontMatter)}---\n${content}\n\n`
+  _(endMatter.footnotes).toPairs().sortBy((v) => v[0]).each(([k, v]) => {
+    text += `[^${k}]:  ${v.split('\n').join('\n      ')}\n\n`
+  })
+  console.log(text)
+  return text
+}
+
+function serializePost({frontMatter, content, endMatter}) {
+  return `---\n${yaml.dump(frontMatter)}---\n${content}\n---END---\n${endMatter ? yaml.dump(endMatter) : ''}`
+}
+
+function prepareEditorString(s, postId) {
+  const postIdInLinkRegex = new RegExp("\\((https:\/\/.*)" + postId + '([^\\)]*)\\)', 'g')
+  const postIdInRelativeLinkRegex = new RegExp("]\\(/(.*)" + postId + '([^\\)]*)\\)', 'g')
+  return s.replace(postIdInLinkRegex, (match, g1, g2) => "(" + g1 + encodeURIComponent(postId) + g2 + ')').replace(
+    postIdInRelativeLinkRegex, (match, g1, g2) => "](/" + g1 + encodeURIComponent(postId) + g2 + ')')
+}
+
+function buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnoteMenu) {
+  const latestEditorState = getPostEditorState(postId)
+  latestEditorState.footnotes = latestEditorState.footnotes || {}
+  latestEditorState.footnoteEditorStates = latestEditorState.footnoteEditorStates || {}
+  latestEditorState.footnotes[footnoteNumber] = latestEditorState.footnotes[footnoteNumber] || ''
+  updateEditorState(postId, {footnotes: latestEditorState.footnotes, footnoteEditorStates: latestEditorState.footnoteEditorStates}, updateFootnoteMenu)
+  function onStateChange({imageIds, editorState, content}) {
+    const latestEditorState = getPostEditorState(postId)
+    latestEditorState.footnotes[footnoteNumber] = content
+    latestEditorState.footnoteEditorStates[footnoteNumber] = editorState
+    updateEditorState(postId, {footnotes: latestEditorState.footnotes, footnoteEditorStates: latestEditorState.footnoteEditorStates}, updateFootnoteMenu)
+    console.log(serializePostToMarkdown(parsePost(serializePost(latestKnownPostState(postId)))))
+  }
+  const editorDiv = domNode({
+    tagName: 'div',
+    classNames: ['prosemirror', 'editor'],
+  })
+  prosemirrorView(editorDiv, uploadImage, _.debounce(_.partial(onStateChange), 2000), latestEditorState.footnoteEditorStates[footnoteNumber], latestEditorState.footnotes[footnoteNumber], [], {})
+  return editorDiv
+}
+
+function updateEditorState(postId, updates, updateFootnoteMenu, setSaveState) {
+  const postAsSaved = getPostAsSaved(postId)
+  let isModified = false
+  if (updates.title && !_.isEqual(updates.title, _.get(postAsSaved, 'frontMatter.title'))) {
+    isModified = true
+  }
+  if (updates.imageIds && !_.isEqual(updates.imageIds, _.get(postAsSaved, 'frontMatter.meta.imageIds'))) {
+    isModified = true
+  }
+  if (updates.trails && !_.isEqual(updates.trails, _.get(postAsSaved, 'frontMatter.meta.trails'))) {
+    isModified = true
+  }
+  if (updates.content && !_.isEqual(updates.content, _.get(postAsSaved, 'content'))) {
+    isModified = true
+  }
+  if (updates.footnotes && !_.isEqual(updates.footnotes, _.get(postAsSaved, 'endMatter.footnotes'))) {
+    updateFootnoteMenu(updates.footnotes)
+    isModified = true
+  }
+  editorState = updatePostEditorState(postId, updates)
+  const s = updatePostSaveState(postId, {label: isModified ? translatableText.saveState.modified : translatableText.saveState.unmodified})
+  if (_.isFunction(setSaveState)) {
+    setSaveState(s.label)
+  }
 }

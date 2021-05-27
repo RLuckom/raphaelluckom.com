@@ -1,43 +1,57 @@
 const _ = require('lodash')
-const moment = require('moment')
 const yaml = require('js-yaml')
+
+const blogImageKeyRegExp = new RegExp('${blog_image_hosting_prefix}([^/]*)/([^\.]*)/([0-9]*)\.(.*)')
+const pluginImageKeyRegExp = new RegExp('${blog_image_hosting_prefix}([^/]*)/([^\.]*)/([0-9]*)\.(.*)')
+
 function parsePost(s) {
   const t = s.split('\n')
   if (_.trim(t[0]) === '---') {
     let started = false
+    let finished = false
     let frontMatter = ''
+    let endMatter = ''
     let content = ''
-    for (let r of t.slice(1)) {
+    for (r of t.slice(1)) {
       if (_.trim(r) === '---') {
         if (!started) {
           started = true
         } else {
           content += r + "\n"
         }
+      } else if (_.trim(r) === '---END---') {
+        finished = true
       } else {
-        if (started) {
+        if (started && !finished) {
           content += r + "\n"
-        } else {
+        } else if (!started && !finished) {
           frontMatter += r + '\n'
+        } else {
+          endMatter += r + '\n'
         }
       }
     }
     try {
       const fm = yaml.load(frontMatter)
-      if (fm.date) {
-        fm.date = moment(fm.date)
-      }
-      return { frontMatter: fm, content, raw:s }
+      const em = endMatter ? yaml.load(endMatter) : {}
+      return { frontMatter: fm, endMatter: em, content, raw:s }
     } catch(e) {
-      return { raw: s } 
+      console.error(e)
+      return { raw: s} 
     }
   } else {
     return { raw: s }
   }
 }
 
-const blogImageKeyRegExp = new RegExp('${blog_image_hosting_prefix}([^/]*)/([^\.]*)/([0-9]*)\.(.*)')
-const pluginImageKeyRegExp = new RegExp('${blog_image_hosting_prefix}([^/]*)/([^\.]*)/([0-9]*)\.(.*)')
+function serializePostToMarkdown({frontMatter, content, endMatter}) {
+  let text = '---\n' + yaml.dump(frontMatter) + '---\n' + content + '\n\n'
+  _(endMatter.footnotes).toPairs().sortBy((v) => v[0]).each(([k, v]) => {
+    text += '[^' + k + ']:  ' + v.split('\n').join('\n      ') + '\n'
+  })
+  console.log(text)
+  return text
+}
 
 module.exports = {
   stages: {
@@ -252,14 +266,15 @@ module.exports = {
               },
               ContentType: { value: 'text/markdown' },
               Body: {
-                helper: ({postString, postId}) => {
-                  return _.replace(postString, "${plugin_image_hosting_root}", "${blog_image_hosting_root}")
-                  .replace(new RegExp("\\((https:\/\/.*)" + postId + '([^\\)]*)\\)', 'g'), (match, g1, g2) => "(" + g1 + encodeURIComponent(postId) + g2 + ')')
-                  .replace(new RegExp("]\\(/(.*)" + postId + '([^\\)]*)\\)', 'g'), (match, g1, g2) => "](/" + g1 + encodeURIComponent(postId) + g2 + ')')
+                helper: ({parsed, postId}) => {
+                 const postString = serializePostToMarkdown(parsed) 
+                 return _.replace(postString, "${plugin_image_hosting_root}", "${blog_image_hosting_root}")
+                 .replace(new RegExp("\\((https:\/\/.*)" + postId + '([^\\)]*)\\)', 'g'), (match, g1, g2) => "(" + g1 + encodeURIComponent(postId) + g2 + ')')
+                 .replace(new RegExp("]\\(/(.*)" + postId + '([^\\)]*)\\)', 'g'), (match, g1, g2) => "](/" + g1 + encodeURIComponent(postId) + g2 + ')')
                 },
                 params: {
                   postId: {ref: 'parsePost.vars.postId'},
-                  postString: {ref: 'parsePost.results.current.raw' },
+                  parsed: {ref: 'parsePost.results.current' },
                 }
               }
             }
