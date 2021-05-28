@@ -35,19 +35,19 @@ function getPostEditorStateDataKey(postId) {
 }
 
 function getParsedLocalStorageData(key) {
+  if (key.indexOf('[object Object]') !== -1) {
+    console.log(new Error('obj in k'))
+  }
   const savedData = localStorage.getItem(key)
   if (savedData) {
-    console.log(savedData)
-    console.log(key)
     const parsed = JSON.parse(savedData)
-    console.log(parsed)
     return parsed
   }
   return null
 }
 
 function updateLocalStorageData(key, updates) {
-  const updatedRecord = _.merge({}, getParsedLocalStorageData(key), updates)
+  const updatedRecord = _.assign({}, getParsedLocalStorageData(key), updates)
   localStorage.setItem(key, JSON.stringify(updatedRecord))
   return updatedRecord
 }
@@ -249,7 +249,7 @@ function newPost() {
 function latestKnownPostState(postId) {
   const mergedPost = _.cloneDeep(getPostAsSaved(postId) || newPost())
   const editorState = getPostEditorState(postId)
-  if (!!mergedPost.etag || editorState.etag === mergedPost.etag) {
+  if (!mergedPost.etag || editorState.etag === mergedPost.etag) {
     mergedPost.frontMatter.meta.imageIds = _.cloneDeep(editorState.imageIds)
     mergedPost.frontMatter.meta.trails = _.cloneDeep(editorState.trails)
     mergedPost.frontMatter.title = _.cloneDeep(editorState.title)
@@ -266,7 +266,6 @@ function serializePostToMarkdown({frontMatter, content, endMatter}) {
   _(endMatter.footnotes).toPairs().sortBy((v) => v[0]).each(([k, v]) => {
     text += `[^${k}]:  ${v.split('\n').join('\n      ')}\n\n`
   })
-  console.log(text)
   return text
 }
 
@@ -304,11 +303,9 @@ function buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnote
 
 function getImageIds({ content, footnotes, postId}) {
   const imageIdsRegex = new RegExp(`https://${CONFIG.domain}/${CONFIG.plugin_image_hosting_path}${encodeURIComponent(postId)}/([0-9a-f-]{36})/`, 'g')
-  let imageIds = _.map(_.reduce([content, ..._.values(footnotes)], (acc, v) => {
-    console.log(v)
+  let imageIds = _.uniq(_.map(_.reduce([content, ..._.values(footnotes)], (acc, v) => {
     return _.concat(acc, _.filter(Array.from(v.matchAll(imageIdsRegex)), (x) => _.isString(_.get(x, 1))))
-  }, []), (x) => x[1])
-  console.log(imageIds)
+  }, []), (x) => x[1]))
   return imageIds
 }
 
@@ -320,17 +317,17 @@ function updateEditorState(postId, updates, updateFootnoteMenu, setSaveState) {
     footnotes: updates.footnotes || latestEditorState.footnotes || {},
     postId,
   })
-  let changedFields = {}
-  if (!_.isEqual(imageIds, latestEditorState.imageIds)) {
-    changedFields.imageIds = imageIds
-  }
-  delete updates.imageIds
-  changedFields = _.reduce(updates, (acc, v, k) => {
+  const changedFields = _.reduce(updates, (acc, v, k) => {
     if (!_.isEqual(v, latestEditorState[k])) {
       acc[k] = v
     }
     return acc
-  }, changedFields)
+  }, {})
+  if (!_.isEqual(imageIds, latestEditorState.imageIds)) {
+    changedFields.imageIds = imageIds
+  } else {
+    delete changedFields.imageIds
+  }
 
   const postAsSaved = getPostAsSaved(postId)
   if (updates.title && !_.isEqual(updates.title, _.get(postAsSaved, 'frontMatter.title'))) {
@@ -349,7 +346,7 @@ function updateEditorState(postId, updates, updateFootnoteMenu, setSaveState) {
     updateFootnoteMenu(updates.footnotes)
     isModified = true
   }
-  editorState = updatePostEditorState(postId, changedFields)
+  const newEditorState = updatePostEditorState(postId, changedFields)
   const s = updatePostSaveState(postId, {label: isModified ? translatableText.saveState.modified : translatableText.saveState.unmodified})
   if (_.isFunction(setSaveState)) {
     setSaveState(s.label)

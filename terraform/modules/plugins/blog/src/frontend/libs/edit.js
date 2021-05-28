@@ -1,5 +1,6 @@
 window.RENDER_CONFIG = {
   init: ({post, publishedETag}, gopher) => {
+    console.log(post)
     const postId = new URLSearchParams(window.location.search).get('postId').replace(/\//g, '-')
     let publishedState = getPostPublishState(postId)
     if (publishedETag && publishedETag !== _.get(publishedState, 'etag')) {
@@ -223,7 +224,7 @@ window.RENDER_CONFIG = {
                       setPostSaveState(postId, {etag: changedETag, label: translatableText.saveState.unmodified})
                     }
                     if (postToSave.etag !== getPostPublishState.etag) {
-                      updatePostPublishState({label: translatableText.publishState.modified})
+                      updatePostPublishState(postId, {label: translatableText.publishState.modified})
                       setPublishState(translatableText.publishState.modified)
                     }
                     setSaveState(translatableText.saveState.unmodified)

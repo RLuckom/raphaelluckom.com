@@ -197,8 +197,6 @@ function footnote_plugin(md) {
 		pos++;
 
 		label = state.src.slice(start + 2, pos - 1);
-    console.log(label)
-    console.log(state)
 
 
     token      = state.push('footnote_ref', '', 0);
@@ -227,7 +225,6 @@ const footnoteMarkdownParser = new prosemirror.MarkdownParser(schema, markdownit
   footnote_ref: {
     node: "footnote_ref",
     getAttrs: (tok) => {
-      console.log(tok)
       return {ref: tok.meta.ref}
     }
   },
@@ -1126,7 +1123,6 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
     ),
   ]
   function updateFootnoteMenu(footnotes) {
-    console.log(footnotes)
     menuItems = buildMenuItems({schema: schema, insertImageItem, footnotes})
     plugins = [
       placeholderPlugin,
