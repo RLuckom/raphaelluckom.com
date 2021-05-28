@@ -1,6 +1,5 @@
 window.RENDER_CONFIG = {
   init: ({post, publishedETag}, gopher) => {
-    console.log(post)
     const postId = new URLSearchParams(window.location.search).get('postId').replace(/\//g, '-')
     let publishedState = getPostPublishState(postId)
     if (publishedETag && publishedETag !== _.get(publishedState, 'etag')) {
@@ -331,7 +330,7 @@ window.RENDER_CONFIG = {
       }
 
       const postContentForProsemirror = prepareEditorString(editorState.content, postId)
-      const {updateFootnoteMenu} = prosemirrorView(document.getElementById('post-editor'), uploadImage, _.partialRight(_.partial(updateEditorState, postId), setSaveState), editorState.editorState, postContentForProsemirror, editorState.imageIds, editorState.footnotes || {})
+      const {updateFootnoteMenu} = prosemirrorView(document.getElementById('post-editor'), uploadImage, _.partialRight(_.partial(updateEditorState, postId), setSaveState), editorState.editorState, postContentForProsemirror, editorState.footnotes || {})
       const latestEditorState = getPostEditorState(postId)
       _.each(latestEditorState.footnotes, (v, k) => {
         document.getElementById('post-footnotes').appendChild(buildFootnoteEditor(postId, k, uploadImage, updateFootnoteMenu))

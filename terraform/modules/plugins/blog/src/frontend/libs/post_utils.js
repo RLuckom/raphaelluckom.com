@@ -291,13 +291,12 @@ function buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnote
     latestEditorState.footnotes[footnoteNumber] = content
     latestEditorState.footnoteEditorStates[footnoteNumber] = editorState
     updateEditorState(postId, {footnotes: latestEditorState.footnotes, footnoteEditorStates: latestEditorState.footnoteEditorStates}, updateFootnoteMenu)
-    console.log(serializePostToMarkdown(parsePost(serializePost(latestKnownPostState(postId)))))
   }
   const editorDiv = domNode({
     tagName: 'div',
     classNames: ['prosemirror', 'editor'],
   })
-  prosemirrorView(editorDiv, uploadImage, onStateChange, latestEditorState.footnoteEditorStates[footnoteNumber], latestEditorState.footnotes[footnoteNumber], [], {})
+  prosemirrorView(editorDiv, uploadImage, onStateChange, latestEditorState.footnoteEditorStates[footnoteNumber], latestEditorState.footnotes[footnoteNumber], {})
   return editorDiv
 }
 

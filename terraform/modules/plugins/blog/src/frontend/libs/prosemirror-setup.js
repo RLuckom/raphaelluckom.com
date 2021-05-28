@@ -963,36 +963,7 @@ function buildInputRules(schema) {
 //
 //     menuContent:: [[MenuItem]]
 //     Can be used to override the menu content.
-function prosemirrorView(container, uploadImage, onChange, initialState, initialMarkdownText, imageIds, footnotes) {
-  const startingImageIds = _.cloneDeep(imageIds) || []
-  const imageIdPlugin = new prosemirror.Plugin({
-    key: 'imageIds',
-    state: {
-      init() { return startingImageIds },
-      toJSON(val) { return JSON.stringify(val) },
-      fromJSON(conf, val, edState) { return JSON.parse(val) },
-      apply(tr, val, state) {
-				changedDescendants(tr.doc, tr.before, 0, (node, pos) => {
-          if (node.attrs.src) {
-            const imageId = _.find(val, (imageId) => node.attrs.src.indexOf(imageId) !== -1)
-            if (imageId) {
-              val.splice(val.indexOf(imageId), 1)
-            }
-          }
-        })
-        let action = tr.getMeta(this)
-        if (action && action.add) {
-          const ids =  _.concat(val, [action.add.imageId])
-          return ids
-        }
-        return val
-      }
-    }
-  })
-
-  const statePluginFields = {
-    imageIds: imageIdPlugin
-  }
+function prosemirrorView(container, uploadImage, onChange, initialState, initialMarkdownText, footnotes) {
 
   // fix the image upload jumping around. Try to add an outer element that has the correct dims then replace the inside
   const placeholderPlugin = new prosemirror.Plugin({
@@ -1065,7 +1036,7 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
       uploadImage(buffer, file.name.split('.').pop(), (e, {url, imageId}) => {
         if (e) {
           return view.dispatch(
-            tr.setMeta(placeholderPlugin, {remove: {id}}).setMeta(imageIdPlugin, {add: {imageId}})
+            tr.setMeta(placeholderPlugin, {remove: {id}})
           )
         }
         let {pos, width, height} = findPlaceholder(view.state, id)
@@ -1084,7 +1055,6 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
             height,
           }))
           .setMeta(placeholderPlugin, {remove: {id}})
-          .setMeta(imageIdPlugin, {add: {imageId}})
         )
       })
     })
@@ -1113,7 +1083,6 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
     prosemirror.keymap(prosemirror.baseKeymap),
     prosemirror.dropCursor(),
     prosemirror.gapCursor(),
-    imageIdPlugin,
     prosemirror.history(),
     prosemirror.menuBar(
       {
@@ -1131,7 +1100,6 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
       prosemirror.keymap(prosemirror.baseKeymap),
       prosemirror.dropCursor(),
       prosemirror.gapCursor(),
-      imageIdPlugin,
       prosemirror.history(),
       prosemirror.menuBar(
         {
@@ -1146,8 +1114,7 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
     {
       schema: schema,
       plugins
-    }, _.isString(initialState) ? JSON.parse(initialState) : initialState, statePluginFields
-  ) : prosemirror.EditorState.create({
+    }, _.isString(initialState) ? JSON.parse(initialState) : initialState) : prosemirror.EditorState.create({
     doc: footnoteMarkdownParser.parse(initialMarkdownText),
     plugins,
   })
@@ -1165,7 +1132,6 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
       view.updateState(state)
       if (tr.docChanged) {
         onChange({
-          imageIds: imageIdPlugin.getState(state),
           editorState: serializeState(),
           content: footnoteMarkdownSerializer.serialize(tr.doc),
         }, updateFootnoteMenu)
@@ -1174,7 +1140,7 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
   })
 
   function serializeState() {
-    return view.state.toJSON(statePluginFields)
+    return view.state.toJSON()
   }
 
   return {
