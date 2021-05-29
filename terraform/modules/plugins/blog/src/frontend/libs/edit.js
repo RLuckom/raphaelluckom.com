@@ -39,7 +39,7 @@ window.RENDER_CONFIG = {
     function mergeEditorStateToPost() {
       return latestKnownPostState(postId)
     }
-      
+
     function setSaveState(text) {
       document.getElementById('save-status').innerText = text
     }
@@ -190,23 +190,6 @@ window.RENDER_CONFIG = {
             children: [
               {
                 tagName: 'button',
-                name: 'addFootnote',
-                classNames: 'addFootnote',
-                innerText: translatableText.postActions.addFootnote,
-                onClick: (evt) => {
-                  const latestEditorState = getPostEditorState(postId)
-                  const footnoteNumber = _.keys(latestEditorState.footnotes || {}).length + 1
-                  document.getElementById('post-footnotes').appendChild(buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnoteMenu))
-                }
-              }
-            ]
-          },
-          {
-            tagName: 'div',
-            classNames: 'button-container',
-            children: [
-              {
-                tagName: 'button',
                 name: 'save',
                 classNames: 'save',
                 spin: true,
@@ -328,9 +311,32 @@ window.RENDER_CONFIG = {
           }
         )
       }
+      const addFootnoteDiv = {
+        tagName: 'div',
+        classNames: 'button-container',
+        children: [
+          {
+            tagName: 'button',
+            name: 'addFootnote',
+            classNames: 'addFootnote',
+            innerText: translatableText.postActions.addFootnote,
+            onClick: (evt) => {
+              const latestEditorState = getPostEditorState(postId)
+              const footnoteNumber = _.keys(latestEditorState.footnotes || {}).length + 1
+              document.getElementById('post-footnotes').appendChild(buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnoteMenu))
+            }
+          }
+        ]
+      }
+
+      function addFootnote() {
+        const latestEditorState = getPostEditorState(postId)
+        const footnoteNumber = _.keys(latestEditorState.footnotes || {}).length + 1
+        document.getElementById('post-footnotes').appendChild(buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnoteMenu))
+      }
 
       const postContentForProsemirror = prepareEditorString(editorState.content, postId)
-      const {updateFootnoteMenu} = prosemirrorView(document.getElementById('post-editor'), uploadImage, _.partialRight(_.partial(updateEditorState, postId), setSaveState), editorState.editorState, postContentForProsemirror, editorState.footnotes || {})
+      const {updateFootnoteMenu} = prosemirrorView(document.getElementById('post-editor'), uploadImage, _.partialRight(_.partial(updateEditorState, postId), setSaveState), editorState.editorState, postContentForProsemirror, editorState.footnotes || {}, addFootnote)
       const latestEditorState = getPostEditorState(postId)
       _.each(latestEditorState.footnotes, (v, k) => {
         document.getElementById('post-footnotes').appendChild(buildFootnoteEditor(postId, k, uploadImage, updateFootnoteMenu))

@@ -666,7 +666,7 @@ function wrapListItem(nodeType, options) {
 // **`fullMenu`**`: [[MenuElement]]`
 //   : An array of arrays of menu elements for use as the full menu
 //     for, for example the [menu bar](https://github.com/prosemirror/prosemirror-menu#user-content-menubar).
-function buildMenuItems({schema, insertImageItem, footnotes}) {
+function buildMenuItems({schema, insertImageItem, footnotes, addFootnote}) {
   let r = {}, type
   if (type = schema.marks.strong)
     r.toggleStrong = markItem(type, {title: "Toggle strong style", icon: prosemirror.icons.strong})
@@ -720,6 +720,13 @@ function buildMenuItems({schema, insertImageItem, footnotes}) {
       run(state, dispatch) { dispatch(state.tr.replaceSelectionWith(hr.create())) }
     })
   }
+  if (_.isFunction(addFootnote)) {
+    r.addFootnote = new prosemirror.MenuItem({
+      title: "Add Footnote text",
+      label: "New footnote text",
+      run: addFootnote,
+    })
+  }
 
   let cut = arr => arr.filter(x => x)
   let footnotables = footnoteSubmenuContent(footnotes)
@@ -732,9 +739,9 @@ function buildMenuItems({schema, insertImageItem, footnotes}) {
       footnotables.push(newFootnotables.pop())
     }
   }
-  r.footnoteMenu = new prosemirror.DropdownSubmenu(footnotables, {label: "Footnotes"})
+  r.footnoteMenu = new prosemirror.DropdownSubmenu(footnotables, {label: "Footnote Ref"})
   r.footnoteMenu.updateFootnotes = updateFootnotes
-  r.insertMenu = new prosemirror.Dropdown([r.insertImage, r.insertHorizontalRule, r.footnoteMenu], {label: "Insert"})
+  r.insertMenu = new prosemirror.Dropdown(cut([r.insertImage, r.insertHorizontalRule, r.footnoteMenu, r.addFootnote]), {label: "Insert"})
   r.typeMenu = new prosemirror.Dropdown(cut([r.makeParagraph, r.makeCodeBlock, r.makeHead1 && new prosemirror.DropdownSubmenu(cut([
     r.makeHead1, r.makeHead2, r.makeHead3,
   ]), {label: "Heading"})]), {label: "Type..."})
@@ -963,7 +970,7 @@ function buildInputRules(schema) {
 //
 //     menuContent:: [[MenuItem]]
 //     Can be used to override the menu content.
-function prosemirrorView(container, uploadImage, onChange, initialState, initialMarkdownText, footnotes) {
+function prosemirrorView(container, uploadImage, onChange, initialState, initialMarkdownText, footnotes, addFootnote) {
 
   // fix the image upload jumping around. Try to add an outer element that has the correct dims then replace the inside
   const placeholderPlugin = new prosemirror.Plugin({
@@ -1075,7 +1082,7 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
     }
   }
 
-  let menuItems = buildMenuItems({schema: schema, insertImageItem, footnotes})
+  let menuItems = buildMenuItems({schema: schema, insertImageItem, footnotes, addFootnote})
   let plugins = [
     placeholderPlugin,
     buildInputRules(schema),
