@@ -7,6 +7,11 @@
   --default-border-width: 2px;
 }
 
+sup {
+  vertical-align: super;
+  font-size: smaller;
+}
+
 input[type=text] {
   padding-top: 7px;
   padding-right: 7px;

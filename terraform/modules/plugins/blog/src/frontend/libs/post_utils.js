@@ -146,6 +146,7 @@ const translatableText = {
       trails: 'Trails (comma-separated)',
       author: 'Author',
       title: 'Title',
+      footnoteTitle: 'Footnote Title',
       id: "Type a new post id, then press Enter",
     }
   },
@@ -281,22 +282,61 @@ function prepareEditorString(s, postId) {
 }
 
 function buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnoteMenu) {
+  let name = footnoteNumber + ''
   const latestEditorState = getPostEditorState(postId)
   latestEditorState.footnotes = latestEditorState.footnotes || {}
   latestEditorState.footnoteEditorStates = latestEditorState.footnoteEditorStates || {}
-  latestEditorState.footnotes[footnoteNumber] = latestEditorState.footnotes[footnoteNumber] || ''
+  latestEditorState.footnotes[name] = latestEditorState.footnotes[name] || ''
   updateEditorState(postId, {footnotes: latestEditorState.footnotes, footnoteEditorStates: latestEditorState.footnoteEditorStates}, updateFootnoteMenu)
+
+  function onFootnoteNameChange(e) {
+    const oldName = name
+    if (!e.target.value) {
+      return
+    }
+    const latestEditorState = getPostEditorState(postId)
+    let testUnique = ''
+    while (latestEditorState.footnotes[e.target.value + testUnique]) {
+      testUnique = testUnique || 0
+      testUnique += 1
+    }
+    e.target.value += testUnique
+    const content = latestEditorState.footnotes[name]
+    const editorState = latestEditorState.footnoteEditorStates[name]
+    delete latestEditorState.footnotes[name]
+    delete latestEditorState.footnoteEditorStates[name]
+    name = e.target.value
+    latestEditorState.footnotes[name] = content
+    latestEditorState.footnoteEditorStates[name] = editorState
+    updateEditorState(postId, {footnotes: latestEditorState.footnotes, footnoteEditorStates: latestEditorState.footnoteEditorStates}, updateFootnoteMenu, null, {[oldName]: e.target.value})
+  }
+
   function onStateChange({imageIds, editorState, content}) {
     const latestEditorState = getPostEditorState(postId)
-    latestEditorState.footnotes[footnoteNumber] = content
-    latestEditorState.footnoteEditorStates[footnoteNumber] = editorState
+    latestEditorState.footnotes[name] = content
+    latestEditorState.footnoteEditorStates[name] = editorState
     updateEditorState(postId, {footnotes: latestEditorState.footnotes, footnoteEditorStates: latestEditorState.footnoteEditorStates}, updateFootnoteMenu)
   }
   const editorDiv = domNode({
     tagName: 'div',
-    classNames: ['prosemirror', 'editor'],
+    children: [
+      {
+        tagName: 'input',
+        type: 'text',
+        name: 'footnote name',
+        classNames: 'authoring-input',
+        onKeyUp: (evt) => evt.target.value = evt.target.value.replace(/[^A-z0-9]/, ''),
+        placeholder: translatableText.postMetadata.placeholders.footnoteTitle,
+        value: name,
+        onChange: onFootnoteNameChange,
+      },
+      {
+        tagName: 'div',
+        classNames: ['prosemirror', 'editor'],
+      }
+    ]
   })
-  prosemirrorView(editorDiv, uploadImage, onStateChange, latestEditorState.footnoteEditorStates[footnoteNumber], latestEditorState.footnotes[footnoteNumber], {})
+  prosemirrorView(editorDiv.querySelector('.editor'), uploadImage, onStateChange, latestEditorState.footnoteEditorStates[name], latestEditorState.footnotes[name], {})
   return editorDiv
 }
 
@@ -308,7 +348,7 @@ function getImageIds({ content, footnotes, postId}) {
   return imageIds
 }
 
-function updateEditorState(postId, updates, updateFootnoteMenu, setSaveState) {
+function updateEditorState(postId, updates, updateFootnoteMenu, setSaveState, updatedFootnoteNames) {
   const latestEditorState = getPostEditorState(postId)
   let isModified = false
   let imageIds = getImageIds({
@@ -332,6 +372,10 @@ function updateEditorState(postId, updates, updateFootnoteMenu, setSaveState) {
   if (updates.title && !_.isEqual(updates.title, _.get(postAsSaved, 'frontMatter.title'))) {
     isModified = true
   }
+  if (updatedFootnoteNames) {
+    updateFootnoteMenu({names: updatedFootnoteNames})
+    isModified = true
+  }
   if (!_.isEqual(imageIds, _.get(postAsSaved, 'frontMatter.meta.imageIds'))) {
     isModified = true
   }
@@ -342,7 +386,7 @@ function updateEditorState(postId, updates, updateFootnoteMenu, setSaveState) {
     isModified = true
   }
   if (updates.footnotes && !_.isEqual(updates.footnotes, _.get(postAsSaved, 'endMatter.footnotes'))) {
-    updateFootnoteMenu(updates.footnotes)
+    updateFootnoteMenu({footnotes: updates.footnotes})
     isModified = true
   }
   const newEditorState = updatePostEditorState(postId, changedFields)

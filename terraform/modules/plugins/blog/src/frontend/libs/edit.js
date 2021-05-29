@@ -176,7 +176,6 @@ window.RENDER_CONFIG = {
           {
             tagName: 'div',
             id: 'post-footnotes',
-            classNames: ['prosemirror', 'editor'],
           },
         ]
       },
@@ -310,23 +309,6 @@ window.RENDER_CONFIG = {
             })
           }
         )
-      }
-      const addFootnoteDiv = {
-        tagName: 'div',
-        classNames: 'button-container',
-        children: [
-          {
-            tagName: 'button',
-            name: 'addFootnote',
-            classNames: 'addFootnote',
-            innerText: translatableText.postActions.addFootnote,
-            onClick: (evt) => {
-              const latestEditorState = getPostEditorState(postId)
-              const footnoteNumber = _.keys(latestEditorState.footnotes || {}).length + 1
-              document.getElementById('post-footnotes').appendChild(buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnoteMenu))
-            }
-          }
-        ]
       }
 
       function addFootnote() {

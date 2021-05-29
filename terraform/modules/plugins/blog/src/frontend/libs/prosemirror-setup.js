@@ -1082,6 +1082,17 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
     }
   }
 
+  function findNodePosition(doc, test) {
+    let result = -1;
+    doc.descendants((node, pos) => {
+      if (test(node)) {
+        result = pos;
+        return false;
+      }
+    });
+    return result;
+  }
+
   let menuItems = buildMenuItems({schema: schema, insertImageItem, footnotes, addFootnote})
   let plugins = [
     placeholderPlugin,
@@ -1098,8 +1109,8 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
       }
     ),
   ]
-  function updateFootnoteMenu(footnotes) {
-    menuItems = buildMenuItems({schema: schema, insertImageItem, footnotes})
+  function updateFootnoteMenu({footnotes, names}) {
+    menuItems = buildMenuItems({schema: schema, insertImageItem, footnotes, addFootnote})
     plugins = [
       placeholderPlugin,
       buildInputRules(schema),
@@ -1116,6 +1127,22 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
       ),
     ]
     view.updateState(view.state.reconfigure({plugins}))
+    _.each(names, (v, k) => {
+      let pos = findNodePosition(view.state.doc, (n) => {
+        return _.get(n, 'attrs.ref') === k
+      })
+      while (pos !== -1) {
+        view.dispatch(
+          view.state.tr
+          .setSelection(new prosemirror.NodeSelection(view.state.doc.resolve(pos)))
+          .replaceSelectionWith(schema.nodes.footnote_ref.create({ref: v}, prosemirror.Fragment.empty))
+          .setMeta('addToHistory', false)
+        )
+        pos = findNodePosition(view.state.doc, (n) => {
+          return _.get(n, 'attrs.ref') === k
+        })
+      }
+    })
   }
   const initState = initialState ? prosemirror.EditorState.fromJSON(
     {

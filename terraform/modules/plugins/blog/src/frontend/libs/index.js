@@ -166,12 +166,12 @@ window.RENDER_CONFIG = {
                     {
                       tagName: 'div',
                       classNames: 'save-status',
-                      children: [saveState.label || translatableText.saveState.unmodified]
+                      children: [_.get(saveState, 'label') || translatableText.saveState.unmodified]
                     },
                     {
                       tagName: 'div',
                       classNames: 'publish-status',
-                      children: [publishState.label || translatableText.publishState.unknown]
+                      children: [_.get(publishState, 'label') || translatableText.publishState.unknown]
                     },
                   ]
                 },
