@@ -109,8 +109,6 @@ const schema = new prosemirror.Schema({
         src: {},
         alt: {default: null},
         title: {default: null},
-        width: {default: null},
-        height: {default: null},
       },
       group: "inline",
       draggable: true,
@@ -119,8 +117,6 @@ const schema = new prosemirror.Schema({
           src: dom.getAttribute("src"),
           title: dom.getAttribute("title"),
           alt: dom.getAttribute("alt"),
-          width: dom.getAttribute("width"),
-          height: dom.getAttribute("height"),
         }
       }}],
       toDOM(node) { return ["img", node.attrs] }
@@ -498,9 +494,21 @@ class TextField extends Field {
     let input = document.createElement("input")
     input.type = "text"
     input.placeholder = this.options.label
+    input.className = this.options.className
     input.value = this.options.value || ""
     input.autocomplete = "off"
     return input
+  }
+}
+
+// ::- A field class for single-line text fields.
+class TextAreaField extends Field {
+  render() {
+    let area = document.createElement("textarea")
+    area.placeholder = this.options.label
+    area.className = this.options.className
+    area.value = this.options.value || ""
+    return area
   }
 }
 
@@ -510,6 +518,7 @@ class FileField extends Field {
   render() {
     let input = document.createElement("input")
     input.type = "file"
+    input.className = this.options.className
     if (this.options.accept) {
       input.accept = this.options.accept
     }
@@ -526,6 +535,7 @@ class FileField extends Field {
 class SelectField extends Field {
   render() {
     let select = document.createElement("select")
+    select.className = this.options.className
     this.options.options.forEach(o => {
       let opt = select.appendChild(document.createElement("option"))
       opt.value = o.value
@@ -1013,9 +1023,9 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
         openPrompt({
           title: "Insert image",
           fields: {
-            src: new FileField({label: "File", required: true, value: attrs && attrs.src, accept: "image/*"}),
-            title: new TextField({label: "Title", value: attrs && attrs.title}),
-            alt: new TextField({label: "Description",
+            src: new FileField({label: "File", className: 'photo-input', required: true, value: attrs && attrs.src, accept: "image/*"}),
+            title: new TextField({label: "Title", className: 'photo-input', value: attrs && attrs.title}),
+            alt: new TextAreaField({label: "Description", className: 'photo-input alt',
                                value: attrs ? attrs.alt : state.doc.textBetween(from, to, " ")})
           },
           callback(attrs) {
@@ -1054,15 +1064,14 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
         }
         // Otherwise, insert it at the placeholder's position, and remove
         // the placeholder
+        const image = view.state.schema.nodes.image.create({
+          src: url,
+          alt,
+          title,
+        })
         view.dispatch(
           view.state.tr
-          .replaceWith(pos, pos, view.state.schema.nodes.image.create({
-            src: url,
-            alt,
-            title,
-            width,
-            height,
-          }))
+          .replaceWith(pos, pos, image)
           .setMeta(placeholderPlugin, {remove: {id}})
         )
       })
@@ -1106,7 +1115,6 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
     prosemirror.history(),
     prosemirror.menuBar(
       {
-        floating: true, 
         content: menuItems.fullMenu
       }
     ),

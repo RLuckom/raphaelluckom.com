@@ -231,6 +231,27 @@ input.new-post.expanded {
   border-bottom: 1px solid gray;
 }
 
+.ProseMirror-prompt-buttons {
+  display: flex;
+}
+
+.ProseMirror-prompt-buttons button {
+  flex: 1;
+  margin-left: 0.2em;
+}
+
+.ProseMirror-prompt-buttons button:first-child {
+  margin-left: 0;
+}
+
+.photo-input.alt {
+  min-height: 3em;
+}
+
+.photo-input {
+  min-width: 100%;
+}
+
 @media screen and (max-width: 767px) {
   input[type="text"],
   input[type="number"],
@@ -246,6 +267,16 @@ input.new-post.expanded {
     border-left-width: 0;
     border-right-width: 0;
     border-bottom-width: 0;
+  }
+
+  .ProseMirror-prompt {
+    min-width: 97%;
+    padding: 0.3em;
+  }
+
+ .ProseMirror-prompt input[type="text"], {
+    font-size: 16px;
+    font-family: inherit;
   }
 
   .post-list-entry #post-running-material {

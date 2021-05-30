@@ -293,7 +293,8 @@ li.ProseMirror-selectednode:after {
 .ProseMirror-prompt input[type="text"],
 .ProseMirror-prompt textarea {
   background: #eee;
-  border: none;
+  border: 1px solid #aaa;
+  font-family: inherit;
   outline: none;
 }
 
@@ -324,7 +325,6 @@ li.ProseMirror-selectednode:after {
 
 .ProseMirror-prompt-buttons {
   margin-top: 5px;
-  display: none;
 }
 
 #editor, .editor {
