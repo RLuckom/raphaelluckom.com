@@ -1128,6 +1128,9 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
     ]
     view.updateState(view.state.reconfigure({plugins}))
     _.each(names, (v, k) => {
+      if ( v === k ) {
+        return
+      }
       let pos = findNodePosition(view.state.doc, (n) => {
         return _.get(n, 'attrs.ref') === k
       })

@@ -291,7 +291,7 @@ function buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnote
 
   function onFootnoteNameChange(e) {
     const oldName = name
-    if (!e.target.value) {
+    if (!e.target.value || e.target.value === name) {
       return
     }
     const latestEditorState = getPostEditorState(postId)
@@ -311,7 +311,7 @@ function buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnote
     updateEditorState(postId, {footnotes: latestEditorState.footnotes, footnoteEditorStates: latestEditorState.footnoteEditorStates}, updateFootnoteMenu, null, {[oldName]: e.target.value})
   }
 
-  function onStateChange({imageIds, editorState, content}) {
+  function onStateChange({editorState, content}) {
     const latestEditorState = getPostEditorState(postId)
     latestEditorState.footnotes[name] = content
     latestEditorState.footnoteEditorStates[name] = editorState
@@ -343,7 +343,7 @@ function buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnote
 function getImageIds({ content, footnotes, postId}) {
   const imageIdsRegex = new RegExp(`https://${CONFIG.domain}/${CONFIG.plugin_image_hosting_path}${encodeURIComponent(postId)}/([0-9a-f-]{36})/`, 'g')
   let imageIds = _.uniq(_.map(_.reduce([content, ..._.values(footnotes)], (acc, v) => {
-    return _.concat(acc, _.filter(Array.from(v.matchAll(imageIdsRegex)), (x) => _.isString(_.get(x, 1))))
+    return _.concat(acc, _.filter(Array.from((v || '').matchAll(imageIdsRegex)), (x) => _.isString(_.get(x, 1))))
   }, []), (x) => x[1]))
   return imageIds
 }
