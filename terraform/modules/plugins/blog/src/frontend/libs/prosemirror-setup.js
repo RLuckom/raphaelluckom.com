@@ -1019,7 +1019,7 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
                                value: attrs ? attrs.alt : state.doc.textBetween(from, to, " ")})
           },
           callback(attrs) {
-            startImageUpload(view, attrs.src)
+            startImageUpload(view, attrs)
             view.focus()
           }
         })
@@ -1027,7 +1027,7 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
     })
   }
 
-  function startImageUpload(view, file) {
+  function startImageUpload(view, {src, alt, title}) {
     // A fresh object to act as the ID for this upload
     let id = {}
 
@@ -1036,11 +1036,11 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
     if (!tr.selection.empty) {
       tr.deleteSelection()
     }
-    tr.setMeta(placeholderPlugin, {add: {id, pos: tr.selection.from, file}})
+    tr.setMeta(placeholderPlugin, {add: {id, pos: tr.selection.from, file: src}})
     view.dispatch(tr)
 
-    file.arrayBuffer().then((buffer) => {
-      uploadImage(buffer, file.name.split('.').pop(), (e, {url, imageId}) => {
+    src.arrayBuffer().then((buffer) => {
+      uploadImage(buffer, src.name.split('.').pop(), (e, {url, imageId}) => {
         if (e) {
           return view.dispatch(
             tr.setMeta(placeholderPlugin, {remove: {id}})
@@ -1058,6 +1058,8 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
           view.state.tr
           .replaceWith(pos, pos, view.state.schema.nodes.image.create({
             src: url,
+            alt,
+            title,
             width,
             height,
           }))
