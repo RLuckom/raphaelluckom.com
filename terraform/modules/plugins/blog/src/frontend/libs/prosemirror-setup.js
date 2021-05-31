@@ -163,147 +163,6 @@ const schema = new prosemirror.Schema({
   }
 })
 
-// Adapted from https://github.com/markdown-it/markdown-it-footnote/blob/master/index.js
-function footnote_plugin(md, {parse_defs}) {
-  function footnote_def(state, startLine, endLine, silent) {
-    var oldBMark, oldTShift, oldSCount, oldParentType, pos, label, token,
-    initial, offset, ch, posAfterColon,
-    start = state.bMarks[startLine] + state.tShift[startLine],
-      max = state.eMarks[startLine];
-    const originalStart = start
-
-    // line should be at least 5 chars - "[^x]:"
-    if (start + 4 > max) { return false; }
-
-    if (state.src.charCodeAt(start) !== 0x5B/* [ */) { return false; }
-    if (state.src.charCodeAt(start + 1) !== 0x5E/* ^ */) { return false; }
-
-    for (pos = start + 2; pos < max; pos++) {
-      if (state.src.charCodeAt(pos) === 0x20) { return false; }
-      if (state.src.charCodeAt(pos) === 0x5D /* ] */) {
-        break;
-      }
-    }
-
-    if (pos === start + 2) { return false; } // no empty footnote labels
-    if (pos + 1 >= max || state.src.charCodeAt(++pos) !== 0x3A /* : */) { return false; }
-    if (silent) { return true; }
-    pos++;
-
-    if (!state.env.footnotes) { state.env.footnotes = {}; }
-    label = state.src.slice(start + 2, pos - 2);
-
-    token       = new state.Token('footnote_reference_open', '', 1);
-    console.log(pos)
-    console.log(state)
-    token.meta  = { label: label };
-    token.level = state.level++;
-    state.tokens.push(token);
-
-    oldBMark = state.bMarks[startLine];
-    oldTShift = state.tShift[startLine];
-    oldSCount = state.sCount[startLine];
-    oldParentType = state.parentType;
-
-    posAfterColon = pos;
-    console.log(pos)
-    initial = offset = state.sCount[startLine] + pos - (state.bMarks[startLine] + state.tShift[startLine]);
-
-    while (pos < max) {
-      ch = state.src.charCodeAt(pos);
-
-      if (md.utils.isSpace(ch)) {
-        if (ch === 0x09) {
-          offset += 4 - offset % 4;
-        } else {
-          offset++;
-        }
-      } else {
-        break;
-      }
-
-      pos++;
-    }
-    console.log(pos)
-
-    state.tShift[startLine] = pos - posAfterColon;
-    state.sCount[startLine] = offset - initial;
-
-    state.bMarks[startLine] = posAfterColon;
-    state.blkIndent += 4;
-    state.parentType = 'footnote';
-
-    if (state.sCount[startLine] < state.blkIndent) {
-      state.sCount[startLine] += state.blkIndent;
-    }
-
-    console.log(state.line)
-    state.md.block.tokenize(state, startLine, endLine, true);
-    console.log(state.line)
-    const content = state.getLines(startLine, state.line, state.blkIndent, false).trim();
-    state.env.footnotes[label] = content
-    if (!state.env.footnoteStartPos) {
-      state.env.footnoteStartPos = originalStart
-    }
-
-    state.parentType = oldParentType;
-    state.blkIndent -= 4;
-    state.tShift[startLine] = oldTShift;
-    state.sCount[startLine] = oldSCount;
-    state.bMarks[startLine] = oldBMark;
-
-    token       = new state.Token('footnote_reference_close', '', -1);
-    console.log(token)
-    token.level = --state.level;
-    state.tokens.push(token);
-
-    return true;
-  }
-
-  // Process footnote references ([^...])
-  function footnote_ref(state, silent) {
-    var label,
-    pos,
-    footnoteId,
-    footnoteSubId,
-    token,
-    max = state.posMax,
-      start = state.pos;
-
-    // should be at least 4 chars - "[^x]"
-    if (start + 3 > max) { return false; }
-
-    if (state.src.charCodeAt(start) !== 0x5B/* [ */) { return false; }
-    if (state.src.charCodeAt(start + 1) !== 0x5E/* ^ */) { return false; }
-
-    for (pos = start + 2; pos < max; pos++) {
-      if (state.src.charCodeAt(pos) === 0x20) { return false; }
-      if (state.src.charCodeAt(pos) === 0x0A) { return false; }
-      if (state.src.charCodeAt(pos) === 0x5D /* ] */) {
-        break;
-      }
-    }
-
-    if (pos === start + 2) { return false; } // no empty footnote labels
-    if (pos >= max) { return false; }
-    pos++;
-
-    label = state.src.slice(start + 2, pos - 1);
-
-
-    token      = state.push('footnote_ref', '', 0);
-    token.meta = { id: label, ref: label, subId: label, label: label };
-
-    state.pos = pos;
-    state.posMax = max;
-    return true;
-  }
-  md.inline.ruler.after('image', 'footnote_ref', footnote_ref);
-  if (parse_defs) {
-    md.block.ruler.before('reference', 'footnote_def', footnote_def, { alt: [ 'paragraph', 'reference' ] });
-  }
-}
-
 function listIsTight(tokens, i) {
   while (++i < tokens.length) {
     if (tokens[i].type != "list_item_open") {
@@ -313,7 +172,7 @@ function listIsTight(tokens, i) {
   return false
 }
 
-const footnoteMarkdownParser = new prosemirror.MarkdownParser(schema, markdownit("commonmark", {html: false}).use(footnote_plugin, {parse_defs: false}), {
+const footnoteMarkdownParser = new prosemirror.MarkdownParser(schema, markdownit("commonmark", {html: false, }).use(footnote_plugin, {parse_defs: false}), {
   blockquote: {block: "blockquote"},
   paragraph: {block: "paragraph"},
   list_item: {block: "list_item"},
@@ -1274,7 +1133,6 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
       }
     })
   }
-  console.log(initialMarkdownText)
   const initState = initialState ? prosemirror.EditorState.fromJSON(
     {
       schema: schema,

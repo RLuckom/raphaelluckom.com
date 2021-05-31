@@ -1,3 +1,137 @@
+// Adapted from https://github.com/markdown-it/markdown-it-footnote/blob/master/index.js
+function footnote_plugin(md, {parse_defs}) {
+  function footnote_def(state, startLine, endLine, silent) {
+    var oldBMark, oldTShift, oldSCount, oldParentType, pos, label, token,
+    initial, offset, ch, posAfterColon,
+    start = state.bMarks[startLine] + state.tShift[startLine],
+      max = state.eMarks[startLine];
+    const originalStart = start
+
+    // line should be at least 5 chars - "[^x]:"
+    if (start + 4 > max) { return false; }
+
+    if (state.src.charCodeAt(start) !== 0x5B/* [ */) { return false; }
+    if (state.src.charCodeAt(start + 1) !== 0x5E/* ^ */) { return false; }
+
+    for (pos = start + 2; pos < max; pos++) {
+      if (state.src.charCodeAt(pos) === 0x20) { return false; }
+      if (state.src.charCodeAt(pos) === 0x5D /* ] */) {
+        break;
+      }
+    }
+
+    if (pos === start + 2) { return false; } // no empty footnote labels
+    if (pos + 1 >= max || state.src.charCodeAt(++pos) !== 0x3A /* : */) { return false; }
+    if (silent) { return true; }
+    pos++;
+
+    if (!state.env.footnotes) { state.env.footnotes = {}; }
+    label = state.src.slice(start + 2, pos - 2);
+
+    token       = new state.Token('footnote_reference_open', '', 1);
+    token.meta  = { label: label };
+    token.level = state.level++;
+    state.tokens.push(token);
+
+    oldBMark = state.bMarks[startLine];
+    oldTShift = state.tShift[startLine];
+    oldSCount = state.sCount[startLine];
+    oldParentType = state.parentType;
+
+    posAfterColon = pos;
+    initial = offset = state.sCount[startLine] + pos - (state.bMarks[startLine] + state.tShift[startLine]);
+
+    while (pos < max) {
+      ch = state.src.charCodeAt(pos);
+
+      if (md.utils.isSpace(ch)) {
+        if (ch === 0x09) {
+          offset += 4 - offset % 4;
+        } else {
+          offset++;
+        }
+      } else {
+        break;
+      }
+
+      pos++;
+    }
+
+    state.tShift[startLine] = pos - posAfterColon;
+    state.sCount[startLine] = offset - initial;
+
+    state.bMarks[startLine] = posAfterColon;
+    state.blkIndent += 4;
+    state.parentType = 'footnote';
+
+    if (state.sCount[startLine] < state.blkIndent) {
+      state.sCount[startLine] += state.blkIndent;
+    }
+
+    state.md.block.tokenize(state, startLine, endLine, true);
+    const content = state.getLines(startLine, state.line, state.blkIndent, false).trim();
+    state.env.footnotes[label] = content
+    if (!state.env.footnoteStartPos) {
+      state.env.footnoteStartPos = originalStart
+    }
+
+    state.parentType = oldParentType;
+    state.blkIndent -= 4;
+    state.tShift[startLine] = oldTShift;
+    state.sCount[startLine] = oldSCount;
+    state.bMarks[startLine] = oldBMark;
+
+    token       = new state.Token('footnote_reference_close', '', -1);
+    token.level = --state.level;
+    state.tokens.push(token);
+
+    return true;
+  }
+
+  // Process footnote references ([^...])
+  function footnote_ref(state, silent) {
+    var label,
+    pos,
+    footnoteId,
+    footnoteSubId,
+    token,
+    max = state.posMax,
+      start = state.pos;
+
+    // should be at least 4 chars - "[^x]"
+    if (start + 3 > max) { return false; }
+
+    if (state.src.charCodeAt(start) !== 0x5B/* [ */) { return false; }
+    if (state.src.charCodeAt(start + 1) !== 0x5E/* ^ */) { return false; }
+
+    for (pos = start + 2; pos < max; pos++) {
+      if (state.src.charCodeAt(pos) === 0x20) { return false; }
+      if (state.src.charCodeAt(pos) === 0x0A) { return false; }
+      if (state.src.charCodeAt(pos) === 0x5D /* ] */) {
+        break;
+      }
+    }
+
+    if (pos === start + 2) { return false; } // no empty footnote labels
+    if (pos >= max) { return false; }
+    pos++;
+
+    label = state.src.slice(start + 2, pos - 1);
+
+
+    token      = state.push('footnote_ref', '', 0);
+    token.meta = { id: label, ref: label, subId: label, label: label };
+
+    state.pos = pos;
+    state.posMax = max;
+    return true;
+  }
+  md.inline.ruler.after('image', 'footnote_ref', footnote_ref);
+  if (parse_defs) {
+    md.block.ruler.before('reference', 'footnote_def', footnote_def, { alt: [ 'paragraph', 'reference' ] });
+  }
+}
+
 function getPostUploadKey({postId}) {
   return `${CONFIG.plugin_post_upload_path}${postId}.md`
 }
@@ -207,12 +341,9 @@ function parsePost(s) {
     try {
       const env = {}
       const footnoteMarkdownParser = markdownit("commonmark", {html: false}).use(footnote_plugin, {parse_defs: true}).parse(content, env)
-      console.log(env)
       footnotes = env.footnotes
       if (env.footnoteStartPos) {
-        console.log(content.slice(env.footnoteStartPos))
         content = content.slice(0, env.footnoteStartPos)
-        console.log(content)
       }
     } catch(e) {
       console.error(e)
@@ -255,7 +386,7 @@ function newPost() {
 function latestKnownPostState(postId) {
   const mergedPost = _.cloneDeep(getPostAsSaved(postId) || newPost())
   const editorState = getPostEditorState(postId)
-  if (!mergedPost.etag || editorState.etag === mergedPost.etag) {
+  if (editorState && (!mergedPost.etag || editorState.etag === mergedPost.etag)) {
     mergedPost.frontMatter.meta.imageIds = _.cloneDeep(editorState.imageIds)
     mergedPost.frontMatter.meta.trails = _.cloneDeep(editorState.trails)
     mergedPost.frontMatter.title = _.cloneDeep(editorState.title)

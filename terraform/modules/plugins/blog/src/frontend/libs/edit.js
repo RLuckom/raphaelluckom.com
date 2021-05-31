@@ -35,8 +35,6 @@ window.RENDER_CONFIG = {
         saveState = setPostSaveState(postId, {etag: post.etag, label: translatableText.saveState.unmodified})
       }
     }
-    console.log(editorState.content)
-    console.log(post)
     const mainSection = document.querySelector('main')
     function mergeEditorStateToPost() {
       return latestKnownPostState(postId)
