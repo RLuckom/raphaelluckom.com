@@ -30,11 +30,13 @@ window.RENDER_CONFIG = {
           content: post.content,
           imageIds: post.frontMatter.meta.imageIds,
           etag: post.etag,
-          footnotes: _.get(post, 'endMatter.footnotes', {}),
+          footnotes: _.get(post, 'footnotes', {}),
         })
         saveState = setPostSaveState(postId, {etag: post.etag, label: translatableText.saveState.unmodified})
       }
     }
+    console.log(editorState.content)
+    console.log(post)
     const mainSection = document.querySelector('main')
     function mergeEditorStateToPost() {
       return latestKnownPostState(postId)

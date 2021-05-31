@@ -186,10 +186,9 @@ function parsePost(s) {
   const t = s.split('\n')
   if (_.trim(t[0]) === '---') {
     let started = false
-    let finished = false
     let frontMatter = ''
-    let endMatter = ''
     let content = ''
+    let footnotes
     for (r of t.slice(1)) {
       if (_.trim(r) === '---') {
         if (!started) {
@@ -197,22 +196,30 @@ function parsePost(s) {
         } else {
           content += r + "\n"
         }
-      } else if (_.trim(r) === '---END---') {
-        finished = true
       } else {
-        if (started && !finished) {
+        if (started) {
           content += r + "\n"
-        } else if (!started && !finished) {
-          frontMatter += r + '\n'
         } else {
-          endMatter += r + '\n'
+          frontMatter += r + '\n'
         }
       }
     }
     try {
+      const env = {}
+      const footnoteMarkdownParser = markdownit("commonmark", {html: false}).use(footnote_plugin, {parse_defs: true}).parse(content, env)
+      console.log(env)
+      footnotes = env.footnotes
+      if (env.footnoteStartPos) {
+        console.log(content.slice(env.footnoteStartPos))
+        content = content.slice(0, env.footnoteStartPos)
+        console.log(content)
+      }
+    } catch(e) {
+      console.error(e)
+    }
+    try {
       const fm = yaml.load(frontMatter)
-      const em = endMatter ? yaml.load(endMatter) : {}
-      return { frontMatter: fm, endMatter: em, content, raw:s }
+      return { frontMatter: fm, footnotes, content, raw:s }
     } catch(e) {
       console.error(e)
       return { raw: s} 
@@ -232,9 +239,7 @@ function newPost() {
         imageIds: [],
       },
     },
-    endMatter: {
-      footnotes: {},
-    },
+    footnotes: {},
     content: '',
     etag: ''
   }
@@ -255,24 +260,21 @@ function latestKnownPostState(postId) {
     mergedPost.frontMatter.meta.trails = _.cloneDeep(editorState.trails)
     mergedPost.frontMatter.title = _.cloneDeep(editorState.title)
     mergedPost.content = _.cloneDeep(editorState.content)
-    mergedPost.endMatter = mergedPost.endMatter || {}
-    mergedPost.endMatter.footnotes = _.cloneDeep(editorState.footnotes || {})
+    mergedPost.footnotes = _.cloneDeep(editorState.footnotes || {})
   }
-  mergedPost.endMatter = mergedPost.endMatter || {footnotes: {}}
+  mergedPost.footnotes = mergedPost.footnotes || {}
   return mergedPost
 }
 
-function serializePostToMarkdown({frontMatter, content, endMatter}) {
+function serializePostToMarkdown({frontMatter, content, footnotes}) {
   let text = `---\n${yaml.dump(frontMatter)}---\n${content}\n\n`
-  _(endMatter.footnotes).toPairs().sortBy((v) => v[0]).each(([k, v]) => {
+  _(footnotes).toPairs().sortBy((v) => v[0]).each(([k, v]) => {
     text += `[^${k}]:  ${v.split('\n').join('\n      ')}\n\n`
   })
   return text
 }
 
-function serializePost({frontMatter, content, endMatter}) {
-  return `---\n${yaml.dump(frontMatter)}---\n${content}\n---END---\n${endMatter ? yaml.dump(endMatter) : ''}`
-}
+const serializePost = serializePostToMarkdown
 
 function prepareEditorString(s, postId) {
   const postIdInLinkRegex = new RegExp("\\((https:\/\/.*)" + postId + '([^\\)]*)\\)', 'g')
@@ -385,7 +387,7 @@ function updateEditorState(postId, updates, updateFootnoteMenu, setSaveState, up
   if (updates.content && !_.isEqual(updates.content, _.get(postAsSaved, 'content'))) {
     isModified = true
   }
-  if (updates.footnotes && !_.isEqual(updates.footnotes, _.get(postAsSaved, 'endMatter.footnotes'))) {
+  if (updates.footnotes && !_.isEqual(updates.footnotes, _.get(postAsSaved, 'footnotes'))) {
     updateFootnoteMenu({footnotes: updates.footnotes})
     isModified = true
   }

@@ -8,9 +8,7 @@ function parsePost(s) {
   const t = s.split('\n')
   if (_.trim(t[0]) === '---') {
     let started = false
-    let finished = false
     let frontMatter = ''
-    let endMatter = ''
     let content = ''
     for (r of t.slice(1)) {
       if (_.trim(r) === '---') {
@@ -19,22 +17,17 @@ function parsePost(s) {
         } else {
           content += r + "\n"
         }
-      } else if (_.trim(r) === '---END---') {
-        finished = true
       } else {
-        if (started && !finished) {
+        if (started) {
           content += r + "\n"
-        } else if (!started && !finished) {
-          frontMatter += r + '\n'
         } else {
-          endMatter += r + '\n'
+          frontMatter += r + '\n'
         }
       }
     }
     try {
       const fm = yaml.load(frontMatter)
-      const em = endMatter ? yaml.load(endMatter) : {}
-      return { frontMatter: fm, endMatter: em, content, raw:s }
+      return { frontMatter: fm, content, raw:s }
     } catch(e) {
       console.error(e)
       return { raw: s} 
@@ -44,12 +37,8 @@ function parsePost(s) {
   }
 }
 
-function serializePostToMarkdown({frontMatter, content, endMatter}) {
-  let text = '---\n' + yaml.dump(frontMatter) + '---\n' + content + '\n\n'
-  _(endMatter.footnotes).toPairs().sortBy((v) => v[0]).each(([k, v]) => {
-    text += '[^' + k + ']:  ' + v.split('\n').join('\n      ') + '\n'
-  })
-  console.log(text)
+function serializePostToMarkdown({frontMatter, content}) {
+  let text = '---\n' + yaml.dump(frontMatter) + '---\n' + content
   return text
 }
 
