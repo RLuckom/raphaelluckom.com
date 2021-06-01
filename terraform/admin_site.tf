@@ -9,6 +9,7 @@ module admin_interface {
   aws_sdk_layer = module.aws_sdk.layer_config
   plugin_static_configs = {
     blog = module.admin_site_blog_plugin.static_config
+    prod_blog = module.admin_site_prod_blog_plugin.static_config
     visibility = {
       role_name_stem = "athena"
       api_name = "visibility"
@@ -27,6 +28,18 @@ module admin_interface {
       upload_path_lambda_notifications = module.admin_site_blog_plugin.plugin_relative_lambda_notifications
       storage_path_lambda_notifications = []
       file_configs = module.admin_site_blog_plugin.files
+    }
+    prod_blog = {
+      additional_connect_sources = ["https://s3.amazonaws.com", "https://${module.admin_site_prod_blog_plugin.blog_site_bucket_name}.s3.amazonaws.com", "https://${module.admin_interface.website_config.bucket_name}.s3.amazonaws.com"]
+      additional_style_sources = []
+      policy_statements = []
+      plugin_relative_lambda_origins = module.admin_site_prod_blog_plugin.plugin_relative_lambda_origins
+      plugin_relative_bucket_upload_permissions_needed = module.admin_site_prod_blog_plugin.plugin_relative_bucket_upload_permissions_needed
+      plugin_relative_bucket_list_permissions_needed = module.admin_site_prod_blog_plugin.plugin_relative_bucket_list_permissions_needed
+      plugin_relative_bucket_host_permissions_needed = module.admin_site_prod_blog_plugin.plugin_relative_bucket_host_permissions_needed 
+      upload_path_lambda_notifications = module.admin_site_prod_blog_plugin.plugin_relative_lambda_notifications
+      storage_path_lambda_notifications = []
+      file_configs = module.admin_site_prod_blog_plugin.files
     }
     visibility = {
       policy_statements = []

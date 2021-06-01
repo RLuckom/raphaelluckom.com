@@ -191,11 +191,16 @@ const footnoteMarkdownParser = new prosemirror.MarkdownParser(schema, markdownit
       return {ref: tok.meta.ref}
     }
   },
-  image: {node: "image", getAttrs: tok => ({
-    src: tok.attrGet("src"),
-    title: tok.attrGet("title") || null,
-    alt: tok.children[0] && tok.children[0].content || null
-  })},
+  image: {node: "image", getAttrs: (tok) => {
+    console.log(tok)
+    const ret = {
+      src: tok.attrGet("src"),
+      title: tok.attrGet("title") || null,
+      alt: tok.content || tok.children[0] && tok.children[0].content || null
+    }
+    console.log(ret)
+    return ret
+  }},
   hardbreak: {node: "hard_break"},
 
   em: {mark: "em"},

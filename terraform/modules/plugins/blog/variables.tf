@@ -69,6 +69,11 @@ variable plugin_config {
   })
 }
 
+variable subject_alternative_names {
+  type = list(string)
+  default = []
+}
+
 variable coordinator_data {
   type = object({
     system_id = object({
@@ -354,7 +359,7 @@ output files {
 
 output plugin_config {
   value = {
-    name = "blog"
+    name = var.name
     slug = "manage blog posts"
   }
 }

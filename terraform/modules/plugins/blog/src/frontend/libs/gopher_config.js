@@ -130,9 +130,9 @@ window.GOPHER_CONFIG = {
           input: 'post',
           formatter: ({post}) => {
             const postToSend = _.cloneDeep(post)
+            postToSend.frontMatter.createDate = postToSend.frontMatter.createDate || postToSend.frontMatter.date || new Date().toISOString(),
             postToSend.frontMatter.updateDate = new Date().toISOString(),
             postToSend.frontMatter.date = new Date().toISOString(),
-            postToSend.frontMatter.createDate = postToSend.frontMatter.createDat || new Date().toISOString(),
             delete postToSend.frontMatter.publish
             delete postToSend.frontMatter.unpublish
             delete postToSend.frontMatter.delete
@@ -156,9 +156,9 @@ window.GOPHER_CONFIG = {
           input: 'post',
           formatter: ({post}) => {
             const postToSend = _.cloneDeep(post)
+            postToSend.frontMatter.createDate = postToSend.frontMatter.createDate || postToSend.frontMatter.date || new Date().toISOString(),
             postToSend.frontMatter.updateDate = new Date().toISOString(),
             postToSend.frontMatter.date = new Date().toISOString(),
-            postToSend.frontMatter.createDate = postToSend.frontMatter.createDat || new Date().toISOString(),
             delete postToSend.frontMatter.unpublish
             delete postToSend.frontMatter.delete
             postToSend.frontMatter.publish = true
@@ -263,9 +263,9 @@ window.GOPHER_CONFIG = {
           input: 'post',
           formatter: ({post}) => {
             const postToSend = _.cloneDeep(post)
+            postToSend.frontMatter.createDate = postToSend.frontMatter.createDate || postToSend.frontMatter.date || new Date().toISOString(),
             postToSend.frontMatter.updateDate = new Date().toISOString(),
             postToSend.frontMatter.date = new Date().toISOString(),
-            postToSend.frontMatter.createDate = postToSend.frontMatter.createDat || new Date().toISOString(),
             delete postToSend.frontMatter.publish
             delete postToSend.frontMatter.delete
             postToSend.frontMatter.unpublish = true
@@ -307,6 +307,11 @@ window.GOPHER_CONFIG = {
     },
     listPosts: {
       accessSchema: exploranda.dataSources.AWS.s3.listObjects,
+      formatter: (posts) => {
+        return _.filter(_.flatten(posts), (post) => {
+          return _.endsWith(post.Key, '.md')
+        })
+      },
       params: {
         Bucket: {value: CONFIG.private_storage_bucket },
         Prefix: { value: CONFIG.plugin_post_hosting_path },

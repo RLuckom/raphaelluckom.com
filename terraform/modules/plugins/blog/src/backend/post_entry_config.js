@@ -163,7 +163,7 @@ module.exports = {
             if (unpublish || del) {
               return publishedImages
             } else {
-              return _.filter(publishedImages, ({imageId}) => currentImageIds.indexOf(imageId) === -1)
+              return _.filter(publishedImages, ({imageId}) => (currentImageIds || []).indexOf(imageId) === -1)
             }
           },
           params: {

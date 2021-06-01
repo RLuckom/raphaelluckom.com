@@ -96,7 +96,7 @@ module blog_site {
       ]
     }
   ]
-  subject_alternative_names = ["www.test.raphaelluckom.com"]
+  subject_alternative_names = var.subject_alternative_names
   lambda_event_configs = var.lambda_event_configs
   layers = {
     donut_days = var.donut_days_layer

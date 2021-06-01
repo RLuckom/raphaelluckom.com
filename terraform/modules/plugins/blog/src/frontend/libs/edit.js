@@ -26,7 +26,7 @@ window.RENDER_CONFIG = {
       } else {
         editorState = setPostEditorState(postId, {
           title: post.frontMatter.title,
-          trails: post.frontMatter.meta.trails,
+          trails: post.frontMatter.meta.trails || post.frontMatter.meta.trail,
           content: post.content,
           imageIds: post.frontMatter.meta.imageIds,
           etag: post.etag,
@@ -35,6 +35,8 @@ window.RENDER_CONFIG = {
         saveState = setPostSaveState(postId, {etag: post.etag, label: translatableText.saveState.unmodified})
       }
     }
+    console.log(post)
+    console.log(editorState)
     const mainSection = document.querySelector('main')
     function mergeEditorStateToPost() {
       return latestKnownPostState(postId)
@@ -279,7 +281,7 @@ window.RENDER_CONFIG = {
         name: 'trails',
         classNames: 'authoring-input',
         id: 'trails',
-        value: (_.get(post, 'frontMatter.meta.trails') || []).join(', '),
+        value: (_.get(post, 'frontMatter.meta.trails') || _.get(post, 'frontMatter.meta.trail') || []).join(', '),
         onChange: (e) => updateEditorState(postId, {trails: _.map((e.target.value || '').split(','), _.trim)}, updateFootnoteMenu, setSaveState)
       },
       {

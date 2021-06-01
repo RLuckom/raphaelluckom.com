@@ -26,7 +26,7 @@ window.RENDER_CONFIG = {
     const closeInputButtonText = 'X'
     window.addEventListener('pageshow', () => {
       goph.report('listPosts', (e, {listPosts}) => {
-        const postKeys = _.map(listPosts[0], 'Key')
+        const postKeys = _.map(listPosts, 'Key')
         updatePostKeys(postKeys)
       })
     })
@@ -275,7 +275,7 @@ window.RENDER_CONFIG = {
     postKeys: {
       source: 'listPosts',
       formatter: ({listPosts}) => {
-        return _.map(listPosts[0], 'Key')
+        return _.map(listPosts, 'Key')
       }
     }
   },
