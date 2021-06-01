@@ -207,6 +207,10 @@ const footnoteMarkdownParser = new prosemirror.MarkdownParser(schema, markdownit
   code_inline: {mark: "code", noCloseToken: true}
 })
 
+footnoteMarkdownParser.tokenHandlers.softbreak = (state, tok) => {
+  state.addText(" ")
+}
+
 class FootnoteView {
   constructor(node, view, getPos) {
     // We'll need these later
@@ -299,7 +303,7 @@ const footnoteMarkdownSerializer = new prosemirror.MarkdownSerializer({
       }
   },
   text(state, node) {
-    state.text(node.text)
+    state.text(node.text.replaceAll(/(.{75,100}) /g, (m, g) => g + '\n'))
   },
 
   footnote_ref(state, node) {
@@ -1107,7 +1111,6 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
       prosemirror.history(),
       prosemirror.menuBar(
         {
-          floating: true, 
           content: menuItems.fullMenu
         }
       ),
