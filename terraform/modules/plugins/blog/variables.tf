@@ -186,6 +186,7 @@ locals {
   libs_js_path = "${local.file_prefix}/assets/js/pkg-${filemd5("${path.module}/src/frontend/libs/libs.js")}.js"
   prosemirror_setup_js_path = "${local.file_prefix}/assets/js/prosemirror-setup-${filemd5("${path.module}/src/frontend/libs/prosemirror-setup.js")}.js"
   plugin_config = {
+    name = var.name
     website_bucket = module.blog_site.website_bucket_name
     blog_image_hosting_root = local.blog_image_hosting_root
     blog_image_hosting_prefix = local.blog_image_hosting_prefix

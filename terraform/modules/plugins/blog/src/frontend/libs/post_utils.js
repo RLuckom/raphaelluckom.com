@@ -149,23 +149,23 @@ function getImageUploadKey({postId, imageId, imageExt}) {
 }
 
 function getPostDataKey(postId) {
-  return `postData?postId=${postId}`
+  return `plugins/${CONFIG.name}/postData?postId=${postId}`
 }
 
 function getPostSaveStateDataKey(postId) {
-  return `postData?postId=${postId}&field=saveState`
+  return `plugins/${CONFIG.name}/postData?postId=${postId}&field=saveState`
 }
 
 function getPostAsSavedDataKey(postId) {
-  return `postData?postId=${postId}&field=asSaved`
+  return `plugins/${CONFIG.name}/postData?postId=${postId}&field=asSaved`
 }
 
 function getPostPublishStateDataKey(postId) {
-  return `postData?postId=${postId}&field=publishState`
+  return `plugins/${CONFIG.name}/postData?postId=${postId}&field=publishState`
 }
 
 function getPostEditorStateDataKey(postId) {
-  return `postData?postId=${postId}&field=editorState`
+  return `plugins/${CONFIG.name}/postData?postId=${postId}&field=editorState`
 }
 
 function getParsedLocalStorageData(key) {
@@ -398,9 +398,10 @@ function latestKnownPostState(postId) {
 }
 
 function serializePostToMarkdown({frontMatter, content, footnotes}) {
-  let text = `---\n${yaml.dump(frontMatter)}---\n${content}\n\n`
+  let text = `---\n${yaml.dump(frontMatter)}---\n${_.trimEnd(content)}\n\n`
   _(footnotes).toPairs().sortBy((v) => v[0]).each(([k, v]) => {
-    text += `[^${k}]:  ${v.split('\n').join('\n      ')}\n\n`
+    const indent = _.repeat(' ', (`[^${k}]: `).length)
+    text += `[^${k}]: ${_.map(v.split('\n'), _.trimStart).join(`\n${indent}`)}\n\n`
   })
   return text
 }
