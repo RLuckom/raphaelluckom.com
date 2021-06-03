@@ -101,6 +101,10 @@ input.new-post.expanded {
   flex: 1;
 }
 
+.post-status-headers {
+  flex: 2;
+}
+
 .post-list-entry .post-status, .post-list-entry .post-actions {
   height: 2.6em;
 }
@@ -285,6 +289,7 @@ input.new-post.expanded {
 
   .post-status, .post-status-headers {
     width: 100%;
+    flex: 2;
   }
 
   .post-actions {
@@ -329,5 +334,17 @@ input.new-post.expanded {
     font-family: inherit;
     border-radius: 7px;
     border-style: solid;
+  }
+
+  .nav-logo {
+    font-size: 1.5em;
+  }
+
+  .location-link-sep {
+    font-size: 1.5em;
+    letter-spacing: 0.07em;
+    font-weight: bold;
+    margin: 0 0.15em;
+    color: var(--neutral);
   }
 }

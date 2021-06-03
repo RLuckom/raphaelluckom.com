@@ -185,22 +185,17 @@ const footnoteMarkdownParser = new prosemirror.MarkdownParser(schema, markdownit
   code_block: {block: "code_block", noCloseToken: true},
   fence: {block: "code_block", getAttrs: tok => ({params: tok.info || ""}), noCloseToken: true},
   hr: {node: "horizontal_rule"},
+  image: {node: "image", getAttrs: tok => ({
+    src: tok.attrGet("src"),
+    title: tok.attrGet("title") || null,
+    alt: tok.children[0] && tok.children[0].content || null
+  })},
   footnote_ref: {
     node: "footnote_ref",
     getAttrs: (tok) => {
       return {ref: tok.meta.ref}
     }
   },
-  image: {node: "image", getAttrs: (tok) => {
-    console.log(tok)
-    const ret = {
-      src: tok.attrGet("src"),
-      title: tok.attrGet("title") || null,
-      alt: tok.content || tok.children[0] && tok.children[0].content || null
-    }
-    console.log(ret)
-    return ret
-  }},
   hardbreak: {node: "hard_break"},
 
   em: {mark: "em"},
@@ -225,6 +220,7 @@ class FootnoteView {
     // The node's representation in the editor (empty, for now)
     this.dom = document.createElement("sup")
     this.dom.innerText = node.attrs.ref
+    this.getPos = getPos
   }
 
   selectNode() {
@@ -297,8 +293,7 @@ const footnoteMarkdownSerializer = new prosemirror.MarkdownSerializer({
   },
 
   image(state, node) {
-    state.write("![" + state.esc(node.attrs.alt || "") + "](" + state.esc(node.attrs.src) +
-                (node.attrs.title ? " " + state.quote(node.attrs.title) : "") + ")")
+    state.write("![" + state.esc(node.attrs.alt || "") + "](" + state.esc(node.attrs.src) + (node.attrs.alt ? ` ${state.quote(node.attrs.alt)}` : '') + ')')
   },
   hard_break(state, node, parent, index) {
     for (let i = index + 1; i < parent.childCount; i++)
@@ -1009,7 +1004,6 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
           title: "Insert image",
           fields: {
             src: new FileField({label: "File", className: 'photo-input', required: true, value: attrs && attrs.src, accept: "image/*"}),
-            title: new TextField({label: "Title", className: 'photo-input', value: attrs && attrs.title}),
             alt: new TextAreaField({label: "Description", className: 'photo-input alt',
                                value: attrs ? attrs.alt : state.doc.textBetween(from, to, " ")})
           },
@@ -1022,7 +1016,7 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
     })
   }
 
-  function startImageUpload(view, {src, alt, title}) {
+  function startImageUpload(view, {src, alt}) {
     // A fresh object to act as the ID for this upload
     let id = {}
 
@@ -1052,7 +1046,7 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
         const image = view.state.schema.nodes.image.create({
           src: url,
           alt,
-          title,
+          title: alt,
         })
         view.dispatch(
           view.state.tr
@@ -1153,10 +1147,36 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
   const view = new prosemirror.EditorView(container, {
     // Set initial state
     state: initState,
+    handleDoubleClickOn: function handleFigureClick(view, pos, node, posBefore) {
+      if (node.type.name != "image" && pos != posBefore) {
+        return false
+      }
+      openPrompt({
+        title: "Update Text Description",
+        fields: {
+          alt: new TextAreaField({label: "Description", className: 'photo-input alt',
+                                 value: _.get(node, 'attrs.alt')})
+        },
+        callback({alt}) {
+          const tr = view.state.tr.setNodeMarkup(
+            pos,
+            null,
+            {
+              src: node.attrs.src,
+              alt,
+              title: alt,
+            }
+          )
+          view.dispatch(tr)
+          view.focus()
+        }
+      })
+      return true
+    },
     nodeViews: {
       footnote_ref(node, view, getPos) {
         return new FootnoteView(node, view, getPos)
-      }
+      },
     },
     dispatchTransaction(tr) {
       const { state } = view.state.applyTransaction(tr)

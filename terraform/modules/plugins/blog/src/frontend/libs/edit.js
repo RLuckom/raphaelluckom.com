@@ -35,8 +35,6 @@ window.RENDER_CONFIG = {
         saveState = setPostSaveState(postId, {etag: post.etag, label: translatableText.saveState.unmodified})
       }
     }
-    console.log(post)
-    console.log(editorState)
     const mainSection = document.querySelector('main')
     function mergeEditorStateToPost() {
       return latestKnownPostState(postId)
@@ -169,17 +167,12 @@ window.RENDER_CONFIG = {
       },
       {
         tagName: 'div',
-        children: [
-          {
-            tagName: 'div',
-            id: 'post-editor',
-            classNames: ['prosemirror', 'editor'],
-          },
-          {
-            tagName: 'div',
-            id: 'post-footnotes',
-          },
-        ]
+        id: 'post-editor',
+        classNames: ['prosemirror', 'editor'],
+      },
+      {
+        tagName: 'div',
+        id: 'post-footnotes',
       },
       {
         tagName: 'div',
