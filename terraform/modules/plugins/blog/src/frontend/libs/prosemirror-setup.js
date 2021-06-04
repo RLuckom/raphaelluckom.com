@@ -1147,7 +1147,7 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
   const view = new prosemirror.EditorView(container, {
     // Set initial state
     state: initState,
-    handleDoubleClickOn: function handleFigureClick(view, pos, node, posBefore) {
+    handleClickOn: function handleFigureClick(view, pos, node, posBefore) {
       if (node.type.name != "image" && pos != posBefore) {
         return false
       }

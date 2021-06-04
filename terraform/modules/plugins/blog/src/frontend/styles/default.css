@@ -257,6 +257,7 @@ input.new-post.expanded {
 }
 
 @media screen and (max-width: 767px) {
+  textarea,
   input[type="text"],
   input[type="number"],
   input[type="email"],

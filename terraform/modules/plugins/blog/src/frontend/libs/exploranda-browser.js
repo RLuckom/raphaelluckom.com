@@ -3789,7 +3789,7 @@ function Gopher(defaultRecordCollectors, dataDependencies, initialInputs) {
     return _.cloneDeep(internalInputs);
   }
 
-  function addToAutoArgs(autoArgs, inputOverrides, {accessSchema, formatter, params, behaviors}, name) {
+  function addToAutoArgs(autoArgs, inputOverrides, metrics, {accessSchema, formatter, params, behaviors}, name) {
     if (autoArgs[name]) {
       return autoArgs;
     }
@@ -3809,14 +3809,14 @@ function Gopher(defaultRecordCollectors, dataDependencies, initialInputs) {
               // have been added to the autoArgs. This allows downstream
               // consumers to isolate the effects of unavailable resources
               // to only the specific elements that rely on those resources
-              addToAutoArgs(autoArgs, inputOverrides, dataDependencies[source], source);
+              addToAutoArgs(autoArgs, inputOverrides, metrics, dataDependencies[source], source);
             }
           } else if (_.isArray(source)) {
             _.each(source, (sourceMember) => {
               if (collector.indexOf(sourceMember) === -1) {
                 collector.push(sourceMember);
                 // See note above.
-                addToAutoArgs(autoArgs, inputOverrides, dataDependencies[sourceMember], sourceMember);
+                addToAutoArgs(autoArgs, inputOverrides, metrics, dataDependencies[sourceMember], sourceMember);
               }
             });
           }
@@ -3891,16 +3891,18 @@ function Gopher(defaultRecordCollectors, dataDependencies, initialInputs) {
     }, {});
 
     function returnValueBookkeeping(cache, name, collectorArgs, callback) {
-      return function(e, r) {
+      return function(e, r, metrics) {
         cacheInsert(cache, name, cacheLifetime, collectorArgs, e, r);
         const formattedResults = formatter ? formatter(r, _.cloneDeep(_.merge({}, getInputs(), inputOverrides))) : r;
-        return callback(e, formattedResults);
+        return callback(e, formattedResults, metrics);
       };
     }
 
     function guardCallback(callback) {
-      return function(e, r) {
+      return function(e, r, callMetrics) {
         try {
+          const key = `${name}.${_.get(accessSchema, 'dataSource')}.${_.get(accessSchema, 'name')}`
+          metrics[key] = callMetrics
           callback(e, r)
         } catch(err) {
           console.error("error in provided callback:")
@@ -3916,7 +3918,7 @@ function Gopher(defaultRecordCollectors, dataDependencies, initialInputs) {
         const collectorArgs = _.merge({}, literals, inputs, generated);
         const timelyCachedResult = getTimelyCachedResult(cache, name, collectorArgs, cacheLifetime);
         if (timelyCachedResult) {
-          return setTimeout(() => {returnValueBookkeeping(cache, null, null, callback)(timelyCachedResult.e, _.cloneDeep(timelyCachedResult.r))}, 0);
+          return setTimeout(() => {returnValueBookkeeping(cache, null, null, callback)(timelyCachedResult.e, _.cloneDeep(timelyCachedResult.r), {cached: 1})}, 0);
         }
         return recordCollectors[accessSchema.dataSource](accessSchema, collectorArgs, behaviors, returnValueBookkeeping(cache, name, collectorArgs, callback));
       }
@@ -3930,7 +3932,7 @@ function Gopher(defaultRecordCollectors, dataDependencies, initialInputs) {
       const collectorArgs = _.merge({}, literals, inputs, generated, dependencies);
       const timelyCachedResult = getTimelyCachedResult(cache, name, collectorArgs, cacheLifetime);
       if (timelyCachedResult) {
-        return setTimeout(() => {returnValueBookkeeping(cache, null, null, callback)(timelyCachedResult.e, _.cloneDeep(timelyCachedResult.r))}, 0);
+        return setTimeout(() => {returnValueBookkeeping(cache, null, null, callback)(timelyCachedResult.e, _.cloneDeep(timelyCachedResult.r), {cached: 1})}, 0);
       }
       return recordCollectors[accessSchema.dataSource](accessSchema, collectorArgs, behaviors, returnValueBookkeeping(cache, name, collectorArgs, callback));
     }
@@ -3976,6 +3978,7 @@ function Gopher(defaultRecordCollectors, dataDependencies, initialInputs) {
   }
 
   function report(...selfArgs) {
+    const metrics = {}
     const hasCallback = _.isFunction(selfArgs[selfArgs.length - 1])
     const inputOverrides = selfArgs[1] && !_.isFunction(selfArgs[1]) ? selfArgs[1] : null;
     const target = _.isString(selfArgs[0]) || _.isArray(selfArgs[0]) ? selfArgs[0] : null;
@@ -3983,38 +3986,38 @@ function Gopher(defaultRecordCollectors, dataDependencies, initialInputs) {
     try {
       validate(dataDependencies, _.merge({}, inputOverrides, getInputs()), target);
     } catch(e) {
-      callback(e)
+      callback(e, undefined, metrics)
       return
     }
     autoArgs = {};
     if (!target) {
       try {
-        _.each(dataDependencies, _.partial(addToAutoArgs, autoArgs, inputOverrides));
-        return asyncLib.auto(autoArgs, callback);
+        _.each(dataDependencies, _.partial(addToAutoArgs, autoArgs, inputOverrides, metrics));
+        return asyncLib.auto(autoArgs, (e, r) => callback(e, r, metrics));
       } catch(e) {
-        callback(e)
+        callback(e, undefined, metrics)
         return
       }
     }
     if (!_.isArray(target) && (!_.isString(target) && !_.isNumber(target))) {
-      callback(new Error(`Bad target: ${target} for dataDependencies: ${dataDependencies}`));
+      callback(new Error(`Bad target: ${target} for dataDependencies: ${dataDependencies}`), undefined, metrics);
       return
     } else if (_.isArray(target)) {
       try {
-        _.each(target, (t) => addToAutoArgs(autoArgs, inputOverrides, dataDependencies[t], t));
+        _.each(target, (t) => addToAutoArgs(autoArgs, inputOverrides, metrics, dataDependencies[t], t));
       } catch(e) {
-        callback(e)
+        callback(e, undefined, metrics)
         return
       }
     } else {
       try {
-        addToAutoArgs(autoArgs, inputOverrides, dataDependencies[target], target);
+        addToAutoArgs(autoArgs, inputOverrides, metrics, dataDependencies[target], target);
       } catch(e) {
-        callback(e)
+        callback(e, undefined, metrics)
         return
       }
     }
-    return asyncLib.auto(autoArgs, callback);
+    return asyncLib.auto(autoArgs, (e, r) => callback(e, r, metrics));
   }
 
   function getCache() { return _.cloneDeep(cache); }
@@ -4240,7 +4243,7 @@ function getSameValue(paramsArray, path, errText) {
   }, _.get(paramsArray[0], path))
 }
 
-function execParamDrivenRequest(sourceSchema, paramsArray, behaviors, callback) {
+function execParamDrivenRequest(sourceSchema, paramsArray, behaviors, metrics, callback) {
   let consistentIsSync 
   try {
     consistentIsSync = getSameValue(paramsArray, 'apiConfig.isSync', 'All the params in a paramsArray must have the same isSync boolean-ness')
@@ -4259,7 +4262,9 @@ function execParamDrivenRequest(sourceSchema, paramsArray, behaviors, callback) 
           setTimeout(() => {
             try {
               result = getCallable(params, sourceSchema)(...args)
+              metrics.successes = metrics.successes ? metrics.successes + 1 : 1
             } catch (e) {
+              metrics.errors = metrics.errors ? metrics.errors + 1 : 1
               err = e
             }
             seriesCallback(err, result)
@@ -4271,7 +4276,9 @@ function execParamDrivenRequest(sourceSchema, paramsArray, behaviors, callback) 
           setTimeout(() => {
             try {
               result = api(params)
+              metrics.successes = metrics.successes ? metrics.successes + 1 : 1
             } catch (e) {
+              metrics.errors = metrics.errors ? metrics.errors + 1 : 1
               err = e
             }
             seriesCallback(err, result)
@@ -4286,16 +4293,24 @@ function execParamDrivenRequest(sourceSchema, paramsArray, behaviors, callback) 
     const parallelFunction = createParallelFunction(_.get(behaviors, 'parallelLimit'))
     parallelFunction(_.map(paramsArray, (params) => {
       return function(parallelCallback) {
+        function metricCallback(e, r) {
+          if (e) {
+            metrics.errors = metrics.errors ? metrics.errors + 1 : 1
+          } else {
+            metrics.successes = metrics.successes ? metrics.successes + 1 : 1
+          }
+          return parallelCallback(e, r)
+        }
         const argOrder = getArgOrder(params, sourceSchema)
         if (argOrder) {
           const args = _.map(argOrder, (a) => params[a])
-          args.push(parallelCallback)
+          args.push(metricCallback)
           getCallable(params, sourceSchema)(...args)
           return
         } else {
           const api = getCallable(params, sourceSchema)
           delete params.apiConfig
-          api(params, parallelCallback)
+          api(params, metricCallback)
         }
       }
     }), callback)
@@ -4321,7 +4336,7 @@ function execParamDrivenRequest(sourceSchema, paramsArray, behaviors, callback) 
 }
 
 function buildFetchAndMerge(getApi, dependencyMap) {
-  return function fetchAndMergeAllResults(sourceSchema, paramSet, behaviors, callback) {
+  return function fetchAndMergeAllResults(sourceSchema, paramSet, behaviors, metrics, callback) {
     const api = getApi(sourceSchema, paramSet, behaviors);
     if (!api) {
       callback(new Error(`Could not find API for source schema ${sourceSchema.name} and params supplied`))
@@ -4336,6 +4351,7 @@ function buildFetchAndMerge(getApi, dependencyMap) {
         res = errAndRes.res;
       }
       if (err) {
+        metrics.errors = metrics.errors ? metrics.errors + 1 : 1
         let errorString = `Error fetching results for schema ${sourceSchema.name} Error ${err}`;
         if (safeProcess.env.EXPLORANDA_DEBUG) {
           errorString = `Error fetching results for schema ${sourceSchema.name} with params ${JSON.stringify(currentParams)} Error ${err}`;
@@ -4349,12 +4365,14 @@ function buildFetchAndMerge(getApi, dependencyMap) {
         results = _.get(sourceSchema, 'value.path') ? _.get(res, sourceSchema.value.path) : res;
       }
       if (!results && !_.get(behaviors, 'maybeNull')) {
+        metrics.errors = metrics.errors ? metrics.errors + 1 : 1
         let errorString = `${sourceSchema.name} specifies path as ${_.get(sourceSchema, 'value.path')} but that path is not present on the response}`
         if (safeProcess.env.EXPLORANDA_DEBUG) {
           errorString = `${sourceSchema.name} specifies path as ${sourceSchema.value.path} but that path is not present on ${JSON.stringify(res)}`
         }
         return callback(new Error(errorString));
       }
+      metrics.successes = metrics.successes ? metrics.successes + 1 : 1
       collector = collector ? (sourceSchema.mergeOperator || _.concat)(collector, results) : results;
       const incompleteIndicatorFunction = _.isFunction(sourceSchema.incompleteIndicator) ? sourceSchema.incompleteIndicator : (x) => _.get(x, sourceSchema.incompleteIndicator);
       if (incompleteIndicatorFunction(res)) {
@@ -4362,7 +4380,7 @@ function buildFetchAndMerge(getApi, dependencyMap) {
         currentParams = sourceSchema.nextBatchParamConstructor(_.cloneDeep(currentParams), _.cloneDeep(res));
         if (_.isArray(currentParams)) {
           return createParallelFunction(_.get(behaviors, 'parallelLimit'))(_.map(currentParams, (individualParamSet) => {
-            return (parallelCallback) => fetchAndMergeAllResults(sourceSchema, individualParamSet, behaviors, parallelCallback)
+            return (parallelCallback) => fetchAndMergeAllResults(sourceSchema, individualParamSet, behaviors, metrics, parallelCallback)
           }), (e, r) => {
             if (!e) {
               collector = (sourceSchema.mergeOperator || _.concat)(collector, r);
@@ -4413,15 +4431,20 @@ function buildExecRecordsRequest(fetchAndMergeAllResults) {
       callback(e)
       return
     }
+    const metrics = {
+      paramSets: paramsArray.length
+    }
     if (_.get(sourceSchema, 'namespaceDetails.paramDriven')) {
-      execParamDrivenRequest(sourceSchema, paramsArray, behaviors, callback)
+      execParamDrivenRequest(sourceSchema, paramsArray, behaviors, metrics, callback)
       return
     } else {
       return createParallelFunction(_.get(behaviors, 'parallelLimit'))(_.map(paramsArray, (paramSet) => {
         return function(parallelCallback) {
-          return fetchAndMergeAllResults(sourceSchema, paramSet, behaviors, parallelCallback);
+          return fetchAndMergeAllResults(sourceSchema, paramSet, behaviors, metrics, parallelCallback);
         };
-      }), (e, r) => {callback(e, (sourceSchema.mergeIndividual || _.flatten)(r));});
+      }), (e, r) => {
+        callback(e, (sourceSchema.mergeIndividual || _.flatten)(r), metrics);
+      });
     };
   }
 }
@@ -4446,7 +4469,7 @@ function buildRecordLookup(updateDefaultSourceParams, execRecordRequest) {
       return execRecordRequest(sourceSchema, _.cloneDeep(params || {}), behaviors, callback);
     } else {
       // recursion case--the parameters we need for this request require that we look up
-      // the records that coorrespond to _other_ sourceSchemas and parameters. In this case,
+      // the records that correspond to _other_ sourceSchemas and parameters. In this case,
       // create a map like: 
       // 
       //   {
@@ -4456,13 +4479,21 @@ function buildRecordLookup(updateDefaultSourceParams, execRecordRequest) {
       //
       // and pass that map to [asyncLib.auto](http://caolan.github.io/async/docs.html#auto),
       // which is a perfect expression of the Tao of JavaScript.
+      const subMetrics = {}
       return asyncLib.auto(_.reduce(sourceSchema.requiredParams, (collector, {defaultSource}, paramName) => {
         if (!params[paramName]) {
           if (!defaultSource) {
             callback(new Error(`No acceptable value provided for the ${paramName} parameter in the ${sourceSchema.name} schema. An acceptable value must be an object with a "value" member containing the literal value, or a "source" or "input" member containing the name of the source`));
             return
           }
-          collector[paramName] = _.partial(lookUpRecords, defaultSource, updateDefaultSourceParams(defaultSource, params), behaviors);
+          collector[paramName] = function(autoCallback) {
+            return lookUpRecords(defaultSource, updateDefaultSourceParams(defaultSource, params), behaviors, (e, r, metrics) => {
+              const key = `${_.get(defaultSource, 'dataSource')}.${_.get(defaultSource, 'name')}`
+              subMetrics[key] = subMetrics[key] || []
+              subMetrics[key].push(metrics)
+              autoCallback(e, r)
+            });
+          }
         }
         return collector;
       }, {}), 
@@ -4472,7 +4503,10 @@ function buildRecordLookup(updateDefaultSourceParams, execRecordRequest) {
         (err, res) => {
           // Since the `res` consisted of the parameters we needed, we just merge it with the params
           // we started with and try the lookup again
-          return lookUpRecords(sourceSchema, _.merge({}, params, res), behaviors, callback);
+          return lookUpRecords(sourceSchema, _.merge({}, params, res), behaviors, (e, r, metrics) => {
+            metrics.subMetrics = subMetrics
+            callback(e, r, metrics);
+          })
         }
       );
     }
@@ -4527,10 +4561,10 @@ function buildSDKCollector({getApi, dependencyMap}) {
     const execRecordRequest = buildExecRecordsRequest(fetchAndMergeAllResults);
     const recordLookup = buildRecordLookup(updateDefaultSourceParams, execRecordRequest);
     const lookUpRecords = function(sourceSchema, params, behaviors, callback) {
-      return recordLookup(sourceSchema, params, behaviors, (e, r) => {
-        if (e) {return callback(e);}
+      return recordLookup(sourceSchema, params, behaviors, (e, r, metrics) => {
+        if (e) {return callback(e, undefined, metrics);}
         const results = _.get(sourceSchema, 'value.sortBy') ? _.sortBy(r, _.get(sourceSchema, 'value.sortBy')) : r;
-        return callback(e, results);
+        return callback(e, results, metrics);
       });
     }
     lookUpRecords.replaceDependency = function(name, newDependency) {
@@ -4588,7 +4622,6 @@ function updateDefaultSourceParams(defaultSource, params) {
 
 module.exports = {
   createBoundApi,
-  buildFetchAndMerge,
   buildRecordLookup,
   sufficientParams,
   buildSDKCollector,
