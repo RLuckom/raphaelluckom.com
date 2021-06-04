@@ -11,7 +11,7 @@ module visibility_system {
     prod = {
       subsystems = {
         prod = {
-          scoped_logging_functions = concat(module.admin_site_prod_blog_plugin.lambda_logging_arns, module.admin_site_blog_plugin.lambda_logging_arns)
+          scoped_logging_functions = module.admin_site_prod_blog_plugin.lambda_logging_arns
           glue_permission_name_map = {
             add_partition_permission_names = []
             add_partition_permission_arns = []
@@ -20,7 +20,7 @@ module visibility_system {
           }
         }
         human = {
-          scoped_logging_functions = concat(module.human_attention_archive.lambda_logging_roles, module.admin_site_blog_plugin.lambda_logging_arns)
+          scoped_logging_functions = module.human_attention_archive.lambda_logging_roles
           glue_permission_name_map = {
             add_partition_permission_names = []
             add_partition_permission_arns = []
@@ -34,6 +34,7 @@ module visibility_system {
       subsystems = {
         test = {
           scoped_logging_functions = []
+          scoped_logging_functions = module.admin_site_blog_plugin.lambda_logging_arns
           glue_permission_name_map = {
             add_partition_permission_names = []
             add_partition_permission_arns = []

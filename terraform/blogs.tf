@@ -8,7 +8,7 @@ module admin_site_blog_plugin {
   nav_links = var.nav_links
   site_title = var.prod_site_title
   subject_alternative_names = ["www.test.raphaelluckom.com"]
-  logging_config = module.visibility_system.lambda_log_configs["prod"]["human"].config
+  logging_config = module.visibility_system.lambda_log_configs["test"]["test"].config
   lambda_event_configs = local.notify_failure_only
   coordinator_data = module.visibility_system.serverless_site_configs["test"]
   plugin_config = module.admin_interface.plugin_config["blog"]

@@ -89,6 +89,7 @@ variable coordinator_data {
       route53_zone_name = string
     })
     // these can be set to "" if NA
+    metric_table = string
     lambda_log_delivery_prefix = string
     lambda_log_delivery_bucket = string
     cloudfront_log_delivery_prefix = string
@@ -147,10 +148,12 @@ variable logging_config {
   type = object({
     bucket = string
     prefix = string
+    metric_table = string
   })
   default = {
     bucket = ""
     prefix = ""
+    metric_table = ""
   }
 }
 

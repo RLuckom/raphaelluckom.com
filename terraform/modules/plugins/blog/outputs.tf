@@ -114,8 +114,8 @@ output blog_site_bucket_name {
 }
 
 output lambda_logging_arns {
-  value = [
+  value = concat([
     module.process_image_uploads.lambda_role.arn,
-    module.post_entry_lambda.role.arn
-  ]
+    module.post_entry_lambda.role.arn,
+  ], module.blog_site.lambda_logging_roles)
 }
