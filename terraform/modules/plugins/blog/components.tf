@@ -46,10 +46,9 @@ module process_image_uploads {
 }
 
 module blog_site {
-  source = "github.com/RLuckom/terraform_modules//aws/serverless_site/tetrapod"
+  source = "github.com/RLuckom/terraform_modules//aws/serverless_site/cyanobacteria"
   account_id = var.account_id
   region = var.region
-  maintainer = var.maintainer
   nav_links = var.nav_links
   site_title = var.site_title
   coordinator_data = var.coordinator_data
