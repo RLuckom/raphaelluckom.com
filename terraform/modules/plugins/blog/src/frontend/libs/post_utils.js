@@ -305,6 +305,10 @@ const translatableText = {
     new: 'New Post',
     addFootnote: 'Add Footnote',
   },
+  editActions: {
+    deleteFootnote: 'Delete Footnote',
+    reallyDeleteFootnote: 'Confirm Delete',
+  },
   editing: 'Editing',
 }
 
@@ -417,6 +421,7 @@ function prepareEditorString(s, postId) {
 
 function buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnoteMenu) {
   let name = footnoteNumber + ''
+  let deleteable = false
   const latestEditorState = getPostEditorState(postId)
   latestEditorState.footnotes = latestEditorState.footnotes || {}
   latestEditorState.footnoteEditorStates = latestEditorState.footnoteEditorStates || {}
@@ -445,6 +450,15 @@ function buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnote
     updateEditorState(postId, {footnotes: latestEditorState.footnotes, footnoteEditorStates: latestEditorState.footnoteEditorStates}, updateFootnoteMenu, null, {[oldName]: e.target.value})
   }
 
+  function onFootnoteDelete(e) {
+    console.log('deleting ' + name)
+    const latestEditorState = getPostEditorState(postId)
+    delete latestEditorState.footnotes[name]
+    delete latestEditorState.footnoteEditorStates[name]
+    updateEditorState(postId, {footnotes: latestEditorState.footnotes, footnoteEditorStates: latestEditorState.footnoteEditorStates}, updateFootnoteMenu, null, {[name]: null})
+    editorDiv.remove()
+  }
+
   function onStateChange({editorState, content}) {
     const latestEditorState = getPostEditorState(postId)
     latestEditorState.footnotes[name] = content
@@ -455,14 +469,40 @@ function buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnote
     tagName: 'div',
     children: [
       {
-        tagName: 'input',
-        type: 'text',
-        name: 'footnote name',
-        classNames: 'authoring-input',
-        onKeyUp: (evt) => evt.target.value = evt.target.value.replace(/[^A-z0-9]/, ''),
-        placeholder: translatableText.postMetadata.placeholders.footnoteTitle,
-        value: name,
-        onChange: onFootnoteNameChange,
+        tagName: 'div',
+        classNames: 'footnote-title-bar',
+        children: [
+          {
+            tagName: 'input',
+            type: 'text',
+            name: 'footnote name',
+            classNames: 'authoring-input',
+            onKeyUp: (evt) => evt.target.value = evt.target.value.replace(/[^A-z0-9]/, ''),
+            placeholder: translatableText.postMetadata.placeholders.footnoteTitle,
+            value: name,
+            onChange: onFootnoteNameChange,
+          },
+          {
+            tagName: 'button',
+            classNames: 'delete-footnote',
+            innerText: translatableText.editActions.deleteFootnote,
+            onClick: function(evt) {
+              if (deleteable) {
+                onFootnoteDelete(evt)
+                deleteable = false
+              } else {
+                deleteable = true
+                editorDiv.querySelector('.delete-footnote').innerText = translatableText.editActions.reallyDeleteFootnote
+                setTimeout(function() {
+                  if (deleteable) {
+                    deleteable = false
+                    editorDiv.querySelector('.delete-footnote').innerText = translatableText.editActions.deleteFootnote
+                  }
+                }, 5000)
+              }
+            }
+          },
+        ]
       },
       {
         tagName: 'div',

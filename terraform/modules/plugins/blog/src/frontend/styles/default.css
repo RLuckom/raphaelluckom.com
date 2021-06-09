@@ -105,6 +105,17 @@ input.new-post.expanded {
   flex: 2;
 }
 
+.footnote-title-bar {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+button.delete-footnote {
+  float: right;
+  border-color: var(--hazard);
+  margin: 5px 0;
+}
+
 .post-list-entry .post-status, .post-list-entry .post-actions {
   height: 2.6em;
 }
@@ -335,6 +346,12 @@ input.new-post.expanded {
     font-family: inherit;
     border-radius: 7px;
     border-style: solid;
+  }
+
+  button.delete-footnote {
+    float: right;
+    border-color: var(--hazard);
+    margin: 5px 0;
   }
 
   .nav-logo {

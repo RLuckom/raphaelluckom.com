@@ -1123,12 +1123,21 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
         return _.get(n, 'attrs.ref') === k
       })
       while (pos !== -1) {
-        view.dispatch(
-          view.state.tr
-          .setSelection(new prosemirror.NodeSelection(view.state.doc.resolve(pos)))
-          .replaceSelectionWith(schema.nodes.footnote_ref.create({ref: v}, prosemirror.Fragment.empty))
-          .setMeta('addToHistory', false)
-        )
+        if (_.isNull(k)) {
+          view.dispatch(
+            view.state.tr
+            .setSelection(new prosemirror.NodeSelection(view.state.doc.resolve(pos)))
+            .deleteSelection()
+            .setMeta('addToHistory', false)
+          )
+        } else {
+          view.dispatch(
+            view.state.tr
+            .setSelection(new prosemirror.NodeSelection(view.state.doc.resolve(pos)))
+            .replaceSelectionWith(schema.nodes.footnote_ref.create({ref: v}, prosemirror.Fragment.empty))
+            .setMeta('addToHistory', false)
+          )
+        }
         pos = findNodePosition(view.state.doc, (n) => {
           return _.get(n, 'attrs.ref') === k
         })

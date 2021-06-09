@@ -47,6 +47,7 @@ window.RENDER_CONFIG = {
               icon.setAttribute('transform', '')
             } else {
               icon.setAttribute('transform', rotation)
+              document.getElementById('new-post').focus()
             }
           },
           children: [
@@ -278,5 +279,12 @@ window.RENDER_CONFIG = {
         return _.map(listPosts, 'Key')
       }
     }
+  },
+  onAPIError: (e, r, cb) => {
+    console.error(e)
+    if (_.isString(_.get(e, 'message')) && e.message.indexOf('401') !== -1) {
+      location.reload()
+    }
+    return cb(e, r)
   },
 }
