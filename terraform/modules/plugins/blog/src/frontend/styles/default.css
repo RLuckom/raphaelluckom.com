@@ -5,6 +5,7 @@
   --neutral: rgba(0, 0, 0, 0.2);
   --hazard: #ff6666;
   --default-border-width: 2px;
+  --editor-font-family: Georgia Palatino serif; 
 }
 
 sup {
@@ -26,6 +27,40 @@ input[type=text] {
   border-left-width: 0;
   border-right-width: 0;
   border-bottom-width: 0;
+}
+
+.authoring-inputs {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  max-width: 740px;
+  margin: 0 auto;
+}
+
+.authoring-inputs h3, 
+.authoring-inputs h2, 
+.authoring-inputs h4, 
+.authoring-inputs em, 
+.authoring-inputs a, 
+.authoring-inputs a {
+  font-family: var(--editor-font-family); 
+}
+
+.authoring-inputs p, 
+.authoring-inputs li,
+.authoring-inputs ol,
+.authoring-inputs ul,
+.authoring-inputs input[type="text"] {
+  font-family: var(--editor-font-family); 
+  color: #1a1a1a;
+  font-size: 20px;
+  line-height: 30px;
+}
+
+input#title {
+  font-size: 22px;
+  margin-top: 25px;
 }
 
 .icon {
@@ -56,6 +91,11 @@ img.placeholder {
 
 #post-editor {
   flex: 1;
+}
+
+.editor {
+  font-size: inherit;
+  font-family: var(--editor-font-family); 
 }
 
 .post-list-entry {
@@ -283,6 +323,31 @@ button.delete-footnote {
     border-left-width: 0;
     border-right-width: 0;
     border-bottom-width: 0;
+  }
+
+  .authoring-inputs p, 
+  .authoring-inputs li,
+  .authoring-inputs ol,
+  .authoring-inputs ul,
+  .authoring-inputs input[type="text"] {
+    font-family: var(--editor-font-family); 
+    color: #1a1a1a;
+    font-size: 18px;
+    line-height: 26px;
+  }
+
+  #post-editor {
+    display: block
+  }
+
+  input#title {
+    margin-top: 25px;
+    font-size: 20px;
+  }
+
+  .editor {
+    font-size: 18px;
+    line-height: 26px;
   }
 
   .ProseMirror-prompt {

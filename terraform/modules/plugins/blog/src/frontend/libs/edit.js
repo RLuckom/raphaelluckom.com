@@ -156,130 +156,136 @@ window.RENDER_CONFIG = {
         ]
       },
       {
-        tagName: 'input',
-        type: 'text',
-        name: 'title',
-        classNames: 'authoring-input',
-        placeholder: translatableText.postMetadata.placeholders.title,
-        value: editorState.title,
-        id: 'title',
-        onChange: (e) => updateEditorState(postId, {title: e.target.value}, updateFootnoteMenu, setSaveState)
-      },
-      {
         tagName: 'div',
-        id: 'post-editor',
-        classNames: ['prosemirror', 'editor'],
-      },
-      {
-        tagName: 'div',
-        id: 'post-footnotes',
-      },
-      {
-        tagName: 'div',
-        id: 'post-actions',
+        classNames: 'authoring-inputs',
         children: [
           {
+            tagName: 'input',
+            type: 'text',
+            name: 'title',
+            classNames: 'authoring-input',
+            placeholder: translatableText.postMetadata.placeholders.title,
+            value: editorState.title,
+            id: 'title',
+            onChange: (e) => updateEditorState(postId, {title: e.target.value}, updateFootnoteMenu, setSaveState)
+          },
+          {
             tagName: 'div',
-            classNames: 'button-container',
+            id: 'post-editor',
+            classNames: ['prosemirror', 'editor'],
+          },
+          {
+            tagName: 'div',
+            id: 'post-footnotes',
+          },
+          {
+            tagName: 'div',
+            id: 'post-actions',
             children: [
               {
-                tagName: 'button',
-                name: 'save',
-                classNames: 'save',
-                spin: true,
-                innerText: translatableText.postActions.save,
-                onClick: function(evt, stopSpin) {
-                  evt.stopPropagation()
-                  const postToSave = mergeEditorStateToPost()
-                  goph.report('savePostWithoutPublishing', {post: postToSave, postId}, (e, r) => {
-                    const changedETag = _.get(r, 'savePostWithoutPublishing[0].ETag')
-                    if (changedETag) {
-                      postToSave.etag = changedETag
-                      updateEditorState(postId, {etag: changedETag}, updateFootnoteMenu, setSaveState)
-                      setPostAsSaved(postId, postToSave)
-                      setPostSaveState(postId, {etag: changedETag, label: translatableText.saveState.unmodified})
+                tagName: 'div',
+                classNames: 'button-container',
+                children: [
+                  {
+                    tagName: 'button',
+                    name: 'save',
+                    classNames: 'save',
+                    spin: true,
+                    innerText: translatableText.postActions.save,
+                    onClick: function(evt, stopSpin) {
+                      evt.stopPropagation()
+                      const postToSave = mergeEditorStateToPost()
+                      goph.report('savePostWithoutPublishing', {post: postToSave, postId}, (e, r) => {
+                        const changedETag = _.get(r, 'savePostWithoutPublishing[0].ETag')
+                        if (changedETag) {
+                          postToSave.etag = changedETag
+                          updateEditorState(postId, {etag: changedETag}, updateFootnoteMenu, setSaveState)
+                          setPostAsSaved(postId, postToSave)
+                          setPostSaveState(postId, {etag: changedETag, label: translatableText.saveState.unmodified})
+                        }
+                        if (postToSave.etag !== getPostPublishState.etag) {
+                          updatePostPublishState(postId, {label: translatableText.publishState.modified})
+                          setPublishState(translatableText.publishState.modified)
+                        }
+                        setSaveState(translatableText.saveState.unmodified)
+                        stopSpin()
+                      })
                     }
-                    if (postToSave.etag !== getPostPublishState.etag) {
-                      updatePostPublishState(postId, {label: translatableText.publishState.modified})
-                      setPublishState(translatableText.publishState.modified)
+                  },
+                  {
+                    tagName: 'button',
+                    name: 'publish',
+                    classNames: 'publish',
+                    spin: true,
+                    innerText: translatableText.postActions.publish,
+                    onClick: function(evt, stopSpin) {
+                      evt.stopPropagation()
+                      const postToSave = mergeEditorStateToPost()
+                      goph.report(['saveAndPublishPost', 'confirmPostPublished'], {post: postToSave, postId}, (e, r) => {
+                        if (e) {
+                          console.error(e)
+                          return
+                        }
+                        const changedETag = _.get(r, 'saveAndPublishPost[0].ETag')
+                        if (changedETag) {
+                          postToSave.etag = changedETag
+                          updateEditorState(postId, {etag: changedETag}, updateFootnoteMenu, setSaveState)
+                          setPostAsSaved(postId, postToSave)
+                          setPostPublishState(postId, {etag: changedETag, label: translatableText.publishState.mostRecent})
+                          setPostSaveState(postId, {etag: changedETag, label: translatableText.saveState.unmodified})
+                        }
+                        setSaveState(translatableText.saveState.unmodified)
+                        setPublishState(translatableText.publishState.mostRecent)
+                        stopSpin()
+                      })
                     }
-                    setSaveState(translatableText.saveState.unmodified)
-                    stopSpin()
-                  })
-                }
+                  },
+                  {
+                    tagName: 'button',
+                    name: 'unpublish',
+                    classNames: 'unpublish',
+                    spin: true,
+                    innerText: translatableText.postActions.unpublish,
+                    onClick: function(evt, stopSpin) {
+                      evt.stopPropagation()
+                      const postToSave = mergeEditorStateToPost()
+                      goph.report(['unpublishPost', 'confirmPostUnpublished'], {post: postToSave, postId}, (e, r) => {
+                        if (e) {
+                          console.error(e)
+                          return
+                        }
+                        const changedETag = _.get(r, 'unpublishPost[0].ETag')
+                        if (changedETag) {
+                          postToSave.etag = changedETag
+                          updateEditorState(postId, {etag: changedETag}, updateFootnoteMenu, setSaveState)
+                          setPostAsSaved(postId, postToSave)
+                          setPostPublishState(postId, {etag: null, label: translatableText.publishState.unpublished})
+                        }
+                        setSaveState(translatableText.saveState.unmodified)
+                        setPublishState(translatableText.publishState.unpublished)
+                        stopSpin()
+                      })
+                    },
+                  }
+                ]
               },
-              {
-                tagName: 'button',
-                name: 'publish',
-                classNames: 'publish',
-                spin: true,
-                innerText: translatableText.postActions.publish,
-                onClick: function(evt, stopSpin) {
-                  evt.stopPropagation()
-                  const postToSave = mergeEditorStateToPost()
-                  goph.report(['saveAndPublishPost', 'confirmPostPublished'], {post: postToSave, postId}, (e, r) => {
-                    if (e) {
-                      console.error(e)
-                      return
-                    }
-                    const changedETag = _.get(r, 'saveAndPublishPost[0].ETag')
-                    if (changedETag) {
-                      postToSave.etag = changedETag
-                      updateEditorState(postId, {etag: changedETag}, updateFootnoteMenu, setSaveState)
-                      setPostAsSaved(postId, postToSave)
-                      setPostPublishState(postId, {etag: changedETag, label: translatableText.publishState.mostRecent})
-                      setPostSaveState(postId, {etag: changedETag, label: translatableText.saveState.unmodified})
-                    }
-                    setSaveState(translatableText.saveState.unmodified)
-                    setPublishState(translatableText.publishState.mostRecent)
-                    stopSpin()
-                  })
-                }
-              },
-              {
-                tagName: 'button',
-                name: 'unpublish',
-                classNames: 'unpublish',
-                spin: true,
-                innerText: translatableText.postActions.unpublish,
-                onClick: function(evt, stopSpin) {
-                  evt.stopPropagation()
-                  const postToSave = mergeEditorStateToPost()
-                  goph.report(['unpublishPost', 'confirmPostUnpublished'], {post: postToSave, postId}, (e, r) => {
-                    if (e) {
-                      console.error(e)
-                      return
-                    }
-                    const changedETag = _.get(r, 'unpublishPost[0].ETag')
-                    if (changedETag) {
-                      postToSave.etag = changedETag
-                      updateEditorState(postId, {etag: changedETag}, updateFootnoteMenu, setSaveState)
-                      setPostAsSaved(postId, postToSave)
-                      setPostPublishState(postId, {etag: null, label: translatableText.publishState.unpublished})
-                    }
-                    setSaveState(translatableText.saveState.unmodified)
-                    setPublishState(translatableText.publishState.unpublished)
-                    stopSpin()
-                  })
-                },
-              }
             ]
           },
+          {
+            tagName: 'input',
+            placeholder: translatableText.postMetadata.placeholders.trails,
+            type: 'text',
+            name: 'trails',
+            classNames: 'authoring-input',
+            id: 'trails',
+            value: (_.get(post, 'frontMatter.meta.trails') || _.get(post, 'frontMatter.meta.trail') || []).join(', '),
+            onChange: (e) => updateEditorState(postId, {trails: _.map((e.target.value || '').split(','), _.trim)}, updateFootnoteMenu, setSaveState)
+          },
+          {
+            tagName: 'div',
+            id: 'error',
+          }
         ]
-      },
-      {
-        tagName: 'input',
-        placeholder: translatableText.postMetadata.placeholders.trails,
-        type: 'text',
-        name: 'trails',
-        classNames: 'authoring-input',
-        id: 'trails',
-        value: (_.get(post, 'frontMatter.meta.trails') || _.get(post, 'frontMatter.meta.trail') || []).join(', '),
-        onChange: (e) => updateEditorState(postId, {trails: _.map((e.target.value || '').split(','), _.trim)}, updateFootnoteMenu, setSaveState)
-      },
-      {
-        tagName: 'div',
-        id: 'error',
       }))
       setSaveState(saveState.label)
       setPublishState(publishedState.label)
