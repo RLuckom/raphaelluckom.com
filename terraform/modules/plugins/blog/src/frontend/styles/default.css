@@ -43,8 +43,18 @@ input[type=text] {
 .authoring-inputs h4, 
 .authoring-inputs em, 
 .authoring-inputs a, 
+.authoring-inputs sup,
+.authoring-inputs strong,
 .authoring-inputs a {
   font-family: var(--editor-font-family); 
+}
+
+.authoring-inputs strong {
+  font-weight: bold;
+}
+
+.authoring-inputs sup {
+  line-height: 0;
 }
 
 .authoring-inputs p, 
