@@ -1,3 +1,11 @@
+resource "random_id" "table_suffix" {
+  byte_length = 3
+}
+
+locals {
+  posts_table_name = "${var.coordinator_data.system_id.security_scope}-${var.coordinator_data.system_id.subsystem_name}-posts_table-${random_id.table_suffix.b64_url}"
+}
+
 module post_entry_lambda {
   source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
   account_id = var.account_id
@@ -5,6 +13,8 @@ module post_entry_lambda {
   config_contents = templatefile("${path.module}/src/backend/post_entry_config.js",
   {
     website_bucket = module.blog_site.website_bucket_name
+    table_name = local.posts_table_name
+    table_region = var.region
     plugin_image_hosting_prefix = local.plugin_image_hosting_prefix
     plugin_post_hosting_prefix = local.plugin_post_hosting_prefix 
     plugin_image_hosting_root = "https://${var.plugin_config.domain}/${var.plugin_config.hosting_root}img/"
@@ -24,6 +34,25 @@ module post_entry_lambda {
   scope_name = var.coordinator_data.system_id.security_scope
   donut_days_layer = var.donut_days_layer
   additional_layers = [var.markdown_tools_layer]
+}
+
+module posts_table {
+  source = "github.com/RLuckom/terraform_modules//aws/state/permissioned_dynamo_table"
+  table_name = local.posts_table_name
+  delete_item_permission_role_names = [module.post_entry_lambda.role.name]
+  write_permission_role_names = [module.post_entry_lambda.role.name]
+  read_permission_role_names = [
+    module.post_entry_lambda.role.name,
+    var.plugin_config.authenticated_role.name,
+  ]
+  partition_key = {
+    name = "kind"
+    type = "S"
+  }
+  range_key = {
+    name = "id"
+    type = "S"
+  }
 }
 
 module process_image_uploads {

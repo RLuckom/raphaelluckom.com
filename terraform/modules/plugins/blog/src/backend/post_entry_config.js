@@ -37,6 +37,10 @@ function parsePost(s) {
   }
 }
 
+function postRecordToDynamo(id, pr) {
+  return {kind: 'post', id, frontMatter: pr.frontMatter}
+}
+
 function serializePostToMarkdown({frontMatter, content}) {
   let text = '---\n' + yaml.dump(frontMatter) + '---\n' + content
   return text
@@ -204,8 +208,35 @@ module.exports = {
             currentImageIds: {ref: 'parsePost.results.current.frontMatter.meta.imageIds' },
           }
         },
+        dynamoPuts: {
+          helper: ({post, postId, isDelete}) => {
+            if (!isDelete) {
+              return [postRecordToDynamo(postId, post)]
+            }
+            return []
+          },
+          params: {
+            isDelete: {ref: 'parsePost.results.current.frontMatter.delete' },
+            post: {ref: 'parsePost.results.current' },
+            postId: {ref: 'parsePost.vars.postId'},
+          }
+        },
       },
       dependencies: {
+        dynamoPuts: {
+          action: 'exploranda',
+          condition: { ref: 'stage.dynamoPuts.length' },
+          params: {
+            accessSchema: {value: 'dataSources.AWS.dynamodb.putItem'},
+            params: {
+              explorandaParams: {
+                apiConfig: {value: {region: '${table_region}'}},
+                TableName: '${table_name}',
+                Item: { ref: 'stage.dynamoPuts' }
+              }
+            }
+          }
+        },
         savePost: {
           action: 'exploranda',
           condition: {not: { ref: 'stage.delete' }},
@@ -374,5 +405,38 @@ module.exports = {
         },
       }
     },
+    cleanupDB: {
+      index: 3,
+      transformers: {
+        dynamoDeletes: {
+          helper: ({postId, isDelete}) => {
+            if (isDelete) {
+              return [{kind: 'post', id: postId}]
+            }
+            return []
+          },
+          params: {
+            isDelete: {ref: 'parsePost.results.current.frontMatter.delete' },
+            postId: {ref: 'parsePost.vars.postId'},
+          }
+        },
+      },
+      dependencies: {
+        dynamoDeletes: {
+          action: 'exploranda',
+          condition: { ref: 'stage.dynamoDeletes.length' },
+          params: {
+            accessSchema: {value: 'dataSources.AWS.dynamodb.deleteItem'},
+            params: {
+              explorandaParams: {
+                apiConfig: {value: {region: '${table_region}'}},
+                TableName: '${table_name}',
+                Key: { ref: 'stage.dynamoDeletes' }
+              }
+            }
+          }
+        },
+      }
+    }
   },
 }
