@@ -392,10 +392,18 @@ module.exports = {
 
 },{"lodash":58}],8:[function(require,module,exports){
 const _ = require('lodash');
-let converter = _.identity
+let converter = {
+  marshall: _.identity,
+  unmarshall: _.identity,
+}
 try {
   converter = require('aws-sdk').DynamoDB.Converter;
-} catch(e) {}
+} catch(e) {
+  try {
+    converter = AWS.DynamoDB.Converter
+  } catch(e) {
+  }
+}
 
 const namespaceDetails = {
   name: 'DynamoDB',

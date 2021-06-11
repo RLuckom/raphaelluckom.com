@@ -112,6 +112,13 @@ output static_config {
 output blog_site_bucket_name {
   value = module.blog_site.website_bucket_name
 }
+output additional_connect_sources_required {
+  value = [
+    "https://s3.amazonaws.com", 
+    "https://${module.blog_site.website_bucket_name}.s3.amazonaws.com", "https://${var.plugin_config.bucket_name}.s3.amazonaws.com",
+    "https://dynamodb.${var.region}.amazonaws.com/",
+  ]
+}
 
 output lambda_logging_arns {
   value = concat([

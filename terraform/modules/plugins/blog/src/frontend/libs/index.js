@@ -21,13 +21,13 @@ window.RENDER_CONFIG = {
       return revert
     }
   },
-  init: ({postKeys}, gopher) => {
+  init: ({postKeys, postRecords}, gopher) => {
     const mainSection = document.querySelector('main')
     const closeInputButtonText = 'X'
     window.addEventListener('pageshow', () => {
-      goph.report('listPosts', (e, {listPosts}) => {
+      goph.report(['listPosts', 'postRecords'], (e, {listPosts, postRecords}) => {
         const postKeys = _.map(listPosts, 'Key')
-        updatePostKeys(postKeys)
+        updatePostKeys(postKeys, postRecords)
       })
     })
     const slashReplacement = '-'
@@ -140,7 +140,17 @@ window.RENDER_CONFIG = {
       tagName: 'div',
       id: 'post-list'
     }))
-    function updatePostKeys(postKeys) {
+    function updatePostKeys(postKeys, postRecords) {
+      postRecords = _.sortBy(postRecords.postRecords, 'frontMatter.createDate')
+      postKeys = _.reverse(_.sortBy(
+        postKeys,
+        (k) => _.findIndex(postRecords, (rec) => {
+          const postIdParts = k.split('/').pop().split('.')
+          postIdParts.pop()
+          const postId = postIdParts.join('.')
+          return postId === rec.id
+        })
+      ))
       document.getElementById('post-list').replaceChildren(..._.map(postKeys, (Key) => {
         const postIdParts = Key.split('/').pop().split('.')
         postIdParts.pop()
@@ -270,7 +280,7 @@ window.RENDER_CONFIG = {
         })
       }))
     }
-    updatePostKeys(postKeys)
+    updatePostKeys(postKeys, postRecords)
   },
   params: {
     postKeys: {
@@ -278,7 +288,10 @@ window.RENDER_CONFIG = {
       formatter: ({listPosts}) => {
         return _.map(listPosts, 'Key')
       }
-    }
+    },
+    postRecords: {
+      source: 'postRecords',
+    },
   },
   onAPIError: (e, r, cb) => {
     console.error(e)

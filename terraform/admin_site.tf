@@ -18,7 +18,7 @@ module admin_interface {
   }
   plugin_configs = {
     blog = {
-      additional_connect_sources = ["https://s3.amazonaws.com", "https://${module.admin_site_blog_plugin.blog_site_bucket_name}.s3.amazonaws.com", "https://${module.admin_interface.website_config.bucket_name}.s3.amazonaws.com"]
+      additional_connect_sources = module.admin_site_blog_plugin.additional_connect_sources_required
       additional_style_sources = []
       policy_statements = []
       plugin_relative_lambda_origins = module.admin_site_blog_plugin.plugin_relative_lambda_origins
@@ -30,7 +30,7 @@ module admin_interface {
       file_configs = module.admin_site_blog_plugin.files
     }
     prod_blog = {
-      additional_connect_sources = ["https://s3.amazonaws.com", "https://${module.admin_site_prod_blog_plugin.blog_site_bucket_name}.s3.amazonaws.com", "https://${module.admin_interface.website_config.bucket_name}.s3.amazonaws.com"]
+      additional_connect_sources = module.admin_site_prod_blog_plugin.additional_connect_sources_required
       additional_style_sources = []
       policy_statements = []
       plugin_relative_lambda_origins = module.admin_site_prod_blog_plugin.plugin_relative_lambda_origins

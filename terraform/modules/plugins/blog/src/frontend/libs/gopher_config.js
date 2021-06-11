@@ -1,6 +1,19 @@
 const POLL_INTERVAL = 2000
 window.GOPHER_CONFIG = {
   awsDependencies: {
+    postRecords: {
+      accessSchema: exploranda.dataSources.AWS.dynamodb.query,
+      params: {
+        apiConfig: {value: {region: '${aws_region}'}},
+        TableName: {value: CONFIG.posts_table},
+        ExpressionAttributeValues: {
+          value: {
+            ':kindId': 'post',
+          }
+        },
+        KeyConditionExpression: {value: 'kind = :kindId' },
+      },
+    },
     putImage: {
       accessSchema: exploranda.dataSources.AWS.s3.putObject,
       params: {
