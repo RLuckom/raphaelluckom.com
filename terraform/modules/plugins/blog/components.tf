@@ -119,8 +119,8 @@ module blog_site {
     {
       permission_type = "list_bucket"
       arns = [
+        module.post_entry_lambda.role.arn,
         var.plugin_config.authenticated_role.arn,
-        module.post_entry_lambda.role.arn
       ]
     }
   ]
