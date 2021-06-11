@@ -122,12 +122,12 @@ window.RENDER_CONFIG = {
                           {
                             tagName: 'div',
                             classNames: 'save-status-header',
-                            children: ["Save Status"]
+                            children: ["Create Date"]
                           },
                           {
                             tagName: 'div',
                             classNames: 'publish-status-header',
-                            children: ["Publish Status"]
+                            children: ["Last Saved"]
                           },
                         ]
                       },
@@ -167,7 +167,7 @@ window.RENDER_CONFIG = {
             placeholder: translatableText.postMetadata.placeholders.title,
             value: editorState.title,
             id: 'title',
-            onChange: (e) => updateEditorState(postId, {title: e.target.value}, updateFootnoteMenu, setSaveState)
+            onChange: (e) => updateEditorState(postId, {title: e.target.value}, updateFootnoteMenu)
           },
           {
             tagName: 'div',
@@ -199,15 +199,15 @@ window.RENDER_CONFIG = {
                         const changedETag = _.get(r, 'savePostWithoutPublishing[0].ETag')
                         if (changedETag) {
                           postToSave.etag = changedETag
-                          updateEditorState(postId, {etag: changedETag}, updateFootnoteMenu, setSaveState)
+                          updateEditorState(postId, {etag: changedETag}, updateFootnoteMenu)
                           setPostAsSaved(postId, postToSave)
                           setPostSaveState(postId, {etag: changedETag, label: translatableText.saveState.unmodified})
                         }
                         if (postToSave.etag !== getPostPublishState.etag) {
                           updatePostPublishState(postId, {label: translatableText.publishState.modified})
-                          setPublishState(translatableText.publishState.modified)
+                          const changedDate = _.get(r, 'savePostWithoutPublishing[0].LastModified')
+                          setPublishState(changedDate.toLocaleString())
                         }
-                        setSaveState(translatableText.saveState.unmodified)
                         stopSpin()
                       })
                     }
@@ -229,13 +229,13 @@ window.RENDER_CONFIG = {
                         const changedETag = _.get(r, 'saveAndPublishPost[0].ETag')
                         if (changedETag) {
                           postToSave.etag = changedETag
-                          updateEditorState(postId, {etag: changedETag}, updateFootnoteMenu, setSaveState)
+                          updateEditorState(postId, {etag: changedETag}, updateFootnoteMenu)
                           setPostAsSaved(postId, postToSave)
                           setPostPublishState(postId, {etag: changedETag, label: translatableText.publishState.mostRecent})
                           setPostSaveState(postId, {etag: changedETag, label: translatableText.saveState.unmodified})
                         }
-                        setSaveState(translatableText.saveState.unmodified)
-                        setPublishState(translatableText.publishState.mostRecent)
+                        const changedDate = _.get(r, 'saveAndPublishPost[0].LastModified')
+                        setPublishState(changedDate.toLocaleString())
                         stopSpin()
                       })
                     }
@@ -257,12 +257,12 @@ window.RENDER_CONFIG = {
                         const changedETag = _.get(r, 'unpublishPost[0].ETag')
                         if (changedETag) {
                           postToSave.etag = changedETag
-                          updateEditorState(postId, {etag: changedETag}, updateFootnoteMenu, setSaveState)
+                          updateEditorState(postId, {etag: changedETag}, updateFootnoteMenu)
                           setPostAsSaved(postId, postToSave)
                           setPostPublishState(postId, {etag: null, label: translatableText.publishState.unpublished})
                         }
-                        setSaveState(translatableText.saveState.unmodified)
-                        setPublishState(translatableText.publishState.unpublished)
+                        const changedDate = _.get(r, 'unpublishPost[0].LastModified')
+                        setPublishState(changedDate.toLocaleString())
                         stopSpin()
                       })
                     },
@@ -279,7 +279,7 @@ window.RENDER_CONFIG = {
             classNames: 'authoring-input',
             id: 'trails',
             value: (_.get(post, 'frontMatter.meta.trails') || _.get(post, 'frontMatter.meta.trail') || []).join(', '),
-            onChange: (e) => updateEditorState(postId, {trails: _.map((e.target.value || '').split(','), _.trim)}, updateFootnoteMenu, setSaveState)
+            onChange: (e) => updateEditorState(postId, {trails: _.map((e.target.value || '').split(','), _.trim)}, updateFootnoteMenu)
           },
           {
             tagName: 'div',
@@ -287,8 +287,8 @@ window.RENDER_CONFIG = {
           }
         ]
       }))
-      setSaveState(saveState.label)
-      setPublishState(publishedState.label)
+      setSaveState(new Date(post.frontMatter.createDate).toLocaleString())
+      setPublishState(post.lastSaved.toLocaleString())
 
       function uploadImage(buffer, ext, callback) {
         const imageId = uuid.v4()
@@ -319,7 +319,7 @@ window.RENDER_CONFIG = {
       }
 
       const postContentForProsemirror = prepareEditorString(editorState.content, postId)
-      const {updateFootnoteMenu} = prosemirrorView(document.getElementById('post-editor'), uploadImage, _.partialRight(_.partial(updateEditorState, postId), setSaveState), editorState.editorState, postContentForProsemirror, editorState.footnotes || {}, addFootnote)
+      const {updateFootnoteMenu} = prosemirrorView(document.getElementById('post-editor'), uploadImage, _.partialRight(_.partial(updateEditorState, postId)), editorState.editorState, postContentForProsemirror, editorState.footnotes || {}, addFootnote)
       const latestEditorState = getPostEditorState(postId)
       _.each(latestEditorState.footnotes, (v, k) => {
         document.getElementById('post-footnotes').appendChild(buildFootnoteEditor(postId, k, uploadImage, updateFootnoteMenu))

@@ -447,7 +447,7 @@ function buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnote
     name = e.target.value
     latestEditorState.footnotes[name] = content
     latestEditorState.footnoteEditorStates[name] = editorState
-    updateEditorState(postId, {footnotes: latestEditorState.footnotes, footnoteEditorStates: latestEditorState.footnoteEditorStates}, updateFootnoteMenu, null, {[oldName]: e.target.value})
+    updateEditorState(postId, {footnotes: latestEditorState.footnotes, footnoteEditorStates: latestEditorState.footnoteEditorStates}, updateFootnoteMenu, {[oldName]: e.target.value})
   }
 
   function onFootnoteDelete(e) {
@@ -455,7 +455,7 @@ function buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnote
     const latestEditorState = getPostEditorState(postId)
     delete latestEditorState.footnotes[name]
     delete latestEditorState.footnoteEditorStates[name]
-    updateEditorState(postId, {footnotes: latestEditorState.footnotes, footnoteEditorStates: latestEditorState.footnoteEditorStates}, updateFootnoteMenu, null, {[name]: null})
+    updateEditorState(postId, {footnotes: latestEditorState.footnotes, footnoteEditorStates: latestEditorState.footnoteEditorStates}, updateFootnoteMenu, {[name]: null})
     editorDiv.remove()
   }
 
@@ -522,7 +522,7 @@ function getImageIds({ content, footnotes, postId}) {
   return imageIds
 }
 
-function updateEditorState(postId, updates, updateFootnoteMenu, setSaveState, updatedFootnoteNames) {
+function updateEditorState(postId, updates, updateFootnoteMenu, updatedFootnoteNames) {
   const latestEditorState = getPostEditorState(postId)
   let isModified = false
   let imageIds = getImageIds({
@@ -565,7 +565,4 @@ function updateEditorState(postId, updates, updateFootnoteMenu, setSaveState, up
   }
   const newEditorState = updatePostEditorState(postId, changedFields)
   const s = updatePostSaveState(postId, {label: isModified ? translatableText.saveState.modified : translatableText.saveState.unmodified})
-  if (_.isFunction(setSaveState)) {
-    setSaveState(s.label)
-  }
 }

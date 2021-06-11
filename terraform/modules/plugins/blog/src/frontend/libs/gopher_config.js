@@ -39,6 +39,7 @@ window.GOPHER_CONFIG = {
         if (post) {
           parsed = parsePost(post.Body.toString('utf8'))
           parsed.etag = post.ETag
+          parsed.lastSaved = post.LastModified
           parsed.frontMatter.createDate = parsed.frontMatter.createDate || parsed.frontMatter.date || new Date().toISOString(),
           setPostAsSaved(postId, parsed)
         }

@@ -21,13 +21,12 @@ window.RENDER_CONFIG = {
       return revert
     }
   },
-  init: ({postKeys, postRecords}, gopher) => {
+  init: ({listPosts, postRecords}, gopher) => {
     const mainSection = document.querySelector('main')
     const closeInputButtonText = 'X'
     window.addEventListener('pageshow', () => {
       goph.report(['listPosts', 'postRecords'], (e, {listPosts, postRecords}) => {
-        const postKeys = _.map(listPosts, 'Key')
-        updatePostKeys(postKeys, postRecords)
+        updatePostKeys(listPosts, postRecords)
       })
     })
     const slashReplacement = '-'
@@ -120,12 +119,12 @@ window.RENDER_CONFIG = {
               {
                 tagName: 'div',
                 classNames: 'save-status-header',
-                children: ["Save Status"]
+                children: ["Create Date"]
               },
               {
                 tagName: 'div',
                 classNames: 'publish-status-header',
-                children: ["Publish Status"]
+                children: ["Last Saved"]
               },
             ]
           },
@@ -140,16 +139,18 @@ window.RENDER_CONFIG = {
       tagName: 'div',
       id: 'post-list'
     }))
-    function updatePostKeys(postKeys, postRecords) {
+    function postKeyToId(k) {
+      const postIdParts = k.split('/').pop().split('.')
+      postIdParts.pop()
+      const postId = postIdParts.join('.')
+      return postId
+    }
+    function updatePostKeys(listPosts, postRecords) {
+      let postKeys = _.map(listPosts, 'Key')
       postRecords = _.sortBy(postRecords.postRecords, 'frontMatter.createDate')
       postKeys = _.reverse(_.sortBy(
         postKeys,
-        (k) => _.findIndex(postRecords, (rec) => {
-          const postIdParts = k.split('/').pop().split('.')
-          postIdParts.pop()
-          const postId = postIdParts.join('.')
-          return postId === rec.id
-        })
+        (k) => _.findIndex(postRecords, (rec) => postKeyToId(k) === rec.id)
       ))
       document.getElementById('post-list').replaceChildren(..._.map(postKeys, (Key) => {
         const postIdParts = Key.split('/').pop().split('.')
@@ -157,6 +158,8 @@ window.RENDER_CONFIG = {
         const postId = postIdParts.join('.')
         let saveState = getPostSaveState(postId)
         let publishState = getPostPublishState(postId)
+        const record = _.find(postRecords, (rec) => postId === rec.id)
+        const saved = _.find(listPosts, ({Key}) => postKeyToId(Key) === postId)
         return domNode({
           tagName: 'div',
           classNames: 'post-list-entry',
@@ -177,12 +180,12 @@ window.RENDER_CONFIG = {
                     {
                       tagName: 'div',
                       classNames: 'save-status',
-                      children: [_.get(saveState, 'label') || translatableText.saveState.unmodified]
+                      children: [new Date(record.frontMatter.createDate).toLocaleString()]
                     },
                     {
                       tagName: 'div',
                       classNames: 'publish-status',
-                      children: [_.get(publishState, 'label') || translatableText.publishState.unknown]
+                      children: [saved.LastModified.toLocaleString()]
                     },
                   ]
                 },
@@ -280,13 +283,13 @@ window.RENDER_CONFIG = {
         })
       }))
     }
-    updatePostKeys(postKeys, postRecords)
+    updatePostKeys(listPosts, postRecords)
   },
   params: {
-    postKeys: {
+    listPosts: {
       source: 'listPosts',
       formatter: ({listPosts}) => {
-        return _.map(listPosts, 'Key')
+        return listPosts
       }
     },
     postRecords: {
