@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "browserify": "browserify -s LIBRARIES -e libs.js -o pkg.js"
+    "browserify": "browserify -e libs.js -o pkg.js"
   },
   "author": "",
   "license": "ISC",

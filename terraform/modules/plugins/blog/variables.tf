@@ -173,20 +173,9 @@ module ui {
   gopher_config_contents = file("${path.module}/src/frontend/libs/gopher_config.js")
   admin_site_resources = var.admin_site_resources
   plugin_config = var.plugin_config
-  library_const_names = [
-    "yaml",
-    "markdownit",
-    "hljs", 
-    "prosemirror",
-    "uuid"
-  ]
   config_values = local.plugin_config
   default_css_paths = local.default_css_paths
-  default_script_paths = concat([
-    var.admin_site_resources.aws_script_path,
-    var.admin_site_resources.lodash_script_path,
-    var.admin_site_resources.exploranda_script_path,
-  ], local.default_script_paths)
+  default_script_paths = local.default_script_paths
   default_deferred_script_paths = []
   page_configs = {
     index = {

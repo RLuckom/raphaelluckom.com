@@ -15,20 +15,19 @@ const markdownit = require('markdown-it')
 
 const uuid = require('uuid')
 const yaml = require('js-yaml')
-
-module.exports = {
-  yaml, uuid, markdownit,
-  prosemirror: {
-    Fragment, StepMap, EditorState, MenuBarView, Plugin, NodeSelection, insertPoint,  Schema, schema, MarkdownParser, MarkdownSerializer,
-    EditorView, Decoration, DecorationSet, TextSelection,
-    wrapInList, splitListItem, liftListItem, sinkListItem,
-    menuBar, wrapItem, blockTypeItem, Dropdown, DropdownSubmenu, joinUpItem, liftItem, selectParentNodeItem, undoItem, redoItem, icons, MenuItem,
-    keymap,
-    undoInputRule, inputRules, wrappingInputRule, textblockTypeInputRule, smartQuotes, emDash, ellipsis,
-    history, undo, redo,
-    gapCursor,
-    dropCursor,
-    defaultMarkdownParser, defaultMarkdownSerializer, 
-    toggleMark, baseKeymap, wrapIn, setBlockType, chainCommands, toggleMark, exitCode, joinUp, joinDown, lift, selectParentNode
-  }
+window.yaml = yaml 
+window.uuid = uuid 
+window.markdownit = markdownit
+window.prosemirror = {
+  Fragment, StepMap, EditorState, MenuBarView, Plugin, NodeSelection, insertPoint,  Schema, schema, MarkdownParser, MarkdownSerializer,
+  EditorView, Decoration, DecorationSet, TextSelection,
+  wrapInList, splitListItem, liftListItem, sinkListItem,
+  menuBar, wrapItem, blockTypeItem, Dropdown, DropdownSubmenu, joinUpItem, liftItem, selectParentNodeItem, undoItem, redoItem, icons, MenuItem,
+  keymap,
+  undoInputRule, inputRules, wrappingInputRule, textblockTypeInputRule, smartQuotes, emDash, ellipsis,
+  history, undo, redo,
+  gapCursor,
+  dropCursor,
+  defaultMarkdownParser, defaultMarkdownSerializer, 
+  toggleMark, baseKeymap, wrapIn, setBlockType, chainCommands, toggleMark, exitCode, joinUp, joinDown, lift, selectParentNode
 }

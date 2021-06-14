@@ -59,7 +59,6 @@ module ui {
   gopher_config_contents = "window.GOPHER_CONFIG = {}"
   admin_site_resources = var.admin_site_resources
   plugin_config = var.plugin_config
-  library_const_names = []
   config_values = {}
   default_css_paths = []
   default_script_paths = []
