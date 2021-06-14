@@ -49,12 +49,18 @@ input[type=text] {
   font-family: var(--editor-font-family); 
 }
 
+.authoring-inputs em {
+  font-style: italic;
+}
+
 .authoring-inputs strong {
   font-weight: bold;
 }
 
 .authoring-inputs sup {
   line-height: 0;
+  vertical-align: super;
+  font-size: smaller;
 }
 
 .authoring-inputs p, 

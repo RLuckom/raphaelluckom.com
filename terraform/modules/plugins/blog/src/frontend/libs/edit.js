@@ -205,7 +205,7 @@ window.RENDER_CONFIG = {
                         }
                         if (postToSave.etag !== getPostPublishState.etag) {
                           updatePostPublishState(postId, {label: translatableText.publishState.modified})
-                          const changedDate = _.get(r, 'savePostWithoutPublishing[0].LastModified')
+                          const changedDate = new Date()
                           setPublishState(changedDate.toLocaleString())
                         }
                         stopSpin()
@@ -234,7 +234,7 @@ window.RENDER_CONFIG = {
                           setPostPublishState(postId, {etag: changedETag, label: translatableText.publishState.mostRecent})
                           setPostSaveState(postId, {etag: changedETag, label: translatableText.saveState.unmodified})
                         }
-                        const changedDate = _.get(r, 'saveAndPublishPost[0].LastModified')
+                        const changedDate = new Date()
                         setPublishState(changedDate.toLocaleString())
                         stopSpin()
                       })
@@ -261,7 +261,7 @@ window.RENDER_CONFIG = {
                           setPostAsSaved(postId, postToSave)
                           setPostPublishState(postId, {etag: null, label: translatableText.publishState.unpublished})
                         }
-                        const changedDate = _.get(r, 'unpublishPost[0].LastModified')
+                        const changedDate = new Date() 
                         setPublishState(changedDate.toLocaleString())
                         stopSpin()
                       })
@@ -287,8 +287,12 @@ window.RENDER_CONFIG = {
           }
         ]
       }))
-      setSaveState(new Date(post.frontMatter.createDate).toLocaleString())
-      setPublishState(post.lastSaved.toLocaleString())
+      if (_.isDate(_.get(post, 'frontMatter.createDate'))) {
+        setSaveState(new Date(post.frontMatter.createDate).toLocaleString())
+      }
+      if (_.isDate(_.get(post, 'lastSaved'))) {
+        setPublishState(post.lastSaved.toLocaleString())
+      }
 
       function uploadImage(buffer, ext, callback) {
         const imageId = uuid.v4()
