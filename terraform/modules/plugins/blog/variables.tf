@@ -10,30 +10,6 @@ variable account_id {
   type = string
 }
 
-variable maintainer {
-  type = object({
-    name = string
-    email = string
-  })
-  default = {
-    name = ""
-    email = ""
-  }
-}
-
-variable nav_links {
-  type = list(object({
-    name = string
-    target = string
-  }))
-  default = []
-}
-
-variable site_title {
-  type = string
-  default = "Test Site"
-}
-
 variable admin_site_resources {
   type = object({
     default_styles_path = string
@@ -42,8 +18,14 @@ variable admin_site_resources {
     footer_contents = string
     site_title = string
     site_description = string
+    aws_script_path = string
+    lodash_script_path = string
+    exploranda_script_path = string
   })
   default = {
+    aws_script_path = ""
+    lodash_script_path = ""
+    exploranda_script_path = ""
     default_styles_path = ""
     default_scripts_path = ""
     header_contents = "<div class=\"header-block\"><h1 class=\"heading\">Private Site</h1></div>"
@@ -69,10 +51,7 @@ variable plugin_config {
   })
 }
 
-variable subject_alternative_names {
-  type = list(string)
-  default = []
-}
+// plugin-specific variables below this line
 
 variable coordinator_data {
   type = object({
@@ -95,6 +74,35 @@ variable coordinator_data {
     cloudfront_log_delivery_prefix = string
     cloudfront_log_delivery_bucket = string
   })
+}
+
+variable subject_alternative_names {
+  type = list(string)
+  default = []
+}
+
+variable maintainer {
+  type = object({
+    name = string
+    email = string
+  })
+  default = {
+    name = ""
+    email = ""
+  }
+}
+
+variable nav_links {
+  type = list(object({
+    name = string
+    target = string
+  }))
+  default = []
+}
+
+variable site_title {
+  type = string
+  default = "Test Site"
 }
 
 variable image_layer {
@@ -157,14 +165,74 @@ variable logging_config {
   }
 }
 
-variable library_const_names {
-  type = list(string)
-  default = [
+module ui {
+  source = "github.com/RLuckom/terraform_modules//themes/icknield/admin_site_plugin_ui"
+  name = var.name
+  region = var.region
+  account_id = var.account_id
+  gopher_config_contents = file("${path.module}/src/frontend/libs/gopher_config.js")
+  admin_site_resources = var.admin_site_resources
+  plugin_config = var.plugin_config
+  library_const_names = [
     "yaml",
     "markdownit",
     "hljs", 
     "prosemirror",
     "uuid"
+  ]
+  config_values = local.plugin_config
+  default_css_paths = local.default_css_paths
+  default_script_paths = concat([
+    var.admin_site_resources.aws_script_path,
+    var.admin_site_resources.lodash_script_path,
+    var.admin_site_resources.exploranda_script_path,
+  ], local.default_script_paths)
+  default_deferred_script_paths = []
+  page_configs = {
+    index = {
+      css_paths = local.index_css_paths
+      script_paths = local.index_script_paths
+      deferred_script_paths = []
+      render_config_path = "${path.module}/src/frontend/libs/index.js"
+    }
+    edit = {
+      css_paths = local.edit_css_paths
+      script_paths = local.edit_script_paths
+      deferred_script_paths = []
+      render_config_path = "${path.module}/src/frontend/libs/edit.js"
+    }
+  }
+  plugin_file_configs = [
+    {
+      key = local.libs_js_path
+      file_contents = null
+      file_path = "${path.module}/src/frontend/libs/pkg.js"
+      content_type = "application/javascript"
+    },
+    {
+      key = local.prosemirror_setup_js_path
+      file_contents = null
+      file_path = "${path.module}/src/frontend/libs/prosemirror-setup.js"
+      content_type = "application/javascript"
+    },
+    {
+      key = local.post_utils_js_path
+      file_contents = null
+      file_path = "${path.module}/src/frontend/libs/post_utils.js"
+      content_type = "application/javascript"
+    },
+    {
+      key = local.plugin_default_styles_path
+      file_path = ""
+      file_contents = file("${path.module}/src/frontend/styles/default.css")
+      content_type = "text/css"
+    },
+    {
+      key = local.edit_styles_path
+      file_path = ""
+      file_contents = file("${path.module}/src/frontend/styles/editor.css")
+      content_type = "text/css"
+    },
   ]
 }
 
@@ -178,18 +246,10 @@ locals {
   file_prefix = trim(var.plugin_config.source_root, "/")
   edit_styles_path = "${local.file_prefix}/assets/styles/editor.css"
   plugin_default_styles_path = "${local.file_prefix}/assets/styles/default.css"
-  exploranda_script_path = "${local.file_prefix}/assets/js/exploranda-browser.js"
-  config_path = "${local.file_prefix}/assets/js/config.js"
-  aws_script_path = "${local.file_prefix}/assets/js/aws-sdk-2.868.0.min.js"
-  edit_js_path = "${local.file_prefix}/assets/js/edit-${filemd5("${path.module}/src/frontend/libs/edit.js")}.js"
-  index_js_path = "${local.file_prefix}/assets/js/index-${filemd5("${path.module}/src/frontend/libs/index.js")}.js"
-  utils_js_path = "${local.file_prefix}/assets/js/utils-${filemd5("${path.module}/src/frontend/libs/utils.js")}.js"
-  gopher_config_js_path = "${local.file_prefix}/assets/js/gopher_config-${filemd5("${path.module}/src/frontend/libs/gopher_config.js")}.js"
   post_utils_js_path = "${local.file_prefix}/assets/js/post-utils-${filemd5("${path.module}/src/frontend/libs/post_utils.js")}.js"
   libs_js_path = "${local.file_prefix}/assets/js/pkg-${filemd5("${path.module}/src/frontend/libs/libs.js")}.js"
   prosemirror_setup_js_path = "${local.file_prefix}/assets/js/prosemirror-setup-${filemd5("${path.module}/src/frontend/libs/prosemirror-setup.js")}.js"
   plugin_config = {
-    name = var.name
     posts_table = local.posts_table_name
     table_region = var.region
     website_bucket = module.blog_site.website_bucket_name
@@ -197,14 +257,7 @@ locals {
     blog_image_hosting_prefix = local.blog_image_hosting_prefix
     blog_post_hosting_root = local.blog_post_hosting_root
     blog_post_hosting_prefix = local.blog_post_hosting_prefix
-    domain = var.plugin_config.domain
     operator_name = var.maintainer.name
-    private_storage_bucket = var.plugin_config.bucket_name
-    upload_root = "${trimsuffix(var.plugin_config.upload_root, "/")}/"
-    aws_credentials_endpoint = var.plugin_config.aws_credentials_endpoint
-    plugin_root = "${trimsuffix(var.plugin_config.source_root, "/")}/"
-    api_root = "${trimsuffix(var.plugin_config.api_root, "/")}/"
-    hosting_root = "${trimsuffix(var.plugin_config.hosting_root, "/")}/"
     plugin_image_upload_path = "${trimsuffix(var.plugin_config.upload_root, "/")}/img/"
     plugin_post_upload_path = "${trimsuffix(var.plugin_config.upload_root, "/")}/posts/"
     plugin_image_hosting_path = "${trimsuffix(var.plugin_config.hosting_root, "/")}/img/"
@@ -225,142 +278,18 @@ locals {
     var.admin_site_resources.default_scripts_path,
   ]
   default_script_paths = [
-    local.aws_script_path,
     local.libs_js_path,
-    local.exploranda_script_path,
-    local.config_path,
-    local.gopher_config_js_path,
-    local.utils_js_path,
     local.post_utils_js_path,
   ]
   index_script_paths = [
-    local.index_js_path
   ]
   edit_script_paths = [
     local.prosemirror_setup_js_path,
-    local.edit_js_path
-  ]
-  files = [
-    {
-      key = local.config_path
-      file_contents = <<EOF
-window.CONFIG = ${jsonencode(local.plugin_config)}
-const {${join(", ", var.library_const_names)}} = window.LIBRARIES
-EOF
-      file_path = null
-      content_type = "application/javascript"
-    },
-    {
-      key = "${local.file_prefix}index.html"
-      file_contents = templatefile("${path.module}/src/frontend/index.html", {
-      operator = var.maintainer.name
-      running_material = var.admin_site_resources
-      css_paths = concat(
-        local.default_css_paths,
-        local.index_css_paths
-      )
-      script_paths = concat(
-        local.default_script_paths,
-        local.index_script_paths
-      )
-      deferred_script_paths = local.default_deferred_script_paths
-    })
-      content_type = "text/html"
-      file_path = ""
-    },
-    {
-      key = "${local.file_prefix}edit.html"
-      file_contents = templatefile("${path.module}/src/frontend/index.html", {
-      running_material = var.admin_site_resources
-      css_paths = concat(
-        local.default_css_paths,
-        local.edit_css_paths
-      )
-      script_paths = concat(
-        local.default_script_paths,
-        local.edit_script_paths
-      )
-      deferred_script_paths = local.default_deferred_script_paths
-    })
-      content_type = "text/html"
-      file_path = ""
-    },
-    {
-      key = local.libs_js_path
-      file_contents = null
-      file_path = "${path.module}/src/frontend/libs/pkg.js"
-      content_type = "application/javascript"
-    },
-    {
-      key = local.prosemirror_setup_js_path
-      file_contents = null
-      file_path = "${path.module}/src/frontend/libs/prosemirror-setup.js"
-      content_type = "application/javascript"
-    },
-    {
-      key = local.edit_js_path
-      file_contents = null
-      file_path = "${path.module}/src/frontend/libs/edit.js"
-      content_type = "application/javascript"
-    },
-    {
-      key = local.index_js_path
-      file_contents = null
-      file_path = "${path.module}/src/frontend/libs/index.js"
-      content_type = "application/javascript"
-    },
-    {
-      key = local.post_utils_js_path
-      file_contents = null
-      file_path = "${path.module}/src/frontend/libs/post_utils.js"
-      content_type = "application/javascript"
-    },
-    {
-      key = local.gopher_config_js_path
-      file_contents = null
-      file_path = "${path.module}/src/frontend/libs/gopher_config.js"
-      content_type = "application/javascript"
-    },
-    {
-      key = local.utils_js_path
-      file_contents = null
-      file_path = "${path.module}/src/frontend/libs/utils.js"
-      content_type = "application/javascript"
-    },
-    {
-      key = local.plugin_default_styles_path
-      file_path = ""
-      file_contents = file("${path.module}/src/frontend/styles/default.css")
-      content_type = "text/css"
-    },
-    {
-      key = local.edit_styles_path
-      file_path = ""
-      file_contents = file("${path.module}/src/frontend/styles/editor.css")
-      content_type = "text/css"
-    },
-    {
-      key = local.exploranda_script_path
-      file_contents = null
-      file_path = "${path.module}/src/frontend/libs/exploranda-browser.js"
-      content_type = "application/javascript"
-    },
-    {
-      key = local.aws_script_path
-      file_contents = null
-      file_path = "${path.module}/src/frontend/libs/aws-sdk-2.868.0.min.js"
-      content_type = "application/javascript"
-    },
   ]
 }
 
 output files {
-  value = [ for conf in local.files : {
-    plugin_relative_key = replace(conf.key, local.file_prefix, "")
-    file_contents = conf.file_contents
-    file_path = conf.file_path
-    content_type = conf.content_type
-  }]
+  value = module.ui.files 
 }
 
 output plugin_config {

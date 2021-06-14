@@ -1,14 +1,14 @@
 module visibility_system {
-  source = "github.com/RLuckom/terraform_modules//aws/visibility/aurochs"
+  source = "github.com/RLuckom/terraform_modules//aws/visibility/aurochs?ref=cost-reports"
   account_id = local.account_id
   region = local.region
-  cloudfront_delivery_bucket = "${var.bucket_prefix}-cloudfront-delivery"
-  visibility_data_bucket = "${var.bucket_prefix}-visibility-data"
+  bucket_prefix = var.bucket_prefix
   donut_days_layer = module.donut_days.layer_config
   lambda_event_configs = local.notify_failure_only
   supported_system_definitions = var.supported_system_definitions
   supported_system_clients = {
     prod = {
+      metric_table_read_role_names = []
       subsystems = {
         prod = {
           scoped_logging_functions = module.admin_site_prod_blog_plugin.lambda_logging_arns
@@ -31,6 +31,7 @@ module visibility_system {
       }
     }
     test = {
+      metric_table_read_role_names = []
       subsystems = {
         test = {
           scoped_logging_functions = []
@@ -58,5 +59,9 @@ module visibility_system {
 
 module admin_site_visibility_plugin {
   source = "./modules/plugins/visibility"
-  default_styles_path = module.admin_interface.site_resources.default_styles_path
+  name = "visibility"
+  account_id = local.account_id
+  region = local.region
+  admin_site_resources = module.admin_interface.site_resources
+  plugin_config = module.admin_interface.plugin_config["visibility"]
 }

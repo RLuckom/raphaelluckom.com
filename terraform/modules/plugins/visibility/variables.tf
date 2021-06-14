@@ -1,62 +1,91 @@
-variable default_styles_path {
+variable name {
   type = string
 }
 
-variable file_prefix {
+variable region {
   type = string
-  default = "/plugins/visibility"
 }
 
-locals {
-  file_prefix = trim(var.file_prefix, "/")
-  exploranda_script_path = "${local.file_prefix}/assets/js/exploranda-browser.js"
-  aws_script_path = "${local.file_prefix}/assets/js/aws-sdk-2.868.0.min.js"
-  index_js_path = "${local.file_prefix}/assets/js/main.js"
-  files = [
-    {
-      key = "${local.file_prefix}/index.html"
-      file_path = ""
-      file_contents = templatefile("${path.module}/src/frontend/index.html", {
-      default_styles_path = var.default_styles_path
-      exploranda_script_path = local.exploranda_script_path
-      aws_script_path = local.aws_script_path
-      index_js_path = local.index_js_path
+variable account_id {
+  type = string
+}
+
+variable admin_site_resources {
+  type = object({
+    default_styles_path = string
+    default_scripts_path = string
+    header_contents = string
+    footer_contents = string
+    site_title = string
+    site_description = string
+    aws_script_path = string
+    lodash_script_path = string
+    exploranda_script_path = string
+  })
+  default = {
+    aws_script_path = ""
+    lodash_script_path = ""
+    exploranda_script_path = ""
+    default_styles_path = ""
+    default_scripts_path = ""
+    header_contents = "<div class=\"header-block\"><h1 class=\"heading\">Private Site</h1></div>"
+    footer_contents = "<div class=\"footer-block\"><h1 class=\"footing\">Private Site</h1></div>"
+    site_title = "running_material.site_title"
+    site_description = "running_material.site_description"
+  }
+}
+
+variable plugin_config {
+  type = object({
+    domain = string
+    bucket_name = string
+    upload_root = string
+    api_root = string
+    aws_credentials_endpoint = string
+    hosting_root = string
+    source_root = string
+    authenticated_role = object({
+      arn = string
+      name = string
     })
-      content_type = "text/html"
-    },
-    {
-      key = local.index_js_path
-      file_contents = null
-      file_path = "${path.module}/src/frontend/main.js"
-      content_type = "application/javascript"
-    },
-    {
-      key = local.exploranda_script_path
-      file_contents = null
-      file_path = "${path.module}/src/frontend/exploranda-browser.js"
-      content_type = "application/javascript"
-    },
-    {
-      key = local.aws_script_path
-      file_contents = null
-      file_path = "${path.module}/src/frontend/aws-sdk-2.868.0.min.js"
-      content_type = "application/javascript"
-    },
+  })
+}
+
+module ui {
+  source = "github.com/RLuckom/terraform_modules//themes/icknield/admin_site_plugin_ui"
+  name = var.name
+  region = var.region
+  account_id = var.account_id
+  gopher_config_contents = "window.GOPHER_CONFIG = {}"
+  admin_site_resources = var.admin_site_resources
+  plugin_config = var.plugin_config
+  library_const_names = []
+  config_values = {}
+  default_css_paths = []
+  default_script_paths = []
+  default_deferred_script_paths = []
+  page_configs = {
+    index = {
+      css_paths = []
+      script_paths = []
+      deferred_script_paths = []
+      render_config_path = "${path.module}/src/frontend/libs/index.js"
+    }
+  }
+  plugin_file_configs = [
   ]
+}
+locals {
+  file_prefix = trim(var.plugin_config.source_root, "/")
 }
 
 output files {
-  value = [ for conf in local.files : {
-    plugin_relative_key = replace(conf.key, local.file_prefix, "")
-    file_path = conf.file_path
-    file_contents = conf.file_contents
-    content_type = conf.content_type
-  }]
+  value = module.ui.files
 }
 
 output plugin_config {
   value = {
-    name = "visibility"
-    slug = "operational metrics"
+    name = var.name
+    slug = "explore system metrics"
   }
 }

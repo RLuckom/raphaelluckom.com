@@ -65,7 +65,7 @@ module process_image_uploads {
   image_layer = var.image_layer
   donut_days_layer = var.donut_days_layer
   io_config = {
-    input_bucket = local.plugin_config.private_storage_bucket
+    input_bucket = var.plugin_config.bucket_name
     input_path = local.plugin_config.plugin_image_upload_path
     output_bucket = var.plugin_config.bucket_name
     output_path = local.plugin_config.plugin_image_hosting_path

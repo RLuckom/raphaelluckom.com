@@ -1,0 +1,1 @@
+window.RENDER_CONFIG = {}
