@@ -88,3 +88,11 @@ output plugin_config {
     slug = "explore system metrics"
   }
 }
+
+output static_config {
+  value = {
+    api_name = var.name
+    display_name = var.name
+    role_name_stem = var.name
+  }
+}
