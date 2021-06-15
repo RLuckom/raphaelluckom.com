@@ -4,3 +4,4 @@ terraform/.terraform
 **node_modules
 **.nyc_output
 *.zip
+*overall-cost-report*
