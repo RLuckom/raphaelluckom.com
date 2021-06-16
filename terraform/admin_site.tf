@@ -43,7 +43,7 @@ module admin_interface {
     }
     visibility = {
       policy_statements = []
-      additional_connect_sources = ["https://athena.us-east-1.amazonaws.com", "https://s3.amazonaws.com", "https://${module.admin_interface.website_config.bucket_name}.s3.amazonaws.com"] 
+      additional_connect_sources = module.admin_site_visibility_plugin.additional_connect_sources_required
       additional_style_sources = []
       plugin_relative_lambda_origins = []
       storage_path_lambda_notifications = []

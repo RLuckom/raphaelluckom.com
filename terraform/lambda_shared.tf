@@ -59,6 +59,10 @@ locals {
   ]
 }
 
+module csv_parser {
+  source = "github.com/RLuckom/terraform_modules//aws/layers/csv_parser"
+}
+
 module "aws_sdk" {
   source = "github.com/RLuckom/terraform_modules//aws/layers/aws_sdk"
 }

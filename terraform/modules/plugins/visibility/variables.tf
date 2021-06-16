@@ -10,6 +10,13 @@ variable account_id {
   type = string
 }
 
+variable cost_report_summary_location {
+  type = object({
+    bucket = string
+    key = string
+  })
+}
+
 variable admin_site_resources {
   type = object({
     default_styles_path = string
@@ -56,10 +63,13 @@ module ui {
   name = var.name
   region = var.region
   account_id = var.account_id
-  gopher_config_contents = "window.GOPHER_CONFIG = {}"
+  gopher_config_contents = file("${path.module}/src/frontend/libs/gopher_config.js")
   admin_site_resources = var.admin_site_resources
   plugin_config = var.plugin_config
-  config_values = {}
+  config_values = {
+    cost_report_summary_storage_bucket = var.cost_report_summary_location.bucket
+    cost_report_summary_storage_key = var.cost_report_summary_location.key 
+  }
   default_css_paths = []
   default_script_paths = []
   default_deferred_script_paths = []
