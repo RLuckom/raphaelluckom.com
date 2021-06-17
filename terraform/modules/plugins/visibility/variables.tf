@@ -17,6 +17,16 @@ variable cost_report_summary_location {
   })
 }
 
+variable data_warehouse_configs {
+  type = any
+  default = {}
+}
+
+variable serverless_site_configs {
+  type = any
+  default = {}
+}
+
 variable admin_site_resources {
   type = object({
     default_styles_path = string
@@ -69,6 +79,8 @@ module ui {
   config_values = {
     cost_report_summary_storage_bucket = var.cost_report_summary_location.bucket
     cost_report_summary_storage_key = var.cost_report_summary_location.key 
+    data_warehouse_configs = var.data_warehouse_configs
+    serverless_site_configs = var.serverless_site_configs
   }
   default_css_paths = []
   default_script_paths = []

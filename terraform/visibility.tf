@@ -71,6 +71,8 @@ module admin_site_visibility_plugin {
   name = "visibility"
   account_id = local.account_id
   region = local.region
+	data_warehouse_configs = module.visibility_system.data_warehouse_configs
+	serverless_site_configs = module.visibility_system.serverless_site_configs
   cost_report_summary_location = module.visibility_system.cost_report_summary_location
   admin_site_resources = module.admin_interface.site_resources
   plugin_config = module.admin_interface.plugin_config["visibility"]
