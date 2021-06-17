@@ -5,6 +5,9 @@ window.RENDER_CONFIG = {
     mainSection.appendChild(domNode({
       tagName: 'div',
       id: 'new-post-container',
+      children: [
+        `Total cost: ${costReportSummary.overall.blendedCost}`
+      ]
     }))
   },
   smallScreenFormatters: {
