@@ -7,6 +7,20 @@ module admin_interface {
   user_email = "raph.aelluckom@gmail.com"
   subject_alternative_names = ["www.admin.raphaelluckom.com"]
   aws_sdk_layer = module.aws_sdk.layer_config
+  token_validities = {
+    access = {
+      value = 5
+      unit = "minutes"
+    }
+    id = {
+      value = 60 * 12
+      unit = "minutes"
+    }
+    refresh = {
+      value = 2
+      unit = "days"
+    }
+  }
   plugin_static_configs = {
     blog = module.admin_site_blog_plugin.static_config
     prod_blog = module.admin_site_prod_blog_plugin.static_config

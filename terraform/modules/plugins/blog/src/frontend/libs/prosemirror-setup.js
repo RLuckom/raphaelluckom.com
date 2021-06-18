@@ -27,7 +27,7 @@ const schema = new prosemirror.Schema({
 
     heading: {
       attrs: {level: {default: 1}},
-      content: "(text | image)*",
+      content: "text*",
       group: "block",
       defining: true,
       parseDOM: [
@@ -104,13 +104,12 @@ const schema = new prosemirror.Schema({
 		}, 
 
     image: {
-      inline: true,
       attrs: {
         src: {},
         alt: {default: null},
         title: {default: null},
       },
-      group: "inline",
+      group: "block",
       draggable: true,
       parseDOM: [{tag: "img[src]", getAttrs(dom) {
         return {
@@ -172,7 +171,40 @@ function listIsTight(tokens, i) {
   return false
 }
 
-const footnoteMarkdownParser = new prosemirror.MarkdownParser(schema, markdownit("commonmark", {html: false, }).use(footnote_plugin, {parse_defs: false}), {
+const md = markdownit("commonmark", {html: false, }).use(footnote_plugin, {parse_defs: false})
+const oldParse = md.parse
+md.parse = function(...args) {
+  const tokenList = oldParse.apply(md, args)
+  let ret = []
+  let current = tokenList.shift()
+  while (current) {
+    if (current.type === 'paragraph_open') {
+      let paragraphOpen = current
+      let paragraphContents = []
+      current = tokenList.shift()
+      while (current.type !== 'paragraph_close') {
+        paragraphContents.push(current)
+        current = tokenList.shift()
+      }
+      let paragraphClose = current
+      if (paragraphContents.length === 1 && _.get(paragraphContents, '[0].children.length') === 1 && _.get(paragraphContents, '[0].children[0].type') === 'image') {
+        ret.push(paragraphContents[0].children[0])
+      } else {
+        paragraphContents.unshift(paragraphOpen)
+        paragraphContents.push(paragraphClose)
+        ret = _.concat(ret, paragraphContents)
+      }
+    } else {
+      ret.push(current)
+    }
+    current = tokenList.shift()
+  }
+  console.log(ret)
+  return ret
+}
+
+
+const footnoteMarkdownParser = new prosemirror.MarkdownParser(schema, md, {
   blockquote: {block: "blockquote"},
   paragraph: {block: "paragraph"},
   list_item: {block: "list_item"},
@@ -294,6 +326,7 @@ const footnoteMarkdownSerializer = new prosemirror.MarkdownSerializer({
 
   image(state, node) {
     state.write("![" + state.esc(node.attrs.alt || "") + "](" + state.esc(node.attrs.src) + (node.attrs.alt ? ` ${state.quote(node.attrs.alt)}` : '') + ')')
+    state.closeBlock(node)
   },
   hard_break(state, node, parent, index) {
     for (let i = index + 1; i < parent.childCount; i++)
