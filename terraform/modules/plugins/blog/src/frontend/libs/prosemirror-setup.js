@@ -199,7 +199,6 @@ md.parse = function(...args) {
     }
     current = tokenList.shift()
   }
-  console.log(ret)
   return ret
 }
 
@@ -261,6 +260,191 @@ class FootnoteView {
 
   deselectNode() {
     this.dom.classList.remove("ProseMirror-selectednode")
+  }
+
+  ignoreMutation() { return true }
+}
+
+function moveUp(view, node, getPos) {
+  const state = view.state
+  const doc = view.state.doc
+  const tr = view.state.tr
+  const startingPos = getPos()
+  let previous = doc.childBefore(startingPos)
+  if (!previous) {
+    return
+  }
+  const newPos = previous.offset
+  tr.setSelection(new prosemirror.NodeSelection(doc.resolve(startingPos)))
+  .deleteSelection()
+  .insert(newPos, node)
+  .setSelection(new prosemirror.NodeSelection(tr.doc.resolve(newPos)))
+  view.dispatch(tr)
+}
+
+function updateTextDescription(view, node, getPos) {
+  if (node.type.name != "image" && pos != posBefore) {
+    return false
+  }
+  openPrompt({
+    title: "Update Text Description",
+    fields: {
+      alt: new TextAreaField({label: "Description", className: 'photo-input alt',
+                             value: _.get(node, 'attrs.alt')})
+    },
+    callback({alt}) {
+      const tr = view.state.tr.setNodeMarkup(
+        getPos(),
+        null,
+        {
+          src: node.attrs.src,
+          alt,
+          title: alt,
+        }
+      )
+      view.dispatch(tr)
+      view.focus()
+    }
+  })
+  return true
+}
+
+function moveDown(view, node, getPos) {
+  const state = view.state
+  const doc = view.state.doc
+  const tr = view.state.tr
+  const startingPos = getPos()
+  let next = doc.childAfter(startingPos + 1)
+  if (!next || !next.node) {
+    return
+  }
+  const newPos = next.offset + next.node.nodeSize
+  console.log(newPos)
+  console.log(next)
+  tr.setSelection(new prosemirror.NodeSelection(doc.resolve(startingPos)))
+  .deleteSelection()
+  .insert(tr.mapping.map(newPos), node)
+  .setSelection(new prosemirror.NodeSelection(tr.doc.resolve(tr.doc.childBefore(tr.mapping.map(newPos)).offset)))
+  view.dispatch(tr)
+}
+
+
+class ImageView {
+  constructor(node, view, getPos) {
+    // We'll need these later
+    this.node = node
+    this.view = view
+
+    // The node's representation in the editor (empty, for now)
+    this.dom = domNode({
+      tagName: 'div',
+      classNames: 'authoring-image-container',
+      children: [{
+        tagName: 'img',
+        src: node.attrs.src,
+        title: node.attrs.title,
+        alt: node.attrs.alt,
+      }]
+    })
+    this.getPos = getPos
+  }
+
+  selectNode() {
+    const self = this
+    this.dom.classList.add("ProseMirror-selectednode")
+    this.controlPane = domNode({
+      tagName: 'div',
+      classNames: 'selected-image-controls',
+      onClick: (evt) => evt.stopPropagation(),
+      children: [
+        {
+          tagName: 'div',
+          classNames: 'selected-image-bump-up',
+          onClick: _.partial(moveUp, self.view, self.node, self.getPos),
+          children: [
+            {
+              tagName: 'svg',
+              width: '5em',
+              height: '2.5em',
+              viewBox: '0 0 50 100',
+              children: [
+                {
+                  tagName: 'polyline',
+                  points: [{
+                    x: 10,
+                    y: 40,
+                  },
+                  {
+                    x: 50,
+                    y: 10,
+                  }, 
+                  {
+                    x: 90,
+                    y: 40,
+                  },
+                  ],
+                  strokeWidth: '0.4em',
+                  stroke: '#1a1a1a',
+                  strokeLinecap: 'round',
+                  strokeLinejoin: 'round',
+                  fill: 'transparent',
+                }
+              ]
+            }
+          ]
+        },
+        {
+          tagName: 'div',
+          classNames: 'selected-image-text-description',
+          onClick: _.partial(updateTextDescription, self.view, self.node, self.getPos),
+          children: [
+             this.node.attrs.alt || 'text description',
+          ]
+        },
+        {
+          tagName: 'div',
+          classNames: 'selected-image-bump-down',
+          onClick: _.partial(moveDown, self.view, self.node, self.getPos),
+          children: [
+            {
+              tagName: 'svg',
+              width: '5em',
+              height: '2.5em',
+              viewBox: '0 0 50 100',
+              children: [
+                {
+                  tagName: 'polyline',
+                  points: [{
+                    x: 10,
+                    y: 10,
+                  },
+                  {
+                    x: 50,
+                    y: 40,
+                  }, 
+                  {
+                    x: 90,
+                    y: 10,
+                  },
+                  ],
+                  strokeWidth: '0.4em',
+                  stroke: '#1a1a1a',
+                  strokeLinecap: 'round',
+                  strokeLinejoin: 'round',
+                  fill: 'transparent',
+                }
+              ]
+            }
+          ]
+        },
+      ]
+    })
+    this.dom.appendChild(this.controlPane)
+  }
+
+  deselectNode() {
+    this.dom.classList.remove("ProseMirror-selectednode")
+    this.dom.removeChild(this.controlPane)
   }
 
   ignoreMutation() { return true }
@@ -1189,6 +1373,7 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
   const view = new prosemirror.EditorView(container, {
     // Set initial state
     state: initState,
+    /*
     handleClickOn: function handleFigureClick(view, pos, node, posBefore) {
       if (node.type.name != "image" && pos != posBefore) {
         return false
@@ -1215,10 +1400,14 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
       })
       return true
     },
+   */
     nodeViews: {
       footnote_ref(node, view, getPos) {
         return new FootnoteView(node, view, getPos)
       },
+      image(node, view, getPos) {
+        return new ImageView(node, view, getPos)
+      }
     },
     dispatchTransaction(tr) {
       const { state } = view.state.applyTransaction(tr)
