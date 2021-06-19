@@ -2,7 +2,7 @@
 const schema = new prosemirror.Schema({
   nodes: {
     doc: {
-      content: "block+"
+      content: "(block | image)+"
     },
 
     paragraph: {
@@ -109,7 +109,6 @@ const schema = new prosemirror.Schema({
         alt: {default: null},
         title: {default: null},
       },
-      group: "block",
       draggable: true,
       parseDOM: [{tag: "img[src]", getAttrs(dom) {
         return {
@@ -309,6 +308,21 @@ function updateTextDescription(view, node, getPos) {
   return true
 }
 
+function updateTextDescriptionArea(view, node, getPos, evt) {
+  evt.stopPropagation()
+  console.log(8)
+  const tr = view.state.tr.setNodeMarkup(
+    getPos(),
+    null,
+    {
+      src: node.attrs.src,
+      alt: evt.target.value,
+      title: evt.target.value,
+    }
+  )
+  view.dispatch(tr)
+}
+
 function moveDown(view, node, getPos) {
   const state = view.state
   const doc = view.state.doc
@@ -349,7 +363,17 @@ class ImageView {
     this.getPos = getPos
   }
 
+  stopEvent(evt) {
+    if (this.isSelected) {
+      console.log(evt)
+      return true
+    }
+  }
+
+  ignoreMutation() { return true }
+
   selectNode() {
+    this.isSelected = true
     const self = this
     this.dom.classList.add("ProseMirror-selectednode")
     this.controlPane = domNode({
@@ -394,12 +418,12 @@ class ImageView {
           ]
         },
         {
-          tagName: 'div',
+          tagName: 'textarea',
           classNames: 'selected-image-text-description',
-          onClick: _.partial(updateTextDescription, self.view, self.node, self.getPos),
-          children: [
-             this.node.attrs.alt || 'text description',
-          ]
+          //onClick: _.partial(updateTextDescription, self.view, self.node, self.getPos),
+          onClick: (evt) => evt.stopPropagation(),
+          onInput: _.partial(updateTextDescriptionArea, self.view, self.node, self.getPos),
+          value: this.node.attrs.alt || 'text description',
         },
         {
           tagName: 'div',
@@ -443,11 +467,15 @@ class ImageView {
   }
 
   deselectNode() {
+    this.isSelected = false
     this.dom.classList.remove("ProseMirror-selectednode")
     this.dom.removeChild(this.controlPane)
   }
 
-  ignoreMutation() { return true }
+  update(node) {
+    this.node = node
+    return true 
+  }
 }
 
 function isPlainURL(link, parent, index, side) {
