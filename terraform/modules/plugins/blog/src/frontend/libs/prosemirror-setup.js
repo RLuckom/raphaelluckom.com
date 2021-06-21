@@ -310,7 +310,6 @@ function updateTextDescription(view, node, getPos) {
 
 function updateTextDescriptionArea(view, node, getPos, evt) {
   evt.stopPropagation()
-  console.log(8)
   const tr = view.state.tr.setNodeMarkup(
     getPos(),
     null,
@@ -333,8 +332,6 @@ function moveDown(view, node, getPos) {
     return
   }
   const newPos = next.offset + next.node.nodeSize
-  console.log(newPos)
-  console.log(next)
   tr.setSelection(new prosemirror.NodeSelection(doc.resolve(startingPos)))
   .deleteSelection()
   .insert(tr.mapping.map(newPos), node)
@@ -365,7 +362,6 @@ class ImageView {
 
   stopEvent(evt) {
     if (this.isSelected) {
-      console.log(evt)
       return true
     }
   }
@@ -1441,9 +1437,10 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
       const { state } = view.state.applyTransaction(tr)
       view.updateState(state)
       if (tr.docChanged) {
+        const content = footnoteMarkdownSerializer.serialize(tr.doc)
         onChange({
           editorState: serializeState(),
-          content: footnoteMarkdownSerializer.serialize(tr.doc),
+          content,
         }, updateFootnoteMenu)
       }
     },

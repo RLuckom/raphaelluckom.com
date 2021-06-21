@@ -317,7 +317,7 @@ function getImagePrivateUrl({postId, imageId, size, ext}) {
   if (!canonicalExt) {
     throw new Error("unsupported image type")
   }
-  return `https://${CONFIG.domain}/${CONFIG.plugin_image_hosting_path}${postId}/${imageId}/${size}.${canonicalExt}`
+  return `https://${CONFIG.domain}/${CONFIG.plugin_image_hosting_path}${encodeURIComponent(postId)}/${imageId}/${size}.${canonicalExt}`
 }
 
 function parsePost(s) {
@@ -451,7 +451,6 @@ function buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnote
   }
 
   function onFootnoteDelete(e) {
-    console.log('deleting ' + name)
     const latestEditorState = getPostEditorState(postId)
     delete latestEditorState.footnotes[name]
     delete latestEditorState.footnoteEditorStates[name]

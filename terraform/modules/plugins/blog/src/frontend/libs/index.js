@@ -180,7 +180,7 @@ window.RENDER_CONFIG = {
                     {
                       tagName: 'div',
                       classNames: 'save-status',
-                      children: [new Date(record.frontMatter.createDate).toLocaleString()]
+                      children: record ? [new Date(record.frontMatter.createDate).toLocaleString()] : []
                     },
                     {
                       tagName: 'div',
