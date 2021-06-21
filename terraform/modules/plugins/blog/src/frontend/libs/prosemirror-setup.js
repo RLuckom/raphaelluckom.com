@@ -108,8 +108,12 @@ const schema = new prosemirror.Schema({
         src: {},
         alt: {default: null},
         title: {default: null},
+        file: {default: null},
+        imageId: {default: null},
+        postId: {default: null},
+        size: {default: null},
+        canonicalExt: {default: null},
       },
-      draggable: true,
       parseDOM: [{tag: "img[src]", getAttrs(dom) {
         return {
           src: dom.getAttribute("src"),
@@ -215,11 +219,19 @@ const footnoteMarkdownParser = new prosemirror.MarkdownParser(schema, md, {
   code_block: {block: "code_block", noCloseToken: true},
   fence: {block: "code_block", getAttrs: tok => ({params: tok.info || ""}), noCloseToken: true},
   hr: {node: "horizontal_rule"},
-  image: {node: "image", getAttrs: tok => ({
-    src: tok.attrGet("src"),
-    title: tok.attrGet("title") || null,
-    alt: tok.children[0] && tok.children[0].content || null
-  })},
+  image: {node: "image", getAttrs: tok => {
+    const {originalUrl, postId, imageId, size, canonicalExt} = parseImageUrl(tok.attrGet("src"))
+    const ret = {
+      src: originalUrl,
+      postId,
+      imageId,
+      size,
+      canonicalExt,
+      title: tok.attrGet("title") || null,
+      alt: tok.children[0] && tok.children[0].content || null,
+    }
+    return ret
+  }},
   footnote_ref: {
     node: "footnote_ref",
     getAttrs: (tok) => {
@@ -339,12 +351,27 @@ function moveDown(view, node, getPos) {
   view.dispatch(tr)
 }
 
+function findNode(node, predicate) {
+  let found
+  node.descendants((node, pos) => {
+    if (predicate(node)) {
+      found = {node, pos}
+    }
+    if (found) {
+      return false
+    }
+  })
+  return found
+}
+
+
 
 class ImageView {
   constructor(node, view, getPos) {
     // We'll need these later
     this.node = node
     this.view = view
+    const hasFile = node.attrs.file && node.attrs.file instanceof File
 
     // The node's representation in the editor (empty, for now)
     this.dom = domNode({
@@ -352,12 +379,46 @@ class ImageView {
       classNames: 'authoring-image-container',
       children: [{
         tagName: 'img',
-        src: node.attrs.src,
+        src: hasFile ? URL.createObjectURL(node.attrs.file) : node.attrs.src,
         title: node.attrs.title,
         alt: node.attrs.alt,
       }]
     })
     this.getPos = getPos
+    const self = this
+    if (hasFile) {
+      node.attrs.file.arrayBuffer().then((buffer) => {
+        window.goph.report(
+          'pollImage',
+          {
+            imageExt: node.attrs.canonicalExt,
+            postId: node.attrs.postId,
+            imageId: node.attrs.imageId,
+            imageSize: node.attrs.size,
+            buffer,
+          },
+          (e, r) => {
+            if (e) {
+            }
+            const tr = view.state.tr.setNodeMarkup(
+              self.getPos(),
+              null,
+              {
+                src: node.attrs.src,
+                file: null,
+                size: self.node.attrs.size,
+                canonicalExt: self.node.attrs.canonicalExt,
+                postId: self.node.attrs.postId,
+                imageId: self.node.attrs.imageId,
+                alt: self.node.attrs.alt,
+                title: self.node.attrs.title,
+              }
+            )
+            view.dispatch(tr)
+          }
+        )
+      })
+    }
   }
 
   stopEvent(evt) {
@@ -419,7 +480,8 @@ class ImageView {
           //onClick: _.partial(updateTextDescription, self.view, self.node, self.getPos),
           onClick: (evt) => evt.stopPropagation(),
           onInput: _.partial(updateTextDescriptionArea, self.view, self.node, self.getPos),
-          value: this.node.attrs.alt || 'text description',
+          value: this.node.attrs.alt || '',
+          placeholder: "Text Description"
         },
         {
           tagName: 'div',
@@ -1201,35 +1263,8 @@ function buildInputRules(schema) {
 //
 //     menuContent:: [[MenuItem]]
 //     Can be used to override the menu content.
-function prosemirrorView(container, uploadImage, onChange, initialState, initialMarkdownText, footnotes, addFootnote) {
+function prosemirrorView(container, uploadImage, onChange, initialState, initialMarkdownText, footnotes, addFootnote, postId) {
 
-  // fix the image upload jumping around. Try to add an outer element that has the correct dims then replace the inside
-  const placeholderPlugin = new prosemirror.Plugin({
-    state: {
-      init() { return prosemirror.DecorationSet.empty },
-      apply(tr, set) {
-        // Adjust decoration positions to changes made by the transaction
-        set = set.map(tr.mapping, tr.doc)
-        // See if the transaction adds or removes any placeholders
-        let action = tr.getMeta(this)
-        if (action && action.add) {
-          let widget = domNode({
-            tagName: 'img',
-            src: URL.createObjectURL(_.get(action, 'add.file')),
-            classNames: ['placeholder'],
-          })
-          let deco = prosemirror.Decoration.widget(action.add.pos, widget, {id: action.add.id})
-          set = set.add(tr.doc, [deco])
-        } else if (action && action.remove) {
-          set = set.remove(set.find(null, null, spec => spec.id == action.remove.id))
-        }
-        return set
-      }
-    },
-    props: {
-      decorations(state) { return this.getState(state) }
-    }
-  })
 
   function insertImageItem(nodeType) {
     return new prosemirror.MenuItem({
@@ -1266,51 +1301,23 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
     if (!tr.selection.empty) {
       tr.deleteSelection()
     }
-    tr.setMeta(placeholderPlugin, {add: {id, pos: tr.selection.from, file: src}})
     view.dispatch(tr)
-
-    src.arrayBuffer().then((buffer) => {
-      uploadImage(buffer, src.name.split('.').pop(), (e, {url, imageId}) => {
-        if (e) {
-          return view.dispatch(
-            tr.setMeta(placeholderPlugin, {remove: {id}})
-          )
-        }
-        let {pos, width, height} = findPlaceholder(view.state, id)
-        // If the content around the placeholder has been deleted, drop
-        // the image
-        if (pos == null) {
-          return
-        }
-        // Otherwise, insert it at the placeholder's position, and remove
-        // the placeholder
-        const image = view.state.schema.nodes.image.create({
-          src: url,
-          alt,
-          title: alt,
-        })
-        view.dispatch(
-          view.state.tr
-          .replaceWith(pos, pos, image)
-          .setMeta(placeholderPlugin, {remove: {id}})
-        )
-      })
+    const imageId = uuid.v4()
+    const canonicalExt = canonicalImageTypes[_.toLower(src.name.split('.').pop())]
+    const privateImageUrl = getImagePrivateUrl({postId, imageId, ext: canonicalExt, size: 500})
+    const image = view.state.schema.nodes.image.create({
+      src: privateImageUrl,
+      file: src,
+      size: 500,
+      canonicalExt,
+      postId,
+      imageId,
+      alt,
+      title: alt,
     })
-  }
-
-  function findPlaceholder(state, id) {
-    let decos = placeholderPlugin.getState(state)
-    let found = decos.find(null, null, spec => spec.id == id)
-    let width, height
-    if (found.length) {
-      const widget = found[0].type.toDOM
-      width = widget.width
-      height = widget.height
-    }
-    return {
-      pos: found.length ? found[0].from : null,
-      width, height
-    }
+    view.dispatch(
+      view.state.tr.replaceWith(tr.selection.from, tr.selection.from, image)
+    )
   }
 
   function findNodePosition(doc, test) {
@@ -1326,7 +1333,6 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
 
   let menuItems = buildMenuItems({schema: schema, insertImageItem, footnotes, addFootnote})
   let plugins = [
-    placeholderPlugin,
     buildInputRules(schema),
     prosemirror.keymap(buildKeymap(schema)),
     prosemirror.keymap(prosemirror.baseKeymap),
@@ -1342,7 +1348,6 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
   function updateFootnoteMenu({footnotes, names}) {
     menuItems = buildMenuItems({schema: schema, insertImageItem, footnotes, addFootnote})
     plugins = [
-      placeholderPlugin,
       buildInputRules(schema),
       prosemirror.keymap(buildKeymap(schema)),
       prosemirror.keymap(prosemirror.baseKeymap),
@@ -1397,34 +1402,6 @@ function prosemirrorView(container, uploadImage, onChange, initialState, initial
   const view = new prosemirror.EditorView(container, {
     // Set initial state
     state: initState,
-    /*
-    handleClickOn: function handleFigureClick(view, pos, node, posBefore) {
-      if (node.type.name != "image" && pos != posBefore) {
-        return false
-      }
-      openPrompt({
-        title: "Update Text Description",
-        fields: {
-          alt: new TextAreaField({label: "Description", className: 'photo-input alt',
-                                 value: _.get(node, 'attrs.alt')})
-        },
-        callback({alt}) {
-          const tr = view.state.tr.setNodeMarkup(
-            pos,
-            null,
-            {
-              src: node.attrs.src,
-              alt,
-              title: alt,
-            }
-          )
-          view.dispatch(tr)
-          view.focus()
-        }
-      })
-      return true
-    },
-   */
     nodeViews: {
       footnote_ref(node, view, getPos) {
         return new FootnoteView(node, view, getPos)

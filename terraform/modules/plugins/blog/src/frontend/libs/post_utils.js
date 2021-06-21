@@ -509,7 +509,7 @@ function buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnote
       }
     ]
   })
-  prosemirrorView(editorDiv.querySelector('.editor'), uploadImage, onStateChange, latestEditorState.footnoteEditorStates[name], latestEditorState.footnotes[name], {})
+  prosemirrorView(editorDiv.querySelector('.editor'), uploadImage, onStateChange, latestEditorState.footnoteEditorStates[name], latestEditorState.footnotes[name], null, postId)
   return editorDiv
 }
 
@@ -519,6 +519,17 @@ function getImageIds({ content, footnotes, postId}) {
     return _.concat(acc, _.filter(Array.from((v || '').matchAll(imageIdsRegex)), (x) => _.isString(_.get(x, 1))))
   }, []), (x) => x[1]))
   return imageIds
+}
+
+const imageKeyRegexp = new RegExp('https://' + CONFIG.domain + '/' +CONFIG.plugin_image_hosting_path + '([^/]*)/([0-9a-f-]{36})/([0-9]*).(.*)')
+function parseImageUrl(url) {
+  const [originalUrl, encodedPostId, imageId, size, canonicalExt] = url.match(imageKeyRegexp)
+  if (encodedPostId && imageId && size && canonicalExt) {
+    return {originalUrl, imageId, postId: decodeURIComponent(encodedPostId), size, canonicalExt}
+  }
+  return {
+    originalUrl
+  }
 }
 
 function updateEditorState(postId, updates, updateFootnoteMenu, updatedFootnoteNames) {
