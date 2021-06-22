@@ -288,7 +288,7 @@ module.exports = {
               Body: {
                 helper: ({parsed, postId}) => {
                  const postString = serializePostToMarkdown(parsed) 
-                 return _.replace(postString, "${plugin_image_hosting_root}", "${blog_image_hosting_root}")
+                 return _.replace(postString, new RegExp("${plugin_image_hosting_root}", "g"), "${blog_image_hosting_root}")
                  .replace(new RegExp("\\((https:\/\/.*)" + postId + '([^\\)]*)\\)', 'g'), (match, g1, g2) => "(" + g1 + encodeURIComponent(postId) + g2 + ')')
                  .replace(new RegExp("]\\(/(.*)" + postId + '([^\\)]*)\\)', 'g'), (match, g1, g2) => "](/" + g1 + encodeURIComponent(postId) + g2 + ')')
                 },

@@ -509,7 +509,14 @@ function buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnote
       }
     ]
   })
-  prosemirrorView(editorDiv.querySelector('.editor'), uploadImage, onStateChange, latestEditorState.footnoteEditorStates[name], latestEditorState.footnotes[name], null, postId)
+  prosemirrorView({
+    container: editorDiv.querySelector('.editor'), 
+    uploadImage,
+    onChange: onStateChange, 
+    initialState: latestEditorState.footnoteEditorStates[name],
+    initialMarkdownText: latestEditorState.footnotes[name],
+    postId
+  })
   return editorDiv
 }
 

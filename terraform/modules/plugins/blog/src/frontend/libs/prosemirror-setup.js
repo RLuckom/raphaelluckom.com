@@ -1270,7 +1270,7 @@ function buildInputRules(schema) {
 //
 //     menuContent:: [[MenuItem]]
 //     Can be used to override the menu content.
-function prosemirrorView(container, uploadImage, onChange, initialState, initialMarkdownText, footnotes, addFootnote, postId) {
+function prosemirrorView({container, uploadImage, onChange, initialState, initialMarkdownText, footnotes, addFootnote, postId}) {
 
 
   function insertImageItem(nodeType) {
