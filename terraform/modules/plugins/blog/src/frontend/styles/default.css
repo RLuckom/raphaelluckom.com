@@ -76,6 +76,12 @@ input[type=text] {
 
 .authoring-image-container {
   position: relative;
+  max-width: 80%;
+  margin: 0 auto;
+}
+
+.authoring-image-container img {
+  margin: auto;
 }
 
 .selected-image-controls {
@@ -140,10 +146,8 @@ img {
   margin: 0 auto;
 }
 
-img.placeholder {
-  opacity: 0.4;
-  max-width: 100%;
-  margin: 0 auto;
+.authoring-image-container.ProseMirror-selectednode {
+  min-height: 350px;
 }
 
 #post-editor {

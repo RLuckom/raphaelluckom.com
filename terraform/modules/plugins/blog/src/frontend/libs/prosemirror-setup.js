@@ -387,6 +387,11 @@ class ImageView {
     this.getPos = getPos
     const self = this
     if (hasFile) {
+      const spinnaNode = domNode(svgs.hex)
+      const spinAnimation = svgNode(svgs.spin)
+      const spinnable = spinnaNode.querySelector('.spinnable')
+      spinnable.appendChild(spinAnimation)
+      this.dom.appendChild(spinnaNode)
       node.attrs.file.arrayBuffer().then((buffer) => {
         window.goph.report(
           'pollImage',
@@ -399,7 +404,9 @@ class ImageView {
           },
           (e, r) => {
             if (e) {
+              console.error(e)
             }
+            this.dom.removeChild(spinnaNode)
             const tr = view.state.tr.setNodeMarkup(
               self.getPos(),
               null,
