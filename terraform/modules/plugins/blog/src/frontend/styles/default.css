@@ -82,6 +82,10 @@ input[type=text] {
 
 .authoring-image-container img {
   margin: auto;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none; 
 }
 
 .selected-image-controls {
@@ -94,12 +98,20 @@ input[type=text] {
   flex-direction: column;
   background-color: #fff;
   opacity: 0.9;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none; 
 }
 
 .selected-image-bump-up {
   width: 100%;
   margin-top: 3em;
   flex: 1;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none; 
 }
 
 .selected-image-bump-up svg, .selected-image-bump-down svg {
@@ -111,6 +123,10 @@ input[type=text] {
   width: 100%;
   margin-bottom: 3em;
   flex: 1;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none; 
 }
 
 .selected-image-text-description {
@@ -148,6 +164,17 @@ img {
 
 .authoring-image-container.ProseMirror-selectednode {
   min-height: 350px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none; 
+}
+
+.authoring-image-container.ProseMirror-selectednode img {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none; 
 }
 
 #post-editor {
