@@ -538,8 +538,10 @@ class ImageView {
   }
 
   update(node) {
-    this.node = node
-    return true 
+    if (node.type.name === "image") {
+      this.node = node
+      return true
+    }
   }
 }
 
@@ -668,7 +670,10 @@ function openPrompt(options) {
   let form = wrapper.appendChild(document.createElement("form"))
   if (options.title) form.appendChild(document.createElement("h5")).textContent = options.title
   domFields.forEach(field => {
-    form.appendChild(document.createElement("div")).appendChild(field)
+    const fieldWrapper = document.createElement("div")
+    fieldWrapper.className = "prompt-field-wrapper"
+    fieldWrapper.appendChild(field)
+    form.appendChild(fieldWrapper)
   })
   let buttons = form.appendChild(document.createElement("div"))
   buttons.className = prefix + "-buttons"
@@ -804,15 +809,24 @@ class TextAreaField extends Field {
 
 // ::- A field class for single-line text fields.
 class FileField extends Field {
-  read(dom) { return dom.files[0] }
+  read(dom) { 
+    return dom.querySelector('input').files[0]
+  }
   render() {
-    let input = document.createElement("input")
-    input.type = "file"
-    input.className = this.options.className
-    if (this.options.accept) {
-      input.accept = this.options.accept
-    }
-    input.value = this.options.value || ""
+    let input = domNode({
+      tagName: 'label',
+      classNames: 'file',
+      children: [
+        {
+          tagName: 'input',
+          type: 'file',
+        },
+        {
+          tagName: 'span',
+          classNames: 'file-custom'
+        }
+      ]
+    })
     return input
   }
 }
