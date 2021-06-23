@@ -475,7 +475,7 @@ function buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnote
             tagName: 'input',
             type: 'text',
             name: 'footnote name',
-            classNames: 'authoring-input',
+            classNames: ['authoring-input', 'footnote-marker'],
             onKeyUp: (evt) => evt.target.value = evt.target.value.replace(/[^A-z0-9]/, ''),
             placeholder: translatableText.postMetadata.placeholders.footnoteTitle,
             value: name,

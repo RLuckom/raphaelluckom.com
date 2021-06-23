@@ -1,5 +1,6 @@
 :root {
   --background: #fff;
+  --button-background-color: #eee;
   --encourage: lightgreen;
   --encourage-neutral: lightblue;
   --neutral: rgba(0, 0, 0, 0.2);
@@ -77,7 +78,7 @@ input[type=text] {
 .authoring-image-container {
   position: relative;
   max-width: 80%;
-  margin: 0 auto;
+  margin: 2em auto;
 }
 
 .authoring-image-container img {
@@ -88,25 +89,9 @@ input[type=text] {
   user-select: none; 
 }
 
-.selected-image-controls {
-  position: absolute;
-  top: 0;
-  left: 0;
+.image-bump-up {
   width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background-color: #fff;
-  opacity: 0.9;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none; 
-}
-
-.selected-image-bump-up {
-  width: 100%;
-  margin-top: 3em;
+  margin-bottom: 1em;
   flex: 1;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -114,14 +99,14 @@ input[type=text] {
   user-select: none; 
 }
 
-.selected-image-bump-up svg, .selected-image-bump-down svg {
+.image-bump-up svg, .image-bump-down svg {
   display: block;
   margin: 0 auto;
 }
 
-.selected-image-bump-down {
+.image-bump-down {
   width: 100%;
-  margin-bottom: 3em;
+  margin-top: 1em;
   flex: 1;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -129,10 +114,12 @@ input[type=text] {
   user-select: none; 
 }
 
-.selected-image-text-description {
+.image-text-description {
   width: 100%;
-  flex: 4;
-  padding: 1em;
+  padding: 0.5em;
+  font-family: inherit;
+  caret-color: black;
+  border: 1px solid black;
 }
 
 input#title {
@@ -151,6 +138,7 @@ button {
   font-weight: bold;
   font-family: inherit;
   border-radius: 7px;
+  background-color: var(--button-background-color);
   border-width: var(--default-border-width);
   border-color: var(--encourage-neutral);
   border-style: solid;
@@ -163,11 +151,15 @@ img {
 }
 
 .authoring-image-container.ProseMirror-selectednode {
-  min-height: 350px;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none; 
+  caret-color: transparent;
+}
+
+.footnote-marker {
+  flex: 3
 }
 
 .authoring-image-container.ProseMirror-selectednode img {
@@ -176,6 +168,22 @@ img {
   -ms-user-select: none;
   user-select: none; 
 }
+
+.img-description-label, .ProseMirror-selectednode label.img-description-label {
+  display: block;
+  margin-top: 1em;
+  margin-bottom: 0.25em;
+  font-weight: 400;
+}
+
+.img-control {
+  display: none;
+}
+
+.ProseMirror-selectednode .img-control {
+  display: unset;
+}
+
 
 #post-editor {
   flex: 1;
@@ -234,12 +242,13 @@ input.new-post.expanded {
 }
 
 .footnote-title-bar {
+  display: flex;
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
 button.delete-footnote {
-  float: right;
+  flex: 0;
   border-color: var(--hazard);
   margin: 5px 0;
 }
@@ -404,7 +413,6 @@ button.delete-footnote {
 }
 
 @media screen and (max-width: 767px) {
-  textarea,
   input[type="text"],
   input[type="number"],
   input[type="email"],
@@ -500,7 +508,7 @@ button.delete-footnote {
     height: 100%;
   }
 
-  .post-actions  button {
+  .post-actions button {
     width: 100%;
     height: 100%;
     margin: 0 0.2em;

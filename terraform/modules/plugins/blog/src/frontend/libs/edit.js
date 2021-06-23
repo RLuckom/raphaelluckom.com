@@ -273,16 +273,6 @@ window.RENDER_CONFIG = {
             ]
           },
           {
-            tagName: 'input',
-            placeholder: translatableText.postMetadata.placeholders.trails,
-            type: 'text',
-            name: 'trails',
-            classNames: 'authoring-input',
-            id: 'trails',
-            value: (_.get(post, 'frontMatter.meta.trails') || _.get(post, 'frontMatter.meta.trail') || []).join(', '),
-            onChange: (e) => updateEditorState(postId, {trails: _.map((e.target.value || '').split(','), _.trim)}, updateFootnoteMenu)
-          },
-          {
             tagName: 'div',
             id: 'error',
           }

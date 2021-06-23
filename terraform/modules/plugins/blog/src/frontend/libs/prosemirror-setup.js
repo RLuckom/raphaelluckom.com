@@ -276,7 +276,8 @@ class FootnoteView {
   ignoreMutation() { return true }
 }
 
-function moveUp(view, node, getPos) {
+function moveUp(view, node, getPos, evt) {
+  evt.stopPropagation()
   const state = view.state
   const doc = view.state.doc
   const tr = view.state.tr
@@ -293,33 +294,6 @@ function moveUp(view, node, getPos) {
   view.dispatch(tr)
 }
 
-function updateTextDescription(view, node, getPos) {
-  if (node.type.name != "image" && pos != posBefore) {
-    return false
-  }
-  openPrompt({
-    title: "Update Text Description",
-    fields: {
-      alt: new TextAreaField({label: "Description", className: 'photo-input alt',
-                             value: _.get(node, 'attrs.alt')})
-    },
-    callback({alt}) {
-      const tr = view.state.tr.setNodeMarkup(
-        getPos(),
-        null,
-        {
-          src: node.attrs.src,
-          alt,
-          title: alt,
-        }
-      )
-      view.dispatch(tr)
-      view.focus()
-    }
-  })
-  return true
-}
-
 function updateTextDescriptionArea(view, node, getPos, evt) {
   evt.stopPropagation()
   const tr = view.state.tr.setNodeMarkup(
@@ -334,7 +308,8 @@ function updateTextDescriptionArea(view, node, getPos, evt) {
   view.dispatch(tr)
 }
 
-function moveDown(view, node, getPos) {
+function moveDown(view, node, getPos, evt) {
+  evt.stopPropagation()
   const state = view.state
   const doc = view.state.doc
   const tr = view.state.tr
@@ -364,28 +339,118 @@ function findNode(node, predicate) {
   return found
 }
 
-
-
 class ImageView {
   constructor(node, view, getPos) {
     // We'll need these later
     this.node = node
     this.view = view
     const hasFile = node.attrs.file && node.attrs.file instanceof File
+    this.getPos = getPos
+    const self = this
 
     // The node's representation in the editor (empty, for now)
     this.dom = domNode({
       tagName: 'div',
+      onClick: (evt) => evt.stopPropagation(),
       classNames: 'authoring-image-container',
-      children: [{
-        tagName: 'img',
-        src: hasFile ? URL.createObjectURL(node.attrs.file) : node.attrs.src,
-        title: node.attrs.title,
-        alt: node.attrs.alt,
-      }]
+      children: [
+        {
+          tagName: 'button',
+          classNames: ['image-bump-up', 'img-control'],
+          onClick: _.partial(moveUp, self.view, self.node, self.getPos),
+          children: [
+            {
+              tagName: 'svg',
+              width: '5em',
+              height: '2.5em',
+              viewBox: '0 0 100 50',
+              children: [
+                {
+                  tagName: 'polyline',
+                  points: [{
+                    x: 10,
+                    y: 40,
+                  },
+                  {
+                    x: 50,
+                    y: 10,
+                  }, 
+                  {
+                    x: 90,
+                    y: 40,
+                  },
+                  ],
+                  strokeWidth: '0.4em',
+                  stroke: '#1a1a1a',
+                  strokeLinecap: 'round',
+                  strokeLinejoin: 'round',
+                  fill: 'transparent',
+                }
+              ]
+            }
+          ]
+        },
+        {
+          tagName: 'img',
+          onClick: (evt) => evt.stopPropagation(),
+          src: hasFile ? URL.createObjectURL(node.attrs.file) : node.attrs.src,
+          title: node.attrs.title,
+          alt: node.attrs.alt,
+        },
+        {
+          tagName: 'label',
+          classNames: ['img-control', 'img-description-label'],
+          children: [
+            'Text Description:'
+          ]
+        },
+        {
+          tagName: 'textarea',
+          classNames: ['image-text-description', 'img-control'],
+          //onClick: _.partial(updateTextDescription, self.view, self.node, self.getPos),
+          onClick: (evt) => evt.stopPropagation(),
+          onInput: _.partial(updateTextDescriptionArea, self.view, self.node, self.getPos),
+          value: this.node.attrs.alt || '',
+          placeholder: "Text Description"
+        },
+        {
+          tagName: 'button',
+          classNames: ['image-bump-down', 'img-control'],
+          onClick: _.partial(moveDown, self.view, self.node, self.getPos),
+          children: [
+            {
+              tagName: 'svg',
+              width: '5em',
+              height: '2.5em',
+              viewBox: '0 0 100 50',
+              children: [
+                {
+                  tagName: 'polyline',
+                  points: [{
+                    x: 10,
+                    y: 10,
+                  },
+                  {
+                    x: 50,
+                    y: 40,
+                  }, 
+                  {
+                    x: 90,
+                    y: 10,
+                  },
+                  ],
+                  strokeWidth: '0.4em',
+                  stroke: '#1a1a1a',
+                  strokeLinecap: 'round',
+                  strokeLinejoin: 'round',
+                  fill: 'transparent',
+                }
+              ]
+            }
+          ]
+        },
+      ]
     })
-    this.getPos = getPos
-    const self = this
     if (hasFile) {
       const spinnaNode = domNode(svgs.hex)
       const spinAnimation = svgNode(svgs.spin)
@@ -440,101 +505,11 @@ class ImageView {
     this.isSelected = true
     const self = this
     this.dom.classList.add("ProseMirror-selectednode")
-    this.controlPane = domNode({
-      tagName: 'div',
-      classNames: 'selected-image-controls',
-      onClick: (evt) => evt.stopPropagation(),
-      children: [
-        {
-          tagName: 'div',
-          classNames: 'selected-image-bump-up',
-          onClick: _.partial(moveUp, self.view, self.node, self.getPos),
-          children: [
-            {
-              tagName: 'svg',
-              width: '5em',
-              height: '2.5em',
-              viewBox: '0 0 50 100',
-              children: [
-                {
-                  tagName: 'polyline',
-                  points: [{
-                    x: 10,
-                    y: 40,
-                  },
-                  {
-                    x: 50,
-                    y: 10,
-                  }, 
-                  {
-                    x: 90,
-                    y: 40,
-                  },
-                  ],
-                  strokeWidth: '0.4em',
-                  stroke: '#1a1a1a',
-                  strokeLinecap: 'round',
-                  strokeLinejoin: 'round',
-                  fill: 'transparent',
-                }
-              ]
-            }
-          ]
-        },
-        {
-          tagName: 'textarea',
-          classNames: 'selected-image-text-description',
-          //onClick: _.partial(updateTextDescription, self.view, self.node, self.getPos),
-          onClick: (evt) => evt.stopPropagation(),
-          onInput: _.partial(updateTextDescriptionArea, self.view, self.node, self.getPos),
-          value: this.node.attrs.alt || '',
-          placeholder: "Text Description"
-        },
-        {
-          tagName: 'div',
-          classNames: 'selected-image-bump-down',
-          onClick: _.partial(moveDown, self.view, self.node, self.getPos),
-          children: [
-            {
-              tagName: 'svg',
-              width: '5em',
-              height: '2.5em',
-              viewBox: '0 0 50 100',
-              children: [
-                {
-                  tagName: 'polyline',
-                  points: [{
-                    x: 10,
-                    y: 10,
-                  },
-                  {
-                    x: 50,
-                    y: 40,
-                  }, 
-                  {
-                    x: 90,
-                    y: 10,
-                  },
-                  ],
-                  strokeWidth: '0.4em',
-                  stroke: '#1a1a1a',
-                  strokeLinecap: 'round',
-                  strokeLinejoin: 'round',
-                  fill: 'transparent',
-                }
-              ]
-            }
-          ]
-        },
-      ]
-    })
-    this.dom.appendChild(this.controlPane)
   }
 
   deselectNode() {
     this.isSelected = false
     this.dom.classList.remove("ProseMirror-selectednode")
-    this.dom.removeChild(this.controlPane)
   }
 
   update(node) {
