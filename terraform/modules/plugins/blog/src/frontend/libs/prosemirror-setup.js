@@ -1337,7 +1337,7 @@ function prosemirrorView({container, uploadImage, onChange, initialState, initia
     prosemirror.history(),
     prosemirror.menuBar(
       {
-        content: menuItems.fullMenu
+        content: menuItems.fullMenu,
       }
     ),
   ]
@@ -1352,7 +1352,7 @@ function prosemirrorView({container, uploadImage, onChange, initialState, initia
       prosemirror.history(),
       prosemirror.menuBar(
         {
-          content: menuItems.fullMenu
+          content: menuItems.fullMenu,
         }
       ),
     ]
