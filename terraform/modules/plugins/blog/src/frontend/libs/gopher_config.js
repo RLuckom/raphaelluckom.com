@@ -40,7 +40,7 @@ window.GOPHER_CONFIG = {
           parsed = parsePost(post.Body.toString('utf8'))
           parsed.etag = post.ETag
           parsed.lastSaved = post.LastModified
-          parsed.frontMatter.createDate = parsed.frontMatter.createDate || parsed.frontMatter.date || new Date().toISOString(),
+          parsed.frontMatter.createDate = parsed.frontMatter.createDate || parsed.frontMatter.date || new Date().toISOString()
           setPostAsSaved(postId, parsed)
         }
         return parsed
@@ -75,7 +75,7 @@ window.GOPHER_CONFIG = {
           input: 'postId',
           formatter: ({getPost}, {postId}) => {
             const postToSend = _.cloneDeep(latestKnownPostState(postId))
-            postToSend.frontMatter.createDate = postToSend.frontMatter.createDate || postToSend.frontMatter.date || new Date().toISOString(),
+            postToSend.frontMatter.createDate = postToSend.frontMatter.createDate || postToSend.frontMatter.date || new Date().toISOString()
             delete postToSend.frontMatter.unpublish
             delete postToSend.frontMatter.delete
             postToSend.frontMatter.publish = true
@@ -100,7 +100,7 @@ window.GOPHER_CONFIG = {
           input: 'postId',
           formatter: ({getPost}, {postId}) => {
             const postToSend = _.cloneDeep(latestKnownPostState(postId))
-            postToSend.frontMatter.createDate = postToSend.frontMatter.createDate || postToSend.frontMatter.date || new Date().toISOString(),
+            postToSend.frontMatter.createDate = postToSend.frontMatter.createDate || postToSend.frontMatter.date || new Date().toISOString()
             delete postToSend.frontMatter.publish
             delete postToSend.frontMatter.delete
             postToSend.frontMatter.unpublish = true
@@ -124,7 +124,7 @@ window.GOPHER_CONFIG = {
           source: ['getPost', 'unpublishPostWithoutInput', 'confirmPostUnpublished'],
           formatter: ({getPost}) => {
             const postToSend = _.cloneDeep(getPost)
-            postToSend.frontMatter.createDate = postToSend.frontMatter.createDate || postToSend.frontMatter.date || new Date().toISOString(),
+            postToSend.frontMatter.createDate = postToSend.frontMatter.createDate || postToSend.frontMatter.date || new Date().toISOString()
             delete postToSend.frontMatter.publish
             delete postToSend.frontMatter.unpublish
             postToSend.frontMatter.delete = true
@@ -148,7 +148,7 @@ window.GOPHER_CONFIG = {
           input: 'post',
           formatter: ({post}) => {
             const postToSend = _.cloneDeep(post)
-            postToSend.frontMatter.createDate = postToSend.frontMatter.createDate || postToSend.frontMatter.date || new Date().toISOString(),
+            postToSend.frontMatter.createDate = postToSend.frontMatter.createDate || postToSend.frontMatter.date || new Date().toISOString()
             postToSend.frontMatter.updateDate = new Date().toISOString(),
             postToSend.frontMatter.date = new Date().toISOString(),
             delete postToSend.frontMatter.publish
@@ -174,7 +174,7 @@ window.GOPHER_CONFIG = {
           input: 'post',
           formatter: ({post}) => {
             const postToSend = _.cloneDeep(post)
-            postToSend.frontMatter.createDate = postToSend.frontMatter.createDate || postToSend.frontMatter.date || new Date().toISOString(),
+            postToSend.frontMatter.createDate = postToSend.frontMatter.createDate || postToSend.frontMatter.date || new Date().toISOString()
             postToSend.frontMatter.updateDate = new Date().toISOString(),
             postToSend.frontMatter.date = new Date().toISOString(),
             delete postToSend.frontMatter.unpublish
@@ -281,9 +281,9 @@ window.GOPHER_CONFIG = {
           input: 'post',
           formatter: ({post}) => {
             const postToSend = _.cloneDeep(post)
-            postToSend.frontMatter.createDate = postToSend.frontMatter.createDate || postToSend.frontMatter.date || new Date().toISOString(),
-            postToSend.frontMatter.updateDate = new Date().toISOString(),
-            postToSend.frontMatter.date = new Date().toISOString(),
+            postToSend.frontMatter.createDate = postToSend.frontMatter.createDate || postToSend.frontMatter.date || new Date().toISOString()
+            postToSend.frontMatter.updateDate = new Date().toISOString()
+            postToSend.frontMatter.date = new Date().toISOString()
             delete postToSend.frontMatter.publish
             delete postToSend.frontMatter.delete
             postToSend.frontMatter.unpublish = true

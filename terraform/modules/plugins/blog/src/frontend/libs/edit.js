@@ -279,6 +279,8 @@ window.RENDER_CONFIG = {
         ]
       }))
       if (_.isDate(_.get(post, 'frontMatter.createDate'))) {
+        setSaveState(post.frontMatter.createDate.toLocaleString())
+      } else if (_.isString(_.get(post, 'frontMatter.createDate'))) {
         setSaveState(new Date(post.frontMatter.createDate).toLocaleString())
       }
       if (_.isDate(_.get(post, 'lastSaved'))) {
