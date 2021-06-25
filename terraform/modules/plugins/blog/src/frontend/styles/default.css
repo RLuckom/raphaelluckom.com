@@ -155,7 +155,6 @@ img {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none; 
-  caret-color: transparent;
 }
 
 .footnote-marker {
@@ -545,6 +544,10 @@ button.delete-footnote {
   display: inline-block;
   cursor: pointer;
   height: 2.5rem;
+}
+
+.prompt-field-wrapper .file {
+  width: 100%;
 }
 
 .file input {
