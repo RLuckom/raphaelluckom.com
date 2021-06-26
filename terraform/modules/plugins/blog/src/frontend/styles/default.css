@@ -118,6 +118,7 @@ input[type=text] {
   width: 100%;
   padding: 0.5em;
   font-family: inherit;
+  font-size: 18px;
   caret-color: black;
   border: 1px solid black;
 }
@@ -177,12 +178,13 @@ img {
 
 .img-control {
   display: none;
+  margin: 0.25em 0;
+  width: 100%;
 }
 
 .ProseMirror-selectednode .img-control {
   display: unset;
 }
-
 
 #post-editor {
   flex: 1;
@@ -212,6 +214,10 @@ main {
   display: flex;
   flex-direction: column;
   width: 100%;
+}
+
+body {
+  height: 100% !important;
 }
 
 input.new-post.expanded {

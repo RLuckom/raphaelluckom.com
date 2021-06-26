@@ -314,7 +314,7 @@ function moveDown(view, node, getPos, evt) {
   const doc = view.state.doc
   const tr = view.state.tr
   const startingPos = getPos()
-  let next = doc.childAfter(startingPos + 1)
+  const next = doc.childAfter(startingPos + 1)
   if (!next || !next.node) {
     return
   }
@@ -323,6 +323,16 @@ function moveDown(view, node, getPos, evt) {
   .deleteSelection()
   .insert(tr.mapping.map(newPos), node)
   .setSelection(new prosemirror.NodeSelection(tr.doc.resolve(tr.doc.childBefore(tr.mapping.map(newPos)).offset)))
+  view.dispatch(tr)
+}
+
+function deselectImage(view, node, getPos, evt) {
+  evt.stopPropagation()
+  const state = view.state
+  const doc = view.state.doc
+  const tr = view.state.tr
+  const startingPos = getPos()
+  tr.setSelection(new prosemirror.TextSelection(doc.resolve(startingPos + 1)))
   view.dispatch(tr)
 }
 
@@ -412,6 +422,14 @@ class ImageView {
           onInput: _.partial(updateTextDescriptionArea, self.view, self.node, self.getPos),
           value: this.node.attrs.alt || '',
           placeholder: "Text Description"
+        },
+        {
+          tagName: 'button',
+          classNames: ['img-control'],
+          onClick: _.partial(deselectImage, self.view, self.node, self.getPos),
+          children: [
+            "Deselect"
+          ]
         },
         {
           tagName: 'button',
@@ -1276,8 +1294,6 @@ function prosemirrorView({container, uploadImage, onChange, initialState, initia
           title: "Insert image",
           fields: {
             src: new FileField({label: "File", className: 'photo-input', required: true, value: attrs && attrs.src, accept: "image/*"}),
-            alt: new TextAreaField({label: "Description", className: 'photo-input alt',
-                               value: attrs ? attrs.alt : state.doc.textBetween(from, to, " ")})
           },
           callback(attrs) {
             startImageUpload(view, attrs)
