@@ -216,10 +216,6 @@ main {
   width: 100%;
 }
 
-body {
-  height: 100% !important;
-}
-
 input.new-post.expanded {
   border-radius: 0;
   width: 300px;

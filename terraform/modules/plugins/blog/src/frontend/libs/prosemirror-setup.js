@@ -228,7 +228,7 @@ const footnoteMarkdownParser = new prosemirror.MarkdownParser(schema, md, {
       size,
       canonicalExt,
       title: tok.attrGet("title") || null,
-      alt: tok.children[0] && tok.children[0].content || null,
+      alt: tok.attrGet("title") || null,
     }
     return ret
   }},
@@ -900,7 +900,6 @@ function linkItem(markType) {
             label: "Link target",
             required: true
           }),
-          title: new TextField({label: "Title"})
         },
         callback(attrs) {
           prosemirror.toggleMark(markType, attrs)(view.state, view.dispatch)
