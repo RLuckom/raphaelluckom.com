@@ -17,7 +17,7 @@ window.RENDER_CONFIG = {
     if (!editorState || _.get(editorState, 'etag') !== _.get(post, 'etag')) {
       if (!post) {
         editorState = setPostEditorState(postId, {
-          title: '',
+          title: postId,
           trails: [],
           content: '',
           imageIds: [],
@@ -26,7 +26,7 @@ window.RENDER_CONFIG = {
         saveState = setPostSaveState(postId, {etag: null, label: translatableText.saveState.unsaved})
       } else {
         editorState = setPostEditorState(postId, {
-          title: post.frontMatter.title,
+          title: post.frontMatter.title || postId,
           trails: post.frontMatter.meta.trails || post.frontMatter.meta.trail,
           content: post.content,
           imageIds: post.frontMatter.meta.imageIds,
