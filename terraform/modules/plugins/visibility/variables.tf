@@ -82,7 +82,9 @@ module ui {
     data_warehouse_configs = var.data_warehouse_configs
     serverless_site_configs = var.serverless_site_configs
   }
-  default_css_paths = []
+  default_css_paths = [
+    local.plugin_default_styles_path,
+  ]
   default_script_paths = []
   default_deferred_script_paths = []
   page_configs = {
@@ -94,9 +96,17 @@ module ui {
     }
   }
   plugin_file_configs = [
+    {
+      key = local.plugin_default_styles_path
+      file_path = ""
+      file_contents = file("${path.module}/src/frontend/styles/default.css")
+      content_type = "text/css"
+    },
   ]
 }
+
 locals {
+  plugin_default_styles_path = "${local.file_prefix}/assets/styles/default.css"
   file_prefix = trim(var.plugin_config.source_root, "/")
 }
 

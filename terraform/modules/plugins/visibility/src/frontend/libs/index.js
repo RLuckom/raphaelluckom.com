@@ -4,9 +4,18 @@ window.RENDER_CONFIG = {
     const mainSection = document.querySelector('main')
     mainSection.appendChild(domNode({
       tagName: 'div',
-      id: 'new-post-container',
+      classNames: ['metric-container'],
       children: [
-        `Total cost: ${costReportSummary.overall.blendedCost}`
+        {
+          tagName: 'div',
+          classNames: ['metric-container-title'],
+          children: ['Total Cost'],
+        },
+        {
+          tagName: 'div',
+          classNames: 'metric-scalar-value',
+          children: [`$${_.round(costReportSummary.overall.blendedCost, 2)}`]
+        }
       ]
     }))
   },
