@@ -57,11 +57,12 @@ main {
   position: relative;
   font-family: inherit;
   padding: 10px;
+  margin: 15px;
 }
 
 .metric-container-title {
   position: absolute;
-  top: -10px;
+  top: -15px;
   background-color: white;
   font-family: inherit;
   font-size: 18px;

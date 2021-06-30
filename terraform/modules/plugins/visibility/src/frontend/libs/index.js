@@ -1,23 +1,47 @@
+function siteContainerId(name) {
+  return `site-metric-container-${name}`
+}
+
 window.RENDER_CONFIG = {
   init: ({costReportSummary}, gopher) => {
     console.log(costReportSummary)
     const mainSection = document.querySelector('main')
-    mainSection.appendChild(domNode({
-      tagName: 'div',
-      classNames: ['metric-container'],
-      children: [
-        {
-          tagName: 'div',
-          classNames: ['metric-container-title'],
-          children: ['Total Cost'],
-        },
-        {
-          tagName: 'div',
-          classNames: 'metric-scalar-value',
-          children: [`$${_.round(costReportSummary.overall.blendedCost, 2)}`]
-        }
-      ]
-    }))
+    const serverlessSiteMetrics = _.map(CONFIG.serverless_site_configs, (conf, site_name) => {
+      return {
+        tagName: 'div',
+        classNames: ['metric-container'],
+        children: [
+          {
+            tagName: 'div',
+            classNames: ['metric-container-title'],
+            children: [site_name],
+          },
+          {
+            tagName: 'div',
+            classNames: 'site-metric-container',
+            id: siteContainerId(site_name),
+          }
+        ]
+      }
+    })
+    _.each(domNode([
+      {
+        tagName: 'div',
+        classNames: ['metric-container'],
+        children: [
+          {
+            tagName: 'div',
+            classNames: ['metric-container-title'],
+            children: ['Total Cost'],
+          },
+          {
+            tagName: 'div',
+            classNames: 'metric-scalar-value',
+            children: [`$${_.round(costReportSummary.overall.blendedCost, 2)}`]
+          }
+        ]
+      }, ...serverlessSiteMetrics
+    ]), (n) => mainSection.appendChild(n))
   },
   smallScreenFormatters: {
     toggleTray: () => {
