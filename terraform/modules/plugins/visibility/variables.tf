@@ -68,63 +68,58 @@ variable plugin_config {
   })
 }
 
-module ui {
-  source = "github.com/RLuckom/terraform_modules//themes/icknield/admin_site_plugin_ui"
-  name = var.name
-  region = var.region
-  account_id = var.account_id
-  gopher_config_contents = file("${path.module}/src/frontend/libs/gopher_config.js")
-  admin_site_resources = var.admin_site_resources
-  plugin_config = var.plugin_config
-  config_values = {
-    cost_report_summary_storage_bucket = var.cost_report_summary_location.bucket
-    cost_report_summary_storage_key = var.cost_report_summary_location.key 
-    data_warehouse_configs = var.data_warehouse_configs
-    serverless_site_configs = var.serverless_site_configs
-  }
-  default_css_paths = [
-    local.plugin_default_styles_path,
-  ]
-  default_script_paths = []
-  default_deferred_script_paths = []
-  page_configs = {
-    index = {
-      css_paths = []
-      script_paths = []
-      deferred_script_paths = []
-      render_config_path = "${path.module}/src/frontend/libs/index.js"
-    }
-  }
-  plugin_file_configs = [
-    {
-      key = local.plugin_default_styles_path
-      file_path = ""
-      file_contents = file("${path.module}/src/frontend/styles/default.css")
-      content_type = "text/css"
-    },
-  ]
-}
-
 locals {
   plugin_default_styles_path = "${local.file_prefix}/assets/styles/default.css"
   file_prefix = trim(var.plugin_config.source_root, "/")
 }
 
-output files {
-  value = module.ui.files
-}
+// function vars
 
-output plugin_config {
-  value = {
-    name = var.name
-    slug = "explore system metrics"
+variable logging_config {
+  type = object({
+    bucket = string
+    prefix = string
+    metric_table = string
+  })
+  default = {
+    bucket = ""
+    prefix = ""
+    metric_table = ""
   }
 }
 
-output static_config {
-  value = {
-    api_name = var.name
-    display_name = var.name
-    role_name_stem = var.name
+variable csv_parser_layer {
+  type = object({
+    present = bool
+    arn = string
+  })
+  default = {
+    present = false
+    arn = ""
   }
+}
+
+variable donut_days_layer {
+  type = object({
+    present = bool
+    arn = string
+  })
+  default = {
+    present = false
+    arn = ""
+  }
+}
+
+variable lambda_event_configs {
+  type = list(object({
+    maximum_event_age_in_seconds = number
+    maximum_retry_attempts = number
+    on_success = list(object({
+      function_arn = string
+    }))
+    on_failure = list(object({
+      function_arn = string
+    }))
+  }))
+  default = []
 }

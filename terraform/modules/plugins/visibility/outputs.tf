@@ -6,3 +6,22 @@ output additional_connect_sources_required {
     "https://${var.plugin_config.bucket_name}.s3.amazonaws.com"
   ]
 }
+
+output files {
+  value = module.ui.files
+}
+
+output plugin_config {
+  value = {
+    name = var.name
+    slug = "explore system metrics"
+  }
+}
+
+output static_config {
+  value = {
+    api_name = var.name
+    display_name = var.name
+    role_name_stem = var.name
+  }
+}
