@@ -1,24 +1,20 @@
 const { Readable } = require('stream');
-const fs = require('fs')
 
 const csv = require('csv-parser')
 const _ = require('lodash')
-
-const csvFilename = '../2aa67b61-00bb-4688-bf80-64d4a9ebb90e.csv' 
-
-const metrics = {
-  ips: {}
-}
-
-const ips = metrics.ips
-
-const requestRecords = []
 
 function toSecs(s) {
   return _.parseInt(s.slice(0, 2)) * 3600 + _.parseInt(s.slice(3, 5)) * 60 + _.parseInt(s.slice(6, 8))
 }
 
-const reportReadStream = Readable.from(fs.readFileSync(csvFilename))
+function parseResults({buf}, callback) {
+  const metrics = {
+    ips: {}
+  }
+  const ips = metrics.ips
+  const requestRecords = []
+
+  Readable.from(buf)
   .pipe(csv())
   .on('data', (data) => {
     if (!ips[data.requestIp]) {
@@ -61,14 +57,16 @@ const reportReadStream = Readable.from(fs.readFileSync(csvFilename))
         }
       }
     })
-    console.log(metrics)
     const hits = _.reduce(requestRecords, (acc, v) => {
       if (!ips[v.requestIp].flag && v.status === '200') {
-        console.log(v)
         acc[v.uri] = (acc[v.uri] || 0) + 1
       }
       return acc
     }, {})
-    console.log(hits)
+    callback(null, {hits, metrics})
   })
+}
 
+module.exports = {
+  parseResults
+}
