@@ -1,29 +1,3 @@
-module request_record_lambda {
-  source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
-  account_id = var.account_id
-  region = var.region
-  cron_notifications = [{
-    period_expression = "01 * * * ? *"
-  }]
-  config_contents = templatefile("${path.module}/src/backend/parse_requests_config.js",
-  {
-    athena_result_bucket = ""
-    athena_region = ""
-    athena_catalog = ""
-    result_bucket = ""
-    result_path = ""
-    table_name = var.posts_table_name
-    db_name = var.posts_table_name
-    table_region = var.region
-  })
-  logging_config = var.logging_config
-  lambda_event_configs = var.lambda_event_configs
-  action_name = "post_entry"
-  scope_name = var.coordinator_data.system_id.security_scope
-  donut_days_layer = var.donut_days_layer
-  additional_layers = [var.markdown_tools_layer]
-}
-
 module ui {
   source = "github.com/RLuckom/terraform_modules//themes/icknield/admin_site_plugin_ui"
   name = var.name

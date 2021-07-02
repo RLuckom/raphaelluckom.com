@@ -17,9 +17,10 @@ module visibility_system {
   }]
   supported_system_clients = {
     prod = {
-      metric_table_read_role_names = []
+      function_metric_table_read_role_names = []
       subsystems = {
         prod = {
+          site_metric_table_read_role_name_map = {}
           scoped_logging_functions = module.admin_site_prod_blog_plugin.lambda_logging_arns
           glue_permission_name_map = {
             add_partition_permission_names = []
@@ -30,6 +31,7 @@ module visibility_system {
         }
         human = {
           scoped_logging_functions = module.human_attention_archive.lambda_logging_roles
+          site_metric_table_read_role_name_map = {}
           glue_permission_name_map = {
             add_partition_permission_names = []
             add_partition_permission_arns = []
@@ -40,9 +42,10 @@ module visibility_system {
       }
     }
     test = {
-      metric_table_read_role_names = []
+      function_metric_table_read_role_names = []
       subsystems = {
         test = {
+          site_metric_table_read_role_name_map = {}
           scoped_logging_functions = []
           scoped_logging_functions = module.admin_site_blog_plugin.lambda_logging_arns
           glue_permission_name_map = {
@@ -54,6 +57,7 @@ module visibility_system {
         }
         admin = {
           scoped_logging_functions = []
+          site_metric_table_read_role_name_map = {}
           glue_permission_name_map = {
             add_partition_permission_names = []
             add_partition_permission_arns = []
@@ -71,8 +75,8 @@ module admin_site_visibility_plugin {
   name = "visibility"
   account_id = local.account_id
   region = local.region
-	data_warehouse_configs = module.visibility_system.data_warehouse_configs
-	serverless_site_configs = module.visibility_system.serverless_site_configs
+  data_warehouse_configs = module.visibility_system.data_warehouse_configs
+  serverless_site_configs = module.visibility_system.serverless_site_configs
   cost_report_summary_location = module.visibility_system.cost_report_summary_location
   admin_site_resources = module.admin_interface.site_resources
   plugin_config = module.admin_interface.plugin_config["visibility"]
