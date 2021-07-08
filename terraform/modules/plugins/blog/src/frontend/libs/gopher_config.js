@@ -14,6 +14,19 @@ window.GOPHER_CONFIG = {
         KeyConditionExpression: {value: 'kind = :kindId' },
       },
     },
+    pageHits: {
+      accessSchema: exploranda.dataSources.AWS.dynamodb.query,
+      params: {
+        apiConfig: {value: {region: '${aws_region}'}},
+        TableName: {value: CONFIG.site_metrics_table},
+        ExpressionAttributeValues: {
+          value: {
+            ':metricType': 'pageHits',
+          }
+        },
+        KeyConditionExpression: {value: 'metricType = :metricType' },
+      },
+    },
     putImage: {
       accessSchema: exploranda.dataSources.AWS.s3.putObject,
       params: {

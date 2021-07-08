@@ -21,12 +21,12 @@ window.RENDER_CONFIG = {
       return revert
     }
   },
-  init: ({listPosts, postRecords}, gopher) => {
+  init: ({listPosts, postRecords, pageHits}, gopher) => {
     const mainSection = document.querySelector('main')
     const closeInputButtonText = 'X'
     window.addEventListener('pageshow', () => {
-      goph.report(['listPosts', 'postRecords'], (e, {listPosts, postRecords}) => {
-        updatePostKeys(listPosts, postRecords)
+      goph.report(['listPosts', 'postRecords', 'pageHits'], (e, {listPosts, postRecords, pageHits}) => {
+        updatePostKeys(listPosts, postRecords, pageHits)
       })
     })
     const slashReplacement = '-'
@@ -124,7 +124,7 @@ window.RENDER_CONFIG = {
               {
                 tagName: 'div',
                 classNames: 'publish-status-header',
-                children: ["Last Saved"]
+                children: ["Page Views"]
               },
             ]
           },
@@ -145,9 +145,14 @@ window.RENDER_CONFIG = {
       const postId = postIdParts.join('.')
       return postId
     }
-    function updatePostKeys(listPosts, postRecords) {
+    function updatePostKeys(listPosts, postRecords, pageHits) {
       let postKeys = _.map(listPosts, 'Key')
       postRecords = _.sortBy(postRecords.postRecords, 'frontMatter.createDate')
+      const pageHitsMap = _.reduce(pageHits.pageHits, (acc, v, k) => {
+        acc[publicPathToPostId(v.metricId)] = v.hits
+        return acc
+      }, {})
+      console.log(pageHitsMap)
       postKeys = _.reverse(_.sortBy(
         postKeys,
         (k) => _.findIndex(postRecords, (rec) => postKeyToId(k) === rec.id)
@@ -185,7 +190,7 @@ window.RENDER_CONFIG = {
                     {
                       tagName: 'div',
                       classNames: 'publish-status',
-                      children: [saved.LastModified.toLocaleString()]
+                      children: [`${pageHitsMap[postId] || 0}`]
                     },
                   ]
                 },
@@ -283,7 +288,7 @@ window.RENDER_CONFIG = {
         })
       }))
     }
-    updatePostKeys(listPosts, postRecords)
+    updatePostKeys(listPosts, postRecords, pageHits)
   },
   params: {
     listPosts: {
@@ -294,6 +299,9 @@ window.RENDER_CONFIG = {
     },
     postRecords: {
       source: 'postRecords',
+    },
+    pageHits: {
+      source: 'pageHits',
     },
   },
   onAPIError: (e, r, cb) => {

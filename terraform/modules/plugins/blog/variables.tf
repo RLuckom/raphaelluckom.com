@@ -69,6 +69,7 @@ variable coordinator_data {
     })
     // these can be set to "" if NA
     metric_table = string
+    site_metrics_table = string
     lambda_log_delivery_prefix = string
     lambda_log_delivery_bucket = string
     cloudfront_log_delivery_prefix = string
@@ -240,6 +241,7 @@ locals {
   prosemirror_setup_js_path = "${local.file_prefix}/assets/js/prosemirror-setup-${filemd5("${path.module}/src/frontend/libs/prosemirror-setup.js")}.js"
   plugin_config = {
     posts_table = local.posts_table_name
+    site_metrics_table = var.coordinator_data.site_metrics_table
     table_region = var.region
     website_bucket = module.blog_site.website_bucket_name
     blog_image_hosting_root = local.blog_image_hosting_root

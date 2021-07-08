@@ -412,6 +412,11 @@ function serializePostToMarkdown({frontMatter, content, footnotes}) {
 
 const serializePost = serializePostToMarkdown
 
+const htmlPostRegex = new RegExp('/posts/([^/]*).html')
+function publicPathToPostId(publicPath) {
+  return _.get((publicPath || "").match(htmlPostRegex), 1)
+}
+
 function prepareEditorString(s, postId) {
   const postIdInLinkRegex = new RegExp("\\((https:\/\/.*)" + postId + '([^\\)]*)\\)', 'g')
   const postIdInRelativeLinkRegex = new RegExp("]\\(/(.*)" + postId + '([^\\)]*)\\)', 'g')

@@ -20,7 +20,9 @@ module visibility_system {
       function_metric_table_read_role_names = []
       subsystems = {
         prod = {
-          site_metric_table_read_role_name_map = {}
+          site_metric_table_read_role_name_map = {
+            raphaelluckom_com = [module.admin_interface.plugin_authenticated_roles["prod_blog"].name]
+          }
           scoped_logging_functions = module.admin_site_prod_blog_plugin.lambda_logging_arns
           glue_permission_name_map = {
             add_partition_permission_names = []
@@ -45,7 +47,9 @@ module visibility_system {
       function_metric_table_read_role_names = []
       subsystems = {
         test = {
-          site_metric_table_read_role_name_map = {}
+          site_metric_table_read_role_name_map = {
+            test = [module.admin_interface.plugin_authenticated_roles["blog"].name]
+          }
           scoped_logging_functions = []
           scoped_logging_functions = module.admin_site_blog_plugin.lambda_logging_arns
           glue_permission_name_map = {
