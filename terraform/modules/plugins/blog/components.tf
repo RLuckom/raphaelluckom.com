@@ -6,6 +6,67 @@ locals {
   posts_table_name = "${var.coordinator_data.system_id.security_scope}-${var.coordinator_data.system_id.subsystem_name}-posts_table-${random_id.table_suffix.b64_url}"
 }
 
+module ui {
+  source = "github.com/RLuckom/terraform_modules//themes/icknield/admin_site_plugin_ui"
+  name = var.name
+  region = var.region
+  account_id = var.account_id
+  gopher_config_contents = file("${path.module}/src/frontend/libs/gopher_config.js")
+  admin_site_resources = var.admin_site_resources
+  plugin_config = var.plugin_config
+  config_values = local.plugin_config
+  i18n_config_values = var.i18n_config_values
+  default_css_paths = local.default_css_paths
+  default_script_paths = local.default_script_paths
+  default_deferred_script_paths = []
+  page_configs = {
+    index = {
+      css_paths = local.index_css_paths
+      script_paths = local.index_script_paths
+      deferred_script_paths = []
+      render_config_path = "${path.module}/src/frontend/libs/index.js"
+    }
+    edit = {
+      css_paths = local.edit_css_paths
+      script_paths = local.edit_script_paths
+      deferred_script_paths = []
+      render_config_path = "${path.module}/src/frontend/libs/edit.js"
+    }
+  }
+  plugin_file_configs = [
+    {
+      key = local.libs_js_path
+      file_contents = null
+      file_path = "${path.module}/src/frontend/libs/pkg.js"
+      content_type = "application/javascript"
+    },
+    {
+      key = local.prosemirror_setup_js_path
+      file_contents = null
+      file_path = "${path.module}/src/frontend/libs/prosemirror-setup.js"
+      content_type = "application/javascript"
+    },
+    {
+      key = local.post_utils_js_path
+      file_contents = null
+      file_path = "${path.module}/src/frontend/libs/post_utils.js"
+      content_type = "application/javascript"
+    },
+    {
+      key = local.plugin_default_styles_path
+      file_path = ""
+      file_contents = file("${path.module}/src/frontend/styles/default.css")
+      content_type = "text/css"
+    },
+    {
+      key = local.edit_styles_path
+      file_path = ""
+      file_contents = file("${path.module}/src/frontend/styles/editor.css")
+      content_type = "text/css"
+    },
+  ]
+}
+
 module post_entry_lambda {
   source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
   account_id = var.account_id

@@ -51,6 +51,83 @@ variable plugin_config {
   })
 }
 
+variable i18n_config_values {
+  type = any
+  default = {
+    postMetadata =  {
+      placeholders = {
+        trails = "Trails (comma-separated)"
+        author = "Author"
+        title = "Title"
+        footnoteTitle = "Footnote Title"
+        id = "Type a new post id, then press Enter"
+      }
+    }
+    saveState = {
+      unmodified = "Unmodified"
+      unsaved = "Unsaved"
+      modified = "Changed"
+    }
+    publishState = {
+      mostRecent = "Published"
+      unpublished = "Unpublished"
+      modified = "Changed"
+      unknown = "Unknown"
+    }
+    postActions = {
+      unpublish = "Unpublish"
+      publish = "Publish"
+      save = "Save"
+      edit = "Edit"
+      delete = "Delete"
+      toIndex = "Back"
+      new = "New Post"
+      addFootnote = "Add Footnote"
+    }
+    editActions = {
+      deleteFootnote = "Delete Footnote"
+      reallyDeleteFootnote = "Confirm Delete"
+    }
+    editing = "Editing"
+    ui = {
+      colonMarker = ":"
+      textDescription = "Text Description"
+      deselect = "Deselect"
+      ok = "OK"
+      cancel = "Cancel"
+      required = "Required"
+      createLink = "Create a link"
+      linkTarget = "Link Target"
+      toggleStrong = "Toggle stromg style"
+      toggleEmphasis = "Toggle emphasis style"
+      toggleCode = "Toggle code font"
+      wrapBullet = "Wrap in bullet list"
+      wrapOrdered = "Wrap in ordered list"
+      wrapBlock = "Wrap in blockquote"
+      changeParagraph = "Change to paragraph"
+      plain = "Plain"
+      changeCode = "Change to code block"
+      code = "Code"
+      changeHeading = "Change to Heading"
+      level = "Level"
+      insertHr = "Insert horizontal rule"
+      hr = "Horizontal rule"
+      addFnText = "Add footnote text"
+      fnText = "Footnote text"
+      fnRef = "Footnote Ref"
+      insert = "Insert"
+      heading = "Heading"
+      type = "Type"
+      ellipsis = "..."
+      insertFn = "Insert Footnote"
+      fn = "Footnote"
+      insertImage = "Insert image"
+      image = "Image"
+      file = "File"
+    }
+  }
+}
+
 // plugin-specific variables below this line
 
 variable coordinator_data {
@@ -164,66 +241,6 @@ variable logging_config {
     prefix = ""
     metric_table = ""
   }
-}
-
-module ui {
-  source = "github.com/RLuckom/terraform_modules//themes/icknield/admin_site_plugin_ui"
-  name = var.name
-  region = var.region
-  account_id = var.account_id
-  gopher_config_contents = file("${path.module}/src/frontend/libs/gopher_config.js")
-  admin_site_resources = var.admin_site_resources
-  plugin_config = var.plugin_config
-  config_values = local.plugin_config
-  default_css_paths = local.default_css_paths
-  default_script_paths = local.default_script_paths
-  default_deferred_script_paths = []
-  page_configs = {
-    index = {
-      css_paths = local.index_css_paths
-      script_paths = local.index_script_paths
-      deferred_script_paths = []
-      render_config_path = "${path.module}/src/frontend/libs/index.js"
-    }
-    edit = {
-      css_paths = local.edit_css_paths
-      script_paths = local.edit_script_paths
-      deferred_script_paths = []
-      render_config_path = "${path.module}/src/frontend/libs/edit.js"
-    }
-  }
-  plugin_file_configs = [
-    {
-      key = local.libs_js_path
-      file_contents = null
-      file_path = "${path.module}/src/frontend/libs/pkg.js"
-      content_type = "application/javascript"
-    },
-    {
-      key = local.prosemirror_setup_js_path
-      file_contents = null
-      file_path = "${path.module}/src/frontend/libs/prosemirror-setup.js"
-      content_type = "application/javascript"
-    },
-    {
-      key = local.post_utils_js_path
-      file_contents = null
-      file_path = "${path.module}/src/frontend/libs/post_utils.js"
-      content_type = "application/javascript"
-    },
-    {
-      key = local.plugin_default_styles_path
-      file_path = ""
-      file_contents = file("${path.module}/src/frontend/styles/default.css")
-      content_type = "text/css"
-    },
-    {
-      key = local.edit_styles_path
-      file_path = ""
-      file_contents = file("${path.module}/src/frontend/styles/editor.css")
-      content_type = "text/css"
-    },
-  ]
 }
 
 locals {

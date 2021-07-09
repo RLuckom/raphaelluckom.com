@@ -274,43 +274,6 @@ const canonicalImageTypes = {
   gif: 'gif',
 }
 
-const translatableText = {
-  postMetadata: {
-    placeholders: {
-      trails: 'Trails (comma-separated)',
-      author: 'Author',
-      title: 'Title',
-      footnoteTitle: 'Footnote Title',
-      id: "Type a new post id, then press Enter",
-    }
-  },
-  saveState: {
-    unmodified: 'Unmodified',
-    unsaved: 'Unsaved',
-    modified: 'Changed',
-  },
-  publishState: {
-    mostRecent: 'Published',
-    unpublished: 'Unpublished',
-    modified: 'Changed',
-    unknown: 'Unknown',
-  },
-  postActions: {
-    unpublish: 'Unpublish',
-    publish: 'Publish',
-    save: 'Save',
-    edit: 'Edit',
-    delete: 'Delete',
-    toIndex: 'Back',
-    new: 'New Post',
-    addFootnote: 'Add Footnote',
-  },
-  editActions: {
-    deleteFootnote: 'Delete Footnote',
-    reallyDeleteFootnote: 'Confirm Delete',
-  },
-  editing: 'Editing',
-}
 
 function getImagePrivateUrl({postId, imageId, size, ext}) {
   const canonicalExt = canonicalImageTypes[_.toLower(ext)]
@@ -487,25 +450,25 @@ function buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnote
             name: 'footnote name',
             classNames: ['authoring-input', 'footnote-marker'],
             onKeyUp: (evt) => evt.target.value = evt.target.value.replace(/[^A-z0-9]/, ''),
-            placeholder: translatableText.postMetadata.placeholders.footnoteTitle,
+            placeholder: I18N_CONFIG.postMetadata.placeholders.footnoteTitle,
             value: name,
             onChange: onFootnoteNameChange,
           },
           {
             tagName: 'button',
             classNames: 'delete-footnote',
-            innerText: translatableText.editActions.deleteFootnote,
+            innerText: I18N_CONFIG.editActions.deleteFootnote,
             onClick: function(evt) {
               if (deleteable) {
                 onFootnoteDelete(evt)
                 deleteable = false
               } else {
                 deleteable = true
-                editorDiv.querySelector('.delete-footnote').innerText = translatableText.editActions.reallyDeleteFootnote
+                editorDiv.querySelector('.delete-footnote').innerText = I18N_CONFIG.editActions.reallyDeleteFootnote
                 setTimeout(function() {
                   if (deleteable) {
                     deleteable = false
-                    editorDiv.querySelector('.delete-footnote').innerText = translatableText.editActions.deleteFootnote
+                    editorDiv.querySelector('.delete-footnote').innerText = I18N_CONFIG.editActions.deleteFootnote
                   }
                 }, 5000)
               }
@@ -591,5 +554,5 @@ function updateEditorState(postId, updates, updateFootnoteMenu, updatedFootnoteN
     isModified = true
   }
   const newEditorState = updatePostEditorState(postId, changedFields)
-  const s = updatePostSaveState(postId, {label: isModified ? translatableText.saveState.modified : translatableText.saveState.unmodified})
+  const s = updatePostSaveState(postId, {label: isModified ? I18N_CONFIG.saveState.modified : I18N_CONFIG.saveState.unmodified})
 }

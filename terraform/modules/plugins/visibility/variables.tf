@@ -68,6 +68,13 @@ variable plugin_config {
   })
 }
 
+variable i18n_config_values {
+  type = any
+  default = {
+    total_cost = "Total Cost"
+  }
+}
+
 locals {
   plugin_default_styles_path = "${local.file_prefix}/assets/styles/default.css"
   file_prefix = trim(var.plugin_config.source_root, "/")

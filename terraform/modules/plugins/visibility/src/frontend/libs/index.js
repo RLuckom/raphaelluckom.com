@@ -14,7 +14,7 @@ window.RENDER_CONFIG = {
           {
             tagName: 'div',
             classNames: ['metric-container-title'],
-            children: ['Total Cost'],
+            children: [I18N_CONFIG.total_cost],
           },
           {
             tagName: 'div',

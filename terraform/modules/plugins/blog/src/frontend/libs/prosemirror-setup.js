@@ -411,7 +411,7 @@ class ImageView {
           tagName: 'label',
           classNames: ['img-control', 'img-description-label'],
           children: [
-            'Text Description:'
+            I18N_CONFIG.ui.textDescription + I18N_CONFIG.ui.colonMarker
           ]
         },
         {
@@ -421,14 +421,14 @@ class ImageView {
           onClick: (evt) => evt.stopPropagation(),
           onInput: _.partial(updateTextDescriptionArea, self.view, self.node, self.getPos),
           value: this.node.attrs.alt || '',
-          placeholder: "Text Description"
+          placeholder: I18N_CONFIG.ui.textDescription
         },
         {
           tagName: 'button',
           classNames: ['img-control'],
           onClick: _.partial(deselectImage, self.view, self.node, self.getPos),
           children: [
-            "Deselect"
+            I18N_CONFIG.ui.deselect
           ]
         },
         {
@@ -653,11 +653,11 @@ function openPrompt(options) {
   let submitButton = document.createElement("button")
   submitButton.type = "submit"
   submitButton.className = prefix + "-submit"
-  submitButton.textContent = "OK"
+  submitButton.textContent = I18N_CONFIG.ui.ok
   let cancelButton = document.createElement("button")
   cancelButton.type = "button"
   cancelButton.className = prefix + "-cancel"
-  cancelButton.textContent = "Cancel"
+  cancelButton.textContent = I18N_CONFIG.ui.cancel
   cancelButton.addEventListener("click", close)
 
   let form = wrapper.appendChild(document.createElement("form"))
@@ -767,7 +767,7 @@ class Field {
 
   validate(value) {
     if (!value && this.options.required)
-      return "Required field"
+      return I18N_CONFIG.ui.required
     return this.validateType(value) || (this.options.validate && this.options.validate(value))
   }
 
@@ -894,10 +894,10 @@ function linkItem(markType) {
         return true
       }
       openPrompt({
-        title: "Create a link",
+        title: I18N_CONFIG.ui.createLink,
         fields: {
           href: new TextField({
-            label: "Link target",
+            label: I18N_CONFIG.ui.linkTarget,
             required: true
           }),
         },
@@ -975,11 +975,11 @@ function wrapListItem(nodeType, options) {
 function buildMenuItems({schema, insertImageItem, footnotes, addFootnote}) {
   let r = {}, type
   if (type = schema.marks.strong)
-    r.toggleStrong = markItem(type, {title: "Toggle strong style", icon: prosemirror.icons.strong})
+    r.toggleStrong = markItem(type, {title: I18N_CONFIG.ui.toggleStrong, icon: prosemirror.icons.strong})
   if (type = schema.marks.em)
-    r.toggleEm = markItem(type, {title: "Toggle emphasis", icon: prosemirror.icons.em})
+    r.toggleEm = markItem(type, {title: I18N_CONFIG.ui.toggleEmphasis, icon: prosemirror.icons.em})
   if (type = schema.marks.code)
-    r.toggleCode = markItem(type, {title: "Toggle code font", icon: prosemirror.icons.code})
+    r.toggleCode = markItem(type, {title: I18N_CONFIG.ui.toggleCode, icon: prosemirror.icons.code})
   if (type = schema.marks.link)
     r.toggleLink = linkItem(type)
 
@@ -987,49 +987,49 @@ function buildMenuItems({schema, insertImageItem, footnotes, addFootnote}) {
     r.insertImage = insertImageItem(type)
   if (type = schema.nodes.bullet_list)
     r.wrapBulletList = wrapListItem(type, {
-      title: "Wrap in bullet list",
+      title: I18N_CONFIG.ui.wrapBullet,
       icon: prosemirror.icons.bulletList
     })
   if (type = schema.nodes.ordered_list)
     r.wrapOrderedList = wrapListItem(type, {
-      title: "Wrap in ordered list",
+      title: I18N_CONFIG.ui.wrapOrdered,
       icon: prosemirror.icons.orderedList
     })
   if (type = schema.nodes.blockquote)
     r.wrapBlockQuote = prosemirror.wrapItem(type, {
-      title: "Wrap in block quote",
+      title: I18N_CONFIG.ui.wrapBlock,
       icon: prosemirror.icons.blockquote
     })
   if (type = schema.nodes.paragraph)
     r.makeParagraph = prosemirror.blockTypeItem(type, {
-      title: "Change to paragraph",
-      label: "Plain"
+      title: I18N_CONFIG.ui.changeParagraph,
+      label: I18N_CONFIG.ui.plain
     })
   if (type = schema.nodes.code_block)
     r.makeCodeBlock = prosemirror.blockTypeItem(type, {
-      title: "Change to code block",
-      label: "Code"
+      title: I18N_CONFIG.ui.changeCode,
+      label: I18N_CONFIG.ui.code
     })
   if (type = schema.nodes.heading)
     for (let i = 1; i <= 3; i++)
       r["makeHead" + i] = prosemirror.blockTypeItem(type, {
-        title: "Change to heading " + i,
-        label: "Level " + i,
+        title: I18N_CONFIG.ui.changeHeading + " " + i,
+        label: I18N_CONFIG.ui.level + " " + i,
         attrs: {level: i}
       })
   if (type = schema.nodes.horizontal_rule) {
     let hr = type
     r.insertHorizontalRule = new prosemirror.MenuItem({
-      title: "Insert horizontal rule",
-      label: "Horizontal rule",
+      title: I18N_CONFIG.ui.insertHr,
+      label: I18N_CONFIG.ui.hr,
       enable(state) { return canInsert(state, hr) },
       run(state, dispatch) { dispatch(state.tr.replaceSelectionWith(hr.create())) }
     })
   }
   if (_.isFunction(addFootnote)) {
     r.addFootnote = new prosemirror.MenuItem({
-      title: "Add Footnote text",
-      label: "New footnote text",
+      title: I18N_CONFIG.ui.addFnText,
+      label: I18N_CONFIG.ui.fnText,
       run: addFootnote,
     })
   }
@@ -1045,12 +1045,12 @@ function buildMenuItems({schema, insertImageItem, footnotes, addFootnote}) {
       footnotables.push(newFootnotables.pop())
     }
   }
-  r.footnoteMenu = new prosemirror.DropdownSubmenu(footnotables, {label: "Footnote Ref"})
+  r.footnoteMenu = new prosemirror.DropdownSubmenu(footnotables, {label: I18N_CONFIG.ui.fnRef})
   r.footnoteMenu.updateFootnotes = updateFootnotes
-  r.insertMenu = new prosemirror.Dropdown(cut([r.insertImage, r.insertHorizontalRule, r.footnoteMenu, r.addFootnote]), {label: "Insert"})
+  r.insertMenu = new prosemirror.Dropdown(cut([r.insertImage, r.insertHorizontalRule, r.footnoteMenu, r.addFootnote]), {label: I18N_CONFIG.ui.insert})
   r.typeMenu = new prosemirror.Dropdown(cut([r.makeParagraph, r.makeCodeBlock, r.makeHead1 && new prosemirror.DropdownSubmenu(cut([
     r.makeHead1, r.makeHead2, r.makeHead3,
-  ]), {label: "Heading"})]), {label: "Type..."})
+  ]), {label: I18N_CONFIG.ui.Heading})]), {label: I18N_CONFIG.ui.type + I18N_CONFIG.ui.ellipsis})
 
   r.inlineMenu = [cut([r.toggleStrong, r.toggleEm, r.toggleCode, r.toggleLink])]
   r.blockMenu = [cut([r.wrapBulletList, r.wrapOrderedList, r.wrapBlockQuote, prosemirror.joinUpItem,
@@ -1063,8 +1063,8 @@ function buildMenuItems({schema, insertImageItem, footnotes, addFootnote}) {
 function footnoteSubmenuContent(footnotes) {
   return _.map(footnotes, (v, k) => {
     return new prosemirror.MenuItem({
-      title: "Insert footnote " + k,
-      label: "Footnote " + k,
+      title: I18N_CONFIG.ui.insertFn + " " + k,
+      label: I18N_CONFIG.ui.fn + " " + k,
       select(state) {
         return prosemirror.insertPoint(state.doc, state.selection.from, schema.nodes.footnote_ref) != null
       },
@@ -1281,8 +1281,8 @@ function prosemirrorView({container, uploadImage, onChange, initialState, initia
 
   function insertImageItem(nodeType) {
     return new prosemirror.MenuItem({
-      title: "Insert image",
-      label: "Image",
+      title: I18N_CONFIG.ui.insertImage,
+      label: I18N_CONFIG.ui.image,
       enable(state) { return canInsert(state, nodeType) },
       run(state, _, view) {
         let {from, to} = state.selection, attrs = null
@@ -1290,9 +1290,9 @@ function prosemirrorView({container, uploadImage, onChange, initialState, initia
           attrs = state.selection.node.attrs
         }
         openPrompt({
-          title: "Insert image",
+          title: I18N_CONFIG.ui.insertImage,
           fields: {
-            src: new FileField({label: "File", className: 'photo-input', required: true, value: attrs && attrs.src, accept: "image/*"}),
+            src: new FileField({label: I18N_CONFIG.ui.file, className: 'photo-input', required: true, value: attrs && attrs.src, accept: "image/*"}),
           },
           callback(attrs) {
             startImageUpload(view, attrs)

@@ -93,7 +93,7 @@ window.RENDER_CONFIG = {
           type: 'text',
           id: 'new-post',
           classNames: ['new-post'],
-          placeholder: translatableText.postMetadata.placeholders.id,
+          placeholder: I18N_CONFIG.postMetadata.placeholders.id,
           onKeyDown: (evt) => {
             if (evt.which === 13 && evt.target.value) {
               window.location.href = `./edit.html?postId=${evt.target.value.replace(/\//g, slashReplacement)}`
@@ -204,7 +204,7 @@ window.RENDER_CONFIG = {
                   tagName: 'button',
                   name: 'edit',
                   classNames: 'edit',
-                  innerText: translatableText.postActions.edit,
+                  innerText: I18N_CONFIG.postActions.edit,
                   onClick: () => {
                       window.location.href = `./edit.html?postId=${postId}`
                   }
@@ -214,7 +214,7 @@ window.RENDER_CONFIG = {
                   name: 'publish',
                   classNames: 'publish',
                   spin: true,
-                  innerText: translatableText.postActions.publish,
+                  innerText: I18N_CONFIG.postActions.publish,
                   onClick: function(evt, stopSpin) {
                     evt.stopPropagation()
                     goph.report(['saveAndPublishPostWithoutInput', 'confirmPostPublished'], {postId}, (e, r) => {
@@ -224,11 +224,11 @@ window.RENDER_CONFIG = {
                       }
                       const changedETag = _.get(r, 'saveAndPublishPostWithoutInput[0].ETag')
                       if (changedETag) {
-                        setPostPublishState(postId, {etag: changedETag, label: translatableText.publishState.mostRecent})
-                        setPostSaveState(postId, {etag: changedETag, label: translatableText.saveState.unmodified})
+                        setPostPublishState(postId, {etag: changedETag, label: I18N_CONFIG.publishState.mostRecent})
+                        setPostSaveState(postId, {etag: changedETag, label: I18N_CONFIG.saveState.unmodified})
                       }
-                      evt.target.closest('.post-list-entry').querySelector('.save-status').innerText = translatableText.saveState.unmodified
-                      evt.target.closest('.post-list-entry').querySelector('.publish-status').innerText = translatableText.publishState.mostRecent
+                      evt.target.closest('.post-list-entry').querySelector('.save-status').innerText = I18N_CONFIG.saveState.unmodified
+                      evt.target.closest('.post-list-entry').querySelector('.publish-status').innerText = I18N_CONFIG.publishState.mostRecent
                       stopSpin()
                     })
                   }
@@ -238,7 +238,7 @@ window.RENDER_CONFIG = {
                   name: 'unpublish',
                   classNames: 'unpublish',
                   spin: true,
-                  innerText: translatableText.postActions.unpublish,
+                  innerText: I18N_CONFIG.postActions.unpublish,
                   onClick: function(evt, stopSpin) {
                     evt.stopPropagation()
                     goph.report(['unpublishPostWithoutInput', 'confirmPostUnpublished'], {postId}, (e, r) => {
@@ -248,11 +248,11 @@ window.RENDER_CONFIG = {
                       }
                       const changedETag = _.get(r, 'unPublishPostWithoutInput[0].ETag')
                       if (changedETag) {
-                        setPostPublishState(postId, {etag: changedETag, label: translatableText.publishState.mostRecent})
-                        setPostSaveState(postId, {etag: changedETag, label: translatableText.saveState.unmodified})
+                        setPostPublishState(postId, {etag: changedETag, label: I18N_CONFIG.publishState.mostRecent})
+                        setPostSaveState(postId, {etag: changedETag, label: I18N_CONFIG.saveState.unmodified})
                       }
-                      evt.target.closest('.post-list-entry').querySelector('.save-status').innerText = translatableText.saveState.unmodified
-                      evt.target.closest('.post-list-entry').querySelector('.publish-status').innerText = translatableText.publishState.unpublished
+                      evt.target.closest('.post-list-entry').querySelector('.save-status').innerText = I18N_CONFIG.saveState.unmodified
+                      evt.target.closest('.post-list-entry').querySelector('.publish-status').innerText = I18N_CONFIG.publishState.unpublished
                       stopSpin()
                     })
                   },
@@ -265,7 +265,7 @@ window.RENDER_CONFIG = {
                   dataset: {
                     postId
                   },
-                  innerText: translatableText.postActions.delete,
+                  innerText: I18N_CONFIG.postActions.delete,
                   onClick: function(evt, stopSpin) {
                     evt.stopPropagation()
                     goph.report(['deletePostWithoutInput', 'confirmPostDeleted'], {postId}, (e, r) => {

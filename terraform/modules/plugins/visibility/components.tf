@@ -6,6 +6,7 @@ module ui {
   gopher_config_contents = file("${path.module}/src/frontend/libs/gopher_config.js")
   admin_site_resources = var.admin_site_resources
   plugin_config = var.plugin_config
+  i18n_config_values = var.i18n_config_values
   config_values = {
     cost_report_summary_storage_bucket = var.cost_report_summary_location.bucket
     cost_report_summary_storage_key = var.cost_report_summary_location.key 

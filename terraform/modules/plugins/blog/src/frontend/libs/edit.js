@@ -5,12 +5,12 @@ window.RENDER_CONFIG = {
     let publishedState = getPostPublishState(postId)
     if (publishedETag && publishedETag !== _.get(publishedState, 'etag')) {
       if (publishedETag === _.get(post, 'etag')) {
-        publishedState = setPostPublishState(postId, {etag: publishedETag, label: translatableText.publishState.mostRecent})
+        publishedState = setPostPublishState(postId, {etag: publishedETag, label: I18N_CONFIG.publishState.mostRecent})
       } else {
-        publishedState = setPostPublishState(postId, {etag: publishedETag, label: translatableText.publishState.modified})
+        publishedState = setPostPublishState(postId, {etag: publishedETag, label: I18N_CONFIG.publishState.modified})
       }
     } else if (!publishedETag) {
-        publishedState = setPostPublishState(postId, {etag: null, label: translatableText.publishState.unpublished})
+        publishedState = setPostPublishState(postId, {etag: null, label: I18N_CONFIG.publishState.unpublished})
     } 
     let saveState = getPostSaveState(postId)
     let editorState = getPostEditorState(postId)
@@ -23,7 +23,7 @@ window.RENDER_CONFIG = {
           imageIds: [],
           footnotes: {},
         })
-        saveState = setPostSaveState(postId, {etag: null, label: translatableText.saveState.unsaved})
+        saveState = setPostSaveState(postId, {etag: null, label: I18N_CONFIG.saveState.unsaved})
       } else {
         editorState = setPostEditorState(postId, {
           title: post.frontMatter.title || postId,
@@ -33,7 +33,7 @@ window.RENDER_CONFIG = {
           etag: post.etag,
           footnotes: _.get(post, 'footnotes', {}),
         })
-        saveState = setPostSaveState(postId, {etag: post.etag, label: translatableText.saveState.unmodified})
+        saveState = setPostSaveState(postId, {etag: post.etag, label: I18N_CONFIG.saveState.unmodified})
       }
     }
     const mainSection = document.querySelector('main')
@@ -165,7 +165,7 @@ window.RENDER_CONFIG = {
             type: 'text',
             name: 'title',
             classNames: 'authoring-input',
-            placeholder: translatableText.postMetadata.placeholders.title,
+            placeholder: I18N_CONFIG.postMetadata.placeholders.title,
             value: editorState.title,
             id: 'title',
             onChange: (e) => updateEditorState(postId, {title: e.target.value}, updateFootnoteMenu)
@@ -192,7 +192,7 @@ window.RENDER_CONFIG = {
                     name: 'save',
                     classNames: 'save',
                     spin: true,
-                    innerText: translatableText.postActions.save,
+                    innerText: I18N_CONFIG.postActions.save,
                     onClick: function(evt, stopSpin) {
                       evt.stopPropagation()
                       const postToSave = mergeEditorStateToPost()
@@ -202,10 +202,10 @@ window.RENDER_CONFIG = {
                           postToSave.etag = changedETag
                           updateEditorState(postId, {etag: changedETag}, updateFootnoteMenu)
                           setPostAsSaved(postId, postToSave)
-                          setPostSaveState(postId, {etag: changedETag, label: translatableText.saveState.unmodified})
+                          setPostSaveState(postId, {etag: changedETag, label: I18N_CONFIG.saveState.unmodified})
                         }
                         if (postToSave.etag !== getPostPublishState.etag) {
-                          updatePostPublishState(postId, {label: translatableText.publishState.modified})
+                          updatePostPublishState(postId, {label: I18N_CONFIG.publishState.modified})
                           const changedDate = new Date()
                           setPublishState(changedDate.toLocaleString())
                         }
@@ -218,7 +218,7 @@ window.RENDER_CONFIG = {
                     name: 'publish',
                     classNames: 'publish',
                     spin: true,
-                    innerText: translatableText.postActions.publish,
+                    innerText: I18N_CONFIG.postActions.publish,
                     onClick: function(evt, stopSpin) {
                       evt.stopPropagation()
                       const postToSave = mergeEditorStateToPost()
@@ -232,8 +232,8 @@ window.RENDER_CONFIG = {
                           postToSave.etag = changedETag
                           updateEditorState(postId, {etag: changedETag}, updateFootnoteMenu)
                           setPostAsSaved(postId, postToSave)
-                          setPostPublishState(postId, {etag: changedETag, label: translatableText.publishState.mostRecent})
-                          setPostSaveState(postId, {etag: changedETag, label: translatableText.saveState.unmodified})
+                          setPostPublishState(postId, {etag: changedETag, label: I18N_CONFIG.publishState.mostRecent})
+                          setPostSaveState(postId, {etag: changedETag, label: I18N_CONFIG.saveState.unmodified})
                         }
                         const changedDate = new Date()
                         setPublishState(changedDate.toLocaleString())
@@ -246,7 +246,7 @@ window.RENDER_CONFIG = {
                     name: 'unpublish',
                     classNames: 'unpublish',
                     spin: true,
-                    innerText: translatableText.postActions.unpublish,
+                    innerText: I18N_CONFIG.postActions.unpublish,
                     onClick: function(evt, stopSpin) {
                       evt.stopPropagation()
                       const postToSave = mergeEditorStateToPost()
@@ -260,7 +260,7 @@ window.RENDER_CONFIG = {
                           postToSave.etag = changedETag
                           updateEditorState(postId, {etag: changedETag}, updateFootnoteMenu)
                           setPostAsSaved(postId, postToSave)
-                          setPostPublishState(postId, {etag: null, label: translatableText.publishState.unpublished})
+                          setPostPublishState(postId, {etag: null, label: I18N_CONFIG.publishState.unpublished})
                         }
                         const changedDate = new Date() 
                         setPublishState(changedDate.toLocaleString())
