@@ -1,7 +1,7 @@
 window.RENDER_CONFIG = {
   init: ({post, publishedETag}, gopher) => {
     window.goph = gopher
-    const postId = new URLSearchParams(window.location.search).get('postId').replace(/\//g, '-')
+    const postId = new URLSearchParams(window.location.search).get('postId').replace(/\//g, '-') + window.location.hash
     let publishedState = getPostPublishState(postId)
     if (publishedETag && publishedETag !== _.get(publishedState, 'etag')) {
       if (publishedETag === _.get(post, 'etag')) {

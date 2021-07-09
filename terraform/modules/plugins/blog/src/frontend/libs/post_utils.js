@@ -412,9 +412,14 @@ function serializePostToMarkdown({frontMatter, content, footnotes}) {
 
 const serializePost = serializePostToMarkdown
 
+//
 const htmlPostRegex = new RegExp('/posts/([^/]*).html')
 function publicPathToPostId(publicPath) {
-  return _.get((publicPath || "").match(htmlPostRegex), 1)
+  // This double-encoded path representation is what the Cloudfront logs produce, saved as-is into dynamo
+  // by the metric collector function. We _could_ do this decoding before saving it in dynamo, maybe that's
+  // better, I'm still thinking about it. I'm worried that it would be harder to clean up everything mis-saved
+  // in dynamo if something like that breaks, than for consumers to caveat emptor.
+  return decodeURIComponent(decodeURIComponent(_.get((publicPath || "").match(htmlPostRegex), 1) || ""))
 }
 
 function prepareEditorString(s, postId) {
