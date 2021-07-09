@@ -75,7 +75,7 @@ module visibility_system {
 }
 
 module admin_site_visibility_plugin {
-  source = "./modules/plugins/visibility"
+  source = "github.com/RLuckom/terraform_modules//aws/serverless_site/plugins/visibility"
   name = "visibility"
   account_id = local.account_id
   region = local.region

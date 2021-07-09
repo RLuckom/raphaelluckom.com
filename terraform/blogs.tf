@@ -1,5 +1,5 @@
 module admin_site_blog_plugin {
-  source = "./modules/plugins/blog"
+  source = "github.com/RLuckom/terraform_modules//aws/serverless_site/plugins/blog"
   name = "blog"
   region = local.region
   account_id = local.account_id
@@ -18,7 +18,7 @@ module admin_site_blog_plugin {
 }
 
 module admin_site_prod_blog_plugin {
-  source = "./modules/plugins/blog"
+  source = "github.com/RLuckom/terraform_modules//aws/serverless_site/plugins/blog"
   name = "prod_blog"
   region = local.region
   account_id = local.account_id
