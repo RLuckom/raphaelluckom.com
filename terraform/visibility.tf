@@ -21,14 +21,23 @@ module visibility_system {
       subsystems = {
         prod = {
           site_metric_table_read_role_name_map = {
-            raphaelluckom_com = [module.admin_interface.plugin_authenticated_roles["prod_blog"].name]
+            raphaelluckom_com = [
+              module.admin_interface.plugin_authenticated_roles["prod_blog"].name
+            ]
           }
-          scoped_logging_functions = module.admin_site_prod_blog_plugin.lambda_logging_arns
+          scoped_logging_functions = concat(
+            module.admin_site_prod_blog_plugin.lambda_logging_arns,
+            module.admin_site_prod_social_plugin.lambda_logging_arns
+          )
           glue_permission_name_map = {
             add_partition_permission_names = []
             add_partition_permission_arns = []
-            query_permission_names = [module.admin_interface.plugin_authenticated_roles["visibility"].name]
-            query_permission_arns = [module.admin_interface.plugin_authenticated_roles["visibility"].arn]
+            query_permission_names = [
+              module.admin_interface.plugin_authenticated_roles["visibility"].name
+            ]
+            query_permission_arns = [
+              module.admin_interface.plugin_authenticated_roles["visibility"].arn
+            ]
           }
         }
         human = {

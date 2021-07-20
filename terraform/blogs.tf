@@ -35,3 +35,19 @@ module admin_site_prod_blog_plugin {
   donut_days_layer = module.donut_days.layer_config
   markdown_tools_layer = module.markdown_tools.layer_config
 }
+
+module admin_site_prod_social_plugin {
+  source = "./modules/reader"
+  name = "social"
+  region = local.region
+  account_id = local.account_id
+  admin_site_resources = module.admin_interface.site_resources
+  coordinator_data = module.visibility_system.serverless_site_configs["social"]
+  plugin_config = module.admin_interface.plugin_config["social"]
+  subject_alternative_names = ["www.social.raphaelluckom.com"]
+  logging_config = module.visibility_system.lambda_log_configs["prod"]["prod"].config
+  lambda_event_configs = local.notify_failure_only
+  image_layer = module.image_dependencies.layer_config
+  donut_days_layer = module.donut_days.layer_config
+  markdown_tools_layer = module.markdown_tools.layer_config
+}

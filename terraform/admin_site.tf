@@ -24,6 +24,7 @@ module admin_interface {
   plugin_static_configs = {
     blog = module.admin_site_blog_plugin.static_config
     prod_blog = module.admin_site_prod_blog_plugin.static_config
+    social = module.admin_site_prod_social_plugin.static_config
     visibility = {
       role_name_stem = "athena"
       api_name = "visibility"
@@ -54,6 +55,18 @@ module admin_interface {
       upload_path_lambda_notifications = module.admin_site_prod_blog_plugin.plugin_relative_lambda_notifications
       storage_path_lambda_notifications = []
       file_configs = module.admin_site_prod_blog_plugin.files
+    }
+    social = {
+      additional_connect_sources = module.admin_site_prod_social_plugin.additional_connect_sources_required
+      additional_style_sources = []
+      policy_statements = []
+      plugin_relative_lambda_origins = module.admin_site_prod_social_plugin.plugin_relative_lambda_origins
+      plugin_relative_bucket_upload_permissions_needed = module.admin_site_prod_social_plugin.plugin_relative_bucket_upload_permissions_needed
+      plugin_relative_bucket_list_permissions_needed = module.admin_site_prod_social_plugin.plugin_relative_bucket_list_permissions_needed
+      plugin_relative_bucket_host_permissions_needed = module.admin_site_prod_social_plugin.plugin_relative_bucket_host_permissions_needed 
+      upload_path_lambda_notifications = module.admin_site_prod_social_plugin.plugin_relative_lambda_notifications
+      storage_path_lambda_notifications = []
+      file_configs = module.admin_site_prod_social_plugin.files
     }
     visibility = {
       policy_statements = []
