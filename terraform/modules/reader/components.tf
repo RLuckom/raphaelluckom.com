@@ -117,6 +117,28 @@ module posts_table {
   }
 }
 
+module friends_table {
+  source = "github.com/RLuckom/terraform_modules//aws/state/permissioned_dynamo_table"
+  unique_suffix = var.unique_suffix
+  table_name = local.friends_table_name
+  account_id = var.account_id
+  region = var.region
+  delete_item_permission_role_names = [
+  ]
+  write_permission_role_names = [
+  ]
+  read_permission_role_names = [
+  ]
+  partition_key = {
+    name = "state"
+    type = "S"
+  }
+  range_key = {
+    name = "url"
+    type = "S"
+  }
+}
+
 module process_image_uploads {
   source = "github.com/RLuckom/terraform_modules//aws/utility_functions/image_upload_processor"
   account_id = var.account_id

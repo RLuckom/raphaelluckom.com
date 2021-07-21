@@ -24,6 +24,9 @@ module visibility_system {
             raphaelluckom_com = [
               module.admin_interface.plugin_authenticated_roles["prod_blog"].name
             ]
+            social = [
+              module.admin_interface.plugin_authenticated_roles["social"].name
+            ]
           }
           scoped_logging_functions = concat(
             module.admin_site_prod_blog_plugin.lambda_logging_arns,
