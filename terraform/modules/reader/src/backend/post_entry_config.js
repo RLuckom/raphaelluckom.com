@@ -127,28 +127,6 @@ module.exports = {
             }
           },
         },
-        publishedImages: {
-          action: 'exploranda',
-          formatter: ({publishedImages}) => {
-            return _.map(_.flatten(publishedImages), ({Key}) => {
-
-              const [key, postId, imageId, size, ext] = blogImageKeyRegExp.exec(Key) 
-              return {key, postId, imageId, size, ext}
-            })
-          },
-          params: {
-            accessSchema: {value: 'dataSources.AWS.s3.listObjects'},
-            explorandaParams: {
-              Bucket: {value: '${website_bucket}'},
-              Prefix: {
-                helper: ({postId}) => "${blog_image_hosting_prefix}" + postId,
-                params: {
-                  postId: {ref: 'stage.postId'},
-                }
-              }
-            }
-          },
-        },
       }
     },
     publish: {
@@ -163,21 +141,6 @@ module.exports = {
         },
         delete: {ref: 'parsePost.results.current.frontMatter.delete' },
         unpublish: {ref: 'parsePost.results.current.frontMatter.unpublish' },
-        imagesToUnpublish: {
-          helper: ({publishedImages, unpublish, del, currentImageIds}) => {
-            if (unpublish || del) {
-              return publishedImages
-            } else {
-              return _.filter(publishedImages, ({imageId}) => (currentImageIds || []).indexOf(imageId) === -1)
-            }
-          },
-          params: {
-            unpublish: {ref: 'parsePost.results.current.frontMatter.unpublish' },
-            del: {ref: 'parsePost.results.current.frontMatter.delete' },
-            currentImageIds: {ref: 'parsePost.results.current.frontMatter.meta.imageIds' },
-            publishedImages: {ref: 'parsePost.results.publishedImages' },
-          }
-        },
         imagesToDelete: {
           helper: ({availableImages, currentImageIds, del}) => {
             if (del) {
@@ -283,9 +246,9 @@ module.exports = {
             explorandaParams: {
               Bucket: {value: '${website_bucket}'},
               Key: {
-                helper: ({pluginKey}) => "${blog_post_hosting_prefix}" + pluginKey.split('/').pop(),
-                params: {
-                  pluginKey: {ref: 'event.Records[0].s3.object.decodedKey'},
+                helper: ({postId}) => "${blog_post_hosting_prefix}" + postId + '.zip',
+                  params: {
+                  postId: {ref: 'parsePost.vars.postId'},
                 }
               },
             }
