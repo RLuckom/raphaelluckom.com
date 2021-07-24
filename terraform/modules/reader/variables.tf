@@ -226,6 +226,17 @@ variable markdown_tools_layer {
   }
 }
 
+variable archive_utils_layer {
+  type = object({
+    present = bool
+    arn = string
+  })
+  default = {
+    present = false
+    arn = ""
+  }
+}
+
 variable lambda_event_configs {
   type = list(object({
     maximum_event_age_in_seconds = number

@@ -88,11 +88,20 @@ module post_entry_lambda {
   invoking_roles = [
     var.plugin_config.authenticated_role.arn
   ]
+  additional_helpers = [
+    {
+      file_contents = file("${path.module}/src/backend/packagePost.js")
+      helper_name = "packagePost"
+    }
+  ]
   lambda_event_configs = var.lambda_event_configs
   action_name = "feed_entry"
   scope_name = var.coordinator_data.system_id.security_scope
   donut_days_layer = var.donut_days_layer
-  additional_layers = [var.markdown_tools_layer]
+  additional_layers = [
+    var.markdown_tools_layer,
+    var.archive_utils_layer
+  ]
 }
 
 module posts_table {

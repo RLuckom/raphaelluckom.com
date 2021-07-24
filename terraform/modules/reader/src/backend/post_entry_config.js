@@ -1,5 +1,6 @@
 const _ = require('lodash')
 const yaml = require('js-yaml')
+const { packagePostAccessSchema } = require('./helpers/packagePost')
 
 const blogImageKeyRegExp = new RegExp('${blog_image_hosting_prefix}([^/]*)/([^\.]*)/([0-9]*)\.(.*)')
 const pluginImageKeyRegExp = new RegExp('${blog_image_hosting_prefix}([^/]*)/([^\.]*)/([0-9]*)\.(.*)')
@@ -271,35 +272,6 @@ module.exports = {
             }
           },
         },
-        publishPost: {
-          action: 'exploranda',
-          condition: { ref: 'stage.publish' },
-          params: {
-            accessSchema: {value: 'dataSources.AWS.s3.putObject'},
-            explorandaParams: {
-              Bucket: {value: '${website_bucket}'},
-              Key: {
-                helper: ({pluginKey}) => "${blog_post_hosting_prefix}" + pluginKey.split('/').pop(),
-                  params: {
-                  pluginKey: {ref: 'event.Records[0].s3.object.decodedKey'},
-                }
-              },
-              ContentType: { value: 'text/markdown' },
-              Body: {
-                helper: ({parsed, postId}) => {
-                 const postString = serializePostToMarkdown(parsed) 
-                 return _.replace(postString, new RegExp("${plugin_image_hosting_root}", "g"), "${blog_image_hosting_root}")
-                 .replace(new RegExp("\\((https:\/\/.*)" + postId + '([^\\)]*)\\)', 'g'), (match, g1, g2) => "(" + g1 + encodeURIComponent(postId) + g2 + ')')
-                 .replace(new RegExp("]\\(/(.*)" + postId + '([^\\)]*)\\)', 'g'), (match, g1, g2) => "](/" + g1 + encodeURIComponent(postId) + g2 + ')')
-                },
-                params: {
-                  postId: {ref: 'parsePost.vars.postId'},
-                  parsed: {ref: 'parsePost.results.current' },
-                }
-              }
-            }
-          },
-        },
         unpublishPost: {
           action: 'exploranda',
           condition: {or: [
@@ -324,54 +296,19 @@ module.exports = {
     manageImages: {
       index: 2,
       dependencies: {
-        publish: {
+        getImagesToPublish: {
           action: 'exploranda',
           condition: {ref: 'publish.vars.imagesToPublish.length' },
           params: {
-            accessSchema: {value: 'dataSources.AWS.s3.copyObject'},
+            accessSchema: {value: 'dataSources.AWS.s3.getObject'},
             explorandaParams: {
-              Bucket: {value: '${website_bucket}'},
-              CopySource: {
-                helper: ({images, bucket}) => _.map(images, ({key}) => "/" + bucket + "/" + key),
+              Bucket: { ref: 'event.Records[0].s3.bucket.name'},
+              Key: {
+                helper: ({images}) => _.map(images, 'key'),
                 params: {
                   images: {ref: 'publish.vars.imagesToPublish' },
-                  bucket: {ref: 'event.Records[0].s3.bucket.name'},
                 }
               },
-              Key: {
-                helper: ({images}) => _.map(images, ({key}) => _.replace(key, "${plugin_image_hosting_prefix}", "${blog_image_hosting_prefix}")),
-                  params: {
-                  images: {ref: 'publish.vars.imagesToPublish' },
-                }
-              }
-            }
-          },
-        },
-        unpublish: {
-          action: 'exploranda',
-          condition: {ref: 'publish.vars.imagesToUnpublish.length' },
-          params: {
-            accessSchema: {value: 'dataSources.AWS.s3.deleteObject'},
-            explorandaParams: {
-              Bucket: {
-                helper: ({images, bucket}) => {
-                  const n = _.map(images, (id) => bucket)
-                  return n
-                },
-                params: {
-                  images: {ref: 'publish.vars.imagesToUnpublish' },
-                  bucket: {value: '${website_bucket}'},
-                }
-              },
-              Key: {
-                helper: ({images}) => {
-                  const n = _.map(images, 'key')
-                  return n
-                },
-                params: {
-                  images: {ref: 'publish.vars.imagesToUnpublish' },
-                }
-              }
             }
           },
         },
@@ -405,8 +342,70 @@ module.exports = {
         },
       }
     },
-    cleanupDB: {
+    packagePost: {
       index: 3,
+      dependencies: {
+        zip: {
+          formatter: ({zip}) => {
+            return zip
+          },
+          action: 'exploranda',
+          params: {
+            accessSchema: {value: packagePostAccessSchema},
+            explorandaParams: {
+              images: {
+                helper: ({imageBuffers, imageConfigs}) => {
+                  return _.reduce(imageBuffers, (acc, v, i) => {
+                    const {imageId, size, ext} = imageConfigs[i]
+                    const name = imageId + '/' + size + '.' + ext
+                    acc[name] = v.Body
+                    return acc
+                  }, {})
+                },
+                params: {
+                  imageBuffers: { ref: 'manageImages.results.getImagesToPublish'}, 
+                  imageConfigs: {ref: 'publish.vars.imagesToPublish' },
+                }
+              },
+              postText: {ref: 'parsePost.results.current.raw' },
+              postId: {ref: 'parsePost.vars.postId'},
+              imageRoot: {
+                helper: ({postId}) => "${plugin_image_hosting_prefix}" + postId,
+                params: {
+                  postId: {ref: 'stage.postId'},
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    publishPost: {
+      index: 4,
+      transformers: {},
+      dependencies: {
+        publishPost: {
+          action: 'exploranda',
+          condition: { ref: 'publish.vars.publish' },
+          params: {
+            accessSchema: {value: 'dataSources.AWS.s3.putObject'},
+            explorandaParams: {
+              Bucket: {value: '${website_bucket}'},
+              Key: {
+                helper: ({postId}) => "${blog_post_hosting_prefix}" + postId + '.zip',
+                  params: {
+                  postId: {ref: 'parsePost.vars.postId'},
+                }
+              },
+              ContentType: { value: 'application/zip' },
+              Body: {ref : 'packagePost.results.zip' }
+            }
+          },
+        },
+      }
+    },
+    cleanupDB: {
+      index: 5,
       transformers: {
         dynamoDeletes: {
           helper: ({postId, isDelete}) => {

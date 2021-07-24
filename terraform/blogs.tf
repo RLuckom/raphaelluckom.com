@@ -49,5 +49,6 @@ module admin_site_prod_social_plugin {
   lambda_event_configs = local.notify_failure_only
   image_layer = module.image_dependencies.layer_config
   donut_days_layer = module.donut_days.layer_config
+  archive_utils_layer = module.archive_utils.layer_config
   markdown_tools_layer = module.markdown_tools.layer_config
 }
