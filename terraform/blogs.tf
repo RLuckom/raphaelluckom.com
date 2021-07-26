@@ -37,7 +37,7 @@ module admin_site_prod_blog_plugin {
 }
 
 module admin_site_prod_social_plugin {
-  source = "./modules/reader"
+  source = "./modules/microburin"
   name = "social"
   region = local.region
   account_id = local.account_id
