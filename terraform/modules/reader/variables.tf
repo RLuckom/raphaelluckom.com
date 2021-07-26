@@ -20,6 +20,11 @@ variable unique_suffix {
   default = ""
 }
 
+variable aws_credentials_file {
+  type = string
+  default = "/.aws/credentials"
+}
+
 variable admin_site_resources {
   type = object({
     default_styles_path = string
@@ -50,6 +55,7 @@ variable plugin_config {
     domain = string
     bucket_name = string
     upload_root = string
+    backend_readonly_root = string
     api_root = string
     aws_credentials_endpoint = string
     hosting_root = string

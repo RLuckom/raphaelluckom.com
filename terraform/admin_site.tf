@@ -40,6 +40,7 @@ module admin_interface {
       plugin_relative_bucket_upload_permissions_needed = module.admin_site_blog_plugin.plugin_relative_bucket_upload_permissions_needed
       plugin_relative_bucket_list_permissions_needed = module.admin_site_blog_plugin.plugin_relative_bucket_list_permissions_needed
       plugin_relative_bucket_host_permissions_needed = module.admin_site_blog_plugin.plugin_relative_bucket_host_permissions_needed 
+      plugin_relative_bucket_backend_readonly_root_permissions_needed = []
       upload_path_lambda_notifications = module.admin_site_blog_plugin.plugin_relative_lambda_notifications
       storage_path_lambda_notifications = []
       file_configs = module.admin_site_blog_plugin.files
@@ -52,6 +53,7 @@ module admin_interface {
       plugin_relative_bucket_upload_permissions_needed = module.admin_site_prod_blog_plugin.plugin_relative_bucket_upload_permissions_needed
       plugin_relative_bucket_list_permissions_needed = module.admin_site_prod_blog_plugin.plugin_relative_bucket_list_permissions_needed
       plugin_relative_bucket_host_permissions_needed = module.admin_site_prod_blog_plugin.plugin_relative_bucket_host_permissions_needed 
+      plugin_relative_bucket_backend_readonly_root_permissions_needed = []
       upload_path_lambda_notifications = module.admin_site_prod_blog_plugin.plugin_relative_lambda_notifications
       storage_path_lambda_notifications = []
       file_configs = module.admin_site_prod_blog_plugin.files
@@ -64,6 +66,7 @@ module admin_interface {
       plugin_relative_bucket_upload_permissions_needed = module.admin_site_prod_social_plugin.plugin_relative_bucket_upload_permissions_needed
       plugin_relative_bucket_list_permissions_needed = module.admin_site_prod_social_plugin.plugin_relative_bucket_list_permissions_needed
       plugin_relative_bucket_host_permissions_needed = module.admin_site_prod_social_plugin.plugin_relative_bucket_host_permissions_needed 
+      plugin_relative_bucket_backend_readonly_root_permissions_needed = []
       upload_path_lambda_notifications = module.admin_site_prod_social_plugin.plugin_relative_lambda_notifications
       storage_path_lambda_notifications = []
       file_configs = module.admin_site_prod_social_plugin.files
@@ -78,6 +81,7 @@ module admin_interface {
       plugin_relative_bucket_upload_permissions_needed = []
       plugin_relative_bucket_list_permissions_needed = []
       plugin_relative_bucket_host_permissions_needed = []
+      plugin_relative_bucket_backend_readonly_root_permissions_needed = []
       lambda_notifications = []
       file_configs = module.admin_site_visibility_plugin.files
     }

@@ -6,3 +6,7 @@ terraform/.terraform
 *.zip
 **.csv
 *overall-cost-report*
+**_logs
+**_cacache
+**.log
+**anonymous-cli-metrics.json

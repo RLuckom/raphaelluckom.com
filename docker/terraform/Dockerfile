@@ -7,8 +7,12 @@ RUN apt-get update && \
 
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && unzip awscliv2.zip && ./aws/install
 
+RUN mkdir /nogroup && export XDG_CONFIG_HOME=/nogroup && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash && export NVM_DIR=/nogroup/nvm && . "$NVM_DIR/nvm.sh" && nvm install 14.2.0 && chgrp -R nogroup /nogroup && chmod -R 775 /nogroup
+
 WORKDIR /input
 
 USER nobody:nogroup
+
+ENV PATH=$PATH:/nogroup/nvm/versions/node/v14.2.0/bin/
 
 ENTRYPOINT ["/terraform"]

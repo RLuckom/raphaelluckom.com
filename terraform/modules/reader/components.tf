@@ -169,6 +169,22 @@ module process_image_uploads {
   }
 }
 
+resource null_resource social_key {
+
+  # Changes to any instance of the cluster requires re-provisioning
+  triggers = {
+    refresh = false
+  }
+
+  provisioner "local-exec" {
+    # Bootstrap script called with private_ip of each node in the clutser
+    command = "ls; pwd; cd ${path.module}/src/setup && ls && export npm_config_cache=. && npm install && node ./index.js && aws s3 cp ./private.json s3://${var.plugin_config.bucket_name}/${var.plugin_config.backend_readonly_root}private-social-key.jwk --content-type=\"application/jwk+json\" && aws s3 cp ./public.json s3://${module.social_site.website_bucket_name}/.well-known/microburin-social/keys/social-signing-public-key.jwk --content-type=\"appication/jwk+json\"; rm ./public.json; rm ./private.json" 
+    environment = {
+      AWS_SHARED_CREDENTIALS_FILE = var.aws_credentials_file
+    }
+  }
+}
+
 module social_site {
   source = "github.com/RLuckom/terraform_modules//aws/serverless_site/capstan"
   account_id = var.account_id
