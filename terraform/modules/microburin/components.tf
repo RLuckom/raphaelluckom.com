@@ -64,6 +64,41 @@ module ui {
   ]
 }
 
+locals {
+  status_codes = {
+    CONNECTED = "CONNECTED"
+  }
+}
+
+module connection_list_function {
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  unique_suffix = var.unique_suffix
+  timeout_secs = 3
+  account_id = var.account_id
+  region = var.region
+  mem_mb = 128
+  // TODO
+  source_contents = [
+    {
+      file_name = "index.js"
+      file_contents = templatefile("${path.module}/src/backend/connection_endpoint.js", {
+        dynamo_region = var.region
+        dynamo_table_name = module.connections_table.table_name
+        status_codes = jsonencode(local.status_codes)
+      })
+    }
+  ]
+  lambda_event_configs = var.lambda_event_configs
+  lambda_details = {
+    action_name = "list_connections"
+    scope_name = var.coordinator_data.system_id.security_scope
+    policy_statements = []
+  }
+  layers = [
+    var.donut_days_layer
+  ]
+}
+
 module post_entry_lambda {
   source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
   account_id = var.account_id
@@ -126,10 +161,10 @@ module posts_table {
   }
 }
 
-module friends_table {
+module connections_table {
   source = "github.com/RLuckom/terraform_modules//aws/state/permissioned_dynamo_table"
   unique_suffix = var.unique_suffix
-  table_name = local.friends_table_name
+  table_name = local.connections_table_name
   account_id = var.account_id
   region = var.region
   delete_item_permission_role_names = [
@@ -137,9 +172,10 @@ module friends_table {
   write_permission_role_names = [
   ]
   read_permission_role_names = [
+    module.connection_list_function.role.name
   ]
   partition_key = {
-    name = "state"
+    name = "connection_state"
     type = "S"
   }
   range_key = {
