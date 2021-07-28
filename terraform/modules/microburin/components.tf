@@ -68,6 +68,15 @@ locals {
   status_codes = {
     CONNECTED = "CONNECTED"
   }
+  connection_list_path = "connections-${random_id.connection_list_endpoint.b64_url}"
+}
+
+resource "random_id" "connection_list_endpoint" {
+  byte_length = 4
+}
+
+resource "random_password" "connection_list_password" {
+  length = 24
 }
 
 module connection_list_function {
@@ -85,6 +94,7 @@ module connection_list_function {
         dynamo_region = var.region
         dynamo_table_name = module.connections_table.table_name
         status_codes = jsonencode(local.status_codes)
+        connection_list_password = random_password.connection_list_password.result
       })
     }
   ]

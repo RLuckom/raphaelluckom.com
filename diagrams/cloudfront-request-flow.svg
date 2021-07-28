@@ -1,0 +1,564 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="298mm"
+   height="316mm"
+   viewBox="0 0 298 316"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)"
+   sodipodi:docname="cloudfront-request-flow.svg">
+  <defs
+     id="defs2">
+    <marker
+       inkscape:stockid="TriangleOutS"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker1991"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         id="path1989"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.00000003pt;stroke-opacity:1"
+         transform="scale(0.2)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutS"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="TriangleOutS"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         id="path1193"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.00000003pt;stroke-opacity:1"
+         transform="scale(0.2)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow2Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow2Mend"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         id="path1072"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.625;stroke-linejoin:round;stroke-opacity:1"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         transform="scale(-0.6)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Lend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Lend"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         id="path1048"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.00000003pt;stroke-opacity:1"
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutS"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="TriangleOutS-7"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         inkscape:connector-curvature="0"
+         id="path1193-5"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.00000003pt;stroke-opacity:1"
+         transform="scale(0.2)" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutS"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker1991-6"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         inkscape:connector-curvature="0"
+         id="path1989-2"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.00000003pt;stroke-opacity:1"
+         transform="scale(0.2)" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutS"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker1991-6-7"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         inkscape:connector-curvature="0"
+         id="path1989-2-4"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.00000003pt;stroke-opacity:1"
+         transform="scale(0.2)" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutS"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="TriangleOutS-7-1"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         inkscape:connector-curvature="0"
+         id="path1193-5-8"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.00000003pt;stroke-opacity:1"
+         transform="scale(0.2)" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutS"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker1991-5"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         inkscape:connector-curvature="0"
+         id="path1989-9"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.00000003pt;stroke-opacity:1"
+         transform="scale(0.2)" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutS"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="TriangleOutS-75"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         inkscape:connector-curvature="0"
+         id="path1193-3"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.00000003pt;stroke-opacity:1"
+         transform="scale(0.2)" />
+    </marker>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.7"
+     inkscape:cx="405.71429"
+     inkscape:cy="605.71429"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1868"
+     inkscape:window-height="1016"
+     inkscape:window-x="52"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,19)">
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.29166651px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="132.3672"
+       y="275.83359"
+       id="text825"><tspan
+         sodipodi:role="line"
+         id="tspan823"
+         x="132.3672"
+         y="275.83359"
+         style="font-weight:bold;stroke-width:0.26458332">Requester</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.29166651px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="197.90736"
+       y="200.16241"
+       id="text829"><tspan
+         sodipodi:role="line"
+         id="tspan827"
+         x="197.90736"
+         y="200.16241"
+         style="font-weight:bold;stroke-width:0.26458332">Viewer-Request Function</tspan><tspan
+         sodipodi:role="line"
+         x="197.90736"
+         y="206.77699"
+         style="stroke-width:0.26458332"
+         id="tspan831" /><tspan
+         sodipodi:role="line"
+         x="197.90736"
+         y="213.39159"
+         style="stroke-width:0.26458332"
+         id="tspan833">Reads the request and either</tspan><tspan
+         sodipodi:role="line"
+         x="197.90736"
+         y="220.00616"
+         style="stroke-width:0.26458332"
+         id="tspan835">returns a response directly or</tspan><tspan
+         sodipodi:role="line"
+         x="197.90736"
+         y="226.62074"
+         style="stroke-width:0.26458332"
+         id="tspan837">passes it through to the back</tspan><tspan
+         sodipodi:role="line"
+         x="197.90736"
+         y="233.23534"
+         style="stroke-width:0.26458332"
+         id="tspan839">end, potentially modifying it</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.29166651px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="197.98302"
+       y="141.72743"
+       id="text843"><tspan
+         sodipodi:role="line"
+         id="tspan841"
+         x="197.98302"
+         y="141.72743"
+         style="font-weight:bold;stroke-width:0.26458332">Cloudfront Cache - Inbound</tspan><tspan
+         sodipodi:role="line"
+         x="197.98302"
+         y="148.34201"
+         style="stroke-width:0.26458332"
+         id="tspan845" /><tspan
+         sodipodi:role="line"
+         x="197.98302"
+         y="154.9566"
+         style="stroke-width:0.26458332"
+         id="tspan847">If the same request has been</tspan><tspan
+         sodipodi:role="line"
+         x="197.98302"
+         y="161.57118"
+         style="stroke-width:0.26458332"
+         id="tspan849">seen recently, Cloudfront will</tspan><tspan
+         sodipodi:role="line"
+         x="197.98302"
+         y="168.18576"
+         style="stroke-width:0.26458332"
+         id="tspan851">return the same response it used</tspan><tspan
+         sodipodi:role="line"
+         x="197.98302"
+         y="174.80035"
+         style="stroke-width:0.26458332"
+         id="tspan853">last time instead of asking the origin</tspan><tspan
+         sodipodi:role="line"
+         x="197.98302"
+         y="181.41493"
+         style="stroke-width:0.26458332"
+         id="tspan855">iagain.</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.29166651px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="198.81458"
+       y="73.389267"
+       id="text859"><tspan
+         sodipodi:role="line"
+         id="tspan857"
+         x="198.81458"
+         y="73.389267"
+         style="stroke-width:0.26458332"><tspan
+           style="font-weight:bold"
+           id="tspan1041">Origin-Request Function</tspan></tspan><tspan
+         sodipodi:role="line"
+         x="198.81458"
+         y="80.003853"
+         style="stroke-width:0.26458332"
+         id="tspan861" /><tspan
+         sodipodi:role="line"
+         x="198.81458"
+         y="86.618431"
+         style="stroke-width:0.26458332"
+         id="tspan863">When Cloudfront can't use a saved</tspan><tspan
+         sodipodi:role="line"
+         x="198.81458"
+         y="93.233017"
+         style="stroke-width:0.26458332"
+         id="tspan865">response, the request goes through</tspan><tspan
+         sodipodi:role="line"
+         x="198.81458"
+         y="99.847603"
+         style="stroke-width:0.26458332"
+         id="tspan867">this function. This function, like the</tspan><tspan
+         sodipodi:role="line"
+         x="198.81458"
+         y="106.46218"
+         style="stroke-width:0.26458332"
+         id="tspan869">viewer-request function, can either</tspan><tspan
+         sodipodi:role="line"
+         x="198.81458"
+         y="113.07677"
+         style="stroke-width:0.26458332"
+         id="tspan871">generate a response or pass the </tspan><tspan
+         sodipodi:role="line"
+         x="198.81458"
+         y="119.69135"
+         style="stroke-width:0.26458332"
+         id="tspan873">request through.</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.29166651px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="102.12922"
+       y="13.895833"
+       id="text877"><tspan
+         sodipodi:role="line"
+         id="tspan875"
+         x="102.12922"
+         y="13.895833"
+         style="font-weight:bold;stroke-width:0.26458332">Origin</tspan><tspan
+         sodipodi:role="line"
+         x="102.12922"
+         y="20.510416"
+         style="stroke-width:0.26458332"
+         id="tspan887" /><tspan
+         sodipodi:role="line"
+         x="102.12922"
+         y="27.125"
+         style="stroke-width:0.26458332"
+         id="tspan879">If the request makes it this far,</tspan><tspan
+         sodipodi:role="line"
+         x="102.12922"
+         y="33.739582"
+         style="stroke-width:0.26458332"
+         id="tspan881">the origin, such as an S3 bucket,</tspan><tspan
+         sodipodi:role="line"
+         x="102.12922"
+         y="40.354164"
+         style="stroke-width:0.26458332"
+         id="tspan883">is queried and the response starts</tspan><tspan
+         sodipodi:role="line"
+         x="102.12922"
+         y="46.96875"
+         style="stroke-width:0.26458332"
+         id="tspan885">moving back toward the viewer</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.29166651px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="5.4645057"
+       y="197.5213"
+       id="text829-9"><tspan
+         sodipodi:role="line"
+         id="tspan827-6"
+         x="5.4645057"
+         y="197.5213"
+         style="font-weight:bold;stroke-width:0.26458332">Viewer-Response Function</tspan><tspan
+         sodipodi:role="line"
+         x="5.4645057"
+         y="204.13588"
+         style="stroke-width:0.26458332"
+         id="tspan831-3" /><tspan
+         sodipodi:role="line"
+         x="5.4645057"
+         y="210.75047"
+         style="stroke-width:0.26458332"
+         id="tspan1025">This function can modify the </tspan><tspan
+         sodipodi:role="line"
+         x="5.4645057"
+         y="217.36505"
+         style="stroke-width:0.26458332"
+         id="tspan1029">response received from the cache</tspan><tspan
+         sodipodi:role="line"
+         x="5.4645057"
+         y="223.97963"
+         style="stroke-width:0.26458332"
+         id="tspan1031">before it is sent back to the</tspan><tspan
+         sodipodi:role="line"
+         x="5.4645057"
+         y="230.59422"
+         style="stroke-width:0.26458332"
+         id="tspan1033">requester. This is commonly used</tspan><tspan
+         sodipodi:role="line"
+         x="5.4645057"
+         y="237.2088"
+         style="stroke-width:0.26458332"
+         id="tspan1035">to apply a standard set of headers</tspan><tspan
+         sodipodi:role="line"
+         x="5.4645057"
+         y="243.82338"
+         style="stroke-width:0.26458332"
+         id="tspan1037">or other metadata.</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.29166651px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="4.4817719"
+       y="139.08623"
+       id="text843-1"><tspan
+         sodipodi:role="line"
+         id="tspan841-5"
+         x="4.4817719"
+         y="139.08623"
+         style="font-weight:bold;stroke-width:0.26458332">Cloudfront Cache - Outbound</tspan><tspan
+         sodipodi:role="line"
+         x="4.4817719"
+         y="145.70081"
+         style="stroke-width:0.26458332"
+         id="tspan845-9" /><tspan
+         sodipodi:role="line"
+         x="4.4817719"
+         y="152.3154"
+         style="stroke-width:0.26458332"
+         id="tspan855-0">When the response to an origin</tspan><tspan
+         sodipodi:role="line"
+         x="4.4817719"
+         y="158.92998"
+         style="stroke-width:0.26458332"
+         id="tspan1010">request is recieved, Cloudfront looks</tspan><tspan
+         sodipodi:role="line"
+         x="4.4817719"
+         y="165.54456"
+         style="stroke-width:0.26458332"
+         id="tspan1012">at the configuration to determine</tspan><tspan
+         sodipodi:role="line"
+         x="4.4817719"
+         y="172.15915"
+         style="stroke-width:0.26458332"
+         id="tspan1014">whether this response can be saved</tspan><tspan
+         sodipodi:role="line"
+         x="4.4817719"
+         y="178.77373"
+         style="stroke-width:0.26458332"
+         id="tspan1016">and reused for similar requests.</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.29166651px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="3.196701"
+       y="76.03978"
+       id="text859-3"><tspan
+         sodipodi:role="line"
+         id="tspan857-0"
+         x="3.196701"
+         y="76.03978"
+         style="font-weight:bold;stroke-width:0.26458332">Origin-Response Function</tspan><tspan
+         sodipodi:role="line"
+         x="3.196701"
+         y="82.654366"
+         style="stroke-width:0.26458332"
+         id="tspan861-4" /><tspan
+         sodipodi:role="line"
+         x="3.196701"
+         y="89.268944"
+         style="stroke-width:0.26458332"
+         id="tspan873-3">The response from the origin goes</tspan><tspan
+         sodipodi:role="line"
+         x="3.196701"
+         y="95.88353"
+         style="stroke-width:0.26458332"
+         id="tspan993">through the origin-response function</tspan><tspan
+         sodipodi:role="line"
+         x="3.196701"
+         y="102.49812"
+         style="stroke-width:0.26458332"
+         id="tspan995">before cloudfront sees it. This </tspan><tspan
+         sodipodi:role="line"
+         x="3.196701"
+         y="109.11269"
+         style="stroke-width:0.26458332"
+         id="tspan997">function may modify the response.</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleOutS)"
+       d="m 156.86012,265.62796 c 14.74107,0 27.97024,-38.55357 27.97024,-48.00297"
+       id="path1043"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker1991)"
+       d="m 184.83035,205.90772 c 0,-3.77976 2.26786,-35.52975 2.26786,-35.52975"
+       id="path1925"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleOutS-7)"
+       d="m 183.64254,93.871009 c 0,-9.827381 -15.875,-35.907732 -32.50595,-35.907727"
+       id="path1043-9"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker1991-6)"
+       d="m 187.72891,156.83524 c 9e-5,-3.77936 0.91204,-30.82164 -2.26785,-44.60118"
+       id="path1925-1"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+    <g
+       id="g5500"
+       transform="rotate(180,118.53411,99.067276)">
+      <path
+         inkscape:connector-curvature="0"
+         id="path1043-8"
+         d="m 99.475268,140.72253 c 14.741072,0 27.970242,-38.55357 27.970242,-48.002975"
+         style="fill:none;stroke:#000000;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleOutS-75)" />
+      <path
+         sodipodi:nodetypes="cc"
+         inkscape:connector-curvature="0"
+         id="path1925-8"
+         d="m 127.4455,81.002295 c 0,-3.77976 2.26786,-35.52975 2.26786,-35.52975"
+         style="fill:none;stroke:#000000;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker1991-5)" />
+      <path
+         sodipodi:nodetypes="cc"
+         inkscape:connector-curvature="0"
+         id="path1043-9-3"
+         d="m 126.25769,-31.034421 c 0,-9.827381 -15.875,-35.907733 -32.505952,-35.907728"
+         style="fill:none;stroke:#000000;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleOutS-7-1)" />
+      <path
+         sodipodi:nodetypes="cc"
+         inkscape:connector-curvature="0"
+         id="path1925-1-1"
+         d="m 130.34406,31.929815 c 9e-5,-3.77936 0.91204,-30.8216441 -2.26785,-44.601184"
+         style="fill:none;stroke:#000000;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker1991-6-7)" />
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.29166651px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="81.189293"
+       y="-4.4738164"
+       id="text5508"><tspan
+         sodipodi:role="line"
+         id="tspan5506"
+         x="81.189293"
+         y="-4.4738164"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:9.87777805px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke-width:0.26458332">Cloudfront Request Flow</tspan></text>
+  </g>
+</svg>

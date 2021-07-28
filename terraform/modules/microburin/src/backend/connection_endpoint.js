@@ -13,15 +13,43 @@ const queryStructure = {
 };
 
 exports.handler = (event, context, callback) => {
-  dynamo.query(queryStructure, (e, r) => {
-    if (e) {
-      console.log(e)
-      callback(e)
-      return
-    } else {
-      console.log(JSON.stringify(r))
-      callback(null, r)
-      return
-    }
-  })
+  if (event.headers.authorization === "Bearer ${connection_list_password}") {
+    dynamo.query(queryStructure, (e, r) => {
+      if (e) {
+        console.log(e)
+        callback(e)
+        return
+      } else {
+        console.log(JSON.stringify({
+          connections: r.Items,
+          timestamp: new Date().getTime(),
+        }))
+        callback(
+          null,
+          {
+            "isBase64Encoded": false,
+            "statusCode": 200,
+            "headers": { "content-type": "application/json" },
+            "multiValueHeaders": {},
+            "body":  JSON.stringify({
+              connections: r.Items,
+              timestamp: new Date().getTime(),
+            }),
+          }
+        )
+        return
+      }
+    })
+  } else {
+    callback(
+      null, 
+      {
+        "isBase64Encoded": false,
+        "statusCode": 401,
+        "headers": { "content-type": "text/plain" },
+        "multiValueHeaders": {},
+        body: "",
+      }
+    )
+  }
 }
