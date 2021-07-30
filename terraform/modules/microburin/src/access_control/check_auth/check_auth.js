@@ -40,13 +40,25 @@ let connectionPassword = "${connection_list_password}"
 let connectionEndpoint = "${connection_endpoint}"
 
 function keyLocation(domain) {
-  return "http://" + domain + `/.well-known/microburin-social/keys/social-signing-public-key.jwk`
+  return "https://" + domain + `/.well-known/microburin-social/keys/social-signing-public-key.jwk`
 }
 
 async function refreshConnections() {
   const connections = await AXIOS.request({
     method: 'get',
     url: connectionEndpoint,
+    headers: {
+      authorization: "Bearer: " + connectionPassword
+    }
+  })
+  return connections.data
+}
+
+async function getSigningKey(domain) {
+  const connections = await AXIOS.request({
+    method: 'get',
+    url: keyLocation(domain),
+    timeout: 1000,
     headers: {
       authorization: "Bearer: " + connectionPassword
     }
@@ -84,13 +96,14 @@ async function handler(event) {
   if (recipient !== domain) {
     return accessDeniedResponse(statusMessages.wrongRecipient)
   }
-  const signedString = Buffer.from("" + timestamp + origin + recipient, 'utf8').toString('base64')
+  const signedString = Buffer.from(JSON.stringify({timestamp, origin,  recipient}), 'utf8').toString('base64').replace(/=*$/g, "")
   if (!_.isNumber(_.get(CONNECTIONS, 'timestamp')) || (now - CONNECTIONS.timestamp > 60000)) {
     CONNECTIONS = await refreshConnections()
   }
   const hash = createHash('sha256');
   hash.update(origin + connectionSalt)
-  if (CONNECTIONS.origins.indexOf(hash.digest('base64')) === -1) {
+  const digest = hash.digest('base64')
+  if (CONNECTIONS.origins.indexOf(digest) === -1) {
     return accessDeniedResponse(statusMessages.unrecognizedOrigin)
   }
   let signingKey
@@ -101,11 +114,12 @@ async function handler(event) {
   }
   const jws = {
     signature,
-    payload: signedString,
+    payload,
     protected
   }
   try {
-    await flattenedVerify(jws, signingKey, {algorithms: ["EdDSA"]})
+    const k = await parseJwk(signingKey, 'EdDSA')
+    await flattenedVerify(jws, k, {algorithms: ["EdDSA"]})
   } catch(e) {
     return accessDeniedResponse(statusMessages.verifyFailed)
   }

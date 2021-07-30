@@ -12,6 +12,7 @@ const privateKeyObject = {"kty":"OKP","crv":"Ed25519","x":"wxeatbwWtfGpu8QOUIdP6
 
 const pubKeyJson = JSON.stringify(publicKeyObject)
 let connections = []
+let delay = 0
 
 async function startTestServer() {
   let pubKeyServer, connectionsServer
@@ -30,7 +31,7 @@ async function startTestServer() {
           res.end(JSON.stringify({
             timestamp: new Date().getTime(),
             origins: connections
-          }), 'utf8');
+          }), 'utf8')
         }
       })
     });
@@ -39,7 +40,6 @@ async function startTestServer() {
     });
     connectionsServer.listen(8000, (e, r) => {
       if (e) {
-        console.log(e)
         reject(e)
       }
       resolve(r)
@@ -56,7 +56,9 @@ async function startTestServer() {
         body = Buffer.concat(chunks).toString()
         if (req.method === "GET" && req.url === `/.well-known/microburin-social/keys/social-signing-public-key.jwk`) {
           res.setHeader('content-type', 'application/jwk+json')
-          res.end(pubKeyJson, 'utf8');
+          setTimeout(() => {
+            res.end(pubKeyJson, 'utf8')
+          }, delay)
         }
       })
     });
@@ -111,6 +113,10 @@ function tokenAuthedEvent(token) {
   return authedEvent(`Bearer ${formatToken(token)}`)
 }
 
+function replaceKeyLocation(domain) {
+  return "http://" + domain + `/.well-known/microburin-social/keys/social-signing-public-key.jwk`
+}
+
 let domain = "${domain}"
 let connectionSalt = "${connection_list_salt}"
 let connectionPassword = "${connection_list_password}"
@@ -133,6 +139,10 @@ function validateAccessDenied(res, message) {
   expect(res.statusDescription).toEqual(message)
 }
 
+function validateRequestPassThrough(res, evt) {
+  expect(res).toEqual(evt.Records[0].cf.request)
+}
+
 function formatToken({sig, timestamp, origin, recipient, protectedHeader}) {
   return Buffer.from(JSON.stringify({sig, timestamp, origin, recipient, protectedHeader})).toString('base64')
 }
@@ -149,10 +159,13 @@ describe("check auth", () => {
     const otherKeys = await generateKeyPair('EdDSA')
     otherKey = otherKeys.privateKey
     unsetArray = [checkAuth.__set__('connectionEndpoint', 'http://localhost:8000')]
+    unsetArray.push(checkAuth.__set__('CONNECTIONS', null)) 
+    unsetArray.push(checkAuth.__set__('keyLocation', replaceKeyLocation)) 
   })
 
   afterEach((done) => {
     connections = []
+    delay = 0
     _.each(unsetArray, (f) => f())
     closeServer(done)
   })
@@ -216,7 +229,7 @@ describe("check auth", () => {
     connections.push(safeOrigin)
     const evt = await validSignedTokenAuthEvent({origin: safeOrigin, recipient: domain, timestamp: now}, otherKey)
     return checkAuth.handler(evt).then((res) => {
-      validateAccessDenied(res, messages.wrongRecipient)
+      validateAccessDenied(res, messages.verifyFailed)
     })
   })
 
@@ -229,6 +242,14 @@ describe("check auth", () => {
   })
 
   it("rejects a request if the key takes longer than 1s to get", async () => {
+    const safeOrigin = "localhost:8001"
+    const now = new Date().getTime()
+    delay = 2000
+    connections.push(safeOrigin)
+    const evt = await validSignedTokenAuthEvent({origin: safeOrigin, recipient: domain, timestamp: now}, privateKey)
+    return checkAuth.handler(evt).then((res) => {
+      validateAccessDenied(res, messages.noSigningKey)
+    })
   })
 
   it("rejects a request if the token can't be parsed", async () => {
@@ -241,6 +262,13 @@ describe("check auth", () => {
   })
 
   it("passes through a request with a valid token", async () => {
+    const safeOrigin = "localhost:8001"
+    const now = new Date().getTime()
+    connections.push(safeOrigin)
+    const evt = await validSignedTokenAuthEvent({origin: safeOrigin, recipient: domain, timestamp: now}, privateKey)
+    return checkAuth.handler(evt).then((res) => {
+      validateRequestPassThrough(res, evt)
+    })
   })
 
 })
