@@ -112,35 +112,41 @@ module connection_list_function {
   ]
 }
 
-/*
+module connection_access_control_function_src {
+  source = "github.com/RLuckom/terraform_modules//aws/self_contained_utility_functions/published_jwk_auth"
+  unique_suffix = var.unique_suffix
+  auth_config = {
+    domain = var.coordinator_data.routing.domain
+    connection_endpoint = "https://${var.coordinator_data.routing.domain}${var.plugin_config.api_root}${local.connection_list_path}"
+    connection_list_salt = random_password.connection_list_salt.result
+    connection_list_password = random_password.connection_list_password.result
+  }
+  bucket_config = {
+    supplied = true
+    credentials_file = ""
+    bucket = var.plugin_config.bucket_name
+    prefix = var.plugin_config.setup_storage_root
+  }
+}
+
 module connection_access_control_function {
   source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   unique_suffix = var.unique_suffix
-  timeout_secs = 3
   account_id = var.account_id
-  region = var.region
-  mem_mb = 128
-  source_contents = [
-    {
-      file_name = "index.js"
-      file_contents = templatefile("${path.module}/src/access_control/check_auth/check_auth.js", {
-        domain = var.coordinator_data.routing.domain
-        connection_list_password = random_password.connection_list_password.result
-        connection_list_salt = random_salt.connection_list_salt.result
-      })
-    }
-  ]
-  lambda_event_configs = var.lambda_event_configs
+  region = "us-east-1"
+  publish = true
+  preuploaded_source = module.connection_access_control_function_src.s3_objects.check_auth
+  timeout_secs = module.connection_access_control_function_src.function_configs.function_defaults.timeout_secs
+  mem_mb = module.connection_access_control_function_src.function_configs.function_defaults.mem_mb
+  role_service_principal_ids = module.connection_access_control_function_src.function_configs.function_defaults.role_service_principal_ids
+  
   lambda_details = {
-    action_name = "social-ac"
+    action_name = module.connection_access_control_function_src.function_configs.check_auth.details.action_name
     scope_name = var.coordinator_data.system_id.security_scope
     policy_statements = []
   }
-  layers = [
-    var.donut_days_layer
-  ]
+  depends_on = [module.connection_access_control_function_src]
 }
-*/
 
 module post_entry_lambda {
   source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
