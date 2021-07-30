@@ -79,6 +79,10 @@ resource "random_password" "connection_list_password" {
   length = 24
 }
 
+resource "random_password" "connection_list_salt" {
+  length = 64
+}
+
 module connection_list_function {
   source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   unique_suffix = var.unique_suffix
@@ -86,7 +90,6 @@ module connection_list_function {
   account_id = var.account_id
   region = var.region
   mem_mb = 128
-  // TODO
   source_contents = [
     {
       file_name = "index.js"
@@ -108,6 +111,36 @@ module connection_list_function {
     var.donut_days_layer
   ]
 }
+
+/*
+module connection_access_control_function {
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  unique_suffix = var.unique_suffix
+  timeout_secs = 3
+  account_id = var.account_id
+  region = var.region
+  mem_mb = 128
+  source_contents = [
+    {
+      file_name = "index.js"
+      file_contents = templatefile("${path.module}/src/access_control/check_auth/check_auth.js", {
+        domain = var.coordinator_data.routing.domain
+        connection_list_password = random_password.connection_list_password.result
+        connection_list_salt = random_salt.connection_list_salt.result
+      })
+    }
+  ]
+  lambda_event_configs = var.lambda_event_configs
+  lambda_details = {
+    action_name = "social-ac"
+    scope_name = var.coordinator_data.system_id.security_scope
+    policy_statements = []
+  }
+  layers = [
+    var.donut_days_layer
+  ]
+}
+*/
 
 module post_entry_lambda {
   source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"

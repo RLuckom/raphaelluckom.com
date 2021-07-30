@@ -6,7 +6,10 @@ tests: ../../spec/src/cognito_functions/check_auth.spec.js
 
 const _ = require('lodash')
 const { flattenedVerify } = require('jose-node-cjs-runtime/jws/flattened/verify')
-const { DynamoDB } = require("@aws-sdk/client-dynamodb");
+const { parseJwk } = require('jose-node-cjs-runtime/jwk/parse')
+const { FlattenedVerify } = require('jose-node-cjs-runtime/jws/flattened/verify')
+const { createHash } = require('crypto')
+const AXIOS = require('axios')
 
 function accessDeniedResponse(message) {
   return {
@@ -24,6 +27,7 @@ const statusMessages = {
   futureTimestamp: 'Timestamp was in the future',
   expiredTimestamp: 'Timestamp was too far in the past',
   wrongRecipient: 'Auth was not signed for the correct recipient',
+  unrecognizedOrigin: 'origin not found in our connections',
   noSigningKey: 'Could not retrieve signing key within 1s',
   verifyFailed: 'Signature verification failed',
 }
@@ -31,9 +35,23 @@ const statusMessages = {
 let CONNECTIONS
 
 let domain = "${domain}"
+let connectionSalt = "${connection_list_salt}"
+let connectionPassword = "${connection_list_password}"
+let connectionEndpoint = "${connection_endpoint}"
+
+function keyLocation(domain) {
+  return "http://" + domain + `/.well-known/microburin-social/keys/social-signing-public-key.jwk`
+}
 
 async function refreshConnections() {
-  return []
+  const connections = await AXIOS.request({
+    method: 'get',
+    url: connectionEndpoint,
+    headers: {
+      authorization: "Bearer: " + connectionPassword
+    }
+  })
+  return connections.data
 }
 
 async function handler(event) {
@@ -48,10 +66,11 @@ async function handler(event) {
   } catch(e) {
     return accessDeniedResponse(statusMessages.unparseableAuth)
   }
-  const {sig, timestamp, origin, recipient, protectedHeader} = parsedAuth
-  if (!sig || !protectedHeader) {
+  const {sig, timestamp, origin, recipient} = parsedAuth
+  if (!sig) {
     return accessDeniedResponse(statusMessages.noSig)
   }
+  const { signature, payload, protected } = sig
   if (!_.isNumber(timestamp)) {
     return accessDeniedResponse(statusMessages.badTimestamp)
   }
@@ -66,10 +85,12 @@ async function handler(event) {
     return accessDeniedResponse(statusMessages.wrongRecipient)
   }
   const signedString = Buffer.from("" + timestamp + origin + recipient, 'utf8').toString('base64')
-  if (!_.isNumber(_.get(CONNECTIONS.timestamp)) || (now - CONNECTIONS.timestamp > 60000)) {
+  if (!_.isNumber(_.get(CONNECTIONS, 'timestamp')) || (now - CONNECTIONS.timestamp > 60000)) {
     CONNECTIONS = await refreshConnections()
   }
-  if (CONNECTIONS.origins.indexOf(origin) === -1) {
+  const hash = createHash('sha256');
+  hash.update(origin + connectionSalt)
+  if (CONNECTIONS.origins.indexOf(hash.digest('base64')) === -1) {
     return accessDeniedResponse(statusMessages.unrecognizedOrigin)
   }
   let signingKey
@@ -79,9 +100,9 @@ async function handler(event) {
     return accessDeniedResponse(statusMessages.noSigningKey)
   }
   const jws = {
-    signature: sig,
+    signature,
     payload: signedString,
-    protected: protectedHeader
+    protected
   }
   try {
     await flattenedVerify(jws, signingKey, {algorithms: ["EdDSA"]})

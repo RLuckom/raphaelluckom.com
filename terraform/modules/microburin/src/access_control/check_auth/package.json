@@ -13,5 +13,9 @@
     "jose-node-cjs-runtime": "^3.14.3",
     "lodash": "^4.17.21",
     "raphlogger": "github:RLuckom/raphlogger"
+  },
+  "devDependencies": {
+    "jasmine": "^3.8.0",
+    "rewire": "^5.0.0"
   }
 }
