@@ -93,7 +93,7 @@ module connection_list_function {
   source_contents = [
     {
       file_name = "index.js"
-      file_contents = templatefile("${path.module}/src/backend/connection_endpoint.js", {
+      file_contents = templatefile("${path.module}/src/backend/connections-endpoint/connection_endpoint.js", {
         dynamo_region = var.region
         dynamo_table_name = module.connections_table.table_name
         status_codes = jsonencode(local.status_codes)
@@ -112,12 +112,14 @@ module connection_list_function {
   ]
 }
 
-module connection_access_control_function_src {
+module social_access_control_function {
   source = "github.com/RLuckom/terraform_modules//aws/self_contained_utility_functions/published_jwk_auth"
   unique_suffix = var.unique_suffix
+  account_id = var.account_id
+  security_scope = var.coordinator_data.system_id.security_scope
   auth_config = {
     domain = var.coordinator_data.routing.domain
-    connection_endpoint = "https://${var.coordinator_data.routing.domain}${var.plugin_config.api_root}${local.connection_list_path}"
+    connection_endpoint = "https://${var.plugin_config.domain}/${var.plugin_config.api_root}${local.connection_list_path}"
     connection_list_salt = random_password.connection_list_salt.result
     connection_list_password = random_password.connection_list_password.result
   }
@@ -129,31 +131,12 @@ module connection_access_control_function_src {
   }
 }
 
-module connection_access_control_function {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
-  unique_suffix = var.unique_suffix
-  account_id = var.account_id
-  region = "us-east-1"
-  publish = true
-  preuploaded_source = module.connection_access_control_function_src.s3_objects.check_auth
-  timeout_secs = module.connection_access_control_function_src.function_configs.function_defaults.timeout_secs
-  mem_mb = module.connection_access_control_function_src.function_configs.function_defaults.mem_mb
-  role_service_principal_ids = module.connection_access_control_function_src.function_configs.function_defaults.role_service_principal_ids
-  
-  lambda_details = {
-    action_name = module.connection_access_control_function_src.function_configs.check_auth.details.action_name
-    scope_name = var.coordinator_data.system_id.security_scope
-    policy_statements = []
-  }
-  depends_on = [module.connection_access_control_function_src]
-}
-
 module post_entry_lambda {
   source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
   account_id = var.account_id
   unique_suffix = var.unique_suffix
   region = var.region
-  config_contents = templatefile("${path.module}/src/backend/post_entry_config.js",
+  config_contents = templatefile("${path.module}/src/backend/post-entry/post_entry_config.js",
   {
     website_bucket = module.social_site.website_bucket_name
     table_name = module.posts_table.table_name
@@ -174,7 +157,7 @@ module post_entry_lambda {
   ]
   additional_helpers = [
     {
-      file_contents = file("${path.module}/src/backend/packagePost.js")
+      file_contents = file("${path.module}/src/backend/post-entry/packagePost.js")
       helper_name = "packagePost"
     }
   ]
@@ -254,6 +237,10 @@ module process_image_uploads {
   }
 }
 
+locals {
+  jwk_s3_path = ".well-known/microburin-social/keys/social-signing-public-key.jwk"
+}
+
 resource null_resource social_key {
 
   # Changes to any instance of the cluster requires re-provisioning
@@ -263,7 +250,7 @@ resource null_resource social_key {
 
   provisioner "local-exec" {
     # Bootstrap script called with private_ip of each node in the clutser
-    command = "ls; pwd; cd ${path.module}/src/setup && ls && export npm_config_cache=. && npm install && node ./index.js && aws s3 cp ./private.json s3://${var.plugin_config.bucket_name}/${var.plugin_config.backend_readonly_root}private-social-key.jwk --content-type=\"application/jwk+json\" && aws s3 cp ./public.json s3://${module.social_site.website_bucket_name}/.well-known/microburin-social/keys/social-signing-public-key.jwk --content-type=\"appication/jwk+json\"; rm ./public.json; rm ./private.json" 
+    command = "ls; pwd; cd ${path.module}/src/setup && ls && export npm_config_cache=. && npm install && node ./index.js && aws s3 cp ./private.json s3://${var.plugin_config.bucket_name}/${var.plugin_config.backend_readonly_root}private-social-key.jwk --content-type=\"application/jwk+json\" && aws s3 cp ./public.json s3://${module.social_site.website_bucket_name}/${local.jwk_s3_path} --content-type=\"appication/jwk+json\"; rm ./public.json; rm ./private.json" 
     environment = {
       AWS_SHARED_CREDENTIALS_FILE = var.aws_credentials_file
     }
@@ -277,6 +264,9 @@ module social_site {
   region = var.region
   coordinator_data = var.coordinator_data
   force_destroy = var.allow_delete_buckets
+  no_access_control_s3_path_patterns = [{
+    path = local.jwk_s3_path
+  }]
   website_bucket_cors_rules = [{
     allowed_headers = ["authorization", "content-md5", "content-type", "cache-control", "x-amz-content-sha256", "x-amz-date", "x-amz-security-token", "x-amz-user-agent"]
     allowed_methods = ["GET"]
@@ -311,6 +301,7 @@ module social_site {
       arns = [module.post_entry_lambda.role.arn]
     },
   ]
+  access_control_function_qualified_arns = [module.social_access_control_function.access_control_function_qualified_arns]
   website_bucket_bucket_permissions = [
     {
       permission_type = "list_bucket"
