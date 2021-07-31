@@ -38,14 +38,39 @@ function parsePost(s) {
   }
 }
 
-function postRecordToDynamo(id, pr) {
-  return {kind: 'post', id, frontMatter: pr.frontMatter}
+function postRecordToDynamo(id, pr, presignedUrl) {
+  return {kind: 'post', id, frontMatter: pr.frontMatter, presignedUrl}
 }
 
 function serializePostToMarkdown({frontMatter, content}) {
   let text = '---\n' + yaml.dump(frontMatter) + '---\n' + content
   return text
 }
+
+const AWS = require('aws-sdk')
+const s3 = new AWS.S3()
+
+const signedUrlAccessSchema = {
+  dataSource: 'GENERIC_FUNCTION',
+  namespaceDetails: {
+    name: 'getSignedS3Url',
+    paramDriven: true,
+    parallel: true,
+  },
+  name: 'ParseReport',
+  requiredParams: {
+    Bucket: {},
+    Key: {},
+    Operation: {},
+  },
+  params: {
+    apiConfig: {
+      apiObject: ({Bucket, Key, Operation, Expires}, callback) => {
+        s3.getSignedUrl(Operation, {Bucket, Key, Expires}, callback)
+      }
+    },
+  }
+};
 
 module.exports = {
   stages: {
@@ -61,9 +86,36 @@ module.exports = {
           params: {
             pluginKey: {ref: 'event.Records[0].s3.object.decodedKey'},
           }
-        }
+        },
+        zipPath: {
+          helper: ({postId}) => "${blog_post_hosting_prefix}" + postId + '.zip',
+          params: {
+            postId: {
+              helper: ({pluginKey}) => {
+                const parts = pluginKey.split('/').pop().split('.')
+                parts.pop()
+                return parts.join('.')
+              },
+              params: {
+                pluginKey: {ref: 'event.Records[0].s3.object.decodedKey'},
+              }
+            }
+          }
+        },
       },
       dependencies: {
+        presignedUrl: {
+          action: 'exploranda',
+          params: {
+            accessSchema: {value: signedUrlAccessSchema},
+            explorandaParams: {
+              Operation: { value: 'getObject' },
+              Bucket: {value: '${website_bucket}'},
+              Key: { ref: 'stage.zipPath'},
+              Expires: { value: 60 * 60 * 24 * 31 },
+            }
+          },
+        },
         current: {
           action: 'exploranda',
           formatter: ({current}) => {
@@ -173,15 +225,16 @@ module.exports = {
           }
         },
         dynamoPuts: {
-          helper: ({post, postId, isDelete}) => {
+          helper: ({post, postId, isDelete, presignedUrl}) => {
             if (!isDelete) {
-              return [postRecordToDynamo(postId, post)]
+              return [postRecordToDynamo(postId, post, presignedUrl)]
             }
             return []
           },
           params: {
             isDelete: {ref: 'parsePost.results.current.frontMatter.delete' },
             post: {ref: 'parsePost.results.current' },
+            presignedUrl: {ref: 'parsePost.results.presignedUrl' },
             postId: {ref: 'parsePost.vars.postId'},
           }
         },
@@ -354,12 +407,7 @@ module.exports = {
             accessSchema: {value: 'dataSources.AWS.s3.putObject'},
             explorandaParams: {
               Bucket: {value: '${website_bucket}'},
-              Key: {
-                helper: ({postId}) => "${blog_post_hosting_prefix}" + postId + '.zip',
-                  params: {
-                  postId: {ref: 'parsePost.vars.postId'},
-                }
-              },
+              Key: { ref: 'parsePost.vars.zipPath'},
               ContentType: { value: 'application/zip' },
               Body: {ref : 'packagePost.results.zip' }
             }
