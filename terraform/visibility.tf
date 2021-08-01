@@ -1,5 +1,5 @@
 module visibility_system {
-  source = "github.com/RLuckom/terraform_modules//aws/visibility/aurochs"
+  source = "github.com/RLuckom/terraform_modules//snapshots/aws/visibility/aurochs"
   account_id = local.account_id
   region = local.region
   bucket_prefix = var.bucket_prefix
@@ -87,7 +87,7 @@ module visibility_system {
 }
 
 module admin_site_visibility_plugin {
-  source = "github.com/RLuckom/terraform_modules//aws/serverless_site/plugins/visibility"
+  source = "github.com/RLuckom/terraform_modules//snapshots/aws/serverless_site/plugins/visibility"
   name = "visibility"
   account_id = local.account_id
   region = local.region

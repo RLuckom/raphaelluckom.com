@@ -1,5 +1,5 @@
 module human_attention_archive {
-  source = "github.com/RLuckom/terraform_modules//aws/state/object_store/replicated_archive"
+  source = "github.com/RLuckom/terraform_modules//snapshots/aws/state/object_store/replicated_archive"
   account_id = local.account_id
   region = local.region
   providers = {

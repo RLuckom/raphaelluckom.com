@@ -1,5 +1,5 @@
 module "slack_event_relay" {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  source = "github.com/RLuckom/terraform_modules//snapshots/aws/permissioned_lambda"
   timeout_secs = 2
   account_id = local.account_id
   region = local.region
@@ -60,26 +60,26 @@ locals {
 }
 
 module archive_utils {
-  source = "github.com/RLuckom/terraform_modules//aws/layers/archive_utils"
+  source = "github.com/RLuckom/terraform_modules//snapshots/aws/layers/archive_utils"
 }
 
 module csv_parser {
-  source = "github.com/RLuckom/terraform_modules//aws/layers/csv_parser"
+  source = "github.com/RLuckom/terraform_modules//snapshots/aws/layers/csv_parser"
 }
 
 module "aws_sdk" {
-  source = "github.com/RLuckom/terraform_modules//aws/layers/aws_sdk"
+  source = "github.com/RLuckom/terraform_modules//snapshots/aws/layers/aws_sdk"
 }
 
 module "donut_days" {
-  source = "github.com/RLuckom/terraform_modules//aws/layers/donut_days"
+  source = "github.com/RLuckom/terraform_modules//snapshots/aws/layers/donut_days"
 }
 
 
 module "image_dependencies" {
-  source = "github.com/RLuckom/terraform_modules//aws/layers/image_dependencies"
+  source = "github.com/RLuckom/terraform_modules//snapshots/aws/layers/image_dependencies"
 }
 
 module "markdown_tools" {
-  source = "github.com/RLuckom/terraform_modules//aws/layers/markdown_tools"
+  source = "github.com/RLuckom/terraform_modules//snapshots/aws/layers/markdown_tools"
 }
