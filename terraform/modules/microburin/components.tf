@@ -141,6 +141,7 @@ module post_entry_lambda {
     website_bucket = module.social_site.website_bucket_name
     table_name = module.posts_table.table_name
     table_region = var.region
+    feed_item_kind = local.feed_item_kind
     plugin_image_hosting_prefix = local.plugin_image_hosting_prefix
     plugin_post_hosting_prefix = local.plugin_post_hosting_prefix 
     plugin_image_hosting_root = "https://${var.plugin_config.domain}/${var.plugin_config.hosting_root}img/"
@@ -171,6 +172,28 @@ module post_entry_lambda {
   ]
 }
 
+module feed_list_endpoint {
+  source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
+  account_id = var.account_id
+  unique_suffix = var.unique_suffix
+  region = var.region
+  config_contents = templatefile("${path.module}/src/backend/feed-list-endpoint/config.js",
+  {
+    table_name = module.posts_table.table_name
+    table_region = var.region
+    partition_key = local.feed_item_partition_key
+    modified_time_key = local.modified_time_key
+    modified_time_index = local.modified_time_index
+    max_lookback_seconds = local.max_lookback_seconds
+    feed_item_kind = local.feed_item_kind
+  })
+  logging_config = var.logging_config
+  lambda_event_configs = var.lambda_event_configs
+  action_name = "feed_list"
+  scope_name = var.coordinator_data.system_id.security_scope
+  donut_days_layer = var.donut_days_layer
+}
+
 module posts_table {
   source = "github.com/RLuckom/terraform_modules//aws/state/permissioned_dynamo_table"
   unique_suffix = var.unique_suffix
@@ -184,13 +207,26 @@ module posts_table {
     var.plugin_config.authenticated_role.name,
   ]
   partition_key = {
-    name = "kind"
+    name = local.feed_item_partition_key
     type = "S"
   }
   range_key = {
-    name = "id"
+    name = "postId"
     type = "S"
   }
+  global_indexes = [{
+    name = local.modified_time_index
+    hash_key = local.feed_item_partition_key
+    range_key = local.modified_time_key
+    write_capacity = 0
+    read_capacity = 0
+    projection_type = "INCLUDE"
+    non_key_attributes = ["presignedUrl", "id"]
+  }]
+  additional_keys = [{
+    name = "modifiedTime"
+    type = "N"
+  }]
 }
 
 module connections_table {

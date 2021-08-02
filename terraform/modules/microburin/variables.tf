@@ -274,6 +274,11 @@ variable logging_config {
 locals {
   posts_table_name = "${var.coordinator_data.system_id.security_scope}-${var.coordinator_data.system_id.subsystem_name}-microburin_table-${random_id.table_suffix.b64_url}"
   connections_table_name = "${var.coordinator_data.system_id.security_scope}-${var.coordinator_data.system_id.subsystem_name}-connections_table-${random_id.table_suffix.b64_url}"
+  modified_time_key = "modifiedTime"
+  modified_time_index = "modified"
+  feed_item_partition_key = "kind"
+  feed_item_kind = "feedItem"
+  max_lookback_seconds = 60 * 60 * 24 * 31
   blog_image_hosting_root = "/img/"
   blog_image_hosting_prefix = "img/"
   blog_post_hosting_root = "/posts/"

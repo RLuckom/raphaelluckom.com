@@ -38,8 +38,8 @@ function parsePost(s) {
   }
 }
 
-function postRecordToDynamo(id, pr, presignedUrl) {
-  return {kind: 'post', id, frontMatter: pr.frontMatter, presignedUrl}
+function postRecordToDynamo({postId, post, presignedUrl, size}) {
+  return {kind: '${feed_item_kind}', postId, frontMatter: post.frontMatter, presignedUrl, size, modifiedTime: new Date().getTime()}
 }
 
 function serializePostToMarkdown({frontMatter, content}) {
@@ -224,36 +224,8 @@ module.exports = {
             currentImageIds: {ref: 'parsePost.results.current.frontMatter.meta.imageIds' },
           }
         },
-        dynamoPuts: {
-          helper: ({post, postId, isDelete, presignedUrl}) => {
-            if (!isDelete) {
-              return [postRecordToDynamo(postId, post, presignedUrl)]
-            }
-            return []
-          },
-          params: {
-            isDelete: {ref: 'parsePost.results.current.frontMatter.delete' },
-            post: {ref: 'parsePost.results.current' },
-            presignedUrl: {ref: 'parsePost.results.presignedUrl' },
-            postId: {ref: 'parsePost.vars.postId'},
-          }
-        },
       },
       dependencies: {
-        dynamoPuts: {
-          action: 'exploranda',
-          condition: { ref: 'stage.dynamoPuts.length' },
-          params: {
-            accessSchema: {value: 'dataSources.AWS.dynamodb.putItem'},
-            params: {
-              explorandaParams: {
-                apiConfig: {value: {region: '${table_region}'}},
-                TableName: '${table_name}',
-                Item: { ref: 'stage.dynamoPuts' }
-              }
-            }
-          }
-        },
         savePost: {
           action: 'exploranda',
           condition: {not: { ref: 'stage.delete' }},
@@ -398,8 +370,38 @@ module.exports = {
     },
     publishPost: {
       index: 4,
-      transformers: {},
+      transformers: {
+        dynamoPuts: {
+          helper: ({post, postId, isDelete, presignedUrl, size}) => {
+            if (!isDelete) {
+              return [postRecordToDynamo({postId, post, presignedUrl, size})]
+            }
+            return []
+          },
+          params: {
+            isDelete: {ref: 'parsePost.results.current.frontMatter.delete' },
+            post: {ref: 'parsePost.results.current' },
+            presignedUrl: {ref: 'parsePost.results.presignedUrl' },
+            postId: {ref: 'parsePost.vars.postId'},
+            size: {ref : 'packagePost.results.zip[0].length' }
+          }
+        },
+      },
       dependencies: {
+        dynamoPuts: {
+          action: 'exploranda',
+          condition: { ref: 'stage.dynamoPuts.length' },
+          params: {
+            accessSchema: {value: 'dataSources.AWS.dynamodb.putItem'},
+            params: {
+              explorandaParams: {
+                apiConfig: {value: {region: '${table_region}'}},
+                TableName: '${table_name}',
+                Item: { ref: 'stage.dynamoPuts' }
+              }
+            }
+          }
+        },
         publishPost: {
           action: 'exploranda',
           condition: { ref: 'publish.vars.publish' },
