@@ -68,48 +68,6 @@ locals {
   status_codes = {
     CONNECTED = "CONNECTED"
   }
-  connection_list_path = "connections-${random_id.connection_list_endpoint.b64_url}"
-}
-
-resource "random_id" "connection_list_endpoint" {
-  byte_length = 4
-}
-
-resource "random_password" "connection_list_password" {
-  length = 24
-}
-
-resource "random_password" "connection_list_salt" {
-  length = 64
-}
-
-module connection_list_function {
-  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
-  unique_suffix = var.unique_suffix
-  timeout_secs = 3
-  account_id = var.account_id
-  region = var.region
-  mem_mb = 128
-  source_contents = [
-    {
-      file_name = "index.js"
-      file_contents = templatefile("${path.module}/src/backend/connections-endpoint/connection_endpoint.js", {
-        dynamo_region = var.region
-        dynamo_table_name = module.connections_table.table_name
-        status_codes = jsonencode(local.status_codes)
-        connection_list_password = random_password.connection_list_password.result
-      })
-    }
-  ]
-  lambda_event_configs = var.lambda_event_configs
-  lambda_details = {
-    action_name = "list_connections"
-    scope_name = var.coordinator_data.system_id.security_scope
-    policy_statements = []
-  }
-  layers = [
-    var.donut_days_layer
-  ]
 }
 
 module social_access_control_function {
@@ -118,10 +76,10 @@ module social_access_control_function {
   account_id = var.account_id
   security_scope = var.coordinator_data.system_id.security_scope
   auth_config = {
+    dynamo_region = var.region
+    dynamo_table_name = module.connections_table.table_name
     domain = var.coordinator_data.routing.domain
-    connection_endpoint = "https://${var.plugin_config.domain}/${var.plugin_config.api_root}${local.connection_list_path}"
-    connection_list_salt = random_password.connection_list_salt.result
-    connection_list_password = random_password.connection_list_password.result
+    status_code_connected = "CONNECTED"
   }
   bucket_config = {
     supplied = true
@@ -180,6 +138,7 @@ module feed_list_endpoint {
   config_contents = templatefile("${path.module}/src/backend/feed-list-endpoint/config.js",
   {
     table_name = module.posts_table.table_name
+    index_name = local.modified_time_index
     table_region = var.region
     partition_key = local.feed_item_partition_key
     modified_time_key = local.modified_time_key
@@ -240,7 +199,7 @@ module connections_table {
   write_permission_role_names = [
   ]
   read_permission_role_names = [
-    module.connection_list_function.role.name
+    module.social_access_control_function.role.name
   ]
   partition_key = {
     name = "connection_state"

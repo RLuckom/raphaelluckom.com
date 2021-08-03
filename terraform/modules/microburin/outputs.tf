@@ -23,15 +23,6 @@ output plugin_relative_lambda_notifications {
 
 output plugin_relative_lambda_origins {
   value = [
-    {
-      plugin_relative_path = local.connection_list_path
-      lambda = {
-        arn = module.connection_list_function.lambda.arn
-        name = module.connection_list_function.lambda.function_name
-      }
-      authorizer = "NONE"
-      forwarded_headers = ["Authorization"]
-    }
   ]
 }
 

@@ -16,6 +16,7 @@ module.exports = {
               explorandaParams: {
                 apiConfig: {value: {region: '${table_region}'}},
                 TableName: '${table_name}',
+                IndexName: '${index_name}',
                 ExpressionAttributeValues: {
                   all: {
                     ':lastChecked': {
@@ -31,8 +32,7 @@ module.exports = {
                     ':itemKind': {ref: '${feed_item_kind}'}
                   }
                 },
-                KeyConditionExpression: '${partition_key} = :itemKind',
-                FilterExpression: '${modified_time_key} > :lastChecked',
+                KeyConditionExpression: '${partition_key} = :itemKind and ${modified_time_key} > :lastChecked',
               }
             },
           }
