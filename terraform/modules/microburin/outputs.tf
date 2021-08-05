@@ -102,6 +102,15 @@ output plugin_relative_bucket_list_permissions_needed {
   ]
 }
 
+output plugin_relative_bucket_readonly_root_permissions_needed {
+  value = [
+    {
+      plugin_relative_key = "private-social-key.jwk"
+      role_arn = module.connection_polling_lambda.role.arn
+    },
+  ]
+}
+
 output static_config {
   value = {
     api_name = var.name

@@ -67,6 +67,10 @@ module csv_parser {
   source = "github.com/RLuckom/terraform_modules//snapshots/aws/layers/csv_parser"
 }
 
+module "node_jose" {
+  source = "github.com/RLuckom/terraform_modules//snapshots/aws/layers/node_jose"
+}
+
 module "aws_sdk" {
   source = "github.com/RLuckom/terraform_modules//snapshots/aws/layers/aws_sdk"
 }

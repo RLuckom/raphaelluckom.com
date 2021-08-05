@@ -70,25 +70,6 @@ locals {
   }
 }
 
-module social_access_control_function {
-  source = "github.com/RLuckom/terraform_modules//aws/self_contained_utility_functions/published_jwk_auth"
-  unique_suffix = var.unique_suffix
-  account_id = var.account_id
-  security_scope = var.coordinator_data.system_id.security_scope
-  auth_config = {
-    dynamo_region = var.region
-    dynamo_table_name = module.connections_table.table_name
-    domain = var.coordinator_data.routing.domain
-    status_code_connected = "CONNECTED"
-  }
-  bucket_config = {
-    supplied = true
-    credentials_file = ""
-    bucket = var.plugin_config.bucket_name
-    prefix = var.plugin_config.setup_storage_root
-  }
-}
-
 module post_entry_lambda {
   source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
   account_id = var.account_id
@@ -111,9 +92,6 @@ module post_entry_lambda {
     plugin_post_hosting_root = "https://${var.plugin_config.domain}/${var.plugin_config.hosting_root}posts/"
   })
   logging_config = var.logging_config
-  invoking_roles = [
-    var.plugin_config.authenticated_role.arn
-  ]
   additional_helpers = [
     {
       file_contents = file("${path.module}/src/backend/post-entry/packagePost.js")
@@ -128,6 +106,81 @@ module post_entry_lambda {
     var.markdown_tools_layer,
     var.archive_utils_layer
   ]
+}
+
+module connections_table {
+  source = "github.com/RLuckom/terraform_modules//aws/state/permissioned_dynamo_table"
+  unique_suffix = var.unique_suffix
+  table_name = local.connections_table_name
+  account_id = var.account_id
+  region = var.region
+  delete_item_permission_role_names = [
+  ]
+  write_permission_role_names = [
+  ]
+  read_permission_role_names = [
+    module.social_access_control_function.role.name,
+    module.connection_polling_lambda.role.name
+  ]
+  partition_key = {
+    name = local.connection_state_key
+    type = "S"
+  }
+  range_key = {
+    name = "domain"
+    type = "S"
+  }
+}
+
+module connection_polling_lambda {
+  source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
+  account_id = var.account_id
+  unique_suffix = var.unique_suffix
+  region = var.region
+  config_contents = templatefile("${path.module}/src/backend/connection_polling/config.js",
+  {
+    connections_table_name = module.posts_table.table_name
+    connections_table_region = var.region
+    connection_table_state_key = local.connection_state_key
+    connection_status_code_connected = local.connection_status_code_connected
+    social_signing_private_key_bucket = var.plugin_config.bucket_name
+    social_signing_private_key_s3_key = local.social_signing_private_key_s3_key
+    social_domain = var.coordinator_data.routing.domain
+    item_collection_lambda = ""
+  })
+  logging_config = var.logging_config
+  additional_helpers = [
+    {
+      file_contents = file("${path.module}/src/backend/connection_polling/signRequests.js")
+      helper_name = "signRequests"
+    }
+  ]
+  lambda_event_configs = var.lambda_event_configs
+  action_name = "poll_connections"
+  scope_name = var.coordinator_data.system_id.security_scope
+  donut_days_layer = var.donut_days_layer
+  additional_layers = [
+    var.node_jose_layer
+  ]
+}
+
+module social_access_control_function {
+  source = "github.com/RLuckom/terraform_modules//aws/self_contained_utility_functions/published_jwk_auth"
+  unique_suffix = var.unique_suffix
+  account_id = var.account_id
+  security_scope = var.coordinator_data.system_id.security_scope
+  auth_config = {
+    dynamo_region = var.region
+    dynamo_table_name = module.connections_table.table_name
+    domain = var.coordinator_data.routing.domain
+    status_code_connected = local.connection_status_code_connected
+  }
+  bucket_config = {
+    supplied = true
+    credentials_file = ""
+    bucket = var.plugin_config.bucket_name
+    prefix = var.plugin_config.setup_storage_root
+  }
 }
 
 module feed_list_endpoint {
@@ -188,29 +241,6 @@ module posts_table {
   }]
 }
 
-module connections_table {
-  source = "github.com/RLuckom/terraform_modules//aws/state/permissioned_dynamo_table"
-  unique_suffix = var.unique_suffix
-  table_name = local.connections_table_name
-  account_id = var.account_id
-  region = var.region
-  delete_item_permission_role_names = [
-  ]
-  write_permission_role_names = [
-  ]
-  read_permission_role_names = [
-    module.social_access_control_function.role.name
-  ]
-  partition_key = {
-    name = "connection_state"
-    type = "S"
-  }
-  range_key = {
-    name = "url"
-    type = "S"
-  }
-}
-
 module process_image_uploads {
   source = "github.com/RLuckom/terraform_modules//aws/utility_functions/image_upload_processor"
   account_id = var.account_id
@@ -245,7 +275,7 @@ resource null_resource social_key {
 
   provisioner "local-exec" {
     # Bootstrap script called with private_ip of each node in the clutser
-    command = "ls; pwd; cd ${path.module}/src/setup && ls && export npm_config_cache=. && npm install && node ./index.js && aws s3 cp ./private.json s3://${var.plugin_config.bucket_name}/${var.plugin_config.backend_readonly_root}private-social-key.jwk --content-type=\"application/jwk+json\" && aws s3 cp ./public.json s3://${module.social_site.website_bucket_name}/${local.jwk_s3_path} --content-type=\"appication/jwk+json\"; rm ./public.json; rm ./private.json" 
+    command = "ls; pwd; cd ${path.module}/src/setup && ls && export npm_config_cache=. && npm install && node ./index.js && aws s3 cp ./private.json s3://${var.plugin_config.bucket_name}/${local.social_signing_private_key_s3_key} --content-type=\"application/jwk+json\" && aws s3 cp ./public.json s3://${module.social_site.website_bucket_name}/${local.jwk_s3_path} --content-type=\"appication/jwk+json\"; rm ./public.json; rm ./private.json" 
     environment = {
       AWS_SHARED_CREDENTIALS_FILE = var.aws_credentials_file
     }

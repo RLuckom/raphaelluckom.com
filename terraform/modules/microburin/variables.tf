@@ -222,6 +222,17 @@ variable donut_days_layer {
   }
 }
 
+variable node_jose_layer {
+  type = object({
+    present = bool
+    arn = string
+  })
+  default = {
+    present = false
+    arn = ""
+  }
+}
+
 variable markdown_tools_layer {
   type = object({
     present = bool
@@ -272,9 +283,11 @@ variable logging_config {
 }
 
 locals {
+  connection_state_key = "connectionState"
   posts_table_name = "${var.coordinator_data.system_id.security_scope}-${var.coordinator_data.system_id.subsystem_name}-microburin_table-${random_id.table_suffix.b64_url}"
   connections_table_name = "${var.coordinator_data.system_id.security_scope}-${var.coordinator_data.system_id.subsystem_name}-connections_table-${random_id.table_suffix.b64_url}"
   modified_time_key = "modifiedTime"
+  connection_status_code_connected = "CONNECTED"
   modified_time_index = "modified"
   feed_item_partition_key = "kind"
   feed_item_kind = "feedItem"
@@ -286,6 +299,7 @@ locals {
   plugin_image_hosting_prefix = "${var.plugin_config.hosting_root}img/"
   plugin_post_hosting_prefix = "${var.plugin_config.hosting_root}posts/"
   file_prefix = trim(var.plugin_config.source_root, "/")
+  social_signing_private_key_s3_key = "${var.plugin_config.backend_readonly_root}private-social-key.jwk"
   edit_styles_path = "${local.file_prefix}/assets/styles/editor.css"
   plugin_default_styles_path = "${local.file_prefix}/assets/styles/default.css"
   post_utils_js_path = "${local.file_prefix}/assets/js/post-utils-${filemd5("${path.module}/src/frontend/libs/post_utils.js")}.js"
