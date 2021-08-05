@@ -43,6 +43,7 @@ module admin_site_prod_social_plugin {
   account_id = local.account_id
   admin_site_resources = module.admin_interface.site_resources
   coordinator_data = module.visibility_system.serverless_site_configs["social"]
+  node_jose_layer = module.node_jose.layer_config
   plugin_config = module.admin_interface.plugin_config["social"]
   subject_alternative_names = ["www.social.raphaelluckom.com"]
   logging_config = module.visibility_system.lambda_log_configs["prod"]["prod"].config

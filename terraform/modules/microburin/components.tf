@@ -147,6 +147,7 @@ module connection_polling_lambda {
     social_signing_private_key_s3_key = local.social_signing_private_key_s3_key
     social_domain = var.coordinator_data.routing.domain
     item_collection_lambda = ""
+    feed_list_path = local.feed_list_api_path
   })
   logging_config = var.logging_config
   additional_helpers = [
@@ -289,6 +290,49 @@ module social_site {
   region = var.region
   coordinator_data = var.coordinator_data
   force_destroy = var.allow_delete_buckets
+  lambda_origins = [{
+    # a value of "NONE" will let the function
+    # handle its own access control. A 
+    # value of "CLOUDFRONT_DISTRIBUTION" will
+    # use the lambda authorizers provided;
+    # this is also the default if there are 
+    # no lambda authorizers. Any other value uses
+    # the lambda authorizers provided.
+    authorizer = "CLOUDFRONT_DISTRIBUTION"
+    # unitary path denoting the function's endpoint, e.g.
+    # "/meta/relations/trails"
+    path = local.feed_list_api_path
+    # Usually all lambdas in a dist should share one gateway, so the gway
+    # name stems should be the same across all lambda endpoints.
+    # But if you wanted multiple apigateways within a single dist., you
+    # could set multiple name stems and the lambdas would get allocated
+    # to different gateways
+    gateway_name_stem = "default"
+    allowed_methods = ["HEAD", "GET"]
+    cached_methods = ["HEAD", "GET"]
+    compress = true
+    ttls = {
+      min = 200
+      default = 200
+      max = 200
+    }
+    forwarded_values = {
+      # usually true
+      query_string = false
+      # usually empty list
+      query_string_cache_keys = []
+      # probably best left to empty list; that way headers used for
+      # auth can't be leaked by insecure functions. If there's
+      # a reason to want certain headers, go ahead.
+      headers = []
+      # same as headers; should generally be empty
+      cookie_names = []
+    }
+    lambda = {
+      arn = module.connection_polling_lambda.lambda.arn
+      name = module.connection_polling_lambda.lambda.function_name
+    }
+  }]
   no_access_control_s3_path_patterns = [{
     path = local.jwk_s3_path
   }]

@@ -72,10 +72,34 @@ module.exports = {
         },
       }
     },
+    requestNewItems: {
+      index: 3,
+      dependencies: {
+        items: {
+          action: 'genericApi',
+          params: {
+            mergeIndividual: _.identity,
+            apiConfig: { 
+              helper: ({tokens}) => {
+                return _.map(tokens, ({timestamp, origin, recipient, sig}) => {
+                  {
+                    url: "https://" + recipient + "${feed_list_path}",
+                    token: Buffer.from(JSON.stringify({sig, timestamp, origin, recipient})).toString('base64')
+                  }
+                }
+              },
+              params: {
+                tokens: { ref: 'signTokens.results.tokens' }
+              }
+            }
+          }
+        },
+      }
+    }
   },
   cleanup: {
     transformers: {
-      results: { ref: 'signTokens.results.tokens' }
+      results: { ref: 'requestNewItems.results.items' }
     }
   }
 }
