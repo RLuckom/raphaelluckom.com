@@ -300,7 +300,9 @@ locals {
   plugin_image_hosting_prefix = "${var.plugin_config.hosting_root}img/"
   plugin_post_hosting_prefix = "${var.plugin_config.hosting_root}posts/"
   file_prefix = trim(var.plugin_config.source_root, "/")
-  social_signing_private_key_s3_key = "${var.plugin_config.backend_readonly_root}private-social-key.jwk"
+  social_signing_key_plugin_relative_prefix = "private-social-key"
+  social_signing_key_plugin_relative = "${local.social_signing_key_plugin_relative_prefix}/key.jwk"
+  social_signing_private_key_s3_key = "${var.plugin_config.backend_readonly_root}${local.social_signing_key_plugin_relative}"
   edit_styles_path = "${local.file_prefix}/assets/styles/editor.css"
   plugin_default_styles_path = "${local.file_prefix}/assets/styles/default.css"
   post_utils_js_path = "${local.file_prefix}/assets/js/post-utils-${filemd5("${path.module}/src/frontend/libs/post_utils.js")}.js"

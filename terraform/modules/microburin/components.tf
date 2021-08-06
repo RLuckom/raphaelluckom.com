@@ -139,7 +139,7 @@ module connection_polling_lambda {
   region = var.region
   config_contents = templatefile("${path.module}/src/backend/connection_polling/config.js",
   {
-    connections_table_name = module.posts_table.table_name
+    connections_table_name = module.connections_table.table_name
     connections_table_region = var.region
     connection_table_state_key = local.connection_state_key
     connection_status_code_connected = local.connection_status_code_connected
@@ -272,6 +272,8 @@ resource null_resource social_key {
   # Changes to any instance of the cluster requires re-provisioning
   triggers = {
     refresh = false
+    command = "ls; pwd; cd ${path.module}/src/setup && ls && export npm_config_cache=. && npm install && node ./index.js && aws s3 cp ./private.json s3://${var.plugin_config.bucket_name}/${local.social_signing_private_key_s3_key} --content-type=\"application/jwk+json\" && aws s3 cp ./public.json s3://${module.social_site.website_bucket_name}/${local.jwk_s3_path} --content-type=\"appication/jwk+json\"; rm ./public.json; rm ./private.json" 
+    node_script = file("${path.module}/src/setup/index.js")
   }
 
   provisioner "local-exec" {

@@ -102,10 +102,15 @@ output plugin_relative_bucket_list_permissions_needed {
   ]
 }
 
+variable runtime {
+  type = string
+  default = "nodejs14.x"
+}
+
 output plugin_relative_bucket_readonly_root_permissions_needed {
   value = [
     {
-      plugin_relative_key = "private-social-key.jwk"
+      plugin_relative_key = local.social_signing_key_plugin_relative_prefix
       role_arn = module.connection_polling_lambda.role.arn
     },
   ]
@@ -138,5 +143,6 @@ output lambda_logging_arns {
   value = concat([
     module.process_image_uploads.lambda_role.arn,
     module.post_entry_lambda.role.arn,
+    module.connection_polling_lambda.role.arn
   ], [])
 }

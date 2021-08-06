@@ -1,5 +1,4 @@
 const _ = require('lodash')
-const yaml = require('js-yaml')
 const { signTokenAccessSchema, parseJwkAccessSchema } = require('./helpers/signRequests')
 
 module.exports = {
@@ -8,20 +7,27 @@ module.exports = {
       index: 0,
       dependencies: {
         connections: {
-          accessSchema: {value: 'dataSources.AWS.dynamodb.query'},
+          action: 'exploranda',
           params: {
-            apiConfig: {value: {region: '${connections_table_region}'}},
-            TableName: {value: "${connections_table_name}"},
-            ExpressionAttributeValues: {
-              value: {
-                ':mconnectionState': '${connection_status_code_connected}',
-              }
+            accessSchema: {value: 'dataSources.AWS.dynamodb.query'},
+            explorandaParams: {
+              apiConfig: {value: {region: '${connections_table_region}'}},
+              TableName: {value: "${connections_table_name}"},
+              ExpressionAttributeValues: {
+                value: {
+                  ':connectionState': '${connection_status_code_connected}',
+                }
+              },
+              KeyConditionExpression: {value: '${connection_table_state_key} = :connectionState' },
             },
-            KeyConditionExpression: {value: '${connection_table_state_key} = :connectionState' },
           },
         },
         signingKeyObject: {
           action: 'exploranda',
+          formatter: ({signingKeyObject}) => {
+            console.log(signingKeyObject)
+            return JSON.parse(signingKeyObject[0].Body.toString('utf8'))
+          },
           params: {
             accessSchema: {value: 'dataSources.AWS.s3.getObject'},
             explorandaParams: {
@@ -32,29 +38,15 @@ module.exports = {
         },
       }
     },
-    parseKey: {
-      index: 1,
-      dependencies: {
-        key: {
-          action: 'exploranda',
-          params: {
-            accessSchema: {value: parseJwkAccessSchema },
-            explorandaParams: {
-              keyObject: {ref: 'getConnections.results.signingKeyObject[0].Body'},
-            }
-          },
-        },
-      }
-    },
     signTokens: {
-      index: 2,
+      index: 1,
       dependencies: {
         tokens: {
           action: 'exploranda',
           params: {
             accessSchema: {value: signTokenAccessSchema },
             explorandaParams: {
-              signingKey: {ref: 'parseKey.results.key[0]'},
+              signingKeyObject: {ref: 'getConnections.results.signingKeyObject'},
               payload: {
                 helper: ({connections, timestamp, origin}) => {
                   return _.map(connections, (c) => {
@@ -62,9 +54,13 @@ module.exports = {
                   })
                 },
                 params: {
-                  timestamp: { helper: () => { return new Date().getTime() }},
+                  timestamp: { 
+                    helper: () => { 
+                      return new Date().getTime() 
+                    }
+                  },
                   origin: { value: "${social_domain}" },
-                  connections: { ref: 'getConnections.results.connections[0]' }'
+                  connections: { ref: 'getConnections.results.connections[0]' }
                 }
               }
             }
@@ -73,7 +69,7 @@ module.exports = {
       }
     },
     requestNewItems: {
-      index: 3,
+      index: 2,
       dependencies: {
         items: {
           action: 'genericApi',
@@ -82,11 +78,11 @@ module.exports = {
             apiConfig: { 
               helper: ({tokens}) => {
                 return _.map(tokens, ({timestamp, origin, recipient, sig}) => {
-                  {
+                  return {
                     url: "https://" + recipient + "${feed_list_path}",
                     token: Buffer.from(JSON.stringify({sig, timestamp, origin, recipient})).toString('base64')
                   }
-                }
+                })
               },
               params: {
                 tokens: { ref: 'signTokens.results.tokens' }
