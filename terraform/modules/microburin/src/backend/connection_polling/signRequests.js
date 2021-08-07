@@ -29,7 +29,6 @@ async function sign(keyObject, payload) {
 
 
 function signToken({payload, signingKeyObject}, callback) {
-  console.log(signingKeyObject)
   sign(signingKeyObject, payload).then((sig) => {
     callback(null, _.merge({}, payload, {sig}))
   }).catch((err) => {

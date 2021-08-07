@@ -134,6 +134,7 @@ module connections_table {
 
 module connection_polling_lambda {
   source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
+  timeout_secs = 600
   account_id = var.account_id
   unique_suffix = var.unique_suffix
   region = var.region
@@ -170,11 +171,13 @@ module social_access_control_function {
   unique_suffix = var.unique_suffix
   account_id = var.account_id
   security_scope = var.coordinator_data.system_id.security_scope
+  log = "true"
   auth_config = {
     dynamo_region = var.region
     dynamo_table_name = module.connections_table.table_name
     domain = var.coordinator_data.routing.domain
-    status_code_connected = local.connection_status_code_connected
+    connection_state_connected = local.connection_status_code_connected
+    connection_state_key = local.connection_state_key
   }
   bucket_config = {
     supplied = true
@@ -217,6 +220,7 @@ module posts_table {
   write_permission_role_names = [module.post_entry_lambda.role.name]
   read_permission_role_names = [
     module.post_entry_lambda.role.name,
+    module.feed_list_endpoint.role.name,
     var.plugin_config.authenticated_role.name,
   ]
   partition_key = {
@@ -331,8 +335,8 @@ module social_site {
       cookie_names = []
     }
     lambda = {
-      arn = module.connection_polling_lambda.lambda.arn
-      name = module.connection_polling_lambda.lambda.function_name
+      arn = module.feed_list_endpoint.lambda.arn
+      name = module.feed_list_endpoint.lambda.function_name
     }
   }]
   no_access_control_s3_path_patterns = [{

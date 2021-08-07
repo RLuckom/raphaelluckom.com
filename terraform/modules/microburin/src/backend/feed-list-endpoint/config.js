@@ -21,15 +21,14 @@ module.exports = {
                   all: {
                     ':lastChecked': {
                       helper: ({lookbackSeconds}) => {
-                        console.log(lookbackSeconds)
-                        lookbackSeconds = lookbackSeconds < MAX_LOOKBACK ? lookbackSeconds : MAX_LOOKBACK
+                        lookbackSeconds = (lookbackSeconds && lookbackSeconds < MAX_LOOKBACK) ? lookbackSeconds : MAX_LOOKBACK
                         return new Date().getTime() - (lookbackSeconds * 1000)
                       },
                       params: {
                         lookbackSeconds: {ref: 'event.queryStringParameters.lookBack' }
                       },
                     },
-                    ':itemKind': {ref: '${feed_item_kind}'}
+                    ':itemKind': {value: '${feed_item_kind}'}
                   }
                 },
                 KeyConditionExpression: '${partition_key} = :itemKind and ${modified_time_key} > :lastChecked',
@@ -43,12 +42,14 @@ module.exports = {
   cleanup: {
     transformers: {
       body: {
-        helper: ({feedItems}) => JSON.stringify(feedItems) 
+        helper: ({feedItems}) => {
+          return JSON.stringify(feedItems) 
+        },
         params: {
           feedItems: { ref: 'getFeedItems.results.feedItems'},
         },
-        statusCode: { value: 200 }
-      }
+      },
+      statusCode: { value: 200 }
     }
   }
 }

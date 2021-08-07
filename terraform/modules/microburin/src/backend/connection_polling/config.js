@@ -25,7 +25,6 @@ module.exports = {
         signingKeyObject: {
           action: 'exploranda',
           formatter: ({signingKeyObject}) => {
-            console.log(signingKeyObject)
             return JSON.parse(signingKeyObject[0].Body.toString('utf8'))
           },
           params: {
@@ -49,9 +48,10 @@ module.exports = {
               signingKeyObject: {ref: 'getConnections.results.signingKeyObject'},
               payload: {
                 helper: ({connections, timestamp, origin}) => {
-                  return _.map(connections, (c) => {
+                  const ret = _.map(connections, (c) => {
                     return {timestamp, origin, recipient: c.domain}
                   })
+                  return ret
                 },
                 params: {
                   timestamp: { 
@@ -60,7 +60,7 @@ module.exports = {
                     }
                   },
                   origin: { value: "${social_domain}" },
-                  connections: { ref: 'getConnections.results.connections[0]' }
+                  connections: { ref: 'getConnections.results.connections' }
                 }
               }
             }
@@ -77,12 +77,13 @@ module.exports = {
             mergeIndividual: _.identity,
             apiConfig: { 
               helper: ({tokens}) => {
-                return _.map(tokens, ({timestamp, origin, recipient, sig}) => {
+                const ret = _.map(tokens, ({timestamp, origin, recipient, sig}) => {
                   return {
                     url: "https://" + recipient + "${feed_list_path}",
                     token: Buffer.from(JSON.stringify({sig, timestamp, origin, recipient})).toString('base64')
                   }
                 })
+                return ret
               },
               params: {
                 tokens: { ref: 'signTokens.results.tokens' }

@@ -143,6 +143,7 @@ output lambda_logging_arns {
   value = concat([
     module.process_image_uploads.lambda_role.arn,
     module.post_entry_lambda.role.arn,
-    module.connection_polling_lambda.role.arn
+    module.connection_polling_lambda.role.arn,
+    module.feed_list_endpoint.role.arn,
   ], [])
 }
