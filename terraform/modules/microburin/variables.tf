@@ -288,6 +288,8 @@ locals {
   posts_table_name = "${var.coordinator_data.system_id.security_scope}-${var.coordinator_data.system_id.subsystem_name}-microburin_table-${random_id.table_suffix.b64_url}"
   connections_table_name = "${var.coordinator_data.system_id.security_scope}-${var.coordinator_data.system_id.subsystem_name}-connections_table-${random_id.table_suffix.b64_url}"
   modified_time_key = "modifiedTime"
+  size_key = "size"
+  feed_item_id_key = "postId"
   connection_status_code_connected = "CONNECTED"
   modified_time_index = "modified"
   feed_item_partition_key = "kind"

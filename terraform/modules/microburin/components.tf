@@ -81,6 +81,9 @@ module post_entry_lambda {
     table_name = module.posts_table.table_name
     table_region = var.region
     feed_item_kind = local.feed_item_kind
+    size_key = local.size_key
+    modified_time_key = local.feed_item_kind
+    feed_item_id_key = local.feed_item_kind
     plugin_image_hosting_prefix = local.plugin_image_hosting_prefix
     plugin_post_hosting_prefix = local.plugin_post_hosting_prefix 
     plugin_image_hosting_root = "https://${var.plugin_config.domain}/${var.plugin_config.hosting_root}img/"
@@ -228,7 +231,7 @@ module posts_table {
     type = "S"
   }
   range_key = {
-    name = "postId"
+    name = local.feed_item_id_key
     type = "S"
   }
   global_indexes = [{
@@ -238,12 +241,14 @@ module posts_table {
     write_capacity = 0
     read_capacity = 0
     projection_type = "INCLUDE"
-    non_key_attributes = ["presignedUrl", "id"]
+    non_key_attributes = ["presignedUrl", "size"]
   }]
-  additional_keys = [{
-    name = "modifiedTime"
-    type = "N"
-  }]
+  additional_keys = [
+    {
+      name = local.modified_time_key
+      type = "N"
+    }
+  ]
 }
 
 module process_image_uploads {

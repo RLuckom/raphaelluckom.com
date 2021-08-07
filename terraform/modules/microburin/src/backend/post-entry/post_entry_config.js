@@ -39,7 +39,7 @@ function parsePost(s) {
 }
 
 function postRecordToDynamo({postId, post, presignedUrl, size}) {
-  return {kind: '${feed_item_kind}', postId, frontMatter: post.frontMatter, presignedUrl, size, modifiedTime: new Date().getTime()}
+  return {"${feed_item_id_key}": '${feed_item_kind}', postId, frontMatter: post.frontMatter, presignedUrl, "${size_key}": size, "${modified_time_key}": new Date().getTime()}
 }
 
 function serializePostToMarkdown({frontMatter, content}) {
