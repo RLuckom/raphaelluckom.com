@@ -288,6 +288,7 @@ locals {
   posts_table_name = "${var.coordinator_data.system_id.security_scope}-${var.coordinator_data.system_id.subsystem_name}-microburin_table-${random_id.table_suffix.b64_url}"
   connections_table_name = "${var.coordinator_data.system_id.security_scope}-${var.coordinator_data.system_id.subsystem_name}-connections_table-${random_id.table_suffix.b64_url}"
   modified_time_key = "modifiedTime"
+  domain_key = "domain"
   size_key = "size"
   feed_item_id_key = "postId"
   connection_status_code_connected = "CONNECTED"
@@ -299,6 +300,7 @@ locals {
   blog_image_hosting_prefix = "img/"
   blog_post_hosting_root = "/posts/"
   blog_post_hosting_prefix = "posts/"
+  connection_item_table_name = "connection_items"
   plugin_image_hosting_prefix = "${var.plugin_config.hosting_root}img/"
   plugin_post_hosting_prefix = "${var.plugin_config.hosting_root}posts/"
   file_prefix = trim(var.plugin_config.source_root, "/")

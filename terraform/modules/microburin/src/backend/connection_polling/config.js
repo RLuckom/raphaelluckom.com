@@ -75,7 +75,7 @@ module.exports = {
           action: 'genericApi',
           params: {
             mergeIndividual: _.identity,
-            apiConfig: { 
+            apiConfig: {
               helper: ({tokens}) => {
                 const ret = _.map(tokens, ({timestamp, origin, recipient, sig}) => {
                   return {
@@ -96,7 +96,22 @@ module.exports = {
   },
   cleanup: {
     transformers: {
-      results: { ref: 'requestNewItems.results.items' }
+      results: {
+        helper: ({returned, tokens}) => {
+          return _.map(_.zip(returned, tokens), ([r, t]) => {
+            const parsed = JSON.parse(r.body)
+            return _.map(parsed, (item) => {
+              return _.merge({
+                from: t.recipient,
+              }, item)
+            })
+          })
+        },
+        params: {
+          returned: { ref: 'requestNewItems.results.items' },
+          tokens: { ref: 'signTokens.results.tokens' }
+        }
+      }
     }
   }
 }

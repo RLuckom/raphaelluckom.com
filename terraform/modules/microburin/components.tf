@@ -137,7 +137,7 @@ module connections_table {
 
 module connection_polling_lambda {
   source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
-  timeout_secs = 600
+  timeout_secs = 60
   account_id = var.account_id
   unique_suffix = var.unique_suffix
   region = var.region
@@ -166,6 +166,59 @@ module connection_polling_lambda {
   donut_days_layer = var.donut_days_layer
   additional_layers = [
     var.node_jose_layer
+  ]
+}
+
+module connection_item_table {
+  source = "github.com/RLuckom/terraform_modules//aws/state/permissioned_dynamo_table"
+  unique_suffix = var.unique_suffix
+  table_name = local.connection_item_table_name
+  account_id = var.account_id
+  region = var.region
+  delete_item_permission_role_names = [
+  ]
+  write_permission_role_names = [
+    module.feed_item_collector_lambda.role.name
+  ]
+  read_permission_role_names = [
+  ]
+  partition_key = {
+    name = local.feed_item_partition_key
+    type = "S"
+  }
+  range_key = {
+    name = local.modified_time_key
+    type = "N"
+  }
+}
+
+module feed_item_collector_lambda {
+  source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
+  account_id = var.account_id
+  unique_suffix = var.unique_suffix
+  region = var.region
+  config_contents = templatefile("${path.module}/src/backend/feed_item_collector/config.js",
+  {
+    connection_item_table_name = module.connection_item_table.table_name
+    connection_item_table_region = var.region
+    connection_item_table_modified_key = local.modified_time_key
+    connection_item_table_partition_key = local.feed_item_partition_key
+    connection_item_table_kind = local.feed_item_kind
+    item_collection_lambda = ""
+    feed_list_path = local.feed_list_api_path
+  })
+  logging_config = var.logging_config
+  additional_helpers = [
+    {
+      file_contents = file("${path.module}/src/backend/feed_item_collector/streamWriter.js")
+      helper_name = "streamWriter"
+    }
+  ]
+  lambda_event_configs = var.lambda_event_configs
+  action_name = "feed_item_collector"
+  scope_name = var.coordinator_data.system_id.security_scope
+  donut_days_layer = var.donut_days_layer
+  additional_layers = [
   ]
 }
 
