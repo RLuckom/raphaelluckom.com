@@ -92,20 +92,61 @@ module.exports = {
           }
         },
       }
+    },
+    distributeGetRequests: {
+      index: 3,
+      transformers: {
+        results: {
+          helper: ({returned, tokens}) => {
+            return _.map(_.zip(returned, tokens), ([r, t]) => {
+              const parsed = JSON.parse(r.body)
+              return _.map(parsed, (item) => {
+                return _.merge({
+                  from: t.recipient,
+                }, item)
+              })
+            })
+          },
+          params: {
+            returned: { ref: 'requestNewItems.results.items' },
+            tokens: { ref: 'signTokens.results.tokens' }
+          }
+        }
+      },
+      dependencies: {
+        delegate: {
+          action: 'exploranda',
+          params: {
+            accessSchema: {value: 'dataSources.AWS.lambda.invoke'},
+            explorandaParams: {
+              FunctionName: { value: '${delegation_function_name}' },
+              InvocationType: { value: 'Event' },
+              Payload: {
+                helper: ({results}) => {
+                  return _.map(results, (r) => JSON.stringify(r))
+                },
+                params: {
+                  results: { ref: 'stage.results' },
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   cleanup: {
     transformers: {
       results: {
         helper: ({returned, tokens}) => {
-          return _.map(_.zip(returned, tokens), ([r, t]) => {
+          return _.flatten(_.map(_.zip(returned, tokens), ([r, t]) => {
             const parsed = JSON.parse(r.body)
             return _.map(parsed, (item) => {
               return _.merge({
                 from: t.recipient,
               }, item)
             })
-          })
+          }))
         },
         params: {
           returned: { ref: 'requestNewItems.results.items' },

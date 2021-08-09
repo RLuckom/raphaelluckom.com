@@ -5,7 +5,19 @@ module.exports = {
   stages: {
     getConnections: {
       index: 0,
+      transformers: {
+        foo: {
+          helper: ({evt}) => {
+            console.log(evt)
+            return evt
+          },
+          params: {
+            evt: { ref: 'event' }
+          }
+        }
+      },
       dependencies: {
+        /*
         connections: {
           action: 'exploranda',
           params: {
@@ -22,6 +34,7 @@ module.exports = {
             },
           },
         },
+       */
       }
     },
     /*
@@ -59,7 +72,7 @@ module.exports = {
   },
   cleanup: {
     transformers: {
-      results: { ref: 'requestNewItems.results.items' }
+      // results: { ref: 'requestNewItems.results.items' }
     }
   }
 }

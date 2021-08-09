@@ -150,7 +150,7 @@ module connection_polling_lambda {
     social_signing_private_key_bucket = var.plugin_config.bucket_name
     social_signing_private_key_s3_key = local.social_signing_private_key_s3_key
     social_domain = var.coordinator_data.routing.domain
-    item_collection_lambda = ""
+    delegation_function_name = module.feed_item_collector_lambda.lambda.function_name
     feed_list_path = local.feed_list_api_path
   })
   logging_config = var.logging_config
@@ -197,6 +197,9 @@ module feed_item_collector_lambda {
   account_id = var.account_id
   unique_suffix = var.unique_suffix
   region = var.region
+  invoking_roles = [
+    module.connection_polling_lambda.role.arn
+  ]
   config_contents = templatefile("${path.module}/src/backend/feed_item_collector/config.js",
   {
     connection_item_table_name = module.connection_item_table.table_name
@@ -204,8 +207,6 @@ module feed_item_collector_lambda {
     connection_item_table_modified_key = local.modified_time_key
     connection_item_table_partition_key = local.feed_item_partition_key
     connection_item_table_kind = local.feed_item_kind
-    item_collection_lambda = ""
-    feed_list_path = local.feed_list_api_path
   })
   logging_config = var.logging_config
   additional_helpers = [
