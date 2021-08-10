@@ -82,8 +82,8 @@ module post_entry_lambda {
     table_region = var.region
     feed_item_kind = local.feed_item_kind
     size_key = local.size_key
-    modified_time_key = local.feed_item_kind
-    feed_item_id_key = local.feed_item_kind
+    modified_time_key = local.modified_time_key
+    feed_item_partition_key = local.feed_item_partition_key
     plugin_image_hosting_prefix = local.plugin_image_hosting_prefix
     plugin_post_hosting_prefix = local.plugin_post_hosting_prefix 
     plugin_image_hosting_root = "https://${var.plugin_config.domain}/${var.plugin_config.hosting_root}img/"
@@ -207,6 +207,10 @@ module feed_item_collector_lambda {
     connection_item_table_modified_key = local.modified_time_key
     connection_item_table_partition_key = local.feed_item_partition_key
     connection_item_table_kind = local.feed_item_kind
+    connection_item_bucket = var.plugin_config.bucket_name
+    connection_item_prefix = "${trimsuffix(var.plugin_config.backend_readwrite_root, "/")}/${local.connection_items_plugin_relative_prefix}/"
+    request_timeout_secs = 4
+    request_size_limit_mb = 2
   })
   logging_config = var.logging_config
   additional_helpers = [

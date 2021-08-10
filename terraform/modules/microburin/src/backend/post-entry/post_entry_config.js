@@ -39,7 +39,7 @@ function parsePost(s) {
 }
 
 function postRecordToDynamo({postId, post, presignedUrl, size}) {
-  return {"${feed_item_id_key}": '${feed_item_kind}', postId, frontMatter: post.frontMatter, presignedUrl, "${size_key}": size, "${modified_time_key}": new Date().getTime()}
+  return {"${feed_item_partition_key}": '${feed_item_kind}', postId, frontMatter: post.frontMatter, presignedUrl, "${size_key}": size, "${modified_time_key}": new Date().getTime()}
 }
 
 function serializePostToMarkdown({frontMatter, content}) {
@@ -381,7 +381,7 @@ module.exports = {
           params: {
             isDelete: {ref: 'parsePost.results.current.frontMatter.delete' },
             post: {ref: 'parsePost.results.current' },
-            presignedUrl: {ref: 'parsePost.results.presignedUrl' },
+            presignedUrl: {ref: 'parsePost.results.presignedUrl[0]' },
             postId: {ref: 'parsePost.vars.postId'},
             size: {ref : 'packagePost.results.zip[0].length' }
           }

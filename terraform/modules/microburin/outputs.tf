@@ -116,6 +116,15 @@ output plugin_relative_bucket_readonly_root_permissions_needed {
   ]
 }
 
+output plugin_relative_bucket_readwrite_root_permissions_needed {
+  value = [
+    {
+      plugin_relative_key = local.connection_items_plugin_relative_prefix
+      role_arn = module.feed_item_collector_lambda.role.arn
+    },
+  ]
+}
+
 output static_config {
   value = {
     api_name = var.name

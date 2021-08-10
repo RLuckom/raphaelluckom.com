@@ -1,5 +1,5 @@
 const _ = require('lodash')
-const m = require('./helpers/streamWriter')
+const {streamDownloadAccessSchema} = require('./helpers/streamWriter')
 
 module.exports = {
   stages: {
@@ -14,9 +14,48 @@ module.exports = {
           params: {
             evt: { ref: 'event' }
           }
+        },
+        saveConfigs: {
+          helper: ({records}) => {
+            return _.map(records, (r) => {
+              return _.merge({
+                key: "${connection_item_prefix}" + r.from + "/" + r.postId + '.zip',
+              }, r)
+            })
+          },
+          params: {
+            records: { ref: 'event' }
+          },
         }
       },
       dependencies: {
+        tokens: {
+          action: 'exploranda',
+          params: {
+            accessSchema: {value: streamDownloadAccessSchema },
+            explorandaParams: {
+              presignedUrl: {
+                helper: ({records}) => {
+                  return _.map(records, 'presignedUrl')
+                },
+                params: {
+                  records: { ref: 'stage.saveConfigs' }
+                },
+              },
+              bucket: { value: "${connection_item_bucket}" },
+              key: {
+                helper: ({records}) => {
+                  return _.map(records, 'key')
+                },
+                params: {
+                  records: { ref: 'stage.saveConfigs' }
+                },
+              },
+              requestTimeoutSecs: {value: ${request_timeout_secs} },
+              sizeLimitBytes: {value: ${request_size_limit_mb} * 1024 * 1024 },
+            }
+          },
+        },
         /*
         connections: {
           action: 'exploranda',
@@ -41,31 +80,6 @@ module.exports = {
     signTokens: {
       index: 1,
       dependencies: {
-        tokens: {
-          action: 'exploranda',
-          params: {
-            accessSchema: {value: signTokenAccessSchema },
-            explorandaParams: {
-              signingKeyObject: {ref: 'getConnections.results.signingKeyObject'},
-              payload: {
-                helper: ({connections, timestamp, origin}) => {
-                  const ret = _.map(connections, (c) => {
-                    return {timestamp, origin, recipient: c.domain}
-                  })
-                  return ret
-                },
-                params: {
-                  timestamp: { 
-                    helper: () => { 
-                      return new Date().getTime() 
-                    }
-                  },
-                  connections: { ref: 'getConnections.results.connections' }
-                }
-              }
-            }
-          },
-        },
       }
     },
     */
