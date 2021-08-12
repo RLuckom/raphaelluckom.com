@@ -125,6 +125,10 @@ module connections_table {
     module.social_access_control_function.role.name,
     module.connection_polling_lambda.role.name
   ]
+  ttl = [{
+    enabled = true
+    attribute_name = "requestExpires"
+  }]
   partition_key = {
     name = local.connection_state_key
     type = "S"
@@ -330,10 +334,6 @@ module process_image_uploads {
   }
 }
 
-locals {
-  jwk_s3_path = ".well-known/microburin-social/keys/social-signing-public-key.jwk"
-}
-
 resource null_resource social_key {
 
   # Changes to any instance of the cluster requires re-provisioning
@@ -352,6 +352,44 @@ resource null_resource social_key {
   }
 }
 
+module connection_request_function {
+  source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
+  config_contents = templatefile("${path.module}/src/backend/connection_request/config.js",
+  {
+    connection_table_name = module.connections_table.table_name
+    connection_table_region = var.region
+    connection_table_state_key = local.connection_state_key
+    connection_status_code_pending = local.connection_status_code_pending
+  })
+  action_name = "connection_request"
+  logging_config = var.logging_config
+  lambda_event_configs = var.lambda_event_configs
+  account_id = var.account_id
+  unique_suffix = var.unique_suffix
+  region = var.region
+  scope_name = var.coordinator_data.system_id.security_scope
+  donut_days_layer = var.donut_days_layer
+}
+
+module connection_request_response_function {
+  source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
+  config_contents = templatefile("${path.module}/src/backend/connection_request_response/config.js",
+  {
+    connection_table_name = module.connections_table.table_name
+    connection_table_region = var.region
+    connection_table_state_key = local.connection_state_key
+    connection_status_code_pending = local.connection_status_code_pending
+  })
+  action_name = "connection_request_response"
+  logging_config = var.logging_config
+  lambda_event_configs = var.lambda_event_configs
+  account_id = var.account_id
+  unique_suffix = var.unique_suffix
+  region = var.region
+  scope_name = var.coordinator_data.system_id.security_scope
+  donut_days_layer = var.donut_days_layer
+}
+
 module social_site {
   source = "github.com/RLuckom/terraform_modules//aws/serverless_site/capstan"
   account_id = var.account_id
@@ -359,49 +397,111 @@ module social_site {
   region = var.region
   coordinator_data = var.coordinator_data
   force_destroy = var.allow_delete_buckets
-  lambda_origins = [{
-    # a value of "NONE" will let the function
-    # handle its own access control. A 
-    # value of "CLOUDFRONT_DISTRIBUTION" will
-    # use the lambda authorizers provided;
-    # this is also the default if there are 
-    # no lambda authorizers. Any other value uses
-    # the lambda authorizers provided.
-    authorizer = "CLOUDFRONT_DISTRIBUTION"
-    # unitary path denoting the function's endpoint, e.g.
-    # "/meta/relations/trails"
-    path = local.feed_list_api_path
-    # Usually all lambdas in a dist should share one gateway, so the gway
-    # name stems should be the same across all lambda endpoints.
-    # But if you wanted multiple apigateways within a single dist., you
-    # could set multiple name stems and the lambdas would get allocated
-    # to different gateways
-    gateway_name_stem = "default"
-    allowed_methods = ["HEAD", "GET"]
-    cached_methods = ["HEAD", "GET"]
-    compress = true
-    ttls = {
-      min = 200
-      default = 200
-      max = 200
+  lambda_origins = [
+    {
+      path = local.connection_request_api_path
+      lambda = {
+        arn = module.connection_request_function.lambda.arn
+        name = module.connection_request_function.lambda.function_name
+      }
+      authorizer = "NONE"
+      forwarded_headers = ["Authorization"]
+      gateway_name_stem = "default"
+      allowed_methods = ["HEAD", "GET", "PUT", "POST", "DELETE", "PATCH", "OPTIONS"]
+      cached_methods = ["HEAD", "GET"]
+      compress = true
+      ttls = {
+        min = 0
+        default = 0
+        max = 0
+      }
+      forwarded_values = {
+        # usually true
+        query_string = false
+        # usually empty list
+        query_string_cache_keys = []
+        # probably best left to empty list; that way headers used for
+        # auth can't be leaked by insecure functions. If there's
+        # a reason to want certain headers, go ahead.
+        headers = []
+        # same as headers; should generally be empty
+        cookie_names = []
+      }
+    },
+    {
+      path = local.connection_request_response_api_path
+      lambda = {
+        arn = module.connection_request_response_function.lambda.arn
+        name = module.connection_request_response_function.lambda.function_name
+      }
+      authorizer = "NONE"
+      compress = true
+      forwarded_headers = ["Authorization"]
+      gateway_name_stem = "default"
+      allowed_methods = ["HEAD", "GET", "PUT", "POST", "DELETE", "PATCH", "OPTIONS"]
+      cached_methods = ["HEAD", "GET"]
+      ttls = {
+        min = 0
+        default = 0
+        max = 0
+      }
+      forwarded_values = {
+        # usually true
+        query_string = false
+        # usually empty list
+        query_string_cache_keys = []
+        # probably best left to empty list; that way headers used for
+        # auth can't be leaked by insecure functions. If there's
+        # a reason to want certain headers, go ahead.
+        headers = []
+        # same as headers; should generally be empty
+        cookie_names = []
+      }
+    },
+    {
+      # a value of "NONE" will let the function
+      # handle its own access control. A 
+      # value of "CLOUDFRONT_DISTRIBUTION" will
+      # use the lambda authorizers provided;
+      # this is also the default if there are 
+      # no lambda authorizers. Any other value uses
+      # the lambda authorizers provided.
+      authorizer = "CLOUDFRONT_DISTRIBUTION"
+      # unitary path denoting the function's endpoint, e.g.
+      # "/meta/relations/trails"
+      path = local.feed_list_api_path
+      # Usually all lambdas in a dist should share one gateway, so the gway
+      # name stems should be the same across all lambda endpoints.
+      # But if you wanted multiple apigateways within a single dist., you
+      # could set multiple name stems and the lambdas would get allocated
+      # to different gateways
+      gateway_name_stem = "default"
+      allowed_methods = ["HEAD", "GET"]
+      cached_methods = ["HEAD", "GET"]
+      compress = true
+      ttls = {
+        min = 200
+        default = 200
+        max = 200
+      }
+      forwarded_values = {
+        # usually true
+        query_string = false
+        # usually empty list
+        query_string_cache_keys = []
+        # probably best left to empty list; that way headers used for
+        # auth can't be leaked by insecure functions. If there's
+        # a reason to want certain headers, go ahead.
+        headers = []
+        # same as headers; should generally be empty
+        cookie_names = []
+      }
+      lambda = {
+        arn = module.feed_list_endpoint.lambda.arn
+        name = module.feed_list_endpoint.lambda.function_name
+      }
     }
-    forwarded_values = {
-      # usually true
-      query_string = false
-      # usually empty list
-      query_string_cache_keys = []
-      # probably best left to empty list; that way headers used for
-      # auth can't be leaked by insecure functions. If there's
-      # a reason to want certain headers, go ahead.
-      headers = []
-      # same as headers; should generally be empty
-      cookie_names = []
-    }
-    lambda = {
-      arn = module.feed_list_endpoint.lambda.arn
-      name = module.feed_list_endpoint.lambda.function_name
-    }
-  }]
+  ]
   no_access_control_s3_path_patterns = [{
     path = local.jwk_s3_path
   }]

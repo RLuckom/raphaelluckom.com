@@ -284,7 +284,6 @@ variable logging_config {
 }
 
 locals {
-  feed_list_api_path = "/feed"
   connection_state_key = "connectionState"
   posts_table_name = "${var.coordinator_data.system_id.security_scope}-${var.coordinator_data.system_id.subsystem_name}-microburin_table-${random_id.table_suffix.b64_url}"
   connections_table_name = "${var.coordinator_data.system_id.security_scope}-${var.coordinator_data.system_id.subsystem_name}-connections_table-${random_id.table_suffix.b64_url}"
@@ -292,7 +291,8 @@ locals {
   domain_key = "domain"
   size_key = "size"
   feed_item_id_key = "postId"
-  connection_status_code_connected = "CONNECTED"
+  connection_status_code_connected = "CONNECTION_ESTABLISHED"
+  connection_status_code_pending = "CONNECTION_PENDING_RESPONSE"
   modified_time_index = "modified"
   feed_item_partition_key = "kind"
   feed_item_kind = "feedItem"
@@ -307,6 +307,10 @@ locals {
   file_prefix = trim(var.plugin_config.source_root, "/")
   social_signing_key_plugin_relative_prefix = "private-social-key"
   connection_items_plugin_relative_prefix = "connection-feed-items"
+  jwk_s3_path = ".well-known/microburin-social/keys/social-signing-public-key.jwk"
+  feed_list_api_path = ".well-known/microburin-social/api/feed-items"
+  connection_request_api_path = ".well-known/microburin-social/api/public/connection-request"
+  connection_request_response_api_path = ".well-known/microburin-social/api/public/connection-response"
   social_signing_key_plugin_relative = "${local.social_signing_key_plugin_relative_prefix}/key.jwk"
   social_signing_private_key_s3_key = "${var.plugin_config.backend_readonly_root}${local.social_signing_key_plugin_relative}"
   edit_styles_path = "${local.file_prefix}/assets/styles/editor.css"
