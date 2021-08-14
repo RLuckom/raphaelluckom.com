@@ -4,6 +4,9 @@ module.exports = {
   stages: {
     getConnections: {
       index: 0,
+      transformers: {
+        authorization: { ref: 'event.cf.request.headers.authorization[0]' }
+      },
       dependencies: {
         connections: {
           action: 'exploranda',
@@ -17,7 +20,7 @@ module.exports = {
                   ':expectedStatus': '${connection_status_code_pending}',
                 }
               },
-              KeyConditionExpression: {value: '${connection_table_state_key} = :itemKind' },
+              KeyConditionExpression: {value: '${connection_table_state_key} = :expectedStatus' },
             },
           },
         },
@@ -26,6 +29,7 @@ module.exports = {
   },
   cleanup: {
     transformers: {
+      statusCode: { value: 200 }
       // results: { ref: 'requestNewItems.results.items' }
     }
   }

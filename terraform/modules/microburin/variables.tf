@@ -293,9 +293,13 @@ locals {
   feed_item_id_key = "postId"
   connection_status_code_connected = "CONNECTION_ESTABLISHED"
   connection_status_code_pending = "CONNECTION_PENDING_RESPONSE"
+  connection_status_code_our_response_requested = "CONNECTION_OUR_RESPONSE_REQUESTED"
+  intermediate_connection_state_timeout_secs = 60 * 60 * 24 * 14
   modified_time_index = "modified"
   feed_item_partition_key = "kind"
   feed_item_kind = "feedItem"
+  domain_index_name = "domainIndex"
+  connection_table_ttl_attribute = "requestExpires"
   max_lookback_seconds = 60 * 60 * 24 * 31
   blog_image_hosting_root = "/img/"
   blog_image_hosting_prefix = "img/"
@@ -308,7 +312,7 @@ locals {
   social_signing_key_plugin_relative_prefix = "private-social-key"
   connection_items_plugin_relative_prefix = "connection-feed-items"
   jwk_s3_path = ".well-known/microburin-social/keys/social-signing-public-key.jwk"
-  feed_list_api_path = ".well-known/microburin-social/api/feed-items"
+  feed_list_api_path = ".well-known/microburin-social/api/private/feed-items"
   connection_request_api_path = ".well-known/microburin-social/api/public/connection-request"
   connection_request_response_api_path = ".well-known/microburin-social/api/public/connection-response"
   social_signing_key_plugin_relative = "${local.social_signing_key_plugin_relative_prefix}/key.jwk"

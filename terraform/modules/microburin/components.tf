@@ -120,21 +120,33 @@ module connections_table {
   delete_item_permission_role_names = [
   ]
   write_permission_role_names = [
+    module.connection_polling_lambda.role.name,
+    module.connection_request_function.role.name,
   ]
   read_permission_role_names = [
     module.social_access_control_function.role.name,
-    module.connection_polling_lambda.role.name
+    module.connection_polling_lambda.role.name,
+    module.connection_request_function.role.name,
   ]
   ttl = [{
     enabled = true
-    attribute_name = "requestExpires"
+    attribute_name = local.connection_table_ttl_attribute
+  }]
+  global_indexes = [{
+    name = local.domain_index_name
+    hash_key = local.domain_key
+    range_key = local.connection_state_key
+    write_capacity = 0
+    read_capacity = 0
+    projection_type = "KEYS_ONLY"
+    non_key_attributes = []
   }]
   partition_key = {
     name = local.connection_state_key
     type = "S"
   }
   range_key = {
-    name = "domain"
+    name = local.domain_key
     type = "S"
   }
 }
@@ -353,41 +365,35 @@ resource null_resource social_key {
 }
 
 module connection_request_function {
-  source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
-  config_contents = templatefile("${path.module}/src/backend/connection_request/config.js",
-  {
-    connection_table_name = module.connections_table.table_name
-    connection_table_region = var.region
-    connection_table_state_key = local.connection_state_key
-    connection_status_code_pending = local.connection_status_code_pending
-  })
-  action_name = "connection_request"
-  logging_config = var.logging_config
+  source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
+  source_contents = [
+    {
+      file_name = "index.js"
+      file_contents = templatefile("${path.module}/src/backend/connection_request/index.js",
+      {
+        key_timeout_secs = 2
+        intermediate_connection_state_timeout_secs = local.intermediate_connection_state_timeout_secs
+        domain_key = local.domain_key
+        dynamo_region = var.region
+        dynamo_table_name = module.connections_table.table_name
+        domain = var.coordinator_data.routing.domain
+        log = true
+        domain_index = local.domain_index_name
+        connection_table_state_key = local.connection_state_key
+        connection_status_code_our_response_requested = local.connection_status_code_our_response_requested
+        connection_table_ttl_attribute = local.connection_table_ttl_attribute
+      })
+    }
+  ]
+  lambda_details = {
+    action_name = "connection_request"
+    scope_name = var.coordinator_data.system_id.security_scope
+    policy_statements = []
+  }
   lambda_event_configs = var.lambda_event_configs
   account_id = var.account_id
   unique_suffix = var.unique_suffix
   region = var.region
-  scope_name = var.coordinator_data.system_id.security_scope
-  donut_days_layer = var.donut_days_layer
-}
-
-module connection_request_response_function {
-  source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
-  config_contents = templatefile("${path.module}/src/backend/connection_request_response/config.js",
-  {
-    connection_table_name = module.connections_table.table_name
-    connection_table_region = var.region
-    connection_table_state_key = local.connection_state_key
-    connection_status_code_pending = local.connection_status_code_pending
-  })
-  action_name = "connection_request_response"
-  logging_config = var.logging_config
-  lambda_event_configs = var.lambda_event_configs
-  account_id = var.account_id
-  unique_suffix = var.unique_suffix
-  region = var.region
-  scope_name = var.coordinator_data.system_id.security_scope
-  donut_days_layer = var.donut_days_layer
 }
 
 module social_site {
@@ -410,36 +416,6 @@ module social_site {
       allowed_methods = ["HEAD", "GET", "PUT", "POST", "DELETE", "PATCH", "OPTIONS"]
       cached_methods = ["HEAD", "GET"]
       compress = true
-      ttls = {
-        min = 0
-        default = 0
-        max = 0
-      }
-      forwarded_values = {
-        # usually true
-        query_string = false
-        # usually empty list
-        query_string_cache_keys = []
-        # probably best left to empty list; that way headers used for
-        # auth can't be leaked by insecure functions. If there's
-        # a reason to want certain headers, go ahead.
-        headers = []
-        # same as headers; should generally be empty
-        cookie_names = []
-      }
-    },
-    {
-      path = local.connection_request_response_api_path
-      lambda = {
-        arn = module.connection_request_response_function.lambda.arn
-        name = module.connection_request_response_function.lambda.function_name
-      }
-      authorizer = "NONE"
-      compress = true
-      forwarded_headers = ["Authorization"]
-      gateway_name_stem = "default"
-      allowed_methods = ["HEAD", "GET", "PUT", "POST", "DELETE", "PATCH", "OPTIONS"]
-      cached_methods = ["HEAD", "GET"]
       ttls = {
         min = 0
         default = 0
