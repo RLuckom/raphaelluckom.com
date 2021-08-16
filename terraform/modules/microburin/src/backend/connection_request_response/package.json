@@ -11,5 +11,11 @@
   "dependencies": {
     "jasmine": "^3.8.0",
     "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.968.0",
+    "axios": "^0.21.1",
+    "jose-node-cjs-runtime": "^3.14.3",
+    "rewire": "^5.0.0"
   }
 }
