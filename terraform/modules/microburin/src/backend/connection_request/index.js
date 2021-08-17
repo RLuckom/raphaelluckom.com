@@ -74,11 +74,10 @@ const RESULTS = {
   CREATE_RECORD: 'CREATE_RECORD'
 }
 
-const CONNECTION_REQUEST = "CONNECTION_REQUEST"
+const CONNECTION_REQUEST = "${connection_request_type}"
 
 async function handler(event) {
-  const request = event.Records[0].cf.request;
-  const auth = _.get(request, 'headers.authorization[0].value', '').substr(7);
+  const auth = _.get(event, 'headers.authorization', '').substr(7);
   if (!auth) {
     return successResponse(STATUS_MESSAGES.noAuth, null, RESULTS.NOOP)
   }
@@ -118,12 +117,18 @@ async function handler(event) {
       dynamo.query({
         TableName: '${dynamo_table_name}',
         IndexName: '${domain_index}',
-        ExpressionAttributeValues: {
-          ':dom': origin
+        ExpressionAttributeNames: {
+          '#domKey': '${domain_key}',
         },
-        KeyConditionExpression: '${domain_key} = :dom',
+        KeyConditionExpression: '#domKey = :dom',
+        ExpressionAttributeValues: {
+          ':dom': {
+            S: origin
+          }
+        },
       }, (e, r) => {
         if (e) {
+          console.log(e)
           return reject(e)
         } else {
           return resolve(_.map(r.Items, (i) => converter.unmarshall(i)))
@@ -141,6 +146,7 @@ async function handler(event) {
   try {
     signingKey = await getSigningKey(origin)
   } catch(e) {
+    console.log(e)
     return successResponse(STATUS_MESSAGES.noSigningKey, origin, RESULTS.NOOP)
   }
   const jws = {
@@ -173,6 +179,7 @@ async function handler(event) {
       })
     })
   } catch(err) {
+    console.log(err)
     return successResponse(STATUS_MESSAGES.insertFailed, origin, RESULTS.NOOP)
   }
   return successResponse(STATUS_MESSAGES.success, origin, RESULTS.CREATE_RECORD)

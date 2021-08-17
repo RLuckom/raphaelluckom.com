@@ -77,8 +77,7 @@ const RESULTS = {
 const CONNECTION_REQUEST_RESPONSE = "CONNECTION_REQUEST_RESPONSE"
 
 async function handler(event) {
-  const request = event.Records[0].cf.request;
-  const auth = _.get(request, 'headers.authorization[0].value', '').substr(7);
+  const auth = _.get(event, 'headers.authorization', '').substr(7);
   if (!auth) {
     return successResponse(STATUS_MESSAGES.noAuth, null, RESULTS.NOOP)
   }
@@ -117,13 +116,21 @@ async function handler(event) {
     connections = await new Promise((resolve, reject) => {
       dynamo.query({
         TableName: '${dynamo_table_name}',
-        ExpressionAttributeValues: {
-          ':status': "${connection_status_code_pending}",
-          ':dom': origin
+        ExpressionAttributeNames: {
+          '#domKey': '${domain_key}',
         },
-        KeyConditionExpression: '${connection_state_key} = :status and ${domain_key} = :dom',
+        ExpressionAttributeValues: {
+          ':status': {
+            S: "${connection_status_code_pending}",
+          },
+          ':dom': {
+            S: origin
+          }
+        },
+        KeyConditionExpression: '${connection_state_key} = :status and #domKey = :dom',
       }, (e, r) => {
         if (e) {
+          console.log(e)
           return reject(e)
         } else {
           return resolve(_.map(r.Items, (i) => converter.unmarshall(i)))
@@ -152,6 +159,7 @@ async function handler(event) {
     const k = await parseJwk(signingKey, 'EdDSA')
     await flattenedVerify(jws, k, {algorithms: ["EdDSA"]})
   } catch(e) {
+    console.log(e)
     return successResponse(STATUS_MESSAGES.verifyFailed, origin, RESULTS.NOOP)
   }
   writeLog('auth success; writing connection')
@@ -172,6 +180,7 @@ async function handler(event) {
       })
     })
   } catch(err) {
+    console.log(err)
     return successResponse(STATUS_MESSAGES.insertFailed, origin, RESULTS.NOOP)
   }
   return successResponse(STATUS_MESSAGES.success, origin, RESULTS.CREATE_RECORD)

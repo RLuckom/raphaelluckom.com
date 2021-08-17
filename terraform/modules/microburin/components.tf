@@ -122,13 +122,13 @@ module connections_table {
   write_permission_role_names = [
     module.connection_polling_lambda.role.name,
     module.connection_request_function.role.name,
-    module.connection_request_response_function.role.name,
+    module.connection_request_acceptance_function.role.name,
   ]
   read_permission_role_names = [
     module.social_access_control_function.role.name,
     module.connection_polling_lambda.role.name,
     module.connection_request_function.role.name,
-    module.connection_request_response_function.role.name,
+    module.connection_request_acceptance_function.role.name,
   ]
   ttl = [{
     enabled = true
@@ -174,12 +174,76 @@ module connection_polling_lambda {
   logging_config = var.logging_config
   additional_helpers = [
     {
-      file_contents = file("${path.module}/src/backend/connection_polling/signRequests.js")
+      file_contents = file("${path.module}/src/backend/signRequests.js")
       helper_name = "signRequests"
     }
   ]
   lambda_event_configs = var.lambda_event_configs
   action_name = "poll_connections"
+  scope_name = var.coordinator_data.system_id.security_scope
+  donut_days_layer = var.donut_days_layer
+  additional_layers = [
+    var.node_jose_layer
+  ]
+}
+
+module connection_request_delivery_function {
+  source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
+  timeout_secs = 60
+  account_id = var.account_id
+  unique_suffix = var.unique_suffix
+  region = var.region
+  config_contents = templatefile("${path.module}/src/backend/connection_request_delivery_functions/config.js",
+  {
+    social_signing_private_key_bucket = var.plugin_config.bucket_name
+    social_signing_private_key_s3_key = local.social_signing_private_key_s3_key
+    social_domain = var.coordinator_data.routing.domain
+    delegation_function_name = module.feed_item_collector_lambda.lambda.function_name
+    connection_request_type = local.connection_request_type
+    feed_list_path = local.feed_list_api_path
+    connection_request_api_path = local.connection_request_api_path 
+  })
+  logging_config = var.logging_config
+  additional_helpers = [
+    {
+      file_contents = file("${path.module}/src/backend/signRequests.js")
+      helper_name = "signRequests"
+    }
+  ]
+  lambda_event_configs = var.lambda_event_configs
+  action_name = "connection_request_delivery"
+  scope_name = var.coordinator_data.system_id.security_scope
+  donut_days_layer = var.donut_days_layer
+  additional_layers = [
+    var.node_jose_layer
+  ]
+}
+
+module connection_request_acceptance_delivery_function {
+  source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
+  timeout_secs = 60
+  account_id = var.account_id
+  unique_suffix = var.unique_suffix
+  region = var.region
+  config_contents = templatefile("${path.module}/src/backend/connection_request_delivery_functions/config.js",
+  {
+    social_signing_private_key_bucket = var.plugin_config.bucket_name
+    social_signing_private_key_s3_key = local.social_signing_private_key_s3_key
+    social_domain = var.coordinator_data.routing.domain
+    delegation_function_name = module.feed_item_collector_lambda.lambda.function_name
+    connection_request_type = local.connection_request_acceptance_type
+    feed_list_path = local.feed_list_api_path
+    connection_request_api_path = local.connection_request_acceptance_api_path 
+  })
+  logging_config = var.logging_config
+  additional_helpers = [
+    {
+      file_contents = file("${path.module}/src/backend/signRequests.js")
+      helper_name = "signRequests"
+    }
+  ]
+  lambda_event_configs = var.lambda_event_configs
+  action_name = "connection_request_acceptance_delivery"
   scope_name = var.coordinator_data.system_id.security_scope
   donut_days_layer = var.donut_days_layer
   additional_layers = [
@@ -366,12 +430,12 @@ resource null_resource social_key {
   }
 }
 
-module connection_request_response_function {
+module connection_request_acceptance_function {
   source = "github.com/RLuckom/terraform_modules//aws/permissioned_lambda"
   source_contents = [
     {
       file_name = "index.js"
-      file_contents = templatefile("${path.module}/src/backend/connection_request_response/index.js",
+      file_contents = templatefile("${path.module}/src/backend/connection_request_acceptance/index.js",
       {
         key_timeout_secs = 2
         intermediate_connection_state_timeout_secs = local.intermediate_connection_state_timeout_secs
@@ -388,10 +452,14 @@ module connection_request_response_function {
     }
   ]
   lambda_details = {
-    action_name = "connection_request_response"
+    action_name = "connection_request_acceptance"
     scope_name = var.coordinator_data.system_id.security_scope
     policy_statements = []
   }
+  layers = [
+    var.donut_days_layer,
+    var.node_jose_layer,
+  ]
   lambda_event_configs = var.lambda_event_configs
   account_id = var.account_id
   unique_suffix = var.unique_suffix
@@ -408,6 +476,7 @@ module connection_request_function {
         key_timeout_secs = 2
         intermediate_connection_state_timeout_secs = local.intermediate_connection_state_timeout_secs
         domain_key = local.domain_key
+        connection_request_type = local.connection_request_type
         dynamo_region = var.region
         dynamo_table_name = module.connections_table.table_name
         domain = var.coordinator_data.routing.domain
@@ -418,6 +487,10 @@ module connection_request_function {
         connection_table_ttl_attribute = local.connection_table_ttl_attribute
       })
     }
+  ]
+  layers = [
+    var.donut_days_layer,
+    var.node_jose_layer,
   ]
   lambda_details = {
     action_name = "connection_request"
@@ -445,7 +518,6 @@ module social_site {
         name = module.connection_request_function.lambda.function_name
       }
       authorizer = "NONE"
-      forwarded_headers = ["Authorization"]
       gateway_name_stem = "default"
       allowed_methods = ["HEAD", "GET", "PUT", "POST", "DELETE", "PATCH", "OPTIONS"]
       cached_methods = ["HEAD", "GET"]
@@ -463,19 +535,18 @@ module social_site {
         # probably best left to empty list; that way headers used for
         # auth can't be leaked by insecure functions. If there's
         # a reason to want certain headers, go ahead.
-        headers = []
+        headers = ["Authorization"]
         # same as headers; should generally be empty
         cookie_names = []
       }
     },
     {
-      path = local.connection_request_response_api_path
+      path = local.connection_request_acceptance_api_path
       lambda = {
-        arn = module.connection_request_response_function.lambda.arn
-        name = module.connection_request_response_function.lambda.function_name
+        arn = module.connection_request_acceptance_function.lambda.arn
+        name = module.connection_request_acceptance_function.lambda.function_name
       }
       authorizer = "NONE"
-      forwarded_headers = ["Authorization"]
       gateway_name_stem = "default"
       allowed_methods = ["HEAD", "GET", "PUT", "POST", "DELETE", "PATCH", "OPTIONS"]
       cached_methods = ["HEAD", "GET"]
@@ -493,7 +564,7 @@ module social_site {
         # probably best left to empty list; that way headers used for
         # auth can't be leaked by insecure functions. If there's
         # a reason to want certain headers, go ahead.
-        headers = []
+        headers = ["Authorization"]
         # same as headers; should generally be empty
         cookie_names = []
       }
