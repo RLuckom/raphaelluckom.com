@@ -683,6 +683,14 @@ module social_site {
     },
   ]
   access_control_function_qualified_arns = [module.social_access_control_function.access_control_function_qualified_arns]
+  access_control_function_include_body = {
+    refresh_auth = false
+    parse_auth = false
+    check_auth = true
+    sign_out = false
+    http_headers = false
+    move_cookie_to_auth_header = false
+  }
   website_bucket_bucket_permissions = [
     {
       permission_type = "list_bucket"
