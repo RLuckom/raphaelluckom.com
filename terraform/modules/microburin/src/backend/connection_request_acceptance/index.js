@@ -168,6 +168,7 @@ async function handler(event) {
       dynamo.putItem({
         TableName: '${dynamo_table_name}',
         Item: converter.marshall({
+          "${connection_type_key}" : "${connection_type_initial}",
           "${domain_key}": origin,
           "${connection_state_key}": "${connection_status_code_connected}",
         })

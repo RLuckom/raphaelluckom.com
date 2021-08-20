@@ -142,15 +142,30 @@ module connections_table {
     read_capacity = 0
     projection_type = "KEYS_ONLY"
     non_key_attributes = []
+  },
+  {
+    name = local.state_index_name
+    range_key = local.domain_key
+    hash_key = local.connection_state_key
+    write_capacity = 0
+    read_capacity = 0
+    projection_type = "KEYS_ONLY"
+    non_key_attributes = []
   }]
   partition_key = {
-    name = local.connection_state_key
+    name = local.connection_type_key
     type = "S"
   }
   range_key = {
     name = local.domain_key
     type = "S"
   }
+  additional_keys = [
+    {
+      name = local.connection_state_key
+      type = "S"
+    }
+  ]
 }
 
 module connection_polling_lambda {
@@ -164,6 +179,7 @@ module connection_polling_lambda {
     connections_table_name = module.connections_table.table_name
     connections_table_region = var.region
     connection_table_state_key = local.connection_state_key
+    connection_table_state_index = local.state_index_name
     connection_status_code_connected = local.connection_status_code_connected
     social_signing_private_key_bucket = var.plugin_config.bucket_name
     social_signing_private_key_s3_key = local.social_signing_private_key_s3_key
@@ -195,6 +211,11 @@ module connection_request_delivery_function {
   region = var.region
   config_contents = templatefile("${path.module}/src/backend/connection_request_delivery_functions/config.js",
   {
+    connections_table_name = module.connections_table.table_name
+    connections_table_region = var.region
+    connection_table_state_key = local.connection_state_key
+    connection_status_code_pending = local.connection_status_code_pending
+    connection_type_key = local.connection_type_key
     social_signing_private_key_bucket = var.plugin_config.bucket_name
     social_signing_private_key_s3_key = local.social_signing_private_key_s3_key
     social_domain = var.coordinator_data.routing.domain
@@ -227,6 +248,11 @@ module connection_request_acceptance_delivery_function {
   region = var.region
   config_contents = templatefile("${path.module}/src/backend/connection_request_delivery_functions/config.js",
   {
+    connections_table_name = module.connections_table.table_name
+    connections_table_region = var.region
+    connection_table_state_key = local.connection_state_key
+    connection_status_code_connected = local.connection_status_code_connected
+    connection_type_key = local.connection_type_key
     social_signing_private_key_bucket = var.plugin_config.bucket_name
     social_signing_private_key_s3_key = local.social_signing_private_key_s3_key
     social_domain = var.coordinator_data.routing.domain
@@ -318,6 +344,7 @@ module social_access_control_function {
   auth_config = {
     dynamo_region = var.region
     dynamo_table_name = module.connections_table.table_name
+    dynamo_index_name = local.state_index_name
     domain = var.coordinator_data.routing.domain
     connection_state_connected = local.connection_status_code_connected
     connection_state_key = local.connection_state_key
@@ -437,6 +464,8 @@ module connection_request_acceptance_function {
       file_name = "index.js"
       file_contents = templatefile("${path.module}/src/backend/connection_request_acceptance/index.js",
       {
+        connection_type_key = local.connection_type_key
+        connection_type_initial = local.connection_type_initial
         key_timeout_secs = 2
         intermediate_connection_state_timeout_secs = local.intermediate_connection_state_timeout_secs
         domain_key = local.domain_key
@@ -473,6 +502,8 @@ module connection_request_function {
       file_name = "index.js"
       file_contents = templatefile("${path.module}/src/backend/connection_request/index.js",
       {
+        connection_type_key = local.connection_type_key
+        connection_type_initial = local.connection_type_initial
         key_timeout_secs = 2
         intermediate_connection_state_timeout_secs = local.intermediate_connection_state_timeout_secs
         domain_key = local.domain_key
@@ -482,6 +513,7 @@ module connection_request_function {
         domain = var.coordinator_data.routing.domain
         log = true
         domain_index = local.domain_index_name
+        connection_table_state_index = local.state_index_name
         connection_table_state_key = local.connection_state_key
         connection_status_code_our_response_requested = local.connection_status_code_our_response_requested
         connection_table_ttl_attribute = local.connection_table_ttl_attribute

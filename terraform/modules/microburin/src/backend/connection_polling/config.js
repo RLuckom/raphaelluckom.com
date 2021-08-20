@@ -13,6 +13,7 @@ module.exports = {
             explorandaParams: {
               apiConfig: {value: {region: '${connections_table_region}'}},
               TableName: {value: "${connections_table_name}"},
+              IndexName: {value: "${connection_table_state_index}"},
               ExpressionAttributeValues: {
                 value: {
                   ':connectionState': '${connection_status_code_connected}',
@@ -79,7 +80,7 @@ module.exports = {
               helper: ({tokens}) => {
                 const ret = _.map(tokens, ({timestamp, origin, recipient, sig}) => {
                   return {
-                    url: "https://" + recipient + "${feed_list_path}",
+                    url: "https://" + recipient + "/${feed_list_path}",
                     token: Buffer.from(JSON.stringify({sig, timestamp, origin, recipient})).toString('base64')
                   }
                 })

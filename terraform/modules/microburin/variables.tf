@@ -285,6 +285,8 @@ variable logging_config {
 
 locals {
   connection_state_key = "connectionState"
+  connection_type_key = "connectionType"
+  connection_type_initial = "INITIAL"
   posts_table_name = "${var.coordinator_data.system_id.security_scope}-${var.coordinator_data.system_id.subsystem_name}-microburin_table-${random_id.table_suffix.b64_url}"
   connections_table_name = "${var.coordinator_data.system_id.security_scope}-${var.coordinator_data.system_id.subsystem_name}-connections_table-${random_id.table_suffix.b64_url}"
   modified_time_key = "modifiedTime"
@@ -301,6 +303,7 @@ locals {
   feed_item_partition_key = "kind"
   feed_item_kind = "feedItem"
   domain_index_name = "domainIndex"
+  state_index_name = "stateIndex"
   connection_table_ttl_attribute = "requestExpires"
   max_lookback_seconds = 60 * 60 * 24 * 31
   blog_image_hosting_root = "/img/"
