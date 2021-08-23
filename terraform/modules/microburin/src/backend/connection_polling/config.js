@@ -40,6 +40,9 @@ module.exports = {
     },
     signTokens: {
       index: 1,
+      transformers: {
+        body: {ref: 'event.body'}
+      },
       dependencies: {
         tokens: {
           action: 'exploranda',
@@ -47,8 +50,9 @@ module.exports = {
             accessSchema: {value: signTokenAccessSchema },
             explorandaParams: {
               signingKeyObject: {ref: 'getConnections.results.signingKeyObject'},
+              body: { ref: 'stage.body'},
               payload: {
-                helper: ({connections, timestamp, origin}) => {
+                helper: ({connections, timestamp, origini}) => {
                   const ret = _.map(connections, (c) => {
                     return {timestamp, origin, recipient: c.domain}
                   })
@@ -69,29 +73,46 @@ module.exports = {
         },
       }
     },
-    requestNewItems: {
+    sendNotification: {
       index: 2,
       dependencies: {
         items: {
-          action: 'genericApi',
+          action: 'exploranda',
           params: {
-            mergeIndividual: _.identity,
-            apiConfig: {
-              helper: ({tokens}) => {
-                const ret = _.map(tokens, ({timestamp, origin, recipient, sig}) => {
-                  return {
-                    url: "https://" + recipient + "/${feed_list_path}",
-                    token: Buffer.from(JSON.stringify({sig, timestamp, origin, recipient})).toString('base64')
-                  }
-                })
-                return ret
+            accessSchema: {value: {
+              name: 'GET url',
+              dataSource: 'GENERIC_API',
+              headerParamKeys: ['Microburin-Signature'],
+            }},
+            explorandaParams: {
+              apiConfig: {
+                helper: ({tokens, body}) => {
+                  return _.map(tokens, ({timestamp, origin, recipient, sig}) => {
+                    return {
+                      url: "https://" + recipient + "/${feed_list_path}",
+                      body,
+                    }
+                  })
+                },
+                 params: {
+                   tokens: { ref: 'signTokens.results.tokens' },
+                   bodies: { ref: 'signTokens.vars.bodies' },
+                 }
               },
-              params: {
-                tokens: { ref: 'signTokens.results.tokens' }
+              'Microburin-Signature': {
+                helper: ({tokens}) => {
+                  const ret = _.map(tokens, ({timestamp, origin, recipient, sig}) => {
+                    return Buffer.from(JSON.stringify({sig, timestamp, origin, recipient})).toString('base64')
+                  })
+                  return ret
+                },
+                params: {
+                  tokens: { ref: 'signTokens.results.tokens' }
+                }
               }
             }
           }
-        },
+        }
       }
     },
     distributeGetRequests: {

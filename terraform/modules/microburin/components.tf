@@ -567,7 +567,7 @@ module social_site {
         # probably best left to empty list; that way headers used for
         # auth can't be leaked by insecure functions. If there's
         # a reason to want certain headers, go ahead.
-        headers = ["Authorization"]
+        headers = ["Microburin-Signature"]
         # same as headers; should generally be empty
         cookie_names = []
       }
@@ -596,7 +596,7 @@ module social_site {
         # probably best left to empty list; that way headers used for
         # auth can't be leaked by insecure functions. If there's
         # a reason to want certain headers, go ahead.
-        headers = ["Authorization"]
+        headers = ["Microburin-Signature"]
         # same as headers; should generally be empty
         cookie_names = []
       }

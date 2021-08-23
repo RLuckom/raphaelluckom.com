@@ -109,19 +109,15 @@ function getEvent(request) {
 }
 
 function authedEvent(authHeaderString) {
-  return getEvent({
+  return {
     headers: {
-      authorization: [
-        {
-          value: authHeaderString
-        }
-      ]
+      'microburin-signature': authHeaderString
     }
-  })
+  }
 }
 
 function tokenAuthedEvent(token) {
-  return authedEvent(`Bearer ${formatToken(token)}`)
+  return authedEvent(`${formatToken(token)}`)
 }
 
 function replaceKeyLocation(domain) {
@@ -154,7 +150,7 @@ function validateSuccess(res, expectedResponseMessage, expectedResponseOrigin, e
 }
 
 function validateRequestPassThrough(res, evt) {
-  expect(res).toEqual(evt.Records[0].cf.request)
+  expect(res).toEqual(evt)
 }
 
 function formatToken({sig, timestamp, origin, requestType, recipient}) {
@@ -201,7 +197,7 @@ describe("check auth", () => {
   it("rejects a request if the token can't be parsed", async () => {
     const now = new Date().getTime()
     const evt = await validSignedTokenAuthEvent({recipient: domain, timestamp: now}, privateKey)
-    evt.Records[0].cf.request.headers['authorization'][0].value += "aea"
+    evt.headers['microburin-signature'] += "aea"
     return checkAuth.handler(evt).then((res) => {
       validateSuccess(res, STATUS_MESSAGES.unparseableAuth, null, RESULTS.NOOP)
     })
@@ -294,7 +290,11 @@ describe("check auth", () => {
     return checkAuth.handler(evt).then((res) => {
       validateSuccess(res, STATUS_MESSAGES.success, safeOrigin, RESULTS.CREATE_RECORD)
       delete savedRequests[0]['${connection_table_ttl_attribute}']
-      expect(savedRequests[0]).toEqual({ '${domain_key}': 'localhost:8001', '${connection_table_state_key}': '${connection_status_code_our_response_requested}'})
+      expect(savedRequests[0]).toEqual({ 
+          "${connection_type_key}" : "${connection_type_initial}",
+        '${domain_key}': 'localhost:8001', 
+        '${connection_table_state_key}': '${connection_status_code_our_response_requested}'
+      })
     })
   })
 

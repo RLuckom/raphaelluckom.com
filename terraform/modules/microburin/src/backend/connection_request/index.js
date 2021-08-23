@@ -77,7 +77,7 @@ const RESULTS = {
 const CONNECTION_REQUEST = "${connection_request_type}"
 
 async function handler(event) {
-  const auth = _.get(event, 'headers.authorization', '').substr(7);
+  const auth = _.get(event, 'headers.microburin-signature', '');
   if (!auth) {
     return successResponse(STATUS_MESSAGES.noAuth, null, RESULTS.NOOP)
   }

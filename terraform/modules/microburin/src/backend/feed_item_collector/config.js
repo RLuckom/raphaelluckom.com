@@ -3,32 +3,30 @@ const {streamDownloadAccessSchema} = require('./helpers/streamWriter')
 
 module.exports = {
   stages: {
-    getConnections: {
+    parseRequest: {
       index: 0,
       transformers: {
-        foo: {
-          helper: ({evt}) => {
-            console.log(evt)
-            return evt
+        microburinSignature: { 
+          helper: ({authHeader}) => {
+            return JSON.parse(Buffer.from(authHeader, 'base64').toString('utf8'))
           },
           params: {
-            evt: { ref: 'event' }
-          }
-        },
-        saveConfigs: {
-          helper: ({records}) => {
-            return _.map(records, (r) => {
-              return _.merge({
-                key: "${connection_item_prefix}" + r.from + "/" + r.postId + '.zip',
-              }, r)
-            })
+            authHeader: {ref: 'event.headers.microburin-signature'}
+          },
+        }
+        body: {
+          helper: ({body}) => {
+            if (body) {
+              return JSON.parse(body)
+            }
           },
           params: {
-            records: { ref: 'event' }
+            body: { ref: 'event.body' }
           },
         }
       },
       dependencies: {
+        /*
         tokens: {
           action: 'exploranda',
           params: {
@@ -56,7 +54,6 @@ module.exports = {
             }
           },
         },
-        /*
         connections: {
           action: 'exploranda',
           params: {
@@ -87,6 +84,8 @@ module.exports = {
   cleanup: {
     transformers: {
       // results: { ref: 'requestNewItems.results.items' }
+      body: { ref: 'parseRequest.vars.body' },
+      microburinSignature: { ref: 'parseRequest.vars.microburinSignature' },
     }
   }
 }
