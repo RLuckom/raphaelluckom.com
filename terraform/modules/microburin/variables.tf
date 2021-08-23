@@ -318,6 +318,7 @@ locals {
   connection_items_plugin_relative_prefix = "connection-feed-items"
   jwk_s3_path = ".well-known/microburin-social/keys/social-signing-public-key.jwk"
   feed_list_api_path = ".well-known/microburin-social/api/private/feed-items"
+  incoming_notification_api_path = ".well-known/microburin-social/api/private/incoming-notifications"
   connection_request_api_path = ".well-known/microburin-social/api/public/connection-request"
   connection_request_acceptance_api_path = ".well-known/microburin-social/api/public/connection-response"
   social_signing_key_plugin_relative = "${local.social_signing_key_plugin_relative_prefix}/key.jwk"

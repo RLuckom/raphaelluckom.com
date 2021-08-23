@@ -27,17 +27,17 @@ async function sign(keyObject, payload, body) {
   let bodySig = null
   if (body) {
     const hash = createHash('sha256')
-    hash.update(body)
+    hash.update(Buffer.from(body).toString('base64'))
     const bodySigPayload = hash.digest('hex')
-    bodySig = await new FlattenedSign(new TextEncoder().encode(bodySigPayload)).setProtectedHeader({alg: 'EdDSA'}).sign(keyObject)
+    bodySig = await new FlattenedSign(new TextEncoder().encode(bodySigPayload)).setProtectedHeader({alg: 'EdDSA'}).sign(privateKey)
   }
   const sig = await new FlattenedSign(new TextEncoder().encode(JSON.stringify({timestamp: payload.timestamp, origin: payload.origin, recipient: payload.recipient, bodySig}))).setProtectedHeader({alg: 'EdDSA'}).sign(privateKey)
-  return sig
+  return {sig, bodySig}
 }
 
 function signToken({payload, body, signingKeyObject}, callback) {
-  sign(signingKeyObject, payload, body).then((sig) => {
-    callback(null, _.merge({}, payload, {sig}))
+  sign(signingKeyObject, payload, body).then(({sig, bodySig}) => {
+    callback(null, _.merge({sig, bodySig}, payload))
   }).catch((err) => {
     callback(err)
   })

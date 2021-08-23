@@ -417,8 +417,32 @@ module.exports = {
         },
       }
     },
-    cleanupDB: {
+    sendNotification: {
       index: 5,
+      condition: { ref: 'publishPost.vars.dynamoPuts[0]'},
+      dependencies: {
+        delegate: {
+          action: 'exploranda',
+          params: {
+            accessSchema: {value: 'dataSources.AWS.lambda.invoke'},
+            explorandaParams: {
+              FunctionName: { value: '${notification_function_name}' },
+              InvocationType: { value: 'Event' },
+              Payload: {
+                helper: ({record}) => {
+                  return JSON.stringify(record)
+                },
+                params: {
+                  record: { ref: 'publishPost.vars.dynamoPuts[0]'},
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    cleanupDB: {
+      index: 6,
       transformers: {
         dynamoDeletes: {
           helper: ({postId, isDelete}) => {

@@ -83,6 +83,7 @@ module post_entry_lambda {
     feed_item_kind = local.feed_item_kind
     size_key = local.size_key
     modified_time_key = local.modified_time_key
+    notification_function_name = module.connection_notifier_lambda.lambda.function_name
     feed_item_partition_key = local.feed_item_partition_key
     plugin_image_hosting_prefix = local.plugin_image_hosting_prefix
     plugin_post_hosting_prefix = local.plugin_post_hosting_prefix 
@@ -120,13 +121,12 @@ module connections_table {
   delete_item_permission_role_names = [
   ]
   write_permission_role_names = [
-    module.connection_polling_lambda.role.name,
     module.connection_request_function.role.name,
     module.connection_request_acceptance_function.role.name,
   ]
   read_permission_role_names = [
     module.social_access_control_function.role.name,
-    module.connection_polling_lambda.role.name,
+    module.connection_notifier_lambda.role.name,
     module.connection_request_function.role.name,
     module.connection_request_acceptance_function.role.name,
   ]
@@ -168,13 +168,16 @@ module connections_table {
   ]
 }
 
-module connection_polling_lambda {
+module connection_notifier_lambda {
   source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
   timeout_secs = 60
   account_id = var.account_id
   unique_suffix = var.unique_suffix
   region = var.region
-  config_contents = templatefile("${path.module}/src/backend/connection_polling/config.js",
+  invoking_roles = [
+    module.post_entry_lambda.role.arn
+  ]
+  config_contents = templatefile("${path.module}/src/backend/connection_notifier/config.js",
   {
     connections_table_name = module.connections_table.table_name
     connections_table_region = var.region
@@ -184,8 +187,7 @@ module connection_polling_lambda {
     social_signing_private_key_bucket = var.plugin_config.bucket_name
     social_signing_private_key_s3_key = local.social_signing_private_key_s3_key
     social_domain = var.coordinator_data.routing.domain
-    delegation_function_name = module.feed_item_collector_lambda.lambda.function_name
-    feed_list_path = local.feed_list_api_path
+    incoming_notification_api_path = local.incoming_notification_api_path
   })
   logging_config = var.logging_config
   additional_helpers = [
@@ -195,7 +197,7 @@ module connection_polling_lambda {
     }
   ]
   lambda_event_configs = var.lambda_event_configs
-  action_name = "poll_connections"
+  action_name = "notify_connections"
   scope_name = var.coordinator_data.system_id.security_scope
   donut_days_layer = var.donut_days_layer
   additional_layers = [
@@ -305,9 +307,6 @@ module feed_item_collector_lambda {
   account_id = var.account_id
   unique_suffix = var.unique_suffix
   region = var.region
-  invoking_roles = [
-    module.connection_polling_lambda.role.arn
-  ]
   config_contents = templatefile("${path.module}/src/backend/feed_item_collector/config.js",
   {
     connection_item_table_name = module.connection_item_table.table_name
@@ -643,7 +642,46 @@ module social_site {
         arn = module.feed_list_endpoint.lambda.arn
         name = module.feed_list_endpoint.lambda.function_name
       }
-    }
+    },
+    {
+      # a value of "NONE" will let the function
+      # handle its own access control. A 
+      # value of "CLOUDFRONT_DISTRIBUTION" will
+      # use the lambda authorizers provided;
+      # this is also the default if there are 
+      # no lambda authorizers. Any other value uses
+      # the lambda authorizers provided.
+      authorizer = "CLOUDFRONT_DISTRIBUTION"
+      # unitary path denoting the function's endpoint, e.g.
+      # "/meta/relations/trails"
+      path = local.incoming_notification_api_path
+      # Usually all lambdas in a dist should share one gateway, so the gway
+      # name stems should be the same across all lambda endpoints.
+      # But if you wanted multiple apigateways within a single dist., you
+      # could set multiple name stems and the lambdas would get allocated
+      # to different gateways
+      gateway_name_stem = "default"
+      allowed_methods = ["HEAD", "DELETE", "PATCH", "GET", "PUT", "POST", "OPTIONS"]
+      cached_methods = ["HEAD", "GET"]
+      compress = true
+      ttls = {
+        min = 0
+        default = 0
+        max = 0
+      }
+      forwarded_values = {
+        # usually true
+        query_string = false
+        # usually empty list
+        query_string_cache_keys = []
+        headers = ["Microburin-Signature"]
+        cookie_names = []
+      }
+      lambda = {
+        arn = module.feed_item_collector_lambda.lambda.arn
+        name = module.feed_item_collector_lambda.lambda.function_name
+      }
+    },
   ]
   no_access_control_s3_path_patterns = [{
     path = local.jwk_s3_path

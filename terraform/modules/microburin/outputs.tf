@@ -119,7 +119,7 @@ output plugin_relative_bucket_readonly_root_permissions_needed {
     },
     {
       plugin_relative_key = local.social_signing_key_plugin_relative_prefix
-      role_arn = module.connection_polling_lambda.role.arn
+      role_arn = module.connection_notifier_lambda.role.arn
     },
   ]
 }
@@ -161,7 +161,7 @@ output lambda_logging_arns {
     module.process_image_uploads.lambda_role.arn,
     module.connection_request_delivery_function.role.arn,
     module.post_entry_lambda.role.arn,
-    module.connection_polling_lambda.role.arn,
+    module.connection_notifier_lambda.role.arn,
     module.feed_list_endpoint.role.arn,
     module.feed_item_collector_lambda.role.arn,
     module.connection_request_function.role.arn,

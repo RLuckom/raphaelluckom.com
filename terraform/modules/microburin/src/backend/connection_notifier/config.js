@@ -41,7 +41,14 @@ module.exports = {
     signTokens: {
       index: 1,
       transformers: {
-        body: {ref: 'event.body'}
+        body: {
+          helper: ({evt}) => {
+            return JSON.stringify(evt)
+          },
+          params: {
+            evt: { ref: 'event'}
+          }
+        }
       },
       dependencies: {
         tokens: {
@@ -52,7 +59,7 @@ module.exports = {
               signingKeyObject: {ref: 'getConnections.results.signingKeyObject'},
               body: { ref: 'stage.body'},
               payload: {
-                helper: ({connections, timestamp, origini}) => {
+                helper: ({connections, timestamp, origin}) => {
                   const ret = _.map(connections, (c) => {
                     return {timestamp, origin, recipient: c.domain}
                   })
@@ -80,29 +87,33 @@ module.exports = {
           action: 'exploranda',
           params: {
             accessSchema: {value: {
-              name: 'GET url',
+              name: 'POST url',
               dataSource: 'GENERIC_API',
+              method: 'POST',
               headerParamKeys: ['Microburin-Signature'],
+              bodyParamKeys: ['body'],
+              requestBodyBuilder: ({body}) => {
+                return body
+              }
             }},
             explorandaParams: {
               apiConfig: {
-                helper: ({tokens, body}) => {
+                helper: ({tokens}) => {
                   return _.map(tokens, ({timestamp, origin, recipient, sig}) => {
                     return {
-                      url: "https://" + recipient + "/${feed_list_path}",
-                      body,
+                      url: "https://" + recipient + "/${incoming_notification_api_path}",
                     }
                   })
                 },
                  params: {
                    tokens: { ref: 'signTokens.results.tokens' },
-                   bodies: { ref: 'signTokens.vars.bodies' },
                  }
               },
+              body: { ref: 'signTokens.vars.body' },
               'Microburin-Signature': {
                 helper: ({tokens}) => {
-                  const ret = _.map(tokens, ({timestamp, origin, recipient, sig}) => {
-                    return Buffer.from(JSON.stringify({sig, timestamp, origin, recipient})).toString('base64')
+                  const ret = _.map(tokens, ({timestamp, origin, recipient, sig, bodySig}) => {
+                    return Buffer.from(JSON.stringify({sig, bodySig, timestamp, origin, recipient})).toString('base64')
                   })
                   return ret
                 },
@@ -115,66 +126,5 @@ module.exports = {
         }
       }
     },
-    distributeGetRequests: {
-      index: 3,
-      transformers: {
-        results: {
-          helper: ({returned, tokens}) => {
-            return _.map(_.zip(returned, tokens), ([r, t]) => {
-              const parsed = JSON.parse(r.body)
-              return _.map(parsed, (item) => {
-                return _.merge({
-                  from: t.recipient,
-                }, item)
-              })
-            })
-          },
-          params: {
-            returned: { ref: 'requestNewItems.results.items' },
-            tokens: { ref: 'signTokens.results.tokens' }
-          }
-        }
-      },
-      dependencies: {
-        delegate: {
-          action: 'exploranda',
-          params: {
-            accessSchema: {value: 'dataSources.AWS.lambda.invoke'},
-            explorandaParams: {
-              FunctionName: { value: '${delegation_function_name}' },
-              InvocationType: { value: 'Event' },
-              Payload: {
-                helper: ({results}) => {
-                  return _.map(results, (r) => JSON.stringify(r))
-                },
-                params: {
-                  results: { ref: 'stage.results' },
-                }
-              }
-            }
-          }
-        }
-      }
-    }
   },
-  cleanup: {
-    transformers: {
-      results: {
-        helper: ({returned, tokens}) => {
-          return _.flatten(_.map(_.zip(returned, tokens), ([r, t]) => {
-            const parsed = JSON.parse(r.body)
-            return _.map(parsed, (item) => {
-              return _.merge({
-                from: t.recipient,
-              }, item)
-            })
-          }))
-        },
-        params: {
-          returned: { ref: 'requestNewItems.results.items' },
-          tokens: { ref: 'signTokens.results.tokens' }
-        }
-      }
-    }
-  }
 }
