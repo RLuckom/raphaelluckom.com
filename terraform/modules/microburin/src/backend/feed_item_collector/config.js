@@ -8,12 +8,16 @@ module.exports = {
       transformers: {
         microburinSignature: { 
           helper: ({authHeader}) => {
-            return JSON.parse(Buffer.from(authHeader, 'base64').toString('utf8'))
+            const parsedHeader = JSON.parse(Buffer.from(authHeader, 'base64').toString('utf8'))
+            return {
+              origin: parsedHeader.origin,
+              recipient: parsedHeader.recipient
+            }
           },
           params: {
             authHeader: {ref: 'event.headers.microburin-signature'}
           },
-        }
+        },
         body: {
           helper: ({body}) => {
             if (body) {
@@ -26,27 +30,20 @@ module.exports = {
         }
       },
       dependencies: {
-        /*
-        tokens: {
+        item: {
           action: 'exploranda',
           params: {
             accessSchema: {value: streamDownloadAccessSchema },
             explorandaParams: {
-              presignedUrl: {
-                helper: ({records}) => {
-                  return _.map(records, 'presignedUrl')
-                },
-                params: {
-                  records: { ref: 'stage.saveConfigs' }
-                },
-              },
+              presignedUrl: { ref: 'stage.body.presignedUrl' },
               bucket: { value: "${connection_item_bucket}" },
               key: {
-                helper: ({records}) => {
-                  return _.map(records, 'key')
+                helper: ({postId, origin}) => {
+                  return "${connection_item_prefix}" + origin + "/" + postId + '.zip'
                 },
                 params: {
-                  records: { ref: 'stage.saveConfigs' }
+                  origin: { ref: 'stage.microburinSignature.origin' },
+                  postId: { ref: 'stage.body.postId' },
                 },
               },
               requestTimeoutSecs: {value: ${request_timeout_secs} },
@@ -54,6 +51,31 @@ module.exports = {
             }
           },
         },
+        itemRecord: {
+          action: 'exploranda',
+          params: {
+            accessSchema: {value: 'dataSources.AWS.dynamodb.putItem'},
+            params: {
+              explorandaParams: {
+                apiConfig: {value: {region: '${connection_item_table_region}'}},
+                TableName: {value: "${connection_item_table_name}"},
+                Item: { 
+                  helper: ({body, origin}) => {
+                    return _.merge({}, body, {
+                      '${connection_item_table_partition_key}': '${connection_item_table_kind}',
+                      origin,
+                    })
+                  },
+                  params: {
+                    body: { ref: 'stage.body' },
+                    origin: { ref: 'stage.microburinSignature.origin' },
+                  }
+                }
+              }
+            }
+          }
+        },
+        /*
         connections: {
           action: 'exploranda',
           params: {
@@ -84,8 +106,17 @@ module.exports = {
   cleanup: {
     transformers: {
       // results: { ref: 'requestNewItems.results.items' }
-      body: { ref: 'parseRequest.vars.body' },
-      microburinSignature: { ref: 'parseRequest.vars.microburinSignature' },
+      display: {
+        helper: ({body, microburinSignature}) => {
+          console.log(body)
+          console.log(microburinSignature)
+        },
+        params: {
+          body: { ref: 'parseRequest.vars.body' },
+          microburinSignature: { ref: 'parseRequest.vars.microburinSignature' },
+        }
+      },
+      statusCode: { value: 200},
     }
   }
 }
