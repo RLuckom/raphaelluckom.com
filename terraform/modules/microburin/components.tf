@@ -123,6 +123,8 @@ module connections_table {
   write_permission_role_names = [
     module.connection_request_function.role.name,
     module.connection_request_acceptance_function.role.name,
+    module.connection_request_delivery_function.role.name,
+    module.connection_request_acceptance_delivery_function.role.name,
   ]
   read_permission_role_names = [
     module.social_access_control_function.role.name,
@@ -224,7 +226,12 @@ module connection_request_delivery_function {
     delegation_function_name = module.feed_item_collector_lambda.lambda.function_name
     connection_request_type = local.connection_request_type
     feed_list_path = local.feed_list_api_path
+    connection_type_initial = local.connection_type_initial
+    connection_status_code = local.connection_status_code_pending
+    domain_key = local.domain_key
+    connection_table_ttl_attribute = local.connection_table_ttl_attribute
     connection_request_api_path = local.connection_request_api_path 
+    intermediate_state_timeout_secs = local.intermediate_connection_state_timeout_secs
   })
   logging_config = var.logging_config
   additional_helpers = [
@@ -261,7 +268,12 @@ module connection_request_acceptance_delivery_function {
     delegation_function_name = module.feed_item_collector_lambda.lambda.function_name
     connection_request_type = local.connection_request_acceptance_type
     feed_list_path = local.feed_list_api_path
+    domain_key = local.domain_key
+    connection_type_initial = local.connection_type_initial
+    connection_status_code = local.connection_status_code_connected
+    connection_table_ttl_attribute = local.connection_table_ttl_attribute
     connection_request_api_path = local.connection_request_acceptance_api_path 
+    intermediate_state_timeout_secs = local.intermediate_connection_state_timeout_secs
   })
   logging_config = var.logging_config
   additional_helpers = [

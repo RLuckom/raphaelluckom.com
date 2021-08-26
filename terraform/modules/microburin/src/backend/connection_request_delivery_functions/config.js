@@ -56,27 +56,65 @@ module.exports = {
       index: 2,
       dependencies: {
         items: {
-          action: 'genericApi',
+          action: 'exploranda',
           params: {
-            mergeIndividual: _.identity,
-            apiConfig: {
-              helper: ({tokens, domain}) => {
-                const ret = _.map(tokens, ({timestamp, origin, recipient, sig}) => {
-                  return {
-                    url: "https://" + domain + "/${connection_request_api_path}",
-                    token: Buffer.from(JSON.stringify({sig, timestamp, origin, requestType: "${connection_request_type}", recipient})).toString('base64')
-                  }
-                })
-                return ret
+            accessSchema: {value: {
+              name: 'GET url',
+              dataSource: 'GENERIC_API',
+              headerParamKeys: ['Microburin-Signature'],
+            }},
+            explorandaParams: {
+              apiConfig: {
+                helper: ({tokens, domain}) => {
+                  const ret = _.map(tokens, ({timestamp, origin, recipient, sig}) => {
+                    return {
+                      url: "https://" + domain + "/${connection_request_api_path}",
+                    }
+                  })
+                  return ret
+                },
+                params: {
+                  domain: { ref: 'event.domain' },
+                  tokens: { ref: 'signToken.results.tokens' }
+                }
               },
-              params: {
-                domain: { ref: 'event.domain' },
-                tokens: { ref: 'signToken.results.tokens' }
+              'Microburin-Signature': {
+                helper: ({token}) => {
+                  return Buffer.from(JSON.stringify({sig: token.sig, timestamp: token.timestamp, origin: token.origin, requestType: "${connection_request_type}", recipient: token.recipient, bodySig: null})).toString('base64')
+                },
+                params: {
+                  token: { ref: 'signToken.results.tokens[0]' }
+                }
               }
             }
           }
         },
-      }
+        updateState: {
+          action: 'exploranda',
+          params: {
+            accessSchema: {value: 'dataSources.AWS.dynamodb.putItem'},
+            params: {
+              explorandaParams: {
+                apiConfig: {value: {region: '${connections_table_region}'}},
+                TableName: '${connections_table_name}',
+                Item: { 
+                  helper: ({domain}) => {
+                    return {
+                      "${connection_type_key}" : "${connection_type_initial}",
+                      "${domain_key}": domain,
+                      "${connection_table_state_key}": "${connection_status_code}",
+                      "${connection_table_ttl_attribute}": new Date().getTime() / 1000 + ${intermediate_state_timeout_secs}
+                    }
+                  },
+                  params: {
+                    domain: { ref: 'event.domain' },
+                  }
+                }
+              }
+            }
+          }
+        },
+      },
     },
   },
 }
