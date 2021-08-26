@@ -22,9 +22,9 @@ module admin_interface {
     }
   }
   plugin_static_configs = {
-    blog = module.admin_site_blog_plugin.static_config
     prod_blog = module.admin_site_prod_blog_plugin.static_config
     social = module.admin_site_prod_social_plugin.static_config
+    social2 = module.admin_site_prod_social2_plugin.static_config
     visibility = {
       role_name_stem = "athena"
       api_name = "visibility"
@@ -32,20 +32,6 @@ module admin_interface {
     }
   }
   plugin_configs = {
-    blog = {
-      additional_connect_sources = module.admin_site_blog_plugin.additional_connect_sources_required
-      additional_style_sources = []
-      policy_statements = []
-      plugin_relative_lambda_origins = module.admin_site_blog_plugin.plugin_relative_lambda_origins
-      plugin_relative_bucket_upload_permissions_needed = module.admin_site_blog_plugin.plugin_relative_bucket_upload_permissions_needed
-      plugin_relative_bucket_list_permissions_needed = module.admin_site_blog_plugin.plugin_relative_bucket_list_permissions_needed
-      plugin_relative_bucket_host_permissions_needed = module.admin_site_blog_plugin.plugin_relative_bucket_host_permissions_needed 
-      plugin_relative_bucket_backend_readonly_root_permissions_needed = []
-      plugin_relative_bucket_backend_readwrite_root_permissions_needed = []
-      upload_path_lambda_notifications = module.admin_site_blog_plugin.plugin_relative_lambda_notifications
-      storage_path_lambda_notifications = []
-      file_configs = module.admin_site_blog_plugin.files
-    }
     prod_blog = {
       additional_connect_sources = module.admin_site_prod_blog_plugin.additional_connect_sources_required
       additional_style_sources = []
@@ -73,6 +59,20 @@ module admin_interface {
       upload_path_lambda_notifications = module.admin_site_prod_social_plugin.plugin_relative_lambda_notifications
       storage_path_lambda_notifications = []
       file_configs = module.admin_site_prod_social_plugin.files
+    }
+    social2 = {
+      additional_connect_sources = module.admin_site_prod_social2_plugin.additional_connect_sources_required
+      additional_style_sources = []
+      policy_statements = []
+      plugin_relative_lambda_origins = module.admin_site_prod_social2_plugin.plugin_relative_lambda_origins
+      plugin_relative_bucket_upload_permissions_needed = module.admin_site_prod_social2_plugin.plugin_relative_bucket_upload_permissions_needed
+      plugin_relative_bucket_list_permissions_needed = module.admin_site_prod_social2_plugin.plugin_relative_bucket_list_permissions_needed
+      plugin_relative_bucket_host_permissions_needed = module.admin_site_prod_social2_plugin.plugin_relative_bucket_host_permissions_needed 
+      plugin_relative_bucket_backend_readonly_root_permissions_needed = module.admin_site_prod_social2_plugin.plugin_relative_bucket_readonly_root_permissions_needed
+      plugin_relative_bucket_backend_readwrite_root_permissions_needed = module.admin_site_prod_social2_plugin.plugin_relative_bucket_readwrite_root_permissions_needed
+      upload_path_lambda_notifications = module.admin_site_prod_social2_plugin.plugin_relative_lambda_notifications
+      storage_path_lambda_notifications = []
+      file_configs = module.admin_site_prod_social2_plugin.files
     }
     visibility = {
       policy_statements = []

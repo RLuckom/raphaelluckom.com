@@ -27,10 +27,14 @@ module visibility_system {
             social = [
               module.admin_interface.plugin_authenticated_roles["social"].name
             ]
+            social2 = [
+              module.admin_interface.plugin_authenticated_roles["social2"].name
+            ]
           }
           scoped_logging_functions = concat(
             module.admin_site_prod_blog_plugin.lambda_logging_arns,
-            module.admin_site_prod_social_plugin.lambda_logging_arns
+            module.admin_site_prod_social_plugin.lambda_logging_arns,
+            module.admin_site_prod_social2_plugin.lambda_logging_arns,
           )
           glue_permission_name_map = {
             add_partition_permission_names = []
@@ -59,11 +63,8 @@ module visibility_system {
       function_metric_table_read_role_names = []
       subsystems = {
         test = {
-          site_metric_table_read_role_name_map = {
-            test = [module.admin_interface.plugin_authenticated_roles["blog"].name]
-          }
+          site_metric_table_read_role_name_map = {}
           scoped_logging_functions = []
-          scoped_logging_functions = module.admin_site_blog_plugin.lambda_logging_arns
           glue_permission_name_map = {
             add_partition_permission_names = []
             add_partition_permission_arns = []

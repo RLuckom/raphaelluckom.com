@@ -64,6 +64,13 @@ variable supported_system_definitions {
                 controlled_domain_part = "raphaelluckom"
               }
             }
+            social2 = {
+              route53_zone_name = "raphaelluckom.com."
+              domain_parts = {
+                top_level_domain = "com"
+                controlled_domain_part = "social2.raphaelluckom"
+              }
+            }
             social = {
               route53_zone_name = "raphaelluckom.com."
               domain_parts = {
