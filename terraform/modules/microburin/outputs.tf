@@ -165,5 +165,7 @@ output lambda_logging_arns {
     module.feed_list_endpoint.role.arn,
     module.feed_item_collector_lambda.role.arn,
     module.connection_request_function.role.arn,
+    module.connection_request_delivery_function.role.arn,
+    module.connection_request_acceptance_delivery_function.role.arn,
   ], [])
 }

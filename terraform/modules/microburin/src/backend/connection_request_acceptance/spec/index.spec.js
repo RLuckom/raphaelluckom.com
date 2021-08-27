@@ -28,7 +28,7 @@ const fakeDynamo = {
       return setTimeout(() => callback(null, {Items: _.map(connections, (c) => {
         return converter.marshall({
           domain: c,
-          "${connection_state_key}" : "CONNECTION_REQUEST_RESPONSE",
+          "${connection_state_key}" : REQUEST_TYPE,
         })
       })}), queryTime)
     }
@@ -160,7 +160,7 @@ function formatToken({sig, timestamp, origin, requestType, recipient}) {
 
 const STATUS_MESSAGES = checkAuth.__get__('STATUS_MESSAGES')
 const RESULTS = checkAuth.__get__('RESULTS')
-const CONNECTION_REQUEST_RESPONSE = checkAuth.__get__('CONNECTION_REQUEST_RESPONSE')
+const REQUEST_TYPE = checkAuth.__get__('REQUEST_TYPE')
 
 describe("check auth", () => {
   let closeServer, privateKey, otherKey, unsetArray
@@ -230,14 +230,14 @@ describe("check auth", () => {
 
   it("rejects a request if the timestamp is in the future", async () => {
     const future = new Date().getTime() + 10000
-    const evt = await validSignedTokenAuthEvent({origin: safeOrigin, requestType: CONNECTION_REQUEST_RESPONSE, timestamp: future}, privateKey)
+    const evt = await validSignedTokenAuthEvent({origin: safeOrigin, requestType: REQUEST_TYPE, timestamp: future}, privateKey)
     return checkAuth.handler(evt).then((res) => {
       validateSuccess(res, STATUS_MESSAGES.futureTimestamp, safeOrigin, RESULTS.NOOP)
     })
   })
 
   it("rejects a request if there is no timestamp", async () => {
-    const evt = await validSignedTokenAuthEvent({origin: safeOrigin, requestType: CONNECTION_REQUEST_RESPONSE}, privateKey)
+    const evt = await validSignedTokenAuthEvent({origin: safeOrigin, requestType: REQUEST_TYPE}, privateKey)
     return checkAuth.handler(evt).then((res) => {
       validateSuccess(res, STATUS_MESSAGES.badTimestamp, safeOrigin, RESULTS.NOOP)
     })
@@ -245,7 +245,7 @@ describe("check auth", () => {
 
   it("rejects a request if the timestamp is too old", async () => {
     const past = new Date().getTime() - 100000
-    const evt = await validSignedTokenAuthEvent({timestamp: past, origin: safeOrigin, requestType: CONNECTION_REQUEST_RESPONSE}, privateKey)
+    const evt = await validSignedTokenAuthEvent({timestamp: past, origin: safeOrigin, requestType: REQUEST_TYPE}, privateKey)
     return checkAuth.handler(evt).then((res) => {
       validateSuccess(res, STATUS_MESSAGES.expiredTimestamp, safeOrigin, RESULTS.NOOP)
     })
@@ -253,7 +253,7 @@ describe("check auth", () => {
 
   it("rejects a request if it is not signed for us", async () => {
     const now = new Date().getTime()
-    const evt = await validSignedTokenAuthEvent({recipient: "anyone", timestamp: now, origin: safeOrigin, requestType: CONNECTION_REQUEST_RESPONSE}, privateKey)
+    const evt = await validSignedTokenAuthEvent({recipient: "anyone", timestamp: now, origin: safeOrigin, requestType: REQUEST_TYPE}, privateKey)
     return checkAuth.handler(evt).then((res) => {
       validateSuccess(res, STATUS_MESSAGES.wrongRecipient, safeOrigin, RESULTS.NOOP)
     })
@@ -261,7 +261,7 @@ describe("check auth", () => {
 
   it("rejects a request if the connection already exists", async () => {
     const now = new Date().getTime()
-    const evt = await validSignedTokenAuthEvent({origin: safeOrigin, recipient: domain, timestamp: now, requestType: CONNECTION_REQUEST_RESPONSE}, otherKey)
+    const evt = await validSignedTokenAuthEvent({origin: safeOrigin, recipient: domain, timestamp: now, requestType: REQUEST_TYPE}, otherKey)
     return checkAuth.handler(evt).then((res) => {
       validateSuccess(res, STATUS_MESSAGES.unrecognizedOrigin, safeOrigin, RESULTS.NOOP)
     })
@@ -270,7 +270,7 @@ describe("check auth", () => {
   it("rejects a request if the connection already exists", async () => {
     const now = new Date().getTime()
     connections.push(safeOrigin)
-    const evt = await validSignedTokenAuthEvent({origin: safeOrigin, recipient: domain, timestamp: now, requestType: CONNECTION_REQUEST_RESPONSE}, otherKey)
+    const evt = await validSignedTokenAuthEvent({origin: safeOrigin, recipient: domain, timestamp: now, requestType: REQUEST_TYPE}, otherKey)
     return checkAuth.handler(evt).then((res) => {
       validateSuccess(res, STATUS_MESSAGES.verifyFailed, safeOrigin, RESULTS.NOOP)
     })
@@ -280,7 +280,7 @@ describe("check auth", () => {
     const now = new Date().getTime()
     connections.push(safeOrigin)
     queryTime = 2000
-    const evt = await validSignedTokenAuthEvent({origin: safeOrigin, recipient: domain, timestamp: now, requestType: CONNECTION_REQUEST_RESPONSE}, privateKey)
+    const evt = await validSignedTokenAuthEvent({origin: safeOrigin, recipient: domain, timestamp: now, requestType: REQUEST_TYPE}, privateKey)
     return checkAuth.handler(evt).then((res) => {
       validateSuccess(res, STATUS_MESSAGES.noSigningKey, safeOrigin, RESULTS.NOOP)
     })
@@ -289,7 +289,7 @@ describe("check auth", () => {
   it("passes through a request with a valid token", async () => {
     const now = new Date().getTime()
     connections.push(safeOrigin)
-    const evt = await validSignedTokenAuthEvent({requestType: CONNECTION_REQUEST_RESPONSE, origin: safeOrigin, recipient: domain, timestamp: now}, privateKey)
+    const evt = await validSignedTokenAuthEvent({requestType: REQUEST_TYPE, origin: safeOrigin, recipient: domain, timestamp: now}, privateKey)
     return checkAuth.handler(evt).then((res) => {
       validateSuccess(res, STATUS_MESSAGES.success, safeOrigin, RESULTS.CREATE_RECORD)
       delete savedRequests[0]['${connection_table_ttl_attribute}']

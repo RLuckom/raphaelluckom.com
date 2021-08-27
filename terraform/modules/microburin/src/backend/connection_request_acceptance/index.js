@@ -74,7 +74,7 @@ const RESULTS = {
   CREATE_RECORD: 'CREATE_RECORD'
 }
 
-const CONNECTION_REQUEST_RESPONSE = "CONNECTION_REQUEST_RESPONSE"
+const REQUEST_TYPE = "${connection_request_type}"
 
 async function handler(event) {
   const auth = _.get(event, 'headers.microburin-signature', '');
@@ -94,7 +94,7 @@ async function handler(event) {
   if (!_.isString(origin)) {
     return successResponse(STATUS_MESSAGES.noOrigin, null, RESULTS.NOOP)
   }
-  if (requestType !== CONNECTION_REQUEST_RESPONSE) {
+  if (requestType !== REQUEST_TYPE) {
     return successResponse(STATUS_MESSAGES.wrongRequestType, origin, RESULTS.NOOP)
   }
   const { signature, payload, protected } = sig
@@ -116,6 +116,7 @@ async function handler(event) {
     connections = await new Promise((resolve, reject) => {
       dynamo.query({
         TableName: '${dynamo_table_name}',
+        IndexName: '${domain_index}',
         ExpressionAttributeNames: {
           '#domKey': '${domain_key}',
         },
@@ -143,7 +144,7 @@ async function handler(event) {
   if (!connections.length) {
     return successResponse(STATUS_MESSAGES.unrecognizedOrigin, origin, RESULTS.NOOP)
   }
-  const signedString = Buffer.from(JSON.stringify({timestamp, origin, requestType: CONNECTION_REQUEST_RESPONSE, recipient}), 'utf8').toString('base64').replace(/=*$/g, "")
+  const signedString = Buffer.from(JSON.stringify({timestamp, origin, requestType: REQUEST_TYPE, recipient}), 'utf8').toString('base64').replace(/=*$/g, "")
   let signingKey
   try {
     signingKey = await getSigningKey(origin)

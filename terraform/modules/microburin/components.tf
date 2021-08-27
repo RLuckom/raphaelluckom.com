@@ -479,6 +479,7 @@ module connection_request_acceptance_function {
         connection_type_initial = local.connection_type_initial
         key_timeout_secs = 2
         intermediate_connection_state_timeout_secs = local.intermediate_connection_state_timeout_secs
+        connection_request_type = local.connection_request_acceptance_type
         domain_key = local.domain_key
         dynamo_region = var.region
         dynamo_table_name = module.connections_table.table_name
