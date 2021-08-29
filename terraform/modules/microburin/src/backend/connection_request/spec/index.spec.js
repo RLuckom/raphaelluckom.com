@@ -141,12 +141,19 @@ async function validUnsignedTokenAuthEvent({timestamp, origin, requestType, reci
   return tokenAuthedEvent(ret)
 }
 
-function validateSuccess(res, expectedResponseMessage, expectedResponseOrigin, expectedResponseResult) {
+function validateSuccess(res, expectedResponseMessage, expectedResponseOrigin, expectedResponseResult, expectedSavedItems) {
+  expectedSavedItems = expectedSavedItems || []
+  _.map(_.zip(expectedSavedItems, savedRequests), ([expected, saved]) => {
+    expect(saved["${connection_type_key}"]).toEqual('${connection_type_initial}')
+    expect(saved["${domain_key}"]).toEqual(expected.domain)
+    expect(saved["${connection_table_state_key}"]).toEqual("${connection_status_code_our_response_requested}")
+  })
   expect(res.statusCode).toEqual(200)
   expect(res.statusDescription).toEqual('OK')
   expect(responseMessage).toEqual(expectedResponseMessage)
   expect(responseOrigin).toEqual(expectedResponseOrigin)
   expect(responseResult).toEqual(expectedResponseResult)
+
 }
 
 function validateRequestPassThrough(res, evt) {
@@ -171,10 +178,6 @@ describe("check auth", () => {
     otherKey = otherKeys.privateKey
     savedRequests = []
     unsetArray = [checkAuth.__set__('connectionEndpoint', 'http://localhost:8000')]
-    unsetArray.push(checkAuth.__set__('CONNECTIONS', {
-      timeout: 0,
-      connections: []
-    })) 
     unsetArray.push(checkAuth.__set__('keyLocation', replaceKeyLocation)) 
     unsetArray.push(checkAuth.__set__('dynamo', fakeDynamo)) 
     unsetArray.push(checkAuth.__set__('successResponse', fakeSuccessResponseBuilder(checkAuth.__get__('successResponse')))) 
@@ -288,13 +291,7 @@ describe("check auth", () => {
     const now = new Date().getTime()
     const evt = await validSignedTokenAuthEvent({requestType: CONNECTION_REQUEST, origin: safeOrigin, recipient: domain, timestamp: now}, privateKey)
     return checkAuth.handler(evt).then((res) => {
-      validateSuccess(res, STATUS_MESSAGES.success, safeOrigin, RESULTS.CREATE_RECORD)
-      delete savedRequests[0]['${connection_table_ttl_attribute}']
-      expect(savedRequests[0]).toEqual({ 
-          "${connection_type_key}" : "${connection_type_initial}",
-        '${domain_key}': 'localhost:8001', 
-        '${connection_table_state_key}': '${connection_status_code_our_response_requested}'
-      })
+      validateSuccess(res, STATUS_MESSAGES.success, safeOrigin, RESULTS.CREATE_RECORD, [{domain: 'localhost:8001'}])
     })
   })
 

@@ -488,7 +488,7 @@ module connection_request_acceptance_function {
         log = true
         domain_index = local.domain_index_name
         connection_status_code_pending = local.connection_status_code_pending
-        connection_state_key = local.connection_state_key
+        connection_table_state_key = local.connection_state_key
         connection_status_code_connected = local.connection_status_code_connected
       })
     }
