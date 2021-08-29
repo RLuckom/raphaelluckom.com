@@ -4,7 +4,7 @@ window.GOPHER_CONFIG = {
     postRecords: {
       accessSchema: exploranda.dataSources.AWS.dynamodb.query,
       params: {
-        apiConfig: {value: {region: '${aws_region}'}},
+        apiConfig: {value: {region: CONFIG.table_region}},
         TableName: {value: CONFIG.posts_table},
         ExpressionAttributeValues: {
           value: {
@@ -14,17 +14,11 @@ window.GOPHER_CONFIG = {
         KeyConditionExpression: {value: 'kind = :kindId' },
       },
     },
-    pageHits: {
-      accessSchema: exploranda.dataSources.AWS.dynamodb.query,
+    connections: {
+      accessSchema: exploranda.dataSources.AWS.dynamodb.scan,
       params: {
-        apiConfig: {value: {region: '${aws_region}'}},
-        TableName: {value: CONFIG.site_metrics_table},
-        ExpressionAttributeValues: {
-          value: {
-            ':metricType': 'pageHits',
-          }
-        },
-        KeyConditionExpression: {value: 'metricType = :metricType' },
+        apiConfig: {value: {region: CONFIG.table_region}},
+        TableName: {value: CONFIG.connections_table_name},
       },
     },
     putImage: {

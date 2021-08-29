@@ -128,6 +128,7 @@ module connections_table {
   ]
   read_permission_role_names = [
     module.social_access_control_function.role.name,
+    var.plugin_config.authenticated_role.name,
     module.connection_notifier_lambda.role.name,
     module.connection_request_function.role.name,
     module.connection_request_acceptance_function.role.name,

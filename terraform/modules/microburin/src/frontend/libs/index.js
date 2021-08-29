@@ -21,12 +21,13 @@ window.RENDER_CONFIG = {
       return revert
     }
   },
-  init: ({listPosts, postRecords, pageHits}, gopher) => {
+  init: ({listPosts, postRecords, connections}, gopher) => {
+    console.log(connections)
     const mainSection = document.querySelector('main')
     const closeInputButtonText = 'X'
     window.addEventListener('pageshow', () => {
-      goph.report(['listPosts', 'postRecords', 'pageHits'], (e, {listPosts, postRecords, pageHits}) => {
-        updatePostKeys(listPosts, postRecords, pageHits)
+      goph.report(['listPosts', 'postRecords'], (e, {listPosts, postRecords}) => {
+        updatePostKeys(listPosts, postRecords)
       })
     })
     const slashReplacement = '-'
@@ -145,14 +146,9 @@ window.RENDER_CONFIG = {
       const postId = postIdParts.join('.')
       return postId
     }
-    function updatePostKeys(listPosts, postRecords, pageHits) {
+    function updatePostKeys(listPosts, postRecords) {
       let postKeys = _.map(listPosts, 'Key')
       postRecords = _.sortBy(postRecords.postRecords, 'frontMatter.createDate')
-      const pageHitsMap = _.reduce(pageHits.pageHits, (acc, v, k) => {
-        acc[publicPathToPostId(v.metricId)] = v.hits
-        return acc
-      }, {})
-      console.log(pageHitsMap)
       postKeys = _.reverse(_.sortBy(
         postKeys,
         (k) => _.findIndex(postRecords, (rec) => postKeyToId(k) === rec.id)
@@ -186,11 +182,6 @@ window.RENDER_CONFIG = {
                       tagName: 'div',
                       classNames: 'save-status',
                       children: record ? [new Date(record.frontMatter.createDate).toLocaleString()] : []
-                    },
-                    {
-                      tagName: 'div',
-                      classNames: 'publish-status',
-                      children: [`${pageHitsMap[postId] || 0}`]
                     },
                   ]
                 },
@@ -288,7 +279,7 @@ window.RENDER_CONFIG = {
         })
       }))
     }
-    updatePostKeys(listPosts, postRecords, pageHits)
+    updatePostKeys(listPosts, postRecords)
   },
   params: {
     listPosts: {
@@ -297,11 +288,11 @@ window.RENDER_CONFIG = {
         return listPosts
       }
     },
+    connections: {
+      source: 'connections',
+    },
     postRecords: {
       source: 'postRecords',
-    },
-    pageHits: {
-      source: 'pageHits',
     },
   },
   onAPIError: (e, r, cb) => {
