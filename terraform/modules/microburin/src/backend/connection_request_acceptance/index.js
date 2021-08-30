@@ -128,7 +128,7 @@ async function handler(event) {
             S: origin
           }
         },
-        KeyConditionExpression: '${connection_state_key} = :status and #domKey = :dom',
+        KeyConditionExpression: '${connection_table_state_key} = :status and #domKey = :dom',
       }, (e, r) => {
         if (e) {
           console.log(e)
