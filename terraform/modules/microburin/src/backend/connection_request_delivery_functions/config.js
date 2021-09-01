@@ -103,7 +103,7 @@ module.exports = {
                       "${connection_type_key}" : "${connection_type_initial}",
                       "${domain_key}": domain,
                       "${connection_table_state_key}": "${connection_status_code}",
-                      "${connection_table_ttl_attribute}": new Date().getTime() / 1000 + ${intermediate_state_timeout_secs}
+                      ${ set_timeout ? "'${connection_table_ttl_attribute}' : new Date().getTime() / 1000 + ${intermediate_state_timeout_secs}" : ""}
                     }
                   },
                   params: {

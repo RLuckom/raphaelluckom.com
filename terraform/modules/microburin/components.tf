@@ -12,7 +12,7 @@ module ui {
   admin_site_resources = var.admin_site_resources
   plugin_config = var.plugin_config
   config_values = local.plugin_config
-  i18n_config_values = var.i18n_config_values
+  i18n_config_values = local.i18n_config_values
   default_css_paths = local.default_css_paths
   default_script_paths = local.default_script_paths
   default_deferred_script_paths = []
@@ -216,6 +216,7 @@ module connection_request_delivery_function {
   region = var.region
   config_contents = templatefile("${path.module}/src/backend/connection_request_delivery_functions/config.js",
   {
+    set_timeout = true
     connections_table_name = module.connections_table.table_name
     connections_table_region = var.region
     connection_table_state_key = local.connection_state_key
@@ -258,6 +259,7 @@ module connection_request_acceptance_delivery_function {
   region = var.region
   config_contents = templatefile("${path.module}/src/backend/connection_request_delivery_functions/config.js",
   {
+    set_timeout = false
     connections_table_name = module.connections_table.table_name
     connections_table_region = var.region
     connection_table_state_key = local.connection_state_key

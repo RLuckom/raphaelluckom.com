@@ -195,13 +195,13 @@ img {
   font-family: var(--editor-font-family); 
 }
 
-.post-list-entry {
+.connection-list-entry {
   display: flex;
   margin-bottom: 0.5em;
   flex-wrap: wrap;
 }
 
-.new-post {
+.new-connection {
   opacity: 0;
   -webkit-transition: all 0.5s ease;
   -moz-transition: all 0.5s ease;
@@ -216,12 +216,12 @@ main {
   width: 100%;
 }
 
-input.new-post.expanded {
+input.new-connection.expanded {
   border-radius: 0;
   width: 300px;
 }
 
-.new-post.expanded {
+.new-connection.expanded {
   opacity: 1;
 }
 
@@ -251,7 +251,7 @@ button.delete-footnote {
   margin: 5px 0;
 }
 
-.post-list-entry .post-status, .post-list-entry .post-actions {
+.connection-list-entry .post-status, .connection-list-entry .post-actions {
   height: 2.6em;
 }
 
@@ -316,7 +316,7 @@ button.delete-footnote {
   width: 100%;
 }
 
-.post-list-entry #post-running-material {
+.connection-list-entry #post-running-material {
   flex: 2;
 }
 
@@ -377,7 +377,7 @@ button.delete-footnote {
   border-color: var(--hazard);
 }
 
-#post-list-header {
+#connection-list-header {
   display: flex;
   width: 100%;
   margin-bottom: 0.5em;
@@ -465,7 +465,7 @@ button.delete-footnote {
     font-family: inherit;
   }
 
-  .post-list-entry #post-running-material {
+  .connection-list-entry #post-running-material {
     min-width: 100%;
   }
 
@@ -485,12 +485,12 @@ button.delete-footnote {
     flex: 0;
   }
 
-  .post-list-entry .post-actions {
+  .connection-list-entry .post-actions {
     height: 0;
     overflow: hidden;
   }
 
-  .post-list-entry.open .post-actions {
+  .connection-list-entry.open .post-actions {
     height: 2.6em;
     overflow: visible;
     -webkit-transition: all 0.5s ease;

@@ -69,9 +69,8 @@ variable plugin_config {
   })
 }
 
-variable i18n_config_values {
-  type = any
-  default = {
+locals {
+  i18n_config_values = {
     postMetadata =  {
       placeholders = {
         trails = "Trails (comma-separated)"
@@ -101,6 +100,57 @@ variable i18n_config_values {
       toIndex = "Back"
       new = "New Post"
       addFootnote = "Add Footnote"
+    }
+    connectionActions = {
+      sendRequest = "Send Connection Request"
+      accept = "Accept"
+      ignore = "Ignore"
+      delete = "Delete Connection"
+    }
+    connectionHeaders = {
+      domain = "Connected Domain"
+      connectionStatus = "Connection Status"
+      connectionType = "Connection Type"
+    }
+    connectionStates = {
+      CONNECTED = {
+        code = local.connection_status_code_connected
+        message = "Connected"
+        transitions = [
+          {
+            nextState = null
+            transitionMethod = "DeleteConnection"
+            message = "Delete Connection"
+          }
+        ]
+      }
+      PENDING_RESPONSE = {
+        code = local.connection_status_code_pending
+        message = "Request Sent"
+        transitions = [
+          {
+            nextState = null
+            transitionMethod = "DeleteConnection"
+            message = "Delete Connection"
+          }
+        ]
+      }
+      OUR_RESPONSE_REQUESTED = {
+        code = local.connection_status_code_our_response_requested
+        message = "Request Received"
+        transitions = [
+          {
+            nextState = local.connection_status_code_connected
+            transitionMethod = "AcceptConnection"
+            message = "Accept Connection"
+          },
+          {
+            nextState = null
+            transitionMethod = "DeleteConnection"
+            message = "Delete Connection"
+          }
+        ]
+      }
     }
     editActions = {
       deleteFootnote = "Delete Footnote"

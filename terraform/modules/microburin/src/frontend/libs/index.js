@@ -2,18 +2,18 @@ window.RENDER_CONFIG = {
   smallScreenFormatters: {
     toggleTray: () => {
       function toggleTray (evt) {
-        evt.target.closest('.post-list-entry').classList.toggle('open')
+        evt.target.closest('.connection-list-entry').classList.toggle('open')
       }
       function revert() {
         _.map(
-          document.querySelectorAll('.post-list-entry'),
+          document.querySelectorAll('.connection-list-entry'),
           (el) => {
             el.removeEventListener('click', toggleTray)
           }
         )
       }
       _.map(
-        document.querySelectorAll('.post-list-entry'),
+        document.querySelectorAll('.connection-list-entry'),
         (el) => {
           el.addEventListener('click', toggleTray)
         }
@@ -21,33 +21,33 @@ window.RENDER_CONFIG = {
       return revert
     }
   },
-  init: ({listPosts, postRecords, connections}, gopher) => {
+  init: ({connections}, gopher) => {
     console.log(connections)
     const mainSection = document.querySelector('main')
     const closeInputButtonText = 'X'
     window.addEventListener('pageshow', () => {
-      goph.report(['listPosts', 'postRecords'], (e, {listPosts, postRecords}) => {
-        updatePostKeys(listPosts, postRecords)
+      goph.report(['connections'], (e, {connections}) => {
+        updateConnections(connections)
       })
     })
     const slashReplacement = '-'
 
     mainSection.appendChild(domNode({
       tagName: 'div',
-      id: 'new-post-container',
+      id: 'new-connection-container',
       children: [
         {
           tagName: 'button',
-          id: 'new-post-button',
+          id: 'new-connection-button',
           onClick: () => {
-            document.getElementById('new-post').classList.toggle('expanded')
-            const icon = document.getElementById('new-post-icon')
+            document.getElementById('new-connection').classList.toggle('expanded')
+            const icon = document.getElementById('new-connection-icon')
             const rotation = 'rotate(45, 50, 50)'
             if (icon.getAttribute('transform') === rotation) {
               icon.setAttribute('transform', '')
             } else {
               icon.setAttribute('transform', rotation)
-              document.getElementById('new-post').focus()
+              document.getElementById('new-connection').focus()
             }
           },
           children: [
@@ -59,7 +59,7 @@ window.RENDER_CONFIG = {
               children: [
                 {
                   tagName: 'g',
-                  id: 'new-post-icon',
+                  id: 'new-connection-icon',
                   children: [
                     {
                       tagName: 'line',
@@ -92,12 +92,12 @@ window.RENDER_CONFIG = {
         {
           tagName: 'input',
           type: 'text',
-          id: 'new-post',
-          classNames: ['new-post'],
+          id: 'new-connection',
+          classNames: ['new-connection'],
           placeholder: I18N_CONFIG.postMetadata.placeholders.id,
           onKeyDown: (evt) => {
             if (evt.which === 13 && evt.target.value) {
-              window.location.href = `./edit.html?postId=${evt.target.value.replace(/\//g, slashReplacement)}`
+              console.log('Add connection: ' + evt.target.value)
             }
           }
         },
@@ -106,7 +106,7 @@ window.RENDER_CONFIG = {
     mainSection.appendChild(domNode(
       {
         tagName: 'div',
-        id: 'post-list-header',
+        id: 'connection-list-header',
         children: [
           {
             tagName: 'div',
@@ -115,17 +115,16 @@ window.RENDER_CONFIG = {
               {
                 tagName: 'div',
                 classNames: 'post-id-header',
-                children: ["Post ID"]
-              },
-              {
-                tagName: 'div',
-                classNames: 'save-status-header',
-                children: ["Create Date"]
+                children: [
+                  I18N_CONFIG.connectionHeaders.domain,
+                ]
               },
               {
                 tagName: 'div',
                 classNames: 'publish-status-header',
-                children: ["Page Views"]
+                children: [
+                  I18N_CONFIG.connectionHeaders.connectionStatus,
+                ]
               },
             ]
           },
@@ -138,32 +137,16 @@ window.RENDER_CONFIG = {
     ))
     mainSection.appendChild(domNode({
       tagName: 'div',
-      id: 'post-list'
+      id: 'connection-list'
     }))
-    function postKeyToId(k) {
-      const postIdParts = k.split('/').pop().split('.')
-      postIdParts.pop()
-      const postId = postIdParts.join('.')
-      return postId
-    }
-    function updatePostKeys(listPosts, postRecords) {
-      let postKeys = _.map(listPosts, 'Key')
-      postRecords = _.sortBy(postRecords.postRecords, 'frontMatter.createDate')
-      postKeys = _.reverse(_.sortBy(
-        postKeys,
-        (k) => _.findIndex(postRecords, (rec) => postKeyToId(k) === rec.id)
-      ))
-      document.getElementById('post-list').replaceChildren(..._.map(postKeys, (Key) => {
-        const postIdParts = Key.split('/').pop().split('.')
-        postIdParts.pop()
-        const postId = postIdParts.join('.')
-        let saveState = getPostSaveState(postId)
-        let publishState = getPostPublishState(postId)
-        const record = _.find(postRecords, (rec) => postId === rec.id)
-        const saved = _.find(listPosts, ({Key}) => postKeyToId(Key) === postId)
+    function updateConnections(connections) {
+      document.getElementById('connection-list').replaceChildren(..._.map(connections.connections, ({domain, connectionType, connectionState, requestExpires}) => {
+        const connectionStateKey = _.find(I18N_CONFIG.connectionStates, (v, k) => {
+          return v.code === connectionState && v
+        })
         return domNode({
           tagName: 'div',
-          classNames: 'post-list-entry',
+          classNames: 'connection-list-entry',
           children: [
             {
               tagName: 'div',
@@ -176,12 +159,12 @@ window.RENDER_CONFIG = {
                     {
                       tagName: 'div',
                       classNames: 'post-id',
-                      children: [postId]
+                      children: [domain]
                     },
                     {
                       tagName: 'div',
-                      classNames: 'save-status',
-                      children: record ? [new Date(record.frontMatter.createDate).toLocaleString()] : []
+                      classNames: 'publish-status',
+                      children: [ connectionStateKey.message ],
                     },
                   ]
                 },
@@ -197,7 +180,6 @@ window.RENDER_CONFIG = {
                   classNames: 'edit',
                   innerText: I18N_CONFIG.postActions.edit,
                   onClick: () => {
-                      window.location.href = `./edit.html?postId=${postId}`
                   }
                 },
                 {
@@ -208,6 +190,7 @@ window.RENDER_CONFIG = {
                   innerText: I18N_CONFIG.postActions.publish,
                   onClick: function(evt, stopSpin) {
                     evt.stopPropagation()
+                    /*
                     goph.report(['saveAndPublishPostWithoutInput', 'confirmPostPublished'], {postId}, (e, r) => {
                       if (e) {
                         console.log(e)
@@ -218,10 +201,11 @@ window.RENDER_CONFIG = {
                         setPostPublishState(postId, {etag: changedETag, label: I18N_CONFIG.publishState.mostRecent})
                         setPostSaveState(postId, {etag: changedETag, label: I18N_CONFIG.saveState.unmodified})
                       }
-                      evt.target.closest('.post-list-entry').querySelector('.save-status').innerText = I18N_CONFIG.saveState.unmodified
-                      evt.target.closest('.post-list-entry').querySelector('.publish-status').innerText = I18N_CONFIG.publishState.mostRecent
+                      evt.target.closest('.connection-list-entry').querySelector('.save-status').innerText = I18N_CONFIG.saveState.unmodified
+                      evt.target.closest('.connection-list-entry').querySelector('.publish-status').innerText = I18N_CONFIG.publishState.mostRecent
                       stopSpin()
                     })
+                   */
                   }
                 },
                 {
@@ -232,6 +216,7 @@ window.RENDER_CONFIG = {
                   innerText: I18N_CONFIG.postActions.unpublish,
                   onClick: function(evt, stopSpin) {
                     evt.stopPropagation()
+                    /*
                     goph.report(['unpublishPostWithoutInput', 'confirmPostUnpublished'], {postId}, (e, r) => {
                       if (e) {
                         console.log(e)
@@ -242,10 +227,11 @@ window.RENDER_CONFIG = {
                         setPostPublishState(postId, {etag: changedETag, label: I18N_CONFIG.publishState.mostRecent})
                         setPostSaveState(postId, {etag: changedETag, label: I18N_CONFIG.saveState.unmodified})
                       }
-                      evt.target.closest('.post-list-entry').querySelector('.save-status').innerText = I18N_CONFIG.saveState.unmodified
-                      evt.target.closest('.post-list-entry').querySelector('.publish-status').innerText = I18N_CONFIG.publishState.unpublished
+                      evt.target.closest('.connection-list-entry').querySelector('.save-status').innerText = I18N_CONFIG.saveState.unmodified
+                      evt.target.closest('.connection-list-entry').querySelector('.publish-status').innerText = I18N_CONFIG.publishState.unpublished
                       stopSpin()
                     })
+                   */
                   },
                 },
                 {
@@ -254,23 +240,24 @@ window.RENDER_CONFIG = {
                   classNames: 'delete',
                   spin: true,
                   dataset: {
-                    postId
                   },
                   innerText: I18N_CONFIG.postActions.delete,
                   onClick: function(evt, stopSpin) {
                     evt.stopPropagation()
+                    /*
                     goph.report(['deletePostWithoutInput', 'confirmPostDeleted'], {postId}, (e, r) => {
                       if (e) {
                         console.log(e)
                         return
                       }
-                      const entry = evt.target.closest('.post-list-entry')
+                      const entry = evt.target.closest('.connection-list-entry')
                       if (entry && !e) {
                         entry.remove()
                       }
                       deleteLocalState(postId)
                       stopSpin()
                     })
+                   */
                   },
                 },
               ]
@@ -279,20 +266,11 @@ window.RENDER_CONFIG = {
         })
       }))
     }
-    updatePostKeys(listPosts, postRecords)
+    updateConnections(connections)
   },
   params: {
-    listPosts: {
-      source: 'listPosts',
-      formatter: ({listPosts}) => {
-        return listPosts
-      }
-    },
     connections: {
       source: 'connections',
-    },
-    postRecords: {
-      source: 'postRecords',
     },
   },
   onAPIError: (e, r, cb) => {
