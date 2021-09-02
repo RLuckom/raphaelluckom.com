@@ -119,6 +119,7 @@ module connections_table {
   account_id = var.account_id
   region = var.region
   delete_item_permission_role_names = [
+    var.plugin_config.authenticated_role.name,
   ]
   write_permission_role_names = [
     module.connection_request_function.role.name,

@@ -39,6 +39,21 @@ window.GOPHER_CONFIG = {
         },
       }
     },
+    deleteConnection: {
+      accessSchema: exploranda.dataSources.AWS.dynamodb.deleteItem,
+      params: {
+        apiConfig: {value: {region: CONFIG.table_region}},
+        TableName: {value: CONFIG.connections_table_name},
+        Key: {
+          input: ["connectionId"],
+          formatter: ({connectionId}) => {
+            const key = {}
+            key[CONFIG.connection_type_key] = CONFIG.connection_type_initial
+            key[CONFIG.connection_domain_key] = connectionId
+          }
+        }
+      }
+    },
     getPost: {
       accessSchema: exploranda.dataSources.AWS.s3.getObject,
       formatter: ([post], {postId}) => {
