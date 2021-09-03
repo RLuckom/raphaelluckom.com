@@ -215,6 +215,10 @@ module connection_request_delivery_function {
   account_id = var.account_id
   unique_suffix = var.unique_suffix
   region = var.region
+
+  invoking_roles = [
+    var.plugin_config.authenticated_role.arn,
+  ]
   config_contents = templatefile("${path.module}/src/backend/connection_request_delivery_functions/config.js",
   {
     set_timeout = true
@@ -258,6 +262,9 @@ module connection_request_acceptance_delivery_function {
   account_id = var.account_id
   unique_suffix = var.unique_suffix
   region = var.region
+  invoking_roles = [
+    var.plugin_config.authenticated_role.arn,
+  ]
   config_contents = templatefile("${path.module}/src/backend/connection_request_delivery_functions/config.js",
   {
     set_timeout = false

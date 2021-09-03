@@ -25,11 +25,24 @@ window.RENDER_CONFIG = {
     console.log(connections)
     const mainSection = document.querySelector('main')
     const closeInputButtonText = 'X'
-    window.addEventListener('pageshow', () => {
-      goph.report(['connections'], (e, {connections}) => {
-        updateConnections(connections)
+    function refreshConnectionList(cb) {
+      cb = cb || function(e) { 
+        return e ? console.log(e) : null 
+      }
+      gopher.report(['connections'], (e, {connections}) => {
+        console.log(connections)
+        if (e) {
+          return cb(e)
+        }
+        try {
+          updateConnections({connections})
+        } catch(e) {
+          return cb(e)
+        }
+        return cb()
       })
-    })
+    }
+    window.addEventListener('pageshow', refreshConnectionList)
     const slashReplacement = '-'
 
     mainSection.appendChild(domNode({
@@ -97,7 +110,13 @@ window.RENDER_CONFIG = {
           placeholder: I18N_CONFIG.postMetadata.placeholders.id,
           onKeyDown: (evt) => {
             if (evt.which === 13 && evt.target.value) {
-              console.log('Add connection: ' + evt.target.value)
+              goph.report(['sendConnectionRequest'], {connectionId: evt.target.value}, (e, r) => {
+                if (e) {
+                  console.log(e)
+                }
+                console.log('Add connection: ' + evt.target.value)
+                refreshConnectionList()
+              })
             }
           }
         },
@@ -173,94 +192,25 @@ window.RENDER_CONFIG = {
             {
               tagName: 'div',
               classNames: 'post-actions',
-              children: [
-                {
+              children: _.map(connectionStateKey.transitions, ({transitionMethod, message, nextState}) => {
+                return {
                   tagName: 'button',
-                  name: 'edit',
-                  classNames: 'edit',
-                  innerText: I18N_CONFIG.postActions.edit,
-                  onClick: () => {
+                  name: nextState || 'null',
+                  classNames: [],
+                  spin: true,
+                  innerText: message,
+                  onClick: function(evt, stopSpin) {
+                    evt.stopPropagation()
+                    goph.report([transitionMethod], {connectionId: domain}, (e, r) => {
+                      if (e) {
+                        console.log(e)
+                      }
+                      stopSpin()
+                      refreshConnectionList()
+                    })
                   }
-                },
-                {
-                  tagName: 'button',
-                  name: 'publish',
-                  classNames: 'publish',
-                  spin: true,
-                  innerText: I18N_CONFIG.postActions.publish,
-                  onClick: function(evt, stopSpin) {
-                    evt.stopPropagation()
-                    /*
-                    goph.report(['saveAndPublishPostWithoutInput', 'confirmPostPublished'], {postId}, (e, r) => {
-                      if (e) {
-                        console.log(e)
-                        return
-                      }
-                      const changedETag = _.get(r, 'saveAndPublishPostWithoutInput[0].ETag')
-                      if (changedETag) {
-                        setPostPublishState(postId, {etag: changedETag, label: I18N_CONFIG.publishState.mostRecent})
-                        setPostSaveState(postId, {etag: changedETag, label: I18N_CONFIG.saveState.unmodified})
-                      }
-                      evt.target.closest('.connection-list-entry').querySelector('.save-status').innerText = I18N_CONFIG.saveState.unmodified
-                      evt.target.closest('.connection-list-entry').querySelector('.publish-status').innerText = I18N_CONFIG.publishState.mostRecent
-                      stopSpin()
-                    })
-                   */
-                  }
-                },
-                {
-                  tagName: 'button',
-                  name: 'unpublish',
-                  classNames: 'unpublish',
-                  spin: true,
-                  innerText: I18N_CONFIG.postActions.unpublish,
-                  onClick: function(evt, stopSpin) {
-                    evt.stopPropagation()
-                    /*
-                    goph.report(['unpublishPostWithoutInput', 'confirmPostUnpublished'], {postId}, (e, r) => {
-                      if (e) {
-                        console.log(e)
-                        return
-                      }
-                      const changedETag = _.get(r, 'unPublishPostWithoutInput[0].ETag')
-                      if (changedETag) {
-                        setPostPublishState(postId, {etag: changedETag, label: I18N_CONFIG.publishState.mostRecent})
-                        setPostSaveState(postId, {etag: changedETag, label: I18N_CONFIG.saveState.unmodified})
-                      }
-                      evt.target.closest('.connection-list-entry').querySelector('.save-status').innerText = I18N_CONFIG.saveState.unmodified
-                      evt.target.closest('.connection-list-entry').querySelector('.publish-status').innerText = I18N_CONFIG.publishState.unpublished
-                      stopSpin()
-                    })
-                   */
-                  },
-                },
-                {
-                  tagName: 'button',
-                  name: 'delete',
-                  classNames: 'delete',
-                  spin: true,
-                  dataset: {
-                  },
-                  innerText: I18N_CONFIG.postActions.delete,
-                  onClick: function(evt, stopSpin) {
-                    evt.stopPropagation()
-                    /*
-                    goph.report(['deletePostWithoutInput', 'confirmPostDeleted'], {postId}, (e, r) => {
-                      if (e) {
-                        console.log(e)
-                        return
-                      }
-                      const entry = evt.target.closest('.connection-list-entry')
-                      if (entry && !e) {
-                        entry.remove()
-                      }
-                      deleteLocalState(postId)
-                      stopSpin()
-                    })
-                   */
-                  },
-                },
-              ]
+                }
+              })
             },
           ]
         })

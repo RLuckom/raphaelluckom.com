@@ -50,7 +50,35 @@ window.GOPHER_CONFIG = {
             const key = {}
             key[CONFIG.connection_type_key] = CONFIG.connection_type_initial
             key[CONFIG.connection_domain_key] = connectionId
+            console.log(key)
+            return key
           }
+        }
+      }
+    },
+    sendConnectionRequest: {
+      accessSchema: exploranda.dataSources.AWS.lambda.invoke ,
+      params: {
+        FunctionName: { value: CONFIG.connection_request_function_name },
+        InvocationType: { value: 'RequestResponse' },
+        Payload: {
+          input: ["connectionId"],
+          formatter: ({connectionId}) => {
+            return JSON.stringify({domain: connectionId})
+          },
+        }
+      }
+    },
+    acceptConnectionRequest: {
+      accessSchema: exploranda.dataSources.AWS.lambda.invoke,
+      params: {
+        FunctionName: { value: CONFIG.connection_request_acceptance_function_name },
+        InvocationType: { value: 'RequestResponse' },
+        Payload: {
+          input: ["connectionId"],
+          formatter: ({connectionId}) => {
+            return JSON.stringify({domain: connectionId})
+          },
         }
       }
     },

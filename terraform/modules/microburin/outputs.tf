@@ -153,6 +153,7 @@ output additional_connect_sources_required {
     "https://s3.amazonaws.com", 
     "https://${module.social_site.website_bucket_name}.s3.amazonaws.com", "https://${var.plugin_config.bucket_name}.s3.amazonaws.com",
     "https://dynamodb.${var.region}.amazonaws.com/",
+    "https://lambda.${var.region}.amazonaws.com",
   ]
 }
 

@@ -101,12 +101,6 @@ locals {
       new = "New Post"
       addFootnote = "Add Footnote"
     }
-    connectionActions = {
-      sendRequest = "Send Connection Request"
-      accept = "Accept"
-      ignore = "Ignore"
-      delete = "Delete Connection"
-    }
     connectionHeaders = {
       domain = "Connected Domain"
       connectionStatus = "Connection Status"
@@ -119,7 +113,7 @@ locals {
         transitions = [
           {
             nextState = null
-            transitionMethod = "DeleteConnection"
+            transitionMethod = "deleteConnection"
             message = "Delete Connection"
           }
         ]
@@ -130,7 +124,7 @@ locals {
         transitions = [
           {
             nextState = null
-            transitionMethod = "DeleteConnection"
+            transitionMethod = "deleteConnection"
             message = "Delete Connection"
           }
         ]
@@ -141,12 +135,12 @@ locals {
         transitions = [
           {
             nextState = local.connection_status_code_connected
-            transitionMethod = "AcceptConnection"
+            transitionMethod = "acceptConnectionRequest"
             message = "Accept Connection"
           },
           {
             nextState = null
-            transitionMethod = "DeleteConnection"
+            transitionMethod = "deleteConnection"
             message = "Delete Connection"
           }
         ]
@@ -382,12 +376,17 @@ locals {
     posts_table = module.posts_table.table_name
     site_metrics_table = var.coordinator_data.site_metrics_table
     table_region = var.region
+    connection_domain_key = local.domain_key
     website_bucket = module.social_site.website_bucket_name
     blog_image_hosting_root = local.blog_image_hosting_root
     blog_image_hosting_prefix = local.blog_image_hosting_prefix
     blog_post_hosting_root = local.blog_post_hosting_root
     blog_post_hosting_prefix = local.blog_post_hosting_prefix
     operator_name = var.maintainer.name
+    connection_type_initial = local.connection_type_initial
+    connection_type_key = local.connection_type_key
+    connection_request_acceptance_function_name = module.connection_request_acceptance_delivery_function.lambda.function_name
+    connection_request_function_name = module.connection_request_delivery_function.lambda.function_name
     plugin_image_upload_path = "${trimsuffix(var.plugin_config.upload_root, "/")}/img/"
     plugin_post_upload_path = "${trimsuffix(var.plugin_config.upload_root, "/")}/posts/"
     plugin_image_hosting_path = "${trimsuffix(var.plugin_config.hosting_root, "/")}/img/"
