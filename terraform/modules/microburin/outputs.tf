@@ -111,6 +111,10 @@ output plugin_relative_bucket_readonly_root_permissions_needed {
   value = [
     {
       plugin_relative_key = local.social_signing_key_plugin_relative_prefix
+      role_arn = module.connection_test_delivery_function.role.arn
+    },
+    {
+      plugin_relative_key = local.social_signing_key_plugin_relative_prefix
       role_arn = module.connection_request_acceptance_delivery_function.role.arn
     },
     {
@@ -167,6 +171,7 @@ output lambda_logging_arns {
     module.feed_item_collector_lambda.role.arn,
     module.connection_request_function.role.arn,
     module.connection_request_delivery_function.role.arn,
+    module.connection_test_delivery_function.role.arn,
     module.connection_request_acceptance_delivery_function.role.arn,
   ], [])
 }

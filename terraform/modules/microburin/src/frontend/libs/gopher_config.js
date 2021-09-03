@@ -82,6 +82,19 @@ window.GOPHER_CONFIG = {
         }
       }
     },
+    testConnection: {
+      accessSchema: exploranda.dataSources.AWS.lambda.invoke,
+      params: {
+        FunctionName: { value: CONFIG.connection_test_function_name },
+        InvocationType: { value: 'RequestResponse' },
+        Payload: {
+          input: ["connectionId"],
+          formatter: ({connectionId}) => {
+            return JSON.stringify({domain: connectionId})
+          },
+        }
+      }
+    },
     getPost: {
       accessSchema: exploranda.dataSources.AWS.s3.getObject,
       formatter: ([post], {postId}) => {

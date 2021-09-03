@@ -112,6 +112,27 @@ locals {
         message = "Connected"
         transitions = [
           {
+            nextState = local.connection_status_code_disconnected
+            transitionMethod = "testConnection"
+            message = "Test Connection"
+          },
+          {
+            nextState = null
+            transitionMethod = "deleteConnection"
+            message = "Delete Connection"
+          }
+        ]
+      }
+      DISCONNECTED = {
+        code = local.connection_status_code_disconnected
+        message = "Connection Broken"
+        transitions = [
+          {
+            nextState = local.connection_status_code_disconnected
+            transitionMethod = "testConnection"
+            message = "Test Connection"
+          },
+          {
             nextState = null
             transitionMethod = "deleteConnection"
             message = "Delete Connection"
@@ -122,6 +143,11 @@ locals {
         code = local.connection_status_code_pending
         message = "Request Sent"
         transitions = [
+          {
+            nextState = local.connection_status_code_disconnected
+            transitionMethod = "testConnection"
+            message = "Test Connection"
+          },
           {
             nextState = null
             transitionMethod = "deleteConnection"
@@ -142,7 +168,12 @@ locals {
             nextState = null
             transitionMethod = "deleteConnection"
             message = "Delete Connection"
-          }
+          },
+          {
+            nextState = local.connection_status_code_disconnected
+            transitionMethod = "testConnection"
+            message = "Test Connection"
+          },
         ]
       }
     }
@@ -338,6 +369,7 @@ locals {
   size_key = "size"
   feed_item_id_key = "postId"
   connection_status_code_connected = "CONNECTION_ESTABLISHED"
+  connection_status_code_disconnected = "CONNECTION_BROKEN"
   connection_status_code_pending = "CONNECTION_PENDING_RESPONSE"
   connection_status_code_our_response_requested = "CONNECTION_OUR_RESPONSE_REQUESTED"
   connection_request_type = "CONNECTION_REQUEST"
@@ -365,6 +397,7 @@ locals {
   incoming_notification_api_path = ".well-known/microburin-social/api/private/incoming-notifications"
   connection_request_api_path = ".well-known/microburin-social/api/public/connection-request"
   connection_request_acceptance_api_path = ".well-known/microburin-social/api/public/connection-response"
+  connection_test_api_path = ".well-known/microburin-social/api/private/connection_canary"
   social_signing_key_plugin_relative = "${local.social_signing_key_plugin_relative_prefix}/key.jwk"
   social_signing_private_key_s3_key = "${var.plugin_config.backend_readonly_root}${local.social_signing_key_plugin_relative}"
   edit_styles_path = "${local.file_prefix}/assets/styles/editor.css"
@@ -385,6 +418,7 @@ locals {
     operator_name = var.maintainer.name
     connection_type_initial = local.connection_type_initial
     connection_type_key = local.connection_type_key
+    connection_test_function_name = module.connection_test_delivery_function.lambda.function_name
     connection_request_acceptance_function_name = module.connection_request_acceptance_delivery_function.lambda.function_name
     connection_request_function_name = module.connection_request_delivery_function.lambda.function_name
     plugin_image_upload_path = "${trimsuffix(var.plugin_config.upload_root, "/")}/img/"

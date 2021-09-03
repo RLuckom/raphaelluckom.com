@@ -125,6 +125,7 @@ module connections_table {
     module.connection_request_function.role.name,
     module.connection_request_acceptance_function.role.name,
     module.connection_request_delivery_function.role.name,
+    module.connection_test_delivery_function.role.name,
     module.connection_request_acceptance_delivery_function.role.name,
   ]
   read_permission_role_names = [
@@ -230,7 +231,6 @@ module connection_request_delivery_function {
     social_signing_private_key_bucket = var.plugin_config.bucket_name
     social_signing_private_key_s3_key = local.social_signing_private_key_s3_key
     social_domain = var.coordinator_data.routing.domain
-    delegation_function_name = module.feed_item_collector_lambda.lambda.function_name
     connection_request_type = local.connection_request_type
     feed_list_path = local.feed_list_api_path
     connection_type_initial = local.connection_type_initial
@@ -276,7 +276,6 @@ module connection_request_acceptance_delivery_function {
     social_signing_private_key_bucket = var.plugin_config.bucket_name
     social_signing_private_key_s3_key = local.social_signing_private_key_s3_key
     social_domain = var.coordinator_data.routing.domain
-    delegation_function_name = module.feed_item_collector_lambda.lambda.function_name
     connection_request_type = local.connection_request_acceptance_type
     feed_list_path = local.feed_list_api_path
     domain_key = local.domain_key
@@ -295,6 +294,51 @@ module connection_request_acceptance_delivery_function {
   ]
   lambda_event_configs = var.lambda_event_configs
   action_name = "connection_request_acceptance_delivery"
+  scope_name = var.coordinator_data.system_id.security_scope
+  donut_days_layer = var.donut_days_layer
+  additional_layers = [
+    var.node_jose_layer
+  ]
+}
+
+module connection_test_delivery_function {
+  source = "github.com/RLuckom/terraform_modules//aws/donut_days_function"
+  timeout_secs = 60
+  account_id = var.account_id
+  unique_suffix = var.unique_suffix
+  region = var.region
+  invoking_roles = [
+    var.plugin_config.authenticated_role.arn,
+  ]
+  config_contents = templatefile("${path.module}/src/backend/connection_test/config.js",
+  {
+    connections_table_name = module.connections_table.table_name
+    connections_table_region = var.region
+    connection_table_state_key = local.connection_state_key
+    connection_status_code_connected = local.connection_status_code_connected
+    connection_type_key = local.connection_type_key
+    social_signing_private_key_bucket = var.plugin_config.bucket_name
+    social_signing_private_key_s3_key = local.social_signing_private_key_s3_key
+    social_domain = var.coordinator_data.routing.domain
+    connection_request_type = local.connection_request_acceptance_type
+    feed_list_path = local.feed_list_api_path
+    domain_key = local.domain_key
+    connection_type_initial = local.connection_type_initial
+    connection_status_code_disconnected = local.connection_status_code_disconnected
+    connection_status_code_connected = local.connection_status_code_connected
+    connection_table_ttl_attribute = local.connection_table_ttl_attribute
+    connection_test_api_path = local.connection_test_api_path 
+    intermediate_state_timeout_secs = local.intermediate_connection_state_timeout_secs
+  })
+  logging_config = var.logging_config
+  additional_helpers = [
+    {
+      file_contents = file("${path.module}/src/backend/signRequests.js")
+      helper_name = "signRequests"
+    }
+  ]
+  lambda_event_configs = var.lambda_event_configs
+  action_name = "connection_test_delivery"
   scope_name = var.coordinator_data.system_id.security_scope
   donut_days_layer = var.donut_days_layer
   additional_layers = [
@@ -477,6 +521,13 @@ resource null_resource social_key {
       AWS_SHARED_CREDENTIALS_FILE = var.aws_credentials_file
     }
   }
+}
+
+resource "aws_s3_bucket_object" "connection_canary" {
+  bucket = module.social_site.website_bucket_name
+  key    = local.connection_test_api_path
+  content_type = "text/plain"
+  content = "Success"
 }
 
 module connection_request_acceptance_function {
