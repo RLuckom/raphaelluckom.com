@@ -23,6 +23,18 @@ module ui {
       deferred_script_paths = []
       render_config_path = "${path.module}/src/frontend/libs/index.js"
     }
+    connections = {
+      css_paths = local.index_css_paths
+      script_paths = local.index_script_paths
+      deferred_script_paths = []
+      render_config_path = "${path.module}/src/frontend/libs/connections.js"
+    }
+    feed = {
+      css_paths = local.index_css_paths
+      script_paths = local.index_script_paths
+      deferred_script_paths = []
+      render_config_path = "${path.module}/src/frontend/libs/feed.js"
+    }
     edit = {
       css_paths = local.edit_css_paths
       script_paths = local.edit_script_paths

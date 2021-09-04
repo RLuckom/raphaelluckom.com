@@ -144,11 +144,6 @@ locals {
         message = "Request Sent"
         transitions = [
           {
-            nextState = local.connection_status_code_disconnected
-            transitionMethod = "testConnection"
-            message = "Test Connection"
-          },
-          {
             nextState = null
             transitionMethod = "deleteConnection"
             message = "Delete Connection"
