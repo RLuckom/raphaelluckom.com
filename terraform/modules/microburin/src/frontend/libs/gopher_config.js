@@ -21,6 +21,19 @@ window.GOPHER_CONFIG = {
         TableName: {value: CONFIG.connections_table_name},
       },
     },
+    connectionItems: {
+      accessSchema: exploranda.dataSources.AWS.dynamodb.scan,
+      params: {
+        apiConfig: {value: {region: CONFIG.table_region}},
+        TableName: {value: CONFIG.connection_item_table_name},
+        ExclusiveStartKey: { 
+          input: ['lastScannedConnectionItem'],
+          formatter: ({lastScannedConnectionItem}) => {
+            return lastScannedConnectionItem
+          }
+        },
+      },
+    },
     putImage: {
       accessSchema: exploranda.dataSources.AWS.s3.putObject,
       params: {

@@ -370,6 +370,7 @@ module connection_item_table {
     module.feed_item_collector_lambda.role.name
   ]
   read_permission_role_names = [
+    var.plugin_config.authenticated_role.name,
   ]
   partition_key = {
     name = local.feed_item_partition_key

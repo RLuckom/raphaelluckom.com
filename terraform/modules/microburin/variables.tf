@@ -423,6 +423,7 @@ locals {
     plugin_image_hosting_prefix = local.plugin_image_hosting_prefix
     plugin_post_hosting_prefix = local.plugin_post_hosting_prefix
     connections_table_name = module.connections_table.table_name
+    connection_item_table_name = module.connection_item_table.table_name
   }
   default_css_paths = [
     var.admin_site_resources.default_styles_path,

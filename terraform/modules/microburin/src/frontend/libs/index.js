@@ -1,5 +1,6 @@
 window.RENDER_CONFIG = {
-  init: () => {
+  init: ({connectionItems}) => {
+    console.log(connectionItems)
     const mainSection = document.querySelector('main')
     mainSection.appendChild(domNode({
       tagName: 'div',
@@ -16,6 +17,12 @@ window.RENDER_CONFIG = {
     }))
   },
   params: {
+    connectionItems: {
+      source: 'connectionItems',
+      formatter: ({connectionItems}) => {
+        return connectionItems
+      }
+    },
   },
   onAPIError: (e, r, cb) => {
     console.error(e)
