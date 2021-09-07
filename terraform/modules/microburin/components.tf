@@ -18,8 +18,8 @@ module ui {
   default_deferred_script_paths = []
   page_configs = {
     index = {
-      css_paths = local.index_css_paths
-      script_paths = local.index_script_paths
+      css_paths = local.edit_css_paths
+      script_paths = local.edit_script_paths
       deferred_script_paths = []
       render_config_path = "${path.module}/src/frontend/libs/index.js"
     }
