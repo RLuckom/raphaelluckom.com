@@ -3,17 +3,15 @@ window.RENDER_CONFIG = {
     console.log(connectionItems)
     const mainSection = document.querySelector('main')
     const postId = "null/test"
-    let editorState = getPostEditorState(postId)
-    let saveState = getPostSaveState(postId)
-    if (!editorState || _.get(editorState, 'etag') !== _.get(post, 'etag')) {
-      editorState = setPostEditorState(postId, {
+    let editorState = getSocialEditorState()
+    if (!editorState) {
+      editorState = setSocialEditorState({
         title: postId,
         trails: [],
         content: '',
         imageIds: [],
         footnotes: {},
       })
-      saveState = setPostSaveState(postId, {etag: null, label: I18N_CONFIG.saveState.unsaved})
     }
     mainSection.appendChild(domNode({
       tagName: 'div',
@@ -75,14 +73,14 @@ window.RENDER_CONFIG = {
     const {updateFootnoteMenu} = prosemirrorView({
       container: document.getElementById('post-editor'),
       uploadImage, 
-      onChange: _.partialRight(_.partial(updateEditorState, postId)),
+      onChange: _.partialRight(_.partial(updateSocialEditorStateExternal, postId)),
       initialState: editorState.editorState,
       initialMarkdownText: postContentForProsemirror,
       footnotes: editorState.footnotes || {},
       addFootnote,
       postId: postId
     })
-    const latestEditorState = getPostEditorState(postId)
+    const latestEditorState = getSocialEditorState()
     _.each(latestEditorState.footnotes, (v, k) => {
       document.getElementById('post-footnotes').appendChild(buildFootnoteEditor(postId, k, uploadImage, updateFootnoteMenu))
     })

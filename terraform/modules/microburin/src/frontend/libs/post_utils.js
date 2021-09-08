@@ -148,6 +148,26 @@ function getImageUploadKey({postId, imageId, imageExt}) {
   return `${CONFIG.plugin_image_upload_path}${postId}/${imageId}.${imageExt}`
 }
 
+function getSocialDataKey() {
+  return `plugins/${CONFIG.name}/social/editor`
+}
+
+function getSocialSaveStateDataKey() {
+  return `plugins/${CONFIG.name}/social/editor?field=saveState`
+}
+
+function getSocialAsSavedDataKey() {
+  return `plugins/${CONFIG.name}/social/editor?field=asSaved`
+}
+
+function getSocialPublishStateDataKey() {
+  return `plugins/${CONFIG.name}/social/editor?field=publishState`
+}
+
+function getSocialEditorStateDataKey() {
+  return `plugins/${CONFIG.name}/social/editor?field=editorState`
+}
+
 function getPostDataKey(postId) {
   return `plugins/${CONFIG.name}/postData?postId=${postId}`
 }
@@ -248,6 +268,22 @@ function getPostPublishState(postId) {
 function getPostSaveState(postId) {
   const postDataKey = getPostSaveStateDataKey(postId)
   return getParsedLocalStorageData(postDataKey)
+}
+
+function getSocialEditorState() {
+  const postDataKey = getSocialEditorStateDataKey()
+  return getParsedLocalStorageData(postDataKey)
+}
+
+function setSocialEditorState(editorState) {
+  const postDataKey = getSocialEditorStateDataKey()
+  localStorage.setItem(postDataKey, JSON.stringify(editorState))
+  return editorState
+}
+
+function updateSocialEditorState(editorState) {
+  const postDataKey = getSocialEditorStateDataKey()
+  return updateLocalStorageData(postDataKey, editorState)
 }
 
 function deleteLocalState(postId) {
@@ -566,4 +602,30 @@ function updateEditorState(postId, updates, updateFootnoteMenu, updatedFootnoteN
   }
   const newEditorState = updatePostEditorState(postId, changedFields)
   const s = updatePostSaveState(postId, {label: isModified ? I18N_CONFIG.saveState.modified : I18N_CONFIG.saveState.unmodified})
+}
+
+function updateSocialEditorStateExternal(postId, updates, updateFootnoteMenu, updatedFootnoteNames) {
+  const latestEditorState = getSocialEditorState()
+  let isModified = false
+  let imageIds = getImageIds({
+    content: updates.content || latestEditorState.content || '',
+    footnotes: updates.footnotes || latestEditorState.footnotes || {},
+    postId,
+  })
+  const changedFields = _.reduce(updates, (acc, v, k) => {
+    if (!_.isEqual(v, latestEditorState[k])) {
+      acc[k] = v
+    }
+    return acc
+  }, {})
+  if (!_.isEqual(imageIds, latestEditorState.imageIds)) {
+    changedFields.imageIds = imageIds
+  } else {
+    delete changedFields.imageIds
+  }
+
+  if (updatedFootnoteNames || updates.footnotes) {
+    updateFootnoteMenu({names: updatedFootnoteNames})
+  }
+  const newEditorState = updateSocialEditorState(changedFields)
 }
