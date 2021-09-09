@@ -2,17 +2,18 @@ window.RENDER_CONFIG = {
   init: ({connectionItems}) => {
     console.log(connectionItems)
     const mainSection = document.querySelector('main')
-    const postId = "null/test"
     let editorState = getSocialEditorState()
     if (!editorState) {
-      editorState = setSocialEditorState({
-        title: postId,
-        trails: [],
-        content: '',
-        imageIds: [],
-        footnotes: {},
-      })
+      editorState = resetSocialEditorState()
     }
+    const postId = editorState.title
+    const editorStateOptions = {
+      getEditorState: getSocialEditorState,
+    }
+    function mergeEditorStateToPost() {
+      return latestKnownPostState(postId, editorStateOptions)
+    }
+
     mainSection.appendChild(domNode({
       tagName: 'div',
       children: [
@@ -38,6 +39,103 @@ window.RENDER_CONFIG = {
           tagName: 'div',
           id: 'post-footnotes',
         },
+        {
+          tagName: 'div',
+          id: 'post-actions',
+          children: [
+            {
+              tagName: 'div',
+              classNames: 'button-container',
+              children: [
+                {
+                  tagName: 'button',
+                  name: 'save',
+                  classNames: 'save',
+                  spin: true,
+                  innerText: I18N_CONFIG.postActions.save,
+                  onClick: function(evt, stopSpin) {
+                    evt.stopPropagation()
+                    const postToSave = mergeEditorStateToPost()
+                    goph.report('savePostWithoutPublishing', {post: postToSave, postId}, (e, r) => {
+                      const changedETag = _.get(r, 'savePostWithoutPublishing[0].ETag')
+                      if (changedETag) {
+                        postToSave.etag = changedETag
+                        updateSocialEditorStateExternal(postId, {etag: changedETag}, updateFootnoteMenu)
+                        setPostAsSaved(postId, postToSave)
+                        setPostSaveState(postId, {etag: changedETag, label: I18N_CONFIG.saveState.unmodified})
+                      }
+                      if (postToSave.etag !== getPostPublishState.etag) {
+                        updatePostPublishState(postId, {label: I18N_CONFIG.publishState.modified})
+                        const changedDate = new Date()
+                        //setPublishState(changedDate.toLocaleString())
+                      }
+                      stopSpin()
+                    })
+                  }
+                },
+                {
+                  tagName: 'button',
+                  name: 'publish',
+                  classNames: 'publish',
+                  spin: true,
+                  innerText: I18N_CONFIG.postActions.publish,
+                  onClick: function(evt, stopSpin) {
+                    evt.stopPropagation()
+                    const postToSave = mergeEditorStateToPost()
+                    goph.report(['saveAndPublishPost', 'confirmPostPublished'], {post: postToSave, postId}, (e, r) => {
+                      if (e) {
+                        console.error(e)
+                        return
+                      }
+                      const changedETag = _.get(r, 'saveAndPublishPost[0].ETag')
+                      if (changedETag) {
+                        postToSave.etag = changedETag
+                        updateSocialEditorStateExternal(postId, {etag: changedETag}, updateFootnoteMenu)
+                        setPostAsSaved(postId, postToSave)
+                        //setPostPublishState(postId, {etag: changedETag, label: I18N_CONFIG.publishState.mostRecent})
+                        setPostSaveState(postId, {etag: changedETag, label: I18N_CONFIG.saveState.unmodified})
+                      }
+                      const changedDate = new Date()
+                      //setPublishState(changedDate.toLocaleString())
+                      stopSpin()
+                    })
+                  }
+                },
+                {
+                  tagName: 'button',
+                  name: 'unpublish',
+                  classNames: 'unpublish',
+                  spin: true,
+                  innerText: I18N_CONFIG.postActions.unpublish,
+                  onClick: function(evt, stopSpin) {
+                    evt.stopPropagation()
+                    const postToSave = mergeEditorStateToPost()
+                    goph.report(['unpublishPost', 'confirmPostUnpublished'], {post: postToSave, postId}, (e, r) => {
+                      if (e) {
+                        console.error(e)
+                        return
+                      }
+                      const changedETag = _.get(r, 'unpublishPost[0].ETag')
+                      if (changedETag) {
+                        postToSave.etag = changedETag
+                        updateSocialEditorStateExternal(postId, {etag: changedETag}, updateFootnoteMenu)
+                        setPostAsSaved(postId, postToSave)
+                        //setPostPublishState(postId, {etag: null, label: I18N_CONFIG.publishState.unpublished})
+                      }
+                      const changedDate = new Date() 
+                      //setPublishState(changedDate.toLocaleString())
+                      stopSpin()
+                    })
+                  },
+                }
+              ]
+            },
+          ]
+        },
+        {
+          tagName: 'div',
+          id: 'error',
+        }
       ]
     }))
 
@@ -64,7 +162,7 @@ window.RENDER_CONFIG = {
     }
 
     function addFootnote() {
-      const latestEditorState = getPostEditorState(postId)
+      const latestEditorState = getSocialEditorState()
       const footnoteNumber = _.keys(latestEditorState.footnotes || {}).length + 1
       document.getElementById('post-footnotes').appendChild(buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnoteMenu))
     }

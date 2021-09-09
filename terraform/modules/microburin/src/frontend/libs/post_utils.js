@@ -281,6 +281,16 @@ function setSocialEditorState(editorState) {
   return editorState
 }
 
+function resetSocialEditorState() {
+  return setSocialEditorState({
+    title: uuid.v4(),
+    trails: [],
+    content: '',
+    imageIds: [],
+    footnotes: {},
+  })
+}
+
 function updateSocialEditorState(editorState) {
   const postDataKey = getSocialEditorStateDataKey()
   return updateLocalStorageData(postDataKey, editorState)
@@ -386,9 +396,10 @@ function newPost() {
  * So if you edit on device A, then edit and save on device B, device A will throw out
  * your local edits when it detects the new save state.
  */
-function latestKnownPostState(postId) {
+function latestKnownPostState(postId, options) {
+  options = options || {}
   const mergedPost = _.cloneDeep(getPostAsSaved(postId) || newPost())
-  const editorState = getPostEditorState(postId)
+  const editorState = (options.getEditorState || getPostEditorState)(postId)
   if (editorState && (!mergedPost.etag || editorState.etag === mergedPost.etag)) {
     mergedPost.frontMatter.meta.imageIds = _.cloneDeep(editorState.imageIds)
     mergedPost.frontMatter.meta.trails = _.cloneDeep(editorState.trails)
