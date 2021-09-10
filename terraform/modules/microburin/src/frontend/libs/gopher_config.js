@@ -281,33 +281,6 @@ window.GOPHER_CONFIG = {
         },
       },
     },
-    confirmImagesPublished: {
-      accessSchema: exploranda.dataSources.AWS.s3.listObjects,
-      params: {
-        Bucket: {value: [CONFIG.website_bucket]},
-        Prefix: {
-          input: 'postId', 
-          formatter: ({postId}) => {
-            return CONFIG.blog_image_hosting_prefix + postId
-          }
-        },
-        MaxKeys: {
-          source: 'postImageList',
-          formatter: ({postImageList}) => {
-            return (_.flatten(postImageList).length + 1) * 10
-          }
-        }
-      },
-      behaviors: {
-        retryParams: {
-          times: 10,
-          interval: (n) => n * POLL_INTERVAL
-        },
-        detectErrors: (err, res, {MaxKeys}) => {
-          return res.Contents.length !== ((MaxKeys / 10) - 1)
-        }
-      }
-    },
     getPublishedPostETag: {
       accessSchema: exploranda.dataSources.AWS.s3.listObjects,
       formatter: ([postRecord]) => {
@@ -330,8 +303,7 @@ window.GOPHER_CONFIG = {
       accessSchema: exploranda.dataSources.AWS.s3.listObjects,
       params: {
         Bucket: {
-          source: 'confirmImagesPublished',
-          formatter: () => [CONFIG.website_bucket],
+          value: CONFIG.website_bucket,
         },
         Prefix: {
           input: 'postId', 
@@ -346,7 +318,7 @@ window.GOPHER_CONFIG = {
           interval: (n) => n * POLL_INTERVAL
         },
         detectErrors: (err, res) => {
-          return res.Contents.length !== 2
+          return res.Contents.length !== 1
         }
       }
     },
