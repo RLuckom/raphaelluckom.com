@@ -405,6 +405,7 @@ locals {
     site_metrics_table = var.coordinator_data.site_metrics_table
     table_region = var.region
     connection_domain_key = local.domain_key
+    feed_item_kind = local.feed_item_kind
     website_bucket = module.social_site.website_bucket_name
     blog_image_hosting_root = local.blog_image_hosting_root
     blog_image_hosting_prefix = local.blog_image_hosting_prefix

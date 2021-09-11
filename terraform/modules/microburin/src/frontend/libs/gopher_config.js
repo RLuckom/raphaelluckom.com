@@ -8,7 +8,7 @@ window.GOPHER_CONFIG = {
         TableName: {value: CONFIG.posts_table},
         ExpressionAttributeValues: {
           value: {
-            ':kindId': 'post',
+            ':kindId': CONFIG.feed_item_kind,
           }
         },
         KeyConditionExpression: {value: 'kind = :kindId' },

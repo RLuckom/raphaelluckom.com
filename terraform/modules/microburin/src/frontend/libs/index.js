@@ -1,5 +1,7 @@
 window.RENDER_CONFIG = {
-  init: ({connectionItems}) => {
+  init: ({listPosts, postRecords, connectionItems}) => {
+    console.log(listPosts)
+    console.log(postRecords)
     console.log(connectionItems)
     const mainSection = document.querySelector('main')
     let editorState = getSocialEditorState()
@@ -94,6 +96,7 @@ window.RENDER_CONFIG = {
                         setPostAsSaved(postId, postToSave)
                         //setPostPublishState(postId, {etag: changedETag, label: I18N_CONFIG.publishState.mostRecent})
                         setPostSaveState(postId, {etag: changedETag, label: I18N_CONFIG.saveState.unmodified})
+                        editorState = resetSocialEditorState()
                       }
                       const changedDate = new Date()
                       //setPublishState(changedDate.toLocaleString())
@@ -189,6 +192,15 @@ window.RENDER_CONFIG = {
       formatter: ({connectionItems}) => {
         return connectionItems
       }
+    },
+    listPosts: {
+      source: 'listPosts',
+      formatter: ({listPosts}) => {
+        return listPosts
+      }
+    },
+    postRecords: {
+      source: 'postRecords',
     },
   },
   onAPIError: (e, r, cb) => {
