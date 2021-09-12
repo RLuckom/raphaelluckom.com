@@ -1,8 +1,73 @@
+function makePostItemList(postRecords, connectionItems) {
+  const sortedPostRecords = _.sortBy(postRecords, (rec) => {
+    return rec.modifiedTime
+  })
+  const sortedConnectionItems = _.sortBy(connectionItems, (it) => {
+    return it.modifiedTime
+  })
+  const items = []
+  let nextPost = sortedPostRecords.pop()
+  let nextItem = sortedConnectionItems.pop()
+  while (nextPost || nextItem) {
+    if (nextPost) {
+      if (nextItem) {
+        if (nextItem.modifiedTime > nextPost.modifiedTime) {
+          items.push(makeItemElement(nextItem))
+          nextItem = sortedConnectionItems.pop()
+        } else {
+          items.push(makePostRecordElement(nextPost))
+          nextPost = sortedPostRecords.pop()
+        }
+      } else {
+        items.push(makePostRecordElement(nextPost))
+        nextPost = sortedPostRecords.pop()
+      }
+    } else {
+      items.push(makeItemElement(nextItem))
+      nextItem = sortedConnectionItems.pop()
+    }
+  }
+  return items
+}
+
+function makePostRecordElement(el) {
+  return domNode({
+    tagName: 'div',
+    children: [{
+      tagName: 'h3',
+      children: ['post']
+    },
+    {
+      tagName: 'p',
+      children: [
+        JSON.stringify(el)
+      ]
+    }]
+  })
+}
+
+function makeItemElement(el) {
+  return domNode({
+    tagName: 'div',
+    children: [{
+      tagName: 'h3',
+      children: ['item']
+    },
+    {
+      tagName: 'p',
+      children: [
+        JSON.stringify(el)
+      ]
+    }]
+  })
+}
+
 window.RENDER_CONFIG = {
   init: ({listPosts, postRecords, connectionItems}) => {
     console.log(listPosts)
     console.log(postRecords)
     console.log(connectionItems)
+
     const mainSection = document.querySelector('main')
     let editorState = getSocialEditorState()
     if (!editorState) {
@@ -137,6 +202,11 @@ window.RENDER_CONFIG = {
         },
         {
           tagName: 'div',
+          classNames: 'connection-items-list',
+          children: makePostItemList(postRecords, connectionItems)
+        },
+        {
+          tagName: 'div',
           id: 'error',
         }
       ]
@@ -201,6 +271,9 @@ window.RENDER_CONFIG = {
     },
     postRecords: {
       source: 'postRecords',
+      formatter: ({postRecords}) => {
+        return postRecords
+      }
     },
   },
   onAPIError: (e, r, cb) => {
