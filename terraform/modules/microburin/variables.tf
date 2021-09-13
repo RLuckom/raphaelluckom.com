@@ -247,6 +247,11 @@ variable subject_alternative_names {
   default = []
 }
 
+variable display_name {
+  type = string
+  default = "display name"
+}
+
 variable maintainer {
   type = object({
     name = string
@@ -406,6 +411,7 @@ locals {
     table_region = var.region
     connection_domain_key = local.domain_key
     feed_item_kind = local.feed_item_kind
+    display_name = var.display_name
     website_bucket = module.social_site.website_bucket_name
     blog_image_hosting_root = local.blog_image_hosting_root
     blog_image_hosting_prefix = local.blog_image_hosting_prefix

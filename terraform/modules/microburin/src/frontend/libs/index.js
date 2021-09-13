@@ -38,9 +38,19 @@ function makePostRecordElement(el) {
       children: ['post']
     },
     {
-      tagName: 'p',
+      tagName: 'div',
+      classNames: ['post-item'],
       children: [
-        JSON.stringify(el)
+        {
+          tagName: 'div',
+          classNames: ['connection-item-source'],
+          children: [`${_.get(el, 'frontMatter.author')}`],
+        },
+        {
+          tagName: 'div',
+          classNames: ['item-modified-date'],
+          children: [`${new Date(el.modifiedTime).toISOString()}`],
+        }
       ]
     }]
   })
@@ -54,9 +64,19 @@ function makeItemElement(el) {
       children: ['item']
     },
     {
-      tagName: 'p',
+      tagName: 'div',
+      classNames: ['connection-item'],
       children: [
-        JSON.stringify(el)
+        {
+          tagName: 'div',
+          classNames: ['connection-item-source'],
+          children: [`${el.origin}:${_.get(el, 'frontMatter.author')}`],
+        },
+        {
+          tagName: 'div',
+          classNames: ['item-modified-date'],
+          children: [`${new Date(el.modifiedTime).toISOString()}`],
+        }
       ]
     }]
   })
@@ -211,50 +231,55 @@ window.RENDER_CONFIG = {
         }
       ]
     }))
+    function buildEditor() {
 
-    function uploadImage(buffer, ext, callback) {
-      const imageId = uuid.v4()
-      const canonicalExt = canonicalImageTypes[_.toLower(ext)]
-      const privateImageUrl = getImagePrivateUrl({postId, imageId, ext: canonicalExt, size: 500})
-      goph.report(
-        'pollImage',
-        {
-          imageExt: canonicalExt,
-          postId: postId,
-          imageId: imageId,
-          imageSize: 500,
-          buffer,
-        },
-        (e, r) => {
-          callback(e, {
-            url: privateImageUrl,
-            imageId
-          })
-        }
-      )
-    }
+      document.getElementById('post-editor').innerHTML = ""
 
-    function addFootnote() {
+      function uploadImage(buffer, ext, callback) {
+        const imageId = uuid.v4()
+        const canonicalExt = canonicalImageTypes[_.toLower(ext)]
+        const privateImageUrl = getImagePrivateUrl({postId, imageId, ext: canonicalExt, size: 500})
+        goph.report(
+          'pollImage',
+          {
+            imageExt: canonicalExt,
+            postId: postId,
+            imageId: imageId,
+            imageSize: 500,
+            buffer,
+          },
+          (e, r) => {
+            callback(e, {
+              url: privateImageUrl,
+              imageId
+            })
+          }
+        )
+      }
+
+      function addFootnote() {
+        const latestEditorState = getSocialEditorState()
+        const footnoteNumber = _.keys(latestEditorState.footnotes || {}).length + 1
+        document.getElementById('post-footnotes').appendChild(buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnoteMenu))
+      }
+
+      const postContentForProsemirror = prepareEditorString(editorState.content, postId)
+      const {updateFootnoteMenu} = prosemirrorView({
+        container: document.getElementById('post-editor'),
+        uploadImage, 
+        onChange: _.partialRight(_.partial(updateSocialEditorStateExternal, postId)),
+        initialState: editorState.editorState,
+        initialMarkdownText: postContentForProsemirror,
+        footnotes: editorState.footnotes || {},
+        addFootnote,
+        postId: postId
+      })
       const latestEditorState = getSocialEditorState()
-      const footnoteNumber = _.keys(latestEditorState.footnotes || {}).length + 1
-      document.getElementById('post-footnotes').appendChild(buildFootnoteEditor(postId, footnoteNumber, uploadImage, updateFootnoteMenu))
+      _.each(latestEditorState.footnotes, (v, k) => {
+        document.getElementById('post-footnotes').appendChild(buildFootnoteEditor(postId, k, uploadImage, updateFootnoteMenu))
+      })
     }
-
-    const postContentForProsemirror = prepareEditorString(editorState.content, postId)
-    const {updateFootnoteMenu} = prosemirrorView({
-      container: document.getElementById('post-editor'),
-      uploadImage, 
-      onChange: _.partialRight(_.partial(updateSocialEditorStateExternal, postId)),
-      initialState: editorState.editorState,
-      initialMarkdownText: postContentForProsemirror,
-      footnotes: editorState.footnotes || {},
-      addFootnote,
-      postId: postId
-    })
-    const latestEditorState = getSocialEditorState()
-    _.each(latestEditorState.footnotes, (v, k) => {
-      document.getElementById('post-footnotes').appendChild(buildFootnoteEditor(postId, k, uploadImage, updateFootnoteMenu))
-    })
+    buildEditor()
   },
   params: {
     connectionItems: {

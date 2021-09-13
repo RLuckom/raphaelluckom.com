@@ -285,6 +285,7 @@ function resetSocialEditorState() {
   return setSocialEditorState({
     title: uuid.v4(),
     trails: [],
+    author: CONFIG.display_name,
     content: '',
     imageIds: [],
     footnotes: {},
