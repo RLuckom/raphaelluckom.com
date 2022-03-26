@@ -31,7 +31,7 @@ terraform {
       version = "~> 3.45"
     }
   }
-  required_version = ">= 1.0"
+  required_version = ">= 1.1.7"
   backend "s3" {
     shared_credentials_file = "/.aws/credentials"
     bucket = "raph"
