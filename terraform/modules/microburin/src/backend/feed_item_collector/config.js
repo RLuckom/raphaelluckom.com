@@ -75,47 +75,11 @@ module.exports = {
             }
           }
         },
-        /*
-        connections: {
-          action: 'exploranda',
-          params: {
-            accessSchema: {value: 'dataSources.AWS.dynamodb.query'},
-            explorandaParams: {
-              apiConfig: {value: {region: '${connection_item_table_region}'}},
-              TableName: {value: "${connection_item_table_name}"},
-              ExpressionAttributeValues: {
-                value: {
-                  ':itemKind': '${connection_item_table_kind}',
-                }
-              },
-              KeyConditionExpression: {value: '${connection_item_table_partition_key} = :itemKind' },
-            },
-          },
-        },
-       */
-      }
+      },
     },
-    /*
-    signTokens: {
-      index: 1,
-      dependencies: {
-      }
-    },
-    */
   },
   cleanup: {
     transformers: {
-      // results: { ref: 'requestNewItems.results.items' }
-      display: {
-        helper: ({body, microburinSignature}) => {
-          console.log(body)
-          console.log(microburinSignature)
-        },
-        params: {
-          body: { ref: 'parseRequest.vars.body' },
-          microburinSignature: { ref: 'parseRequest.vars.microburinSignature' },
-        }
-      },
       statusCode: { value: 200},
     }
   }

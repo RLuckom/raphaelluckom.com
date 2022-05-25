@@ -1,6 +1,7 @@
 module admin_site_prod_blog_plugin {
   source = "github.com/RLuckom/terraform_modules//snapshots/aws/serverless_site/plugins/blog"
   name = "prod_blog"
+  payment_pointer = "$ilp.uphold.com/JZJ3QMFmgEXp"
   region = local.region
   account_id = local.account_id
   coordinator_data = module.visibility_system.serverless_site_configs["raphaelluckom_com"]
