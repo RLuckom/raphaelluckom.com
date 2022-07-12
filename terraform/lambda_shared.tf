@@ -79,7 +79,6 @@ module "donut_days" {
   source = "github.com/RLuckom/terraform_modules//snapshots/aws/layers/donut_days"
 }
 
-
 module "image_dependencies" {
   source = "github.com/RLuckom/terraform_modules//snapshots/aws/layers/image_dependencies"
 }
