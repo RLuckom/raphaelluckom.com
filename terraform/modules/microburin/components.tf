@@ -536,7 +536,7 @@ resource null_resource social_key {
   }
 }
 
-resource "aws_s3_bucket_object" "connection_canary" {
+resource "aws_s3_object" "connection_canary" {
   bucket = module.social_site.website_bucket_name
   key    = local.connection_test_api_path
   content_type = "text/plain"
