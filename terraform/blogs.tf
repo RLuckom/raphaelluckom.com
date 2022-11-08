@@ -12,7 +12,7 @@ module admin_site_prod_blog_plugin {
   nav_links = var.nav_links
   site_title = var.prod_site_title
   logging_config = module.visibility_system.lambda_log_configs["prod"]["human"].config
-  lambda_event_configs = local.notify_failure_only
+  lambda_event_configs = module.visibility_system.error_relay_notification_configs.notify_failure_only
   image_layer = module.image_dependencies.layer_config
   donut_days_layer = module.donut_days.layer_config
   markdown_tools_layer = module.markdown_tools.layer_config
@@ -29,7 +29,7 @@ module admin_site_prod_social_plugin {
   plugin_config = module.admin_interface.plugin_config["social"]
   subject_alternative_names = ["www.social.raphaelluckom.com"]
   logging_config = module.visibility_system.lambda_log_configs["prod"]["prod"].config
-  lambda_event_configs = local.notify_failure_only
+  lambda_event_configs = module.visibility_system.error_relay_notification_configs.notify_failure_only
   image_layer = module.image_dependencies.layer_config
   donut_days_layer = module.donut_days.layer_config
   archive_utils_layer = module.archive_utils.layer_config
@@ -48,7 +48,7 @@ module admin_site_prod_social2_plugin {
   plugin_config = module.admin_interface.plugin_config["social2"]
   subject_alternative_names = ["www.social2.raphaelluckom.com"]
   logging_config = module.visibility_system.lambda_log_configs["prod"]["prod"].config
-  lambda_event_configs = local.notify_failure_only
+  lambda_event_configs = module.visibility_system.error_relay_notification_configs.notify_failure_only
   image_layer = module.image_dependencies.layer_config
   donut_days_layer = module.donut_days.layer_config
   archive_utils_layer = module.archive_utils.layer_config

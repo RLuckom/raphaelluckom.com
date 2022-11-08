@@ -9,7 +9,7 @@ module human_attention_archive {
   }
   bucket_prefix = var.bucket_prefix
   security_scope = "prod"
-  replication_lambda_event_configs = local.notify_failure_only
+  replication_lambda_event_configs = module.visibility_system.error_relay_notification_configs.notify_failure_only
   replication_function_logging_config = module.visibility_system.lambda_log_configs["prod"]["human"].config
   donut_days_layer_config = module.donut_days.layer_config
   replication_sources = [{

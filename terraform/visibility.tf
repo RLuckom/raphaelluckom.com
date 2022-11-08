@@ -5,9 +5,10 @@ module visibility_system {
   bucket_prefix = var.bucket_prefix
   donut_days_layer = module.donut_days.layer_config
   csv_parser_layer = module.csv_parser.layer_config
-  lambda_event_configs = local.notify_failure_only
   supported_system_definitions = var.supported_system_definitions
   cost_report_summary_reader_arns = [module.admin_interface.plugin_authenticated_roles["visibility"].arn]
+  slack_credentials_parameterstore_key = var.slack_credentials_parameterstore_key
+  error_relay_slack_channel = var.app_slack_channel
   visibility_bucket_cors_rules = [{
     allowed_headers = ["authorization", "content-md5", "content-type", "cache-control", "x-amz-content-sha256", "x-amz-date", "x-amz-security-token", "x-amz-user-agent"]
     allowed_methods = ["GET"]
