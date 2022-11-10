@@ -7,6 +7,7 @@ module admin_interface {
   user_email = "raph.aelluckom@gmail.com"
   subject_alternative_names = ["www.admin.raphaelluckom.com"]
   aws_sdk_layer = module.aws_sdk.layer_config
+  aws_credentials_file = var.aws_credentials_file
   token_validities = {
     access = {
       value = 5

@@ -20,6 +20,11 @@ variable prod_site_title {
   default = "Raphael Luckom"
 }
 
+variable aws_credentials_file {
+  type = string
+  default = "/.aws/credentials"
+}
+
 variable bucket_prefix {
   type = string
   default = "rluckom"

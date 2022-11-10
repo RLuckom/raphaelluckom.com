@@ -9,6 +9,7 @@ module visibility_system {
   cost_report_summary_reader_arns = [module.admin_interface.plugin_authenticated_roles["visibility"].arn]
   slack_credentials_parameterstore_key = var.slack_credentials_parameterstore_key
   error_relay_slack_channel = var.app_slack_channel
+  error_table_read_permission_role_names = [module.admin_interface.plugin_authenticated_roles["visibility"].name]
   visibility_bucket_cors_rules = [{
     allowed_headers = ["authorization", "content-md5", "content-type", "cache-control", "x-amz-content-sha256", "x-amz-date", "x-amz-security-token", "x-amz-user-agent"]
     allowed_methods = ["GET"]
@@ -96,6 +97,7 @@ module admin_site_visibility_plugin {
   data_warehouse_configs = module.visibility_system.data_warehouse_configs
   serverless_site_configs = module.visibility_system.serverless_site_configs
   cost_report_summary_location = module.visibility_system.cost_report_summary_location
+  error_table_metadata = module.visibility_system.error_table_metadata
   admin_site_resources = module.admin_interface.site_resources
   plugin_config = module.admin_interface.plugin_config["visibility"]
 }
