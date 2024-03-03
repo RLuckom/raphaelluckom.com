@@ -44,7 +44,7 @@ function makePostRecordElement(el) {
         {
           tagName: 'div',
           classNames: ['connection-item-source'],
-          children: [`${_.get(el, 'frontMatter.author')}`],
+          children: [`${JSON.stringify(el)}`],
         },
         {
           tagName: 'div',
@@ -70,7 +70,7 @@ function makeItemElement(el) {
         {
           tagName: 'div',
           classNames: ['connection-item-source'],
-          children: [`${el.origin}:${_.get(el, 'frontMatter.author')}`],
+          children: [`${JSON.stringify(el)}`],
         },
         {
           tagName: 'div',
@@ -87,8 +87,157 @@ window.RENDER_CONFIG = {
     console.log(listPosts)
     console.log(postRecords)
     console.log(connectionItems)
-
     const mainSection = document.querySelector('main')
+    mainSection.appendChild(domNode({
+      tagName: 'div',
+      id: 'post-list'
+    }))
+    window.addEventListener('pageshow', () => {
+      goph.report(['listPosts', 'postRecords'], (e, {listPosts, postRecords}) => {
+        updatePostKeys(listPosts, postRecords)
+      })
+    })
+    function postKeyToId(k) {
+      const postIdParts = k.split('/').pop().split('.')
+      postIdParts.pop()
+      const postId = postIdParts.join('.')
+      return postId
+    }
+    function updatePostKeys(listPosts, postRecords) {
+      let postKeys = _.map(listPosts, 'Key')
+      postRecords = _.sortBy(postRecords.postRecords, 'frontMatter.createDate')
+      postKeys = _.reverse(_.sortBy(
+        postKeys,
+        (k) => _.findIndex(postRecords, (rec) => postKeyToId(k) === rec.id)
+      ))
+      document.getElementById('post-list').replaceChildren(..._.map(postKeys, (Key) => {
+        const postIdParts = Key.split('/').pop().split('.')
+        postIdParts.pop()
+        const postId = postIdParts.join('.')
+        let saveState = getPostSaveState(postId)
+        let publishState = getPostPublishState(postId)
+        const record = _.find(postRecords, (rec) => postId === rec.id)
+        const saved = _.find(listPosts, ({Key}) => postKeyToId(Key) === postId)
+        return domNode({
+          tagName: 'div',
+          classNames: 'post-list-entry',
+          children: [
+            {
+              tagName: 'div',
+              id: 'post-running-material',
+              children: [
+                {
+                  tagName: 'div',
+                  classNames: 'post-status',
+                  children: [
+                    {
+                      tagName: 'div',
+                      classNames: 'post-id',
+                      children: [postId]
+                    },
+                    {
+                      tagName: 'div',
+                      classNames: 'save-status',
+                      children: record ? [new Date(record.frontMatter.createDate).toLocaleString()] : []
+                    },
+                  ]
+                },
+              ]
+            },
+            {
+              tagName: 'div',
+              classNames: 'post-actions',
+              children: [
+                {
+                  tagName: 'button',
+                  name: 'edit',
+                  classNames: 'edit',
+                  innerText: I18N_CONFIG.postActions.edit,
+                  onClick: () => {
+                      window.location.href = `./edit.html?postId=${postId}`
+                  }
+                },
+                {
+                  tagName: 'button',
+                  name: 'publish',
+                  classNames: 'publish',
+                  spin: true,
+                  innerText: I18N_CONFIG.postActions.publish,
+                  onClick: function(evt, stopSpin) {
+                    evt.stopPropagation()
+                    goph.report(['saveAndPublishPostWithoutInput', 'confirmPostPublished'], {postId}, (e, r) => {
+                      if (e) {
+                        console.log(e)
+                        return
+                      }
+                      const changedETag = _.get(r, 'saveAndPublishPostWithoutInput[0].ETag')
+                      if (changedETag) {
+                        setPostPublishState(postId, {etag: changedETag, label: I18N_CONFIG.publishState.mostRecent})
+                        setPostSaveState(postId, {etag: changedETag, label: I18N_CONFIG.saveState.unmodified})
+                      }
+                      evt.target.closest('.post-list-entry').querySelector('.save-status').innerText = I18N_CONFIG.saveState.unmodified
+                      evt.target.closest('.post-list-entry').querySelector('.publish-status').innerText = I18N_CONFIG.publishState.mostRecent
+                      stopSpin()
+                    })
+                  }
+                },
+                {
+                  tagName: 'button',
+                  name: 'unpublish',
+                  classNames: 'unpublish',
+                  spin: true,
+                  innerText: I18N_CONFIG.postActions.unpublish,
+                  onClick: function(evt, stopSpin) {
+                    evt.stopPropagation()
+                    goph.report(['unpublishPostWithoutInput', 'confirmPostUnpublished'], {postId}, (e, r) => {
+                      if (e) {
+                        console.log(e)
+                        return
+                      }
+                      const changedETag = _.get(r, 'unPublishPostWithoutInput[0].ETag')
+                      if (changedETag) {
+                        setPostPublishState(postId, {etag: changedETag, label: I18N_CONFIG.publishState.mostRecent})
+                        setPostSaveState(postId, {etag: changedETag, label: I18N_CONFIG.saveState.unmodified})
+                      }
+                      evt.target.closest('.post-list-entry').querySelector('.save-status').innerText = I18N_CONFIG.saveState.unmodified
+                      evt.target.closest('.post-list-entry').querySelector('.publish-status').innerText = I18N_CONFIG.publishState.unpublished
+                      stopSpin()
+                    })
+                  },
+                },
+                {
+                  tagName: 'button',
+                  name: 'delete',
+                  classNames: 'delete',
+                  spin: true,
+                  dataset: {
+                    postId
+                  },
+                  innerText: I18N_CONFIG.postActions.delete,
+                  onClick: function(evt, stopSpin) {
+                    evt.stopPropagation()
+                    goph.report(['deletePostWithoutInput', 'confirmPostDeleted'], {postId}, (e, r) => {
+                      if (e) {
+                        console.log(e)
+                        return
+                      }
+                      const entry = evt.target.closest('.post-list-entry')
+                      if (entry && !e) {
+                        entry.remove()
+                      }
+                      deleteLocalState(postId)
+                      stopSpin()
+                    })
+                  },
+                },
+              ]
+            },
+          ]
+        })
+      }))
+    }
+    updatePostKeys(listPosts, postRecords)
+
     let editorState = getSocialEditorState()
     if (!editorState) {
       editorState = resetSocialEditorState()

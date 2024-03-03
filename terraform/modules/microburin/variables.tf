@@ -449,6 +449,7 @@ locals {
     local.post_utils_js_path,
   ]
   index_script_paths = [
+    local.post_utils_js_path,
   ]
   edit_script_paths = [
     local.prosemirror_setup_js_path,

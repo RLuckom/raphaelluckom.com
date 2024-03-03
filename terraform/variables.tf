@@ -22,7 +22,7 @@ variable prod_site_title {
 
 variable aws_credentials_file {
   type = string
-  default = "/.aws/credentials"
+  default = "~/.aws/credentials"
 }
 
 variable bucket_prefix {

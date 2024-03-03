@@ -1,3 +1,7 @@
+module activitypub_utils {
+  source = "github.com/RLuckom/terraform_modules//snapshots/aws/layers/activitypub_utils"
+}
+
 module archive_utils {
   source = "github.com/RLuckom/terraform_modules//snapshots/aws/layers/archive_utils"
 }

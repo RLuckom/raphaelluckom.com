@@ -540,6 +540,7 @@ resource "aws_s3_object" "connection_canary" {
   bucket = module.social_site.website_bucket_name
   key    = local.connection_test_api_path
   content_type = "text/plain"
+  acl = "private"
   content = "Success"
 }
 
